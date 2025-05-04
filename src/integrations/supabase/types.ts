@@ -9,7 +9,176 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      case_actions: {
+        Row: {
+          action_by: string
+          action_description: string
+          case_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action_by: string
+          action_description: string
+          case_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action_by?: string
+          action_description?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_actions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_cases: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string
+          id: string
+          risk_score: number
+          status: Database["public"]["Enums"]["case_status"]
+          type: Database["public"]["Enums"]["case_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          risk_score: number
+          status?: Database["public"]["Enums"]["case_status"]
+          type: Database["public"]["Enums"]["case_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          risk_score?: number
+          status?: Database["public"]["Enums"]["case_status"]
+          type?: Database["public"]["Enums"]["case_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          extracted_data: Json | null
+          file_name: string
+          file_path: string
+          id: string
+          status: Database["public"]["Enums"]["document_status"]
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string
+          upload_date: string
+          user_id: string
+          verification_date: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          extracted_data?: Json | null
+          file_name: string
+          file_path: string
+          id?: string
+          status?: Database["public"]["Enums"]["document_status"]
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
+          upload_date?: string
+          user_id: string
+          verification_date?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          extracted_data?: Json | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          status?: Database["public"]["Enums"]["document_status"]
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
+          upload_date?: string
+          user_id?: string
+          verification_date?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +187,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      case_status: "open" | "resolved" | "escalated"
+      case_type: "kyc" | "aml" | "sanctions"
+      document_status: "pending" | "verified" | "rejected"
+      document_type: "passport" | "id" | "license"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +305,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      case_status: ["open", "resolved", "escalated"],
+      case_type: ["kyc", "aml", "sanctions"],
+      document_status: ["pending", "verified", "rejected"],
+      document_type: ["passport", "id", "license"],
+    },
   },
 } as const
