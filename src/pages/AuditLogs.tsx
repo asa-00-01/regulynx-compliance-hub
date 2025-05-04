@@ -30,6 +30,10 @@ import {
 
 interface AuditLogWithProfile extends AuditLog {
   user_name?: string;
+  profiles?: {
+    name?: string;
+    [key: string]: any;
+  } | null;
 }
 
 const AuditLogs = () => {
@@ -80,13 +84,15 @@ const AuditLogs = () => {
       
       // Transform the data to include user_name
       const transformedData = data?.map(log => {
-        // Fix the type issue by correctly handling the profiles field
-        const userName = log.profiles ? 
-          // Check if profiles exists and has a name property
-          (typeof log.profiles === 'object' && log.profiles !== null && 'name' in log.profiles) ? 
-            log.profiles.name as string : 
-            'Unknown' :
-          'System';
+        // Fix the type issue by properly handling the null case
+        let userName = 'System';
+        
+        // Check if profiles exists and has a name property
+        if (log.profiles) {
+          if (typeof log.profiles === 'object' && 'name' in log.profiles && log.profiles.name) {
+            userName = log.profiles.name;
+          }
+        }
           
         return {
           ...log,
