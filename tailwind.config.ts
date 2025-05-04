@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,12 +62,29 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				regulynx: {
+					blue: '#1EAEDB',
+					'blue-light': '#33C3F0',
+					'gray-dark': '#403E43',
+					'gray-medium': '#8A898C',
+					'gray-light': '#F6F6F7',
+					green: '#F2FCE2',
+					'green-accent': '#4CAF50',
+					'red-alert': '#ea384c',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				'ibm-plex': ['IBM Plex Sans', 'sans-serif'],
+				'ibm-plex-mono': ['IBM Plex Mono', 'monospace'],
+			},
+			boxShadow: {
+				'card-hover': '0 4px 12px rgba(0, 0, 0, 0.08)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -84,12 +102,34 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'fade-out': {
+					'0%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					},
+					'100%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					}
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'fade-out': 'fade-out 0.3s ease-out',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
