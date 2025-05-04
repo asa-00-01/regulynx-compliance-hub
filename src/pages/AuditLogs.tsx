@@ -7,10 +7,24 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AuditLog } from '@/types/supabase';
-import { Search, FileText, User, Calendar } from 'lucide-react';
+import { Search, FileText, User, Calendar, Filter, Download } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+
+interface AuditLogWithProfile extends AuditLog {
+  user_name?: string;
+}
 
 const AuditLogs = () => {
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
@@ -37,7 +51,16 @@ const AuditLogs = () => {
         throw error;
       }
       
-      setAuditLogs(data || []);
+      // Transform the data to include user_name
+      const transformedData = data?.map(log => {
+        const profiles = log.profiles as { name: string } | null;
+        return {
+          ...log,
+          user_name: profiles?.name || 'System'
+        };
+      }) || [];
+      
+      setAuditLogs(transformedData);
     } catch (error: any) {
       console.error('Error fetching audit logs:', error);
       toast({
@@ -54,7 +77,8 @@ const AuditLogs = () => {
   const filteredLogs = auditLogs.filter(log => 
     log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.entity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.entity_id?.toLowerCase().includes(searchTerm.toLowerCase())
+    log.entity_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.user_name && log.user_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const formatDate = (dateString: string) => {
@@ -79,6 +103,47 @@ const AuditLogs = () => {
     }
   };
 
+  const getActionBadge = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'create':
+        return <Badge className="bg-green-500">Create</Badge>;
+      case 'update':
+        return <Badge className="bg-blue-500">Update</Badge>;
+      case 'delete':
+        return <Badge className="bg-red-500">Delete</Badge>;
+      case 'verify':
+        return <Badge className="bg-purple-500">Verify</Badge>;
+      default:
+        return <Badge>{action}</Badge>;
+    }
+  };
+
+  const exportToCSV = () => {
+    if (filteredLogs.length === 0) return;
+    
+    // Create CSV content
+    const headers = ['Date', 'User', 'Action', 'Entity', 'Entity ID', 'Details'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredLogs.map(log => [
+        formatDate(log.created_at),
+        log.user_name,
+        log.action,
+        log.entity,
+        log.entity_id,
+        JSON.stringify(log.details).replace(/,/g, ';')
+      ].join(','))
+    ].join('\n');
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    link.click();
+  };
+
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
       <div className="space-y-6">
@@ -89,8 +154,8 @@ const AuditLogs = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -102,6 +167,10 @@ const AuditLogs = () => {
           </div>
           <Button variant="outline" onClick={fetchAuditLogs}>
             Refresh
+          </Button>
+          <Button variant="outline" onClick={exportToCSV} disabled={filteredLogs.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
           </Button>
         </div>
 
@@ -116,10 +185,12 @@ const AuditLogs = () => {
             {loading ? (
               <div className="space-y-4">
                 {Array(5).fill(0).map((_, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 border rounded-md animate-pulse">
-                    <div className="w-20 h-4 bg-muted rounded"></div>
-                    <div className="flex-1 h-4 bg-muted rounded"></div>
-                    <div className="w-32 h-4 bg-muted rounded"></div>
+                  <div key={i} className="flex items-center gap-4 p-4 border rounded-md">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[200px]" />
+                      <Skeleton className="h-4 w-[300px]" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -134,42 +205,50 @@ const AuditLogs = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-1">
-                {filteredLogs.map((log) => (
-                  <div 
-                    key={log.id} 
-                    className="p-4 border rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-muted/50 rounded-md">
-                          {getEntityIcon(log.entity)}
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {log.action} {log.entity}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Entity</TableHead>
+                      <TableHead>Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-xs">
+                          {formatDate(log.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            <span>{log.user_name}</span>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            By {log.profiles?.name || 'System'} • {formatDate(log.created_at)}
+                        </TableCell>
+                        <TableCell>{getActionBadge(log.action)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getEntityIcon(log.entity)}
+                            <span>{log.entity}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {log.entity_id && log.entity_id.substring(0, 8)}
+                            </span>
                           </div>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        Details
-                      </Button>
-                    </div>
-                    {log.details && (
-                      <div className="mt-2 ml-11 text-sm text-muted-foreground">
-                        {typeof log.details === 'object' 
-                          ? Object.entries(log.details).map(([key, value]) => (
-                              <div key={key}>{key}: {String(value)}</div>
-                            ))
-                          : String(log.details)
-                        }
-                      </div>
-                    )}
-                  </div>
-                ))}
+                        </TableCell>
+                        <TableCell>
+                          {log.details && typeof log.details === 'object' && (
+                            <pre className="text-xs overflow-hidden max-w-[300px] text-ellipsis whitespace-nowrap">
+                              {JSON.stringify(log.details)}
+                            </pre>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
