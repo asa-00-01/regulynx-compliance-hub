@@ -113,9 +113,16 @@ type UserWithRiskScore = {
   kycRisk: number;
 };
 
+// Define a type for the risk distribution data that includes the color property
+type RiskDistributionItem = {
+  name: string;
+  value: number;
+  color: string;
+};
+
 const RiskScoringEngine: React.FC = () => {
   const [usersWithRiskScores, setUsersWithRiskScores] = useState<UserWithRiskScore[]>([]);
-  const [riskDistribution, setRiskDistribution] = useState<{ name: string; value: number }[]>([]);
+  const [riskDistribution, setRiskDistribution] = useState<RiskDistributionItem[]>([]);
 
   useEffect(() => {
     // Calculate risk scores for all users

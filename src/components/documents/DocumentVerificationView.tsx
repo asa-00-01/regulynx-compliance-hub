@@ -16,6 +16,16 @@ interface DocumentVerificationViewProps {
   onVerificationComplete: () => void;
 }
 
+// Define a type for the extracted data to ensure type safety
+interface ExtractedData {
+  name?: string;
+  dob?: string;
+  idNumber?: string;
+  nationality?: string;
+  expiryDate?: string;
+  rejection_reason?: string;
+}
+
 const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({ 
   document, 
   onVerificationComplete 
@@ -83,6 +93,10 @@ const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Create a properly typed extracted data object
+      const currentExtractedData = document.extracted_data ? 
+        (document.extracted_data as unknown as ExtractedData) : {};
+      
       const { error } = await supabase
         .from('documents')
         .update({
@@ -90,7 +104,7 @@ const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({
           verified_by: user.id,
           verification_date: new Date().toISOString(),
           extracted_data: {
-            ...document.extracted_data,
+            ...currentExtractedData,
             rejection_reason: rejectionReason
           }
         })
@@ -128,8 +142,9 @@ const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({
     }
   };
 
-  // Format extracted data for display
-  const extractedData = document.extracted_data || {};
+  // Cast extracted data to the proper type
+  const extractedData = document.extracted_data ? 
+    (document.extracted_data as unknown as ExtractedData) : {};
 
   return (
     <Card className="w-full">
