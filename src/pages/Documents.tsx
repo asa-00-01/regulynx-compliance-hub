@@ -1,116 +1,90 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { DocumentStatus, Document } from '@/types';
-import { FileText, Upload, CheckCircle, AlertCircle } from 'lucide-react';
-
-// Mock documents data
-const mockDocuments: Document[] = [
-  {
-    id: '1',
-    userId: '101',
-    type: 'passport',
-    fileName: 'passport_john_doe.pdf',
-    uploadDate: '2025-05-01T10:30:00Z',
-    status: 'pending',
-    extractedData: {
-      name: 'John Doe',
-      dob: '1985-06-15',
-      idNumber: 'P12345678',
-      nationality: 'Sweden',
-      expiryDate: '2030-06-14',
-    },
-  },
-  {
-    id: '2',
-    userId: '102',
-    type: 'id',
-    fileName: 'national_id_anna.jpg',
-    uploadDate: '2025-05-02T09:15:00Z',
-    status: 'verified',
-    verifiedBy: '1',
-    verificationDate: '2025-05-02T14:20:00Z',
-    extractedData: {
-      name: 'Anna Johansson',
-      dob: '1990-03-22',
-      idNumber: '900322-1234',
-      nationality: 'Sweden',
-    },
-  },
-  {
-    id: '3',
-    userId: '103',
-    type: 'license',
-    fileName: 'drivers_license_mikhail.png',
-    uploadDate: '2025-05-03T11:45:00Z',
-    status: 'rejected',
-    verifiedBy: '1',
-    verificationDate: '2025-05-03T16:30:00Z',
-  },
-  {
-    id: '4',
-    userId: '104',
-    type: 'passport',
-    fileName: 'passport_sarah.pdf',
-    uploadDate: '2025-05-03T13:10:00Z',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    userId: '105',
-    type: 'id',
-    fileName: 'national_id_erik.jpg',
-    uploadDate: '2025-05-04T08:20:00Z',
-    status: 'pending',
-  },
-];
+import { DocumentStatus, Document } from '@/types/supabase';
+import { FileText, Clock, CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { usePermissions } from '@/hooks/use-permissions';
+import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
+import DocumentVerificationView from '@/components/documents/DocumentVerificationView';
+import DocumentDetailsModal from '@/components/documents/DocumentDetailsModal';
+import DashboardMetricsCard from '@/components/dashboard/DashboardMetricsCard';
 
 const Documents = () => {
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<DocumentStatus | 'all'>('all');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<'passport' | 'id' | 'license'>('passport');
-  const [uploading, setUploading] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { canApproveDocuments } = usePermissions();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+  // Statistics
+  const [stats, setStats] = useState({
+    pending: 0,
+    verified: 0,
+    rejected: 0,
+    total: 0
+  });
+
+  // Fetch documents
+  const fetchDocuments = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // For admin/compliance officers, fetch all documents
+      // For regular users, fetch only their own documents
+      let query = supabase
+        .from('documents')
+        .select('*');
+      
+      if (!canApproveDocuments()) {
+        query = query.eq('user_id', user.id);
+      }
+        
+      const { data, error } = await query
+        .order('upload_date', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setDocuments(data);
+        
+        // Update stats
+        setStats({
+          pending: data.filter(doc => doc.status === 'pending').length,
+          verified: data.filter(doc => doc.status === 'verified').length,
+          rejected: data.filter(doc => doc.status === 'rejected').length,
+          total: data.length
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast({
+        title: "Error fetching documents",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-
-    setUploading(true);
-
-    // Simulate upload delay
-    setTimeout(() => {
-      const newDocument: Document = {
-        id: `${documents.length + 1}`,
-        userId: '107', // Mock user ID
-        type: documentType,
-        fileName: selectedFile.name,
-        uploadDate: new Date().toISOString(),
-        status: 'pending',
-      };
-
-      setDocuments([newDocument, ...documents]);
-      setSelectedFile(null);
-      setUploading(false);
-
-      toast({
-        title: 'Document uploaded successfully',
-        description: 'Your document has been uploaded and is pending review.',
-      });
-    }, 1500);
-  };
+  // Fetch documents on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      fetchDocuments();
+    }
+  }, [user]);
 
   const filteredDocuments = activeTab === 'all' 
     ? documents 
@@ -119,7 +93,7 @@ const Documents = () => {
   const getStatusIcon = (status: DocumentStatus) => {
     switch (status) {
       case 'pending':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-yellow-500" />;
       case 'verified':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'rejected':
@@ -127,86 +101,75 @@ const Documents = () => {
     }
   };
 
+  const handleViewDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowDetailsModal(true);
+  };
+
+  const handleReviewDocument = (doc: Document) => {
+    setDocumentForReview(doc);
+  };
+
+  const handleVerificationComplete = () => {
+    setDocumentForReview(null);
+    fetchDocuments();
+  };
+
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'support']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Document Management</h1>
           <p className="text-muted-foreground">
-            Upload and manage KYC documents
+            Upload, verify and manage KYC documents
           </p>
         </div>
 
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <DashboardMetricsCard
+            title="Total Documents"
+            value={stats.total}
+            icon={FileText}
+          />
+          <DashboardMetricsCard
+            title="Pending Review"
+            value={stats.pending}
+            icon={Clock}
+            valueColor="text-yellow-600"
+          />
+          <DashboardMetricsCard
+            title="Verified Documents"
+            value={stats.verified}
+            icon={CheckCircle}
+            valueColor="text-green-600"
+          />
+          <DashboardMetricsCard
+            title="Rejected Documents"
+            value={stats.rejected}
+            icon={AlertCircle}
+            valueColor="text-red-600"
+          />
+        </div>
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {/* Document Upload Card */}
           <Card className="md:col-span-1">
             <CardHeader>
-              <CardTitle>Upload Document</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload Document
+              </CardTitle>
               <CardDescription>
                 Upload a new document for KYC verification
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUpload} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="documentType">Document Type</Label>
-                  <select
-                    id="documentType"
-                    value={documentType}
-                    onChange={(e) => setDocumentType(e.target.value as any)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="passport">Passport</option>
-                    <option value="id">National ID</option>
-                    <option value="license">Driver's License</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="document">Upload File</Label>
-                  <div className="grid w-full items-center gap-1.5">
-                    <div className="flex items-center justify-center w-full">
-                      <label
-                        htmlFor="document"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50"
-                      >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="h-6 w-6 mb-2 text-regulynx-blue" />
-                          <p className="mb-2 text-sm text-center">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            PNG, JPG or PDF (MAX. 10MB)
-                          </p>
-                        </div>
-                        <input
-                          id="document"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                    </div>
-                    {selectedFile && (
-                      <div className="text-sm flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        <span>{selectedFile.name}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={!selectedFile || uploading}
-                >
-                  {uploading ? 'Uploading...' : 'Upload Document'}
-                </Button>
-              </form>
+              <DocumentUploadForm onUploadComplete={fetchDocuments} />
             </CardContent>
           </Card>
 
+          {/* Document List Card */}
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle>Document List</CardTitle>
@@ -228,7 +191,12 @@ const Documents = () => {
                 </TabsList>
 
                 <div className="mt-6 space-y-4">
-                  {filteredDocuments.length === 0 ? (
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="h-10 w-10 rounded-full border-4 border-t-blue-500 border-b-blue-500 border-r-transparent border-l-transparent animate-spin"></div>
+                      <p className="text-sm mt-4">Loading documents...</p>
+                    </div>
+                  ) : filteredDocuments.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <FileText className="h-10 w-10 text-muted-foreground mb-2" />
                       <h3 className="font-medium text-lg">No documents found</h3>
@@ -250,10 +218,10 @@ const Documents = () => {
                       <div className="divide-y">
                         {filteredDocuments.map((doc) => (
                           <div key={doc.id} className="grid grid-cols-4 p-3 items-center">
-                            <div className="font-medium truncate">{doc.fileName}</div>
+                            <div className="font-medium truncate">{doc.file_name}</div>
                             <div className="capitalize">{doc.type}</div>
                             <div>
-                              {new Date(doc.uploadDate).toLocaleDateString('en-SE', {
+                              {new Date(doc.upload_date).toLocaleDateString('en-SE', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric',
@@ -269,9 +237,27 @@ const Documents = () => {
                               }`}>
                                 {getStatusIcon(doc.status)} {doc.status}
                               </span>
-                              <Button variant="ghost" size="sm">
-                                View
-                              </Button>
+                              
+                              <div className="flex gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleViewDocument(doc)}
+                                >
+                                  View
+                                </Button>
+                                
+                                {canApproveDocuments() && doc.status === 'pending' && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="text-blue-600" 
+                                    onClick={() => handleReviewDocument(doc)}
+                                  >
+                                    Review
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -284,73 +270,24 @@ const Documents = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Document Verification</CardTitle>
-            <CardDescription>
-              Review and verify pending documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {documents
-                .filter(doc => doc.status === 'pending')
-                .slice(0, 2)
-                .map((doc) => (
-                  <div 
-                    key={doc.id} 
-                    className="p-4 border rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4"
-                  >
-                    <div className="space-y-2">
-                      <div className="font-medium">{doc.fileName}</div>
-                      <div className="text-sm text-muted-foreground">
-                        <div>Type: <span className="capitalize">{doc.type}</span></div>
-                        <div>
-                          Uploaded: {new Date(doc.uploadDate).toLocaleDateString('en-SE')}
-                        </div>
-                      </div>
-                    </div>
+        {/* Document Review Section */}
+        {documentForReview && (
+          <Card>
+            <CardContent className="pt-6">
+              <DocumentVerificationView 
+                document={documentForReview} 
+                onVerificationComplete={handleVerificationComplete} 
+              />
+            </CardContent>
+          </Card>
+        )}
 
-                    <div className="space-y-2">
-                      <div className="font-medium">Extracted Data</div>
-                      {doc.extractedData ? (
-                        <div className="text-sm">
-                          {doc.extractedData.name && (
-                            <div>Name: {doc.extractedData.name}</div>
-                          )}
-                          {doc.extractedData.dob && (
-                            <div>DOB: {doc.extractedData.dob}</div>
-                          )}
-                          {doc.extractedData.idNumber && (
-                            <div>ID: {doc.extractedData.idNumber}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No data extracted
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col md:items-end justify-center gap-2">
-                      <Button>Verify Document</Button>
-                      <Button variant="outline">Reject</Button>
-                    </div>
-                  </div>
-                ))}
-              
-              {documents.filter(doc => doc.status === 'pending').length === 0 && (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <CheckCircle className="h-10 w-10 text-green-500 mb-2" />
-                  <h3 className="font-medium text-lg">All caught up!</h3>
-                  <p className="text-muted-foreground text-sm">
-                    There are no documents pending verification
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Document Details Modal */}
+        <DocumentDetailsModal 
+          document={selectedDocument} 
+          open={showDetailsModal} 
+          onOpenChange={setShowDetailsModal} 
+        />
       </div>
     </DashboardLayout>
   );

@@ -6,19 +6,21 @@ import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 interface MetricCardProps {
   title: string;
   value: string | number;
-  change: string;
-  changeType: 'increase' | 'decrease' | 'neutral';
+  change?: string;
+  changeType?: 'increase' | 'decrease' | 'neutral';
   icon: React.ElementType;
   changeDirection?: 'positive-up' | 'positive-down' | 'standard';
+  valueColor?: string;
 }
 
 const DashboardMetricsCard = ({ 
   title, 
   value, 
   change, 
-  changeType, 
+  changeType = 'neutral', 
   icon: Icon, 
-  changeDirection = 'standard' 
+  changeDirection = 'standard',
+  valueColor
 }: MetricCardProps) => {
   // Determine the appropriate color class based on change type and direction
   const getChangeColorClass = () => {
@@ -37,6 +39,7 @@ const DashboardMetricsCard = ({
   };
 
   const changeColorClass = getChangeColorClass();
+  const valueColorClass = valueColor || '';
 
   return (
     <Card>
@@ -45,25 +48,27 @@ const DashboardMetricsCard = ({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs">
-          {changeType === 'increase' ? (
-            <span className={`flex items-center ${changeColorClass}`}>
-              <ArrowUpRight className="mr-1 h-3 w-3" />
-              {change} since yesterday
-            </span>
-          ) : changeType === 'decrease' ? (
-            <span className={`flex items-center ${changeColorClass}`}>
-              <ArrowDownRight className="mr-1 h-3 w-3" />
-              {change} since yesterday
-            </span>
-          ) : (
-            <span className="flex items-center text-muted-foreground">
-              <Minus className="mr-1 h-3 w-3" />
-              No change since yesterday
-            </span>
-          )}
-        </p>
+        <div className={`text-2xl font-bold ${valueColorClass}`}>{value}</div>
+        {change && (
+          <p className="text-xs">
+            {changeType === 'increase' ? (
+              <span className={`flex items-center ${changeColorClass}`}>
+                <ArrowUpRight className="mr-1 h-3 w-3" />
+                {change} since yesterday
+              </span>
+            ) : changeType === 'decrease' ? (
+              <span className={`flex items-center ${changeColorClass}`}>
+                <ArrowDownRight className="mr-1 h-3 w-3" />
+                {change} since yesterday
+              </span>
+            ) : (
+              <span className="flex items-center text-muted-foreground">
+                <Minus className="mr-1 h-3 w-3" />
+                No change since yesterday
+              </span>
+            )}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
