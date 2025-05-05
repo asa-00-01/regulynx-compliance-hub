@@ -12,6 +12,7 @@ import Documents from "./pages/Documents";
 import Compliance from "./pages/Compliance";
 import Users from "./pages/Users";
 import AuditLogs from "./pages/AuditLogs";
+import RiskAnalysis from "./pages/RiskAnalysis";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/compliance" element={<Compliance />} />
             <Route path="/users" element={<Users />} />
             <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route path="/risk-analysis" element={<RiskAnalysis />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
