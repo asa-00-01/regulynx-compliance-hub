@@ -3,6 +3,9 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Document } from '@/types';
+import { CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface RecentDocumentsTableProps {
   documents: Document[];
@@ -10,6 +13,25 @@ interface RecentDocumentsTableProps {
 }
 
 const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps) => {
+  const navigate = useNavigate();
+  const { canApproveDocuments } = usePermissions();
+  
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'verified': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'rejected': return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'pending': default: return <Clock className="h-4 w-4 text-yellow-500" />;
+    }
+  };
+  
+  const handleReviewClick = () => {
+    navigate('/documents');
+  };
+  
+  const handleViewAllClick = () => {
+    navigate('/documents');
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -44,29 +66,33 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                     <span className="capitalize">{doc.type}</span>
                   </div>
                   <div>
-                    {new Date(doc.uploadDate).toLocaleDateString('en-SE', {
+                    {new Date(doc.uploadDate).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
                     })}
                   </div>
                   <div>
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      doc.status === 'pending' 
-                        ? 'bg-yellow-100 text-yellow-800' 
-                        : doc.status === 'verified' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {doc.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(doc.status)}
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        doc.status === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : doc.status === 'verified' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {doc.status}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={handleViewAllClick}>
+                      <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
-                    {doc.status === 'pending' && (
-                      <Button size="sm">
+                    {doc.status === 'pending' && canApproveDocuments() && (
+                      <Button size="sm" onClick={handleReviewClick}>
                         Review
                       </Button>
                     )}
@@ -77,7 +103,7 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button variant="outline">View All Documents</Button>
+          <Button variant="outline" onClick={handleViewAllClick}>View All Documents</Button>
         </div>
       </CardContent>
     </Card>

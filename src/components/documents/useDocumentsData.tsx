@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { usePermissions } from '@/hooks/use-permissions';
+import { ensureMockDocuments } from './mockDocumentData';
 
 export const useDocumentsData = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -47,15 +48,24 @@ export const useDocumentsData = () => {
       
       if (error) throw error;
       
+      let documentList: Document[] = [];
+      
       if (data) {
-        setDocuments(data);
+        documentList = data;
+        
+        // If no documents found or in development mode, add mock data
+        if (documentList.length === 0 || process.env.NODE_ENV === 'development') {
+          documentList = ensureMockDocuments(documentList);
+        }
+        
+        setDocuments(documentList);
         
         // Update stats
         setStats({
-          pending: data.filter(doc => doc.status === 'pending').length,
-          verified: data.filter(doc => doc.status === 'verified').length,
-          rejected: data.filter(doc => doc.status === 'rejected').length,
-          total: data.length
+          pending: documentList.filter(doc => doc.status === 'pending').length,
+          verified: documentList.filter(doc => doc.status === 'verified').length,
+          rejected: documentList.filter(doc => doc.status === 'rejected').length,
+          total: documentList.length
         });
       }
     } catch (error) {
@@ -65,6 +75,18 @@ export const useDocumentsData = () => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      
+      // In case of error, use mock data in development
+      if (process.env.NODE_ENV === 'development') {
+        const mockDocs = ensureMockDocuments([]);
+        setDocuments(mockDocs);
+        setStats({
+          pending: mockDocs.filter(doc => doc.status === 'pending').length,
+          verified: mockDocs.filter(doc => doc.status === 'verified').length,
+          rejected: mockDocs.filter(doc => doc.status === 'rejected').length,
+          total: mockDocs.length
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -92,3 +114,5 @@ export const useDocumentsData = () => {
     setDocumentForReview
   };
 };
+
+export default useDocumentsData;

@@ -7,6 +7,7 @@ import DocumentStats from '@/components/documents/DocumentStats';
 import DocumentsGrid from '@/components/documents/DocumentsGrid';
 import DocumentVerificationView from '@/components/documents/DocumentVerificationView';
 import DocumentDetailsModal from '@/components/documents/DocumentDetailsModal';
+import DocumentOverview from '@/components/documents/DocumentOverview';
 
 const Documents = () => {
   const {
@@ -47,6 +48,9 @@ const Documents = () => {
             Upload, verify and manage KYC documents
           </p>
         </div>
+
+        {/* Document Overview */}
+        <DocumentOverview documents={documents} />
 
         {/* Statistics Cards */}
         <DocumentStats stats={stats} />
