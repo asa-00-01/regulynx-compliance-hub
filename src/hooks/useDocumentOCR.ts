@@ -73,9 +73,10 @@ export function useDocumentOCR() {
       const worker = await createWorker('eng');
       
       // Use the correct progress event handler for Tesseract.js
-      worker.setProgress((progress) => {
-        if (progress.progress !== undefined) {
-          setOcrProgress(Math.round(progress.progress * 100));
+      // Updated to use the correct API for progress handling
+      worker.setLogger(m => {
+        if (m.progress !== undefined) {
+          setOcrProgress(Math.round(m.progress * 100));
         }
       });
       
