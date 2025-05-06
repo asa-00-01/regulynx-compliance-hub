@@ -2,149 +2,93 @@
 import { useState } from 'react';
 import { createWorker } from 'tesseract.js';
 
-interface ExtractedData {
-  fullText: string;
+type ExtractedData = {
   name?: string;
   idNumber?: string;
-  dateOfBirth?: string;
-  expiryDate?: string;
   nationality?: string;
-  rejection_reason?: string;
-}
+  expiryDate?: string;
+  dateOfBirth?: string;
+};
 
-export const useDocumentOCR = () => {
-  const [ocrResult, setOcrResult] = useState<ExtractedData | null>(null);
-  const [loading, setLoading] = useState(false);
+export default function useDocumentOCR() {
   const [progress, setProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const extractName = (text: string): string | undefined => {
-    const nameRegex = /Name:\s*([A-Za-z\s]+)/i;
-    const match = text.match(nameRegex);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const extractIDNumber = (text: string): string | undefined => {
-    const idRegex = /ID Number:\s*(\w+)/i;
-    const match = text.match(idRegex);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const extractDateOfBirth = (text: string): string | undefined => {
-    const dobRegex = /Date of Birth:\s*(\d{2}[./-]\d{2}[./-]\d{4})/i;
-    const match = text.match(dobRegex);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const extractExpiryDate = (text: string): string | undefined => {
-    const expiryRegex = /Expiry Date:\s*(\d{2}[./-]\d{2}[./-]\d{4})/i;
-    const match = text.match(expiryRegex);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const extractNationality = (text: string): string | undefined => {
-    const nationalityRegex = /Nationality:\s*([A-Za-z\s]+)/i;
-    const match = text.match(nationalityRegex);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const processImage = async (imageFile: File): Promise<ExtractedData> => {
-    setLoading(true);
+  const processImage = async (imageFile: File): Promise<ExtractedData | null> => {
+    setIsProcessing(true);
     setProgress(0);
-    
+    setError(null);
+    setExtractedData(null);
+
     try {
       const worker = await createWorker('eng');
       
-      // Set up logger for progress tracking
-      worker.setLogger((m) => {
-        if (m.status === 'recognizing text' && m.progress !== undefined) {
-          setProgress(Math.floor(m.progress * 100));
-        }
+      // Configure progress tracking using the proper method
+      worker.setProgressHandler((p) => {
+        setProgress(Math.floor(p.progress * 100));
       });
 
-      const { data } = await worker.recognize(imageFile);
+      const { data: { text } } = await worker.recognize(imageFile);
       await worker.terminate();
+
+      // Extract data patterns from text
+      const extractedData = extractInformation(text);
       
-      const fullText = data.text;
-      
-      // Extract information from the OCR result
-      const name = extractName(fullText);
-      const idNumber = extractIDNumber(fullText);
-      const dateOfBirth = extractDateOfBirth(fullText);
-      const expiryDate = extractExpiryDate(fullText);
-      const nationality = extractNationality(fullText);
-      
-      const result = {
-        fullText,
-        name,
-        idNumber,
-        dateOfBirth,
-        expiryDate,
-        nationality,
-      };
-      
-      setOcrResult(result);
-      setExtractedData(result);
-      setLoading(false);
-      setProgress(100);
-      
-      return result;
-    } catch (error) {
-      console.error('OCR processing error:', error);
-      setLoading(false);
-      throw new Error('Failed to process document');
+      setExtractedData(extractedData);
+      setIsProcessing(false);
+      return extractedData;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred during OCR processing';
+      setError(errorMessage);
+      setIsProcessing(false);
+      return null;
     }
   };
 
-  // Mock process function for testing
-  const processDocument = async (file: File, documentType: string): Promise<ExtractedData> => {
-    setLoading(true);
-    setProgress(0);
+  // Simple pattern matching for document information
+  const extractInformation = (text: string): ExtractedData => {
+    const data: ExtractedData = {};
     
-    // Simulate processing time
-    await new Promise(resolve => {
-      let currentProgress = 0;
-      const interval = setInterval(() => {
-        currentProgress += 10;
-        setProgress(currentProgress);
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 300);
-    });
-
-    // Generate mock data based on document type
-    const mockData: ExtractedData = {
-      fullText: `This is mock OCR text for a ${documentType} document.`,
-      name: documentType === 'passport' ? 'Jane Doe' : 'John Smith',
-      idNumber: documentType === 'passport' ? 'P12345678' : 'ID98765432',
-      dateOfBirth: '1990-01-01',
-      expiryDate: '2030-01-01',
-      nationality: documentType === 'passport' ? 'United States' : 'Canada'
-    };
+    // Extract name (look for patterns like "Name:" or "Full Name:")
+    const nameMatch = text.match(/(?:Name|Full Name|Surname and given names)[\s:]+([\w\s]+)/i);
+    if (nameMatch && nameMatch[1]) {
+      data.name = nameMatch[1].trim();
+    }
     
-    setOcrResult(mockData);
-    setExtractedData(mockData);
-    setLoading(false);
+    // Extract ID number (look for patterns like "No:", "ID:", "Document No:")
+    const idMatch = text.match(/(?:No|ID|Document No|Passport No)[\s.:]+([A-Z0-9]+)/i);
+    if (idMatch && idMatch[1]) {
+      data.idNumber = idMatch[1].trim();
+    }
     
-    return mockData;
+    // Extract nationality
+    const nationalityMatch = text.match(/(?:Nationality|Country)[\s:]+([\w\s]+)/i);
+    if (nationalityMatch && nationalityMatch[1]) {
+      data.nationality = nationalityMatch[1].trim();
+    }
+    
+    // Extract expiry date
+    const expiryMatch = text.match(/(?:Date of expiry|Expiry Date|Valid Until)[\s:]+([\d\s./-]+)/i);
+    if (expiryMatch && expiryMatch[1]) {
+      data.expiryDate = expiryMatch[1].trim();
+    }
+    
+    // Extract date of birth
+    const dobMatch = text.match(/(?:Date of birth|Birth Date|Born)[\s:]+([\d\s./-]+)/i);
+    if (dobMatch && dobMatch[1]) {
+      data.dateOfBirth = dobMatch[1].trim();
+    }
+    
+    return data;
   };
-
-  const isProcessing = loading;
-  const ocrProgress = progress;
 
   return {
     processImage,
-    processDocument,
-    ocrResult,
-    extractedData,
-    setExtractedData,
-    loading,
-    isProcessing,
     progress,
-    ocrProgress
+    isProcessing,
+    extractedData,
+    error
   };
-};
-
-export default useDocumentOCR;
+}

@@ -11,7 +11,8 @@ import {
   BarChart2, 
   Settings, 
   Clock, 
-  AlertCircle 
+  AlertCircle,
+  BarChart
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -23,12 +24,14 @@ const roleBasedNavItems: Record<UserRole, { path: string; label: string; icon: R
   complianceOfficer: [
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
     { path: '/documents', label: 'Documents', icon: <FileText className="h-5 w-5" /> },
+    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
     { path: '/compliance', label: 'Compliance', icon: <Shield className="h-5 w-5" /> },
     { path: '/customers', label: 'Customers', icon: <Users className="h-5 w-5" /> },
     { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
   ],
   admin: [
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
     { path: '/users', label: 'User Management', icon: <Users className="h-5 w-5" /> },
     { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
     { path: '/settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> },
@@ -36,6 +39,7 @@ const roleBasedNavItems: Record<UserRole, { path: string; label: string; icon: R
   ],
   executive: [
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
     { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
     { path: '/compliance', label: 'Compliance Overview', icon: <Shield className="h-5 w-5" /> },
   ],
