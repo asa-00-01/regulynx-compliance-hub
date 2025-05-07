@@ -26,7 +26,7 @@ export default function useDocumentOCR() {
       const worker = await createWorker('eng');
       
       // Configure progress tracking using the proper method
-      worker.setProgressHandler((p) => {
+      worker.progress((p) => {
         setProgress(Math.floor(p.progress * 100));
       });
 
