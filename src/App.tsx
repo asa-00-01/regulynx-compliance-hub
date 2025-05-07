@@ -14,6 +14,7 @@ import Index from '@/pages/Index';
 import Users from '@/pages/Users';
 import AuditLogs from '@/pages/AuditLogs';
 import RiskAnalysis from '@/pages/RiskAnalysis';
+import SARCenter from '@/pages/SARCenter';
 
 // UI Components
 import { Toaster } from '@/components/ui/toaster';
@@ -33,6 +34,7 @@ function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/audit-logs" element={<AuditLogs />} />
         <Route path="/risk-analysis" element={<RiskAnalysis />} />
+        <Route path="/sar-center" element={<SARCenter />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

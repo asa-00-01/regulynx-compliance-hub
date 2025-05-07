@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { createWorker } from 'tesseract.js';
 
@@ -24,8 +25,8 @@ export default function useDocumentOCR() {
     try {
       const worker = await createWorker('eng');
       
-      // Configure progress tracking using the proper method
-      worker.progress((p) => {
+      // Configure progress tracking using onProgress callback
+      worker.setProgressHandler((p) => {
         setProgress(Math.floor(p.progress * 100));
       });
 
