@@ -17,6 +17,7 @@ import RiskAnalysis from '@/pages/RiskAnalysis';
 import SARCenter from '@/pages/SARCenter';
 import KYCVerification from '@/pages/KYCVerification';
 import AMLMonitoring from '@/pages/AMLMonitoring';
+import Profile from '@/pages/Profile';
 
 // UI Components
 import { Toaster } from '@/components/ui/toaster';
@@ -39,6 +40,7 @@ function App() {
         <Route path="/sar-center" element={<SARCenter />} />
         <Route path="/kyc-verification" element={<KYCVerification />} />
         <Route path="/aml-monitoring" element={<AMLMonitoring />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
