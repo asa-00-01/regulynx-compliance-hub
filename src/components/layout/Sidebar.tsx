@@ -13,9 +13,12 @@ import {
   Clock, 
   AlertCircle,
   BarChart,
-  FileSearch
+  FileSearch,
+  UserCheck,
+  CircleDollarSign
 } from 'lucide-react';
 import { UserRole } from '@/types';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,15 +27,18 @@ interface SidebarProps {
 const roleBasedNavItems: Record<UserRole, { path: string; label: string; icon: React.ReactNode }[]> = {
   complianceOfficer: [
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/kyc-verification', label: 'KYC Verification', icon: <UserCheck className="h-5 w-5" /> },
+    { path: '/aml-monitoring', label: 'AML Monitoring', icon: <CircleDollarSign className="h-5 w-5" /> },
     { path: '/documents', label: 'Documents', icon: <FileText className="h-5 w-5" /> },
     { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
     { path: '/compliance', label: 'Compliance', icon: <Shield className="h-5 w-5" /> },
     { path: '/sar-center', label: 'SAR Center', icon: <FileSearch className="h-5 w-5" /> },
-    { path: '/customers', label: 'Customers', icon: <Users className="h-5 w-5" /> },
-    { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
+    { path: '/risk-analysis', label: 'Risk Analysis', icon: <BarChart2 className="h-5 w-5" /> },
   ],
   admin: [
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/kyc-verification', label: 'KYC Verification', icon: <UserCheck className="h-5 w-5" /> },
+    { path: '/aml-monitoring', label: 'AML Monitoring', icon: <CircleDollarSign className="h-5 w-5" /> },
     { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
     { path: '/sar-center', label: 'SAR Center', icon: <FileSearch className="h-5 w-5" /> },
     { path: '/users', label: 'User Management', icon: <Users className="h-5 w-5" /> },

@@ -15,6 +15,8 @@ import Users from '@/pages/Users';
 import AuditLogs from '@/pages/AuditLogs';
 import RiskAnalysis from '@/pages/RiskAnalysis';
 import SARCenter from '@/pages/SARCenter';
+import KYCVerification from '@/pages/KYCVerification';
+import AMLMonitoring from '@/pages/AMLMonitoring';
 
 // UI Components
 import { Toaster } from '@/components/ui/toaster';
@@ -35,6 +37,8 @@ function App() {
         <Route path="/audit-logs" element={<AuditLogs />} />
         <Route path="/risk-analysis" element={<RiskAnalysis />} />
         <Route path="/sar-center" element={<SARCenter />} />
+        <Route path="/kyc-verification" element={<KYCVerification />} />
+        <Route path="/aml-monitoring" element={<AMLMonitoring />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

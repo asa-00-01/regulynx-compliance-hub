@@ -7,7 +7,10 @@ import useDashboardData from '@/hooks/useDashboardData';
 import DashboardMetricsCard from '@/components/dashboard/DashboardMetricsCard';
 import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
 import ComplianceCasesCard from '@/components/dashboard/ComplianceCasesCard';
+import ComplianceSummaryCard from '@/components/dashboard/ComplianceSummaryCard';
 import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
+import { mockComplianceMetrics, mockRiskDistribution } from '@/components/aml/mockTransactionData';
+import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -60,7 +63,9 @@ const Dashboard = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <RiskScoreChart data={riskScoreData} loading={loading} />
+          <div className="lg:col-span-2">
+            <RiskScoreChart data={riskScoreData} loading={loading} />
+          </div>
           <ComplianceCasesCard 
             complianceCases={complianceCases} 
             loading={loading} 
@@ -68,7 +73,15 @@ const Dashboard = () => {
           />
         </div>
 
-        <RecentDocumentsTable documents={recentDocuments} loading={loading} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <RecentDocumentsTable documents={recentDocuments} loading={loading} />
+          </div>
+          <div className="space-y-6">
+            <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
+            <RiskDistributionChart data={mockRiskDistribution} loading={loading} />
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import KYCMonitoringDashboard from '@/components/compliance/KYCMonitoringDashboard';
 import RiskScoringEngine from '@/components/compliance/RiskScoringEngine';
@@ -8,6 +10,7 @@ import ComplianceCaseManagement from '@/components/compliance/ComplianceCaseMana
 import RedFlagsAlerts from '@/components/compliance/RedFlagsAlerts';
 import UserActivityLogs from '@/components/compliance/UserActivityLogs';
 import { usePermissions } from '@/hooks/use-permissions';
+import { UserCheck, CircleDollarSign, FileSearch, Shield } from 'lucide-react';
 
 const Compliance = () => {
   const [activeTab, setActiveTab] = useState('kyc-monitoring');
@@ -21,6 +24,44 @@ const Compliance = () => {
           <p className="text-muted-foreground">
             Monitor and manage KYC compliance, risk scores, and compliance cases
           </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link to="/kyc-verification">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <UserCheck className="h-10 w-10 text-blue-500" />
+                <span className="font-medium">KYC Verification</span>
+              </Button>
+            </div>
+          </Link>
+          
+          <Link to="/aml-monitoring">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <CircleDollarSign className="h-10 w-10 text-green-500" />
+                <span className="font-medium">AML Monitoring</span>
+              </Button>
+            </div>
+          </Link>
+          
+          <Link to="/sar-center">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <FileSearch className="h-10 w-10 text-amber-500" />
+                <span className="font-medium">SAR Center</span>
+              </Button>
+            </div>
+          </Link>
+          
+          <Link to="/risk-analysis">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <Shield className="h-10 w-10 text-purple-500" />
+                <span className="font-medium">Risk Analysis</span>
+              </Button>
+            </div>
+          </Link>
         </div>
 
         <Tabs 
