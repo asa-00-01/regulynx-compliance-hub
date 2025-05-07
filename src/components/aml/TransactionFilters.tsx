@@ -86,7 +86,7 @@ const TransactionFilters = ({ onFilterChange, filters }: TransactionFiltersProps
                 <SelectValue placeholder="Any country" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any country</SelectItem>
+                <SelectItem value="any">Any country</SelectItem>
                 {HIGH_RISK_COUNTRIES.map((country) => (
                   <SelectItem key={country.countryCode} value={country.countryCode}>
                     {country.countryName} ({country.countryCode})

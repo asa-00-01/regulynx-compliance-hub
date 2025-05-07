@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { BadgeVariant } from '@/components/ui/badge-variants';
 
 interface RiskBadgeProps {
   score: number;
@@ -10,9 +11,9 @@ interface RiskBadgeProps {
 }
 
 const RiskBadge = ({ score, showText = true, className }: RiskBadgeProps) => {
-  const getVariant = () => {
+  const getVariant = (): BadgeVariant => {
     if (score >= 75) return "destructive";
-    if (score >= 50) return "warning";
+    if (score >= 50) return "secondary";
     if (score >= 25) return "secondary";
     return "outline";
   };
