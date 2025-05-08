@@ -7,10 +7,13 @@ import TransactionsOverviewTable from '@/components/aml/TransactionsOverviewTabl
 import TransactionFilters from '@/components/aml/TransactionFilters';
 import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
+import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
+import { useToast } from '@/hooks/use-toast';
 
 const AMLMonitoringPage = () => {
   const [activeTab, setActiveTab] = useState('transactions');
   const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     dateRange: '30days',
     minAmount: undefined,
@@ -19,15 +22,33 @@ const AMLMonitoringPage = () => {
     riskLevel: 'all',
     onlyFlagged: false
   });
+  const { toast } = useToast();
 
   const handleViewTransactionDetails = (transaction: AMLTransaction) => {
     setSelectedTransaction(transaction);
-    // In a real app, this would open a modal or navigate to a details page
-    console.log("View transaction:", transaction);
+    setDetailsModalOpen(true);
   };
 
   const handleFilterChange = (newFilters: any) => {
     setFilters({ ...filters, ...newFilters });
+  };
+
+  const handleFlagTransaction = (transaction: AMLTransaction) => {
+    toast({
+      title: 'Transaction Flagged',
+      description: `Transaction ${transaction.id.substring(0, 8)}... has been flagged for review.`,
+    });
+    // In a real application, we would update the transaction status in the database
+    setDetailsModalOpen(false);
+  };
+
+  const handleCreateCase = (transaction: AMLTransaction) => {
+    toast({
+      title: 'Case Created',
+      description: `A compliance case has been created for transaction ${transaction.id.substring(0, 8)}...`,
+    });
+    // In a real application, we would create a case in the database
+    setDetailsModalOpen(false);
   };
 
   // Apply filters to transactions
@@ -101,6 +122,8 @@ const AMLMonitoringPage = () => {
                   <TransactionsOverviewTable 
                     transactions={filteredTransactions}
                     onViewDetails={handleViewTransactionDetails}
+                    onFlagTransaction={handleFlagTransaction}
+                    onCreateCase={handleCreateCase}
                   />
                 </CardContent>
               </Card>
@@ -130,6 +153,15 @@ const AMLMonitoringPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Transaction Details Modal */}
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        open={detailsModalOpen}
+        onOpenChange={setDetailsModalOpen}
+        onFlag={handleFlagTransaction}
+        onCreateCase={handleCreateCase}
+      />
     </DashboardLayout>
   );
 };

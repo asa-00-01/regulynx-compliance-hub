@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -11,7 +11,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Flag, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { AMLTransaction, HIGH_RISK_COUNTRIES } from '@/types/aml';
 import { formatCurrency } from '@/lib/utils';
 import RiskBadge from '../common/RiskBadge';
@@ -19,28 +18,16 @@ import RiskBadge from '../common/RiskBadge';
 interface TransactionsOverviewTableProps {
   transactions: AMLTransaction[];
   onViewDetails: (transaction: AMLTransaction) => void;
+  onFlagTransaction: (transaction: AMLTransaction) => void;
+  onCreateCase: (transaction: AMLTransaction) => void;
 }
 
 const TransactionsOverviewTable = ({ 
   transactions,
-  onViewDetails
+  onViewDetails,
+  onFlagTransaction,
+  onCreateCase
 }: TransactionsOverviewTableProps) => {
-  const { toast } = useToast();
-
-  const handleFlagTransaction = (transaction: AMLTransaction) => {
-    toast({
-      title: 'Transaction Flagged',
-      description: `Transaction ${transaction.id} has been flagged for review.`,
-    });
-  };
-
-  const handleCreateCase = (transaction: AMLTransaction) => {
-    toast({
-      title: 'Case Created',
-      description: `A new case has been created for transaction ${transaction.id}.`,
-    });
-  };
-
   const isHighRiskCountry = (countryCode: string) => {
     return HIGH_RISK_COUNTRIES.some(country => 
       country.countryCode === countryCode && 
@@ -132,7 +119,7 @@ const TransactionsOverviewTable = ({
                     <Button 
                       size="sm" 
                       variant="secondary"
-                      onClick={() => handleFlagTransaction(transaction)}
+                      onClick={() => onFlagTransaction(transaction)}
                     >
                       <Flag className="h-4 w-4 mr-1" />
                       Flag
@@ -140,7 +127,7 @@ const TransactionsOverviewTable = ({
                     <Button 
                       size="sm" 
                       variant="default"
-                      onClick={() => handleCreateCase(transaction)}
+                      onClick={() => onCreateCase(transaction)}
                     >
                       <FileText className="h-4 w-4 mr-1" />
                       Case
