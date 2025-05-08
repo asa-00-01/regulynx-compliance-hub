@@ -53,7 +53,7 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
       </Button>
 
       <div className="flex-1">
-        <div className="relative md:w-64 lg:w-80">
+        <div className="relative max-w-md w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
             type="search"

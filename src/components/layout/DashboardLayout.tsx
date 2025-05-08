@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
   const { isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -46,7 +48,7 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
       
       {/* Main content area with dynamic margin */}
       <div 
-        className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
+        className={`flex flex-col flex-1 w-full transition-all duration-300 ease-in-out ${
           sidebarOpen ? "ml-64" : "ml-16"
         }`}
       >

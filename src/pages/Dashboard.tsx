@@ -31,7 +31,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <div className="flex flex-col space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
@@ -48,7 +48,7 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {highlightedStats.map((stat, index) => (
               <DashboardMetricsCard
                 key={index}
