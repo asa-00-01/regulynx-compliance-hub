@@ -1,25 +1,39 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { KYCUser, UserFlags, KYCStatus } from '@/types/kyc';
-import { useToast } from '@/hooks/use-toast';
-import { UserCheck, UserX, FileQuestion, Upload, ShieldCheck } from 'lucide-react';
-import UserFlagsDisplay from './UserFlagsDisplay';
-import SanctionIndicator from './SanctionIndicator';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { 
+  User, 
+  Calendar, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  AlertTriangle, 
+  Shield, 
+  ShieldCheck, 
+  ShieldOff, 
+  FileText,
+  Flag,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
+import RiskBadge from '@/components/common/RiskBadge';
+import { useToast } from '@/components/ui/use-toast';
 import { useRiskCalculation } from '@/hooks/useRiskCalculation';
-import RiskBadge from '../common/RiskBadge';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserDetailModalProps {
   user: KYCUser & { flags: UserFlags };
@@ -27,400 +41,484 @@ interface UserDetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalProps) => {
-  const [activeTab, setActiveTab] = useState('details');
-  const [notes, setNotes] = useState('');
-  const [kycStatus, setKycStatus] = useState<KYCStatus>('pending');
+const UserDetailModal: React.FC<UserDetailModalProps> = ({ 
+  user, 
+  open, 
+  onOpenChange 
+}) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [caseNotes, setCaseNotes] = useState('');
+  const [kycStatus, setKycStatus] = useState<KYCStatus>(user.flags.is_verified_pep ? 'information_requested' : 'pending');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const riskData = useRiskCalculation(user);
-
-  const handleVerify = () => {
-    setKycStatus('verified');
-    toast({
-      title: 'User Verified',
-      description: `${user.fullName} has been marked as verified.`,
-      variant: 'default',
-    });
-    onOpenChange(false);
-  };
-
-  const handleReject = () => {
-    setKycStatus('rejected');
-    toast({
-      title: 'User Rejected',
-      description: `${user.fullName} has been rejected for verification.`,
-      variant: 'destructive',
-    });
-    onOpenChange(false);
-  };
-
-  const handleRequestInfo = () => {
-    setKycStatus('information_requested');
-    toast({
-      title: 'More Information Requested',
-      description: `A request for more information has been sent to ${user.fullName}.`,
-      variant: 'default',
-    });
-    onOpenChange(false);
-  };
-
-  const getKycBadge = () => {
-    switch (kycStatus) {
-      case 'verified':
-        return <Badge variant="default">Verified</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
-      case 'information_requested':
-        return <Badge variant="secondary">Information Requested</Badge>;
-      default:
-        return <Badge variant="outline">Pending</Badge>;
+  
+  const userRiskData = useRiskCalculation(user);
+  
+  const handleApproveKYC = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, this would update the database
+      // For now, we'll just show a toast notification
+      setTimeout(() => {
+        toast({
+          title: "KYC Approved",
+          description: `${user.fullName}'s KYC verification has been approved.`,
+        });
+        setIsSubmitting(false);
+        onOpenChange(false);
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update KYC status. Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
     }
   };
-
-  // Mock transaction data for the user
-  const mockTransactions = [
-    {
-      id: 'tx1',
-      date: '2023-04-15',
-      amount: 5000,
-      currency: 'SEK',
-      type: 'Deposit'
-    },
-    {
-      id: 'tx2',
-      date: '2023-04-10',
-      amount: 12500,
-      currency: 'SEK',
-      type: 'Transfer'
-    },
-    {
-      id: 'tx3',
-      date: '2023-04-05',
-      amount: 3200,
-      currency: 'SEK',
-      type: 'Withdrawal'
+  
+  const handleRejectKYC = async () => {
+    if (!caseNotes.trim()) {
+      toast({
+        title: "Notes Required",
+        description: "Please provide rejection reason in the notes.",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
-
-  // Mock document upload status
-  const mockDocuments = {
-    identityDocument: {
-      status: 'verified',
-      uploadDate: '2023-03-20'
-    },
-    addressProof: {
-      status: 'pending',
-      uploadDate: '2023-04-01'
-    },
-    additionalDocuments: {
-      status: 'none',
-      uploadDate: null
+    
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, this would update the database
+      // For now, we'll just show a toast notification
+      setTimeout(() => {
+        toast({
+          title: "KYC Rejected",
+          description: `${user.fullName}'s KYC verification has been rejected.`,
+        });
+        setIsSubmitting(false);
+        onOpenChange(false);
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update KYC status. Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleCreateCase = async () => {
+    if (!caseNotes.trim()) {
+      toast({
+        title: "Notes Required",
+        description: "Please provide details for the compliance case.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, this would create a case in the database
+      // For now, we'll just show a toast notification
+      setTimeout(() => {
+        toast({
+          title: "Case Created",
+          description: `Compliance case created for ${user.fullName}.`,
+        });
+        setIsSubmitting(false);
+        onOpenChange(false);
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create compliance case. Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>User Details: {user.fullName}</DialogTitle>
-            <div className="flex items-center space-x-2">
-              {getKycBadge()}
-              <RiskBadge score={user.flags.riskScore} />
-            </div>
-          </div>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <User className="h-5 w-5" />
+            User Profile: {user.fullName}
+          </DialogTitle>
+          <DialogDescription>
+            KYC verification and compliance information
+          </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="details">Personal Details</TabsTrigger>
-            <TabsTrigger value="flags">Risk & Flags</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="verification">Verification</TabsTrigger>
+        <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
+          <div>
+            <Badge className={user.flags.is_verified_pep ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"}>
+              {user.flags.is_verified_pep ? "PEP" : "Regular Customer"}
+            </Badge>
+            {user.flags.is_sanction_list && (
+              <Badge variant="destructive" className="ml-2">Sanctioned</Badge>
+            )}
+            {!user.flags.is_email_confirmed && (
+              <Badge variant="outline" className="ml-2">Unverified Email</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Risk Score:</span>
+            <RiskBadge score={user.flags.riskScore} showText={true} />
+          </div>
+        </div>
+        
+        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="risk">Risk Analysis</TabsTrigger>
+            <TabsTrigger value="case">Case Management</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="details" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Personal Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm font-semibold">Full Name</div>
-                    <div>{user.fullName || <span className="text-muted-foreground italic">Missing</span>}</div>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Full Name:</span>
+                    <span className="font-medium">{user.fullName}</span>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">Email</div>
-                    <div>{user.email || <span className="text-muted-foreground italic">Missing</span>}</div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Date of Birth:</span>
+                    <span className="font-medium">{user.dateOfBirth}</span>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">Date of Birth</div>
-                    <div>{user.dateOfBirth || <span className="text-muted-foreground italic">Missing</span>}</div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">{user.email}</span>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">Identity Number</div>
-                    <div>{user.identityNumber || <span className="text-muted-foreground italic">Missing</span>}</div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span className="font-medium">{user.phoneNumber || "Not provided"}</span>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">Phone Number</div>
-                    <div>{user.phoneNumber || <span className="text-muted-foreground italic">Missing</span>}</div>
+                  <div className="flex justify-between pb-1">
+                    <span className="text-muted-foreground">Address:</span>
+                    <span className="font-medium">{user.address || "Not provided"}</span>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">Created At</div>
-                    <div>{new Date(user.createdAt).toLocaleDateString()}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Verification Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Account Created:</span>
+                    <span className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Email Verified:</span>
+                    <span className="font-medium flex items-center">
+                      {user.flags.is_email_confirmed ? 
+                        <><CheckCircle className="h-4 w-4 text-green-500 mr-1" /> Yes</> : 
+                        <><XCircle className="h-4 w-4 text-red-500 mr-1" /> No</>}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">Identity Verified:</span>
+                    <span className="font-medium flex items-center">
+                      {user.identityNumber ? 
+                        <><CheckCircle className="h-4 w-4 text-green-500 mr-1" /> Yes</> : 
+                        <><XCircle className="h-4 w-4 text-red-500 mr-1" /> No</>}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="text-muted-foreground">PEP Status:</span>
+                    <span className="font-medium flex items-center">
+                      {user.flags.is_verified_pep ? 
+                        <><AlertTriangle className="h-4 w-4 text-yellow-500 mr-1" /> PEP</> : 
+                        <><CheckCircle className="h-4 w-4 text-green-500 mr-1" /> Not PEP</>}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pb-1">
+                    <span className="text-muted-foreground">Sanctions List:</span>
+                    <span className="font-medium flex items-center">
+                      {user.flags.is_sanction_list ? 
+                        <><AlertTriangle className="h-4 w-4 text-red-500 mr-1" /> Listed</> : 
+                        <><CheckCircle className="h-4 w-4 text-green-500 mr-1" /> Not Listed</>}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
             
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Address</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Transaction Summary
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div>{user.address || <span className="text-muted-foreground italic">No address provided</span>}</div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Metric</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Risk Impact</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Transaction Count (30d)</TableCell>
+                      <TableCell>{userRiskData.transactionCount}</TableCell>
+                      <TableCell>
+                        {userRiskData.riskFactors.highFrequency ? 
+                          <Badge variant="warning">High Volume</Badge> : 
+                          <Badge variant="outline">Normal</Badge>}
+                      </TableCell>
+                      <TableCell>{userRiskData.riskFactors.highFrequency ? "+20 points" : "0 points"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Last Transaction Amount</TableCell>
+                      <TableCell>{userRiskData.recentTransactionAmount.toLocaleString()} SEK</TableCell>
+                      <TableCell>
+                        {userRiskData.riskFactors.highAmount ? 
+                          <Badge variant="warning">High Value</Badge> : 
+                          <Badge variant="outline">Normal</Badge>}
+                      </TableCell>
+                      <TableCell>{userRiskData.riskFactors.highAmount ? "+40 points" : "0 points"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Countries</TableCell>
+                      <TableCell>{userRiskData.transactionCountries.join(", ")}</TableCell>
+                      <TableCell>
+                        {userRiskData.riskFactors.highRiskCountry ? 
+                          <Badge variant="destructive">High Risk</Badge> : 
+                          <Badge variant="outline">Standard</Badge>}
+                      </TableCell>
+                      <TableCell>{userRiskData.riskFactors.highRiskCountry ? "+30 points" : "0 points"}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="flags" className="space-y-4">
+          <TabsContent value="documents" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Risk Analysis</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Identity Documents</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-base font-medium">Overall Risk Score</div>
-                  <RiskBadge score={user.flags.riskScore} showText={true} />
-                </div>
+              <CardContent>
+                <p className="text-muted-foreground text-sm mb-4">
+                  {user.identityNumber ? 
+                    `Identity verified with number: ${user.identityNumber}` : 
+                    "No identity documents have been verified yet."}
+                </p>
                 
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">Risk Factors</div>
-                  <div className="bg-muted p-3 rounded-md space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>High transaction amount</div>
-                      <Badge variant={riskData.riskFactors.highAmount ? "destructive" : "outline"}>
-                        {riskData.riskFactors.highAmount ? '+40 points' : '0 points'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>High-risk country</div>
-                      <Badge variant={riskData.riskFactors.highRiskCountry ? "destructive" : "outline"}>
-                        {riskData.riskFactors.highRiskCountry ? '+30 points' : '0 points'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>High transaction frequency</div>
-                      <Badge variant={riskData.riskFactors.highFrequency ? "secondary" : "outline"}>
-                        {riskData.riskFactors.highFrequency ? '+20 points' : '0 points'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>Incomplete KYC information</div>
-                      <Badge variant={riskData.riskFactors.incompleteKYC ? "secondary" : "outline"}>
-                        {riskData.riskFactors.incompleteKYC ? '+10 points' : '0 points'}
-                      </Badge>
-                    </div>
+                {/* This would be populated from the documents table in a real implementation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="border border-dashed p-4 flex flex-col items-center justify-center text-center">
+                    <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm font-medium">Passport / ID Card</p>
+                    <p className="text-xs text-muted-foreground mb-2">Verification status would show here</p>
+                    <Button variant="outline" size="sm" disabled>View Document</Button>
+                  </Card>
+                  
+                  <Card className="border border-dashed p-4 flex flex-col items-center justify-center text-center">
+                    <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm font-medium">Proof of Address</p>
+                    <p className="text-xs text-muted-foreground mb-2">Not uploaded yet</p>
+                    <Button variant="outline" size="sm" disabled>View Document</Button>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="risk" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Risk Assessment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="font-medium">Overall Risk Score</h3>
+                    <p className="text-muted-foreground text-sm">Based on multiple risk factors</p>
+                  </div>
+                  <div className="text-right">
+                    <RiskBadge score={userRiskData.riskScore} size="lg" showText={true} />
                   </div>
                 </div>
-
-                <div className="pt-2">
-                  <div className="text-sm font-medium mb-2">Missing KYC Fields</div>
-                  {riskData.missingKYCFields.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {riskData.missingKYCFields.map((field, index) => (
-                        <Badge key={index} variant="outline">{field}</Badge>
-                      ))}
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Risk Breakdown</h4>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Transaction Amount</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full bg-yellow-500" style={{ width: `${userRiskData.riskFactors.highAmount ? 80 : 20}%` }}></div>
+                          </div>
+                          <span className="text-xs font-medium">{userRiskData.riskFactors.highAmount ? "High" : "Low"}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Transaction Frequency</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full bg-yellow-500" style={{ width: `${userRiskData.riskFactors.highFrequency ? 70 : 30}%` }}></div>
+                          </div>
+                          <span className="text-xs font-medium">{userRiskData.riskFactors.highFrequency ? "High" : "Low"}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Country Risk</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full bg-red-500" style={{ width: `${userRiskData.riskFactors.highRiskCountry ? 90 : 10}%` }}></div>
+                          </div>
+                          <span className="text-xs font-medium">{userRiskData.riskFactors.highRiskCountry ? "High" : "Low"}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">KYC Status</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full bg-blue-500" style={{ width: `${userRiskData.riskFactors.incompleteKYC ? 60 : 10}%` }}></div>
+                          </div>
+                          <span className="text-xs font-medium">{userRiskData.riskFactors.incompleteKYC ? "Incomplete" : "Complete"}</span>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-sm text-green-600">No missing fields</div>
+                  </div>
+                  
+                  {(userRiskData.riskScore > 70 || user.flags.is_verified_pep || user.flags.is_sanction_list) && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                      <h4 className="text-sm font-medium text-red-800 mb-1 flex items-center gap-1">
+                        <AlertTriangle className="h-4 w-4" />
+                        High Risk Indicators
+                      </h4>
+                      <ul className="list-disc list-inside text-xs text-red-700 space-y-1">
+                        {userRiskData.riskScore > 70 && <li>Overall risk score above threshold (70)</li>}
+                        {user.flags.is_verified_pep && <li>Politically Exposed Person</li>}
+                        {user.flags.is_sanction_list && <li>Present on sanctions list</li>}
+                        {userRiskData.riskFactors.highRiskCountry && <li>Transactions with high-risk countries</li>}
+                        {userRiskData.riskFactors.highAmount && <li>High value transactions</li>}
+                      </ul>
+                    </div>
                   )}
                 </div>
-
-                <div className="pt-2">
-                  <div className="text-sm font-medium mb-2">Transaction Countries</div>
-                  <div className="flex flex-wrap gap-2">
-                    {riskData.transactionCountries.map((country, index) => (
-                      <Badge 
-                        key={index} 
-                        variant={country === 'Iran' || country === 'Somalia' ? "destructive" : "outline"}
-                      >
-                        {country}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">User Flags</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <UserFlagsDisplay flags={user.flags} detailed />
-                
-                <div className="mt-4">
-                  <SanctionIndicator isPep={user.flags.is_verified_pep} isSanctioned={user.flags.is_sanction_list} />
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="transactions" className="space-y-4">
+          <TabsContent value="case" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Compliance Case Management
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {mockTransactions.map(tx => (
-                        <TableRow key={tx.id}>
-                          <TableCell className="font-medium">{tx.id}</TableCell>
-                          <TableCell>{tx.date}</TableCell>
-                          <TableCell>{tx.type}</TableCell>
-                          <TableCell>{tx.amount.toLocaleString()} {tx.currency}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Current KYC Status</label>
+                  <Select value={kycStatus} onValueChange={(value) => setKycStatus(value as KYCStatus)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="information_requested">Information Requested</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                <div className="mt-4 text-sm text-muted-foreground">
-                  Showing last 3 of {riskData.transactionCount} transactions
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Case Notes</label>
+                  <Textarea
+                    placeholder="Enter your notes, findings, or reasons for approval/rejection here..."
+                    value={caseNotes}
+                    onChange={(e) => setCaseNotes(e.target.value)}
+                    className="min-h-[120px]"
+                  />
                 </div>
-
-                <div className="flex justify-center mt-4">
-                  <Button variant="outline" size="sm" disabled>
-                    View All Transactions
+                
+                <div className="flex flex-wrap gap-3 justify-end pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                    onClick={handleRejectKYC}
+                    disabled={isSubmitting}
+                  >
+                    <XCircle className="mr-1 h-4 w-4" />
+                    Reject KYC
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Transaction Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="p-3 bg-muted rounded-md">
-                    <div className="text-sm text-muted-foreground">Total Transactions</div>
-                    <div className="text-2xl font-bold">{riskData.transactionCount}</div>
-                  </div>
-                  <div className="p-3 bg-muted rounded-md">
-                    <div className="text-sm text-muted-foreground">Recent Amount</div>
-                    <div className="text-2xl font-bold">{riskData.recentTransactionAmount.toLocaleString()} SEK</div>
-                  </div>
-                  <div className="p-3 bg-muted rounded-md">
-                    <div className="text-sm text-muted-foreground">Countries</div>
-                    <div className="text-2xl font-bold">{riskData.transactionCountries.length}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="verification" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Document Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                    <div>
-                      <div className="font-medium">Identity Document</div>
-                      <div className="text-xs text-muted-foreground">Uploaded: {mockDocuments.identityDocument.uploadDate}</div>
-                    </div>
-                    <Badge variant={mockDocuments.identityDocument.status === 'verified' ? "default" : "outline"}>
-                      {mockDocuments.identityDocument.status === 'verified' ? 'Verified' : 'Pending'}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                    <div>
-                      <div className="font-medium">Address Proof</div>
-                      <div className="text-xs text-muted-foreground">Uploaded: {mockDocuments.addressProof.uploadDate}</div>
-                    </div>
-                    <Badge variant="outline">Pending</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                    <div>
-                      <div className="font-medium">Additional Documents</div>
-                      <div className="text-xs text-muted-foreground">Not uploaded</div>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      <Upload className="h-3 w-3 mr-1" />
-                      Request
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex justify-center mt-2">
-                  <Button variant="outline" size="sm" disabled={user.flags.is_sanction_list}>
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    View Document Details
+                  <Button
+                    variant="outline"
+                    className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                    onClick={handleApproveKYC}
+                    disabled={isSubmitting}
+                  >
+                    <CheckCircle className="mr-1 h-4 w-4" />
+                    Approve KYC
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={handleCreateCase}
+                    disabled={isSubmitting}
+                  >
+                    <Flag className="mr-1 h-4 w-4" />
+                    Create Compliance Case
                   </Button>
                 </div>
               </CardContent>
             </Card>
             
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Add Verification Note</div>
-              <Textarea
-                placeholder="Enter verification notes here..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-              />
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleVerify}
-                className="flex-1"
-                variant="default"
-                disabled={user.flags.is_sanction_list}
-                title={user.flags.is_sanction_list ? "Cannot verify sanctioned users" : ""}
-              >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Mark as Verified
-              </Button>
-              <Button 
-                onClick={handleReject}
-                className="flex-1"
-                variant="destructive"
-              >
-                <UserX className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-              <Button 
-                onClick={handleRequestInfo}
-                className="flex-1"
-                variant="secondary"
-              >
-                <FileQuestion className="h-4 w-4 mr-2" />
-                Request More Info
-              </Button>
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Case History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  No previous cases found for this user.
+                </p>
+                {/* In a real implementation, this would show the history of cases */}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

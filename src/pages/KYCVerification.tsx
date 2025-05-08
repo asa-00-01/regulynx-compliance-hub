@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,8 +7,9 @@ import UserVerificationTable from '@/components/kyc/UserVerificationTable';
 import { mockUsers } from '@/components/kyc/mockKycData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, DownloadCloud, Flag } from 'lucide-react';
 import KYCDashboardSummary from '@/components/kyc/KYCDashboardSummary';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,19 @@ const KYCVerificationPage = () => {
   const [riskFilter, setRiskFilter] = useState('all');
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [flaggedUsers, setFlaggedUsers] = useState<string[]>([]);
+  const { toast } = useToast();
+
+  // Simulate loading state for UI improvements
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredUsers = mockUsers.filter(user => {
     // Apply search term
@@ -45,6 +59,9 @@ const KYCVerificationPage = () => {
     }
     if (activeTab === 'incomplete' && 
         (user.flags.is_email_confirmed && user.phoneNumber && user.identityNumber)) {
+      return false;
+    }
+    if (activeTab === 'flagged' && !flaggedUsers.includes(user.id)) {
       return false;
     }
 
@@ -79,6 +96,45 @@ const KYCVerificationPage = () => {
     }
   };
 
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setRiskFilter('all');
+    setSortField('name');
+    setSortOrder('asc');
+    setActiveTab('all');
+  };
+
+  const handleFlagUser = (userId: string) => {
+    if (flaggedUsers.includes(userId)) {
+      setFlaggedUsers(flaggedUsers.filter(id => id !== userId));
+      toast({
+        title: "User Unflagged",
+        description: "User has been removed from flagged list"
+      });
+    } else {
+      setFlaggedUsers([...flaggedUsers, userId]);
+      toast({
+        title: "User Flagged",
+        description: "User has been added to flagged list for review"
+      });
+    }
+  };
+
+  const handleExportData = () => {
+    toast({
+      title: "Exporting Data",
+      description: "KYC data export has been initiated. File will be downloaded shortly."
+    });
+    
+    // In a real implementation, this would generate a CSV file
+    setTimeout(() => {
+      toast({
+        title: "Export Complete",
+        description: "KYC data has been exported successfully"
+      });
+    }, 1500);
+  };
+
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
       <div className="space-y-6">
@@ -89,7 +145,7 @@ const KYCVerificationPage = () => {
           </p>
         </div>
 
-        <KYCDashboardSummary users={mockUsers} />
+        <KYCDashboardSummary users={mockUsers} isLoading={isLoading} />
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="relative flex-1 w-full">
@@ -125,6 +181,17 @@ const KYCVerificationPage = () => {
                 ? `Risk Score ${sortOrder === 'asc' ? '↑' : '↓'}` 
                 : 'Sort by Risk'}
             </Button>
+
+            <Button variant="outline" onClick={handleExportData}>
+              <DownloadCloud className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            
+            {(searchTerm || riskFilter !== 'all' || sortField !== 'name' || sortOrder !== 'asc' || activeTab !== 'all') && (
+              <Button variant="ghost" onClick={handleResetFilters}>
+                Clear Filters
+              </Button>
+            )}
           </div>
         </div>
 
@@ -135,11 +202,24 @@ const KYCVerificationPage = () => {
             <TabsTrigger value="sanctioned">Sanctioned</TabsTrigger>
             <TabsTrigger value="high_risk">High Risk</TabsTrigger>
             <TabsTrigger value="incomplete">Incomplete KYC</TabsTrigger>
+            <TabsTrigger value="flagged">
+              Flagged
+              {flaggedUsers.length > 0 && (
+                <Badge variant="secondary" className="ml-2">{flaggedUsers.length}</Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">User Verification</CardTitle>
+              <CardTitle className="text-base">
+                User Verification
+                {isLoading ? null : (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    {sortedUsers.length} user{sortedUsers.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <UserVerificationTable 
@@ -147,6 +227,9 @@ const KYCVerificationPage = () => {
                 onSort={handleSortChange}
                 sortField={sortField}
                 sortOrder={sortOrder}
+                isLoading={isLoading}
+                flaggedUsers={flaggedUsers}
+                onFlagUser={handleFlagUser}
               />
             </CardContent>
           </Card>
