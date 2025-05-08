@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Filter, SlidersHorizontal, DownloadCloud, Flag } from 'lucide-react';
 import KYCDashboardSummary from '@/components/kyc/KYCDashboardSummary';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge'; // Add missing import
 import {
   Select,
   SelectContent,

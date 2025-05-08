@@ -1,7 +1,7 @@
 
 import { cva } from "class-variance-authority"
 
-export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "warning";
+export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "warning" | "success";
 
 export const badgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -17,6 +17,8 @@ export const badgeVariants = cva(
         outline: "text-foreground",
         warning:
           "border-transparent bg-amber-500 text-amber-50 hover:bg-amber-500/80",
+        success:
+          "border-transparent bg-green-500 text-green-50 hover:bg-green-500/80",
       },
     },
     defaultVariants: {

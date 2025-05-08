@@ -7,9 +7,10 @@ interface RiskBadgeProps {
   score: number;
   showText?: boolean;
   className?: string;
+  size?: 'sm' | 'md' | 'lg'; // Add the size prop
 }
 
-const RiskBadge = ({ score, showText = true, className }: RiskBadgeProps) => {
+const RiskBadge = ({ score, showText = true, className, size = 'md' }: RiskBadgeProps) => {
   const getVariant = () => {
     if (score >= 75) return "destructive";
     if (score >= 50) return "warning";
@@ -24,10 +25,19 @@ const RiskBadge = ({ score, showText = true, className }: RiskBadgeProps) => {
     return "Minimal Risk";
   };
 
+  // Apply size classes based on the size prop
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm': return 'text-xs px-1.5 py-0';
+      case 'lg': return 'text-sm px-3 py-0.5';
+      default: return ''; // Default size from badge component
+    }
+  };
+
   return (
     <Badge 
       variant={getVariant()} 
-      className={cn("font-medium", className)}
+      className={cn("font-medium", getSizeClasses(), className)}
     >
       {score}{showText && <span className="ml-1">- {getText()}</span>}
     </Badge>

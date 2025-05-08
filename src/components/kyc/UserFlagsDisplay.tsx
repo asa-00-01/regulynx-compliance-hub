@@ -51,7 +51,7 @@ const UserFlagsDisplay: React.FC<UserFlagsDisplayProps> = ({ flags, showLabels =
       
       {flags.riskScore < 30 && (
         <TooltipHelp content="Low risk user">
-          <Badge variant="success" className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-200">
+          <Badge variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-200">
             <Check className="h-3 w-3" />
             {showLabels && "Low Risk"}
           </Badge>
