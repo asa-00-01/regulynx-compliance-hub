@@ -40,7 +40,7 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
     }
     
     // Process document with OCR
-    const extractedData = await processImage(file);
+    const result = await processImage(file);
     
     // Mock upload to Supabase
     setTimeout(() => {
@@ -55,10 +55,10 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       });
       
       // Display extracted data in the toast if available
-      if (extractedData && extractedData.name) {
+      if (result && result.extractedData && result.extractedData.name) {
         toast({
           title: "Document Processed",
-          description: `Detected name: ${extractedData.name}`,
+          description: `Detected name: ${result.extractedData.name}`,
         });
       }
       

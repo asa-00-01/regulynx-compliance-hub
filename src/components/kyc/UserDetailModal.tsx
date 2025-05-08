@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { KYCUser, UserFlags, KYCStatus } from '@/types/kyc';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, UserX, FileQuestion, Upload, ShieldCheck } from 'lucide-react';

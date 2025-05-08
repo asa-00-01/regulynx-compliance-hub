@@ -19,12 +19,15 @@ export function useDocumentOCR() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const processImage = async (imageData: string): Promise<OCRResult> => {
+  const processImage = async (file: File): Promise<OCRResult> => {
     setIsProcessing(true);
     setProgress(0);
     setError(null);
 
     try {
+      // Convert File to data URL for Tesseract
+      const imageData = URL.createObjectURL(file);
+      
       const worker = await createWorker('eng');
       
       // Manual progress updates since worker.setProgressHandler is not available
@@ -40,6 +43,9 @@ export function useDocumentOCR() {
 
       setProgress(100);
       await worker.terminate();
+      
+      // Cleanup the object URL to avoid memory leaks
+      URL.revokeObjectURL(imageData);
       
       return {
         extractedText,
