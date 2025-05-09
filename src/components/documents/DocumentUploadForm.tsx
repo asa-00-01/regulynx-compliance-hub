@@ -9,6 +9,8 @@ import { DocumentType } from '@/types/supabase';
 import useDocumentOCR from '@/hooks/useDocumentOCR';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentUploadFormProps {
   onUploadComplete: () => void;
@@ -19,6 +21,7 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
   const [documentType, setDocumentType] = useState<DocumentType>('passport');
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -38,17 +41,43 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       });
       return;
     }
+
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload documents",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Process document with OCR
-    const result = await processImage(file);
-    
-    // Mock upload to Supabase
-    setTimeout(() => {
-      // In a real implementation, we would:
-      // 1. Upload file to Supabase Storage
-      // 2. Create document record with metadata
-      // 3. Link extracted data to the document
+    try {
+      // Process document with OCR
+      const result = await processImage(file);
       
+      // Create a unique file path
+      const timestamp = new Date().getTime();
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/${documentType}_${timestamp}.${fileExt}`;
+      
+      // Insert document record in database
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert({
+          user_id: user.id,
+          type: documentType,
+          file_name: file.name,
+          file_path: filePath,
+          status: 'pending',
+          extracted_data: result?.extractedData || {}
+        })
+        .select()
+        .single();
+      
+      if (documentError) {
+        throw documentError;
+      }
+
       toast({
         title: "Success",
         description: "Document uploaded successfully",
@@ -67,75 +96,77 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       
       // Notify parent component to refresh the documents list
       onUploadComplete();
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred while uploading the document",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="documentType">Document Type</Label>
-            <Select 
-              value={documentType}
-              onValueChange={(value) => setDocumentType(value as DocumentType)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select document type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="passport">Passport</SelectItem>
-                <SelectItem value="id">ID Card</SelectItem>
-                <SelectItem value="license">Driver's License</SelectItem>
-              </SelectContent>
-            </Select>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="documentType">Document Type</Label>
+        <Select 
+          value={documentType}
+          onValueChange={(value) => setDocumentType(value as DocumentType)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select document type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="passport">Passport</SelectItem>
+            <SelectItem value="id">ID Card</SelectItem>
+            <SelectItem value="license">Driver's License</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="file">Upload Document</Label>
+        <Input 
+          id="file" 
+          type="file" 
+          accept="image/png, image/jpeg, application/pdf"
+          onChange={handleFileChange} 
+          disabled={isProcessing}
+        />
+        {file && (
+          <div className="text-xs text-muted-foreground">
+            {file.name} ({Math.round(file.size / 1024)} KB)
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="file">Upload Document</Label>
-            <Input 
-              id="file" 
-              type="file" 
-              accept="image/png, image/jpeg, application/pdf"
-              onChange={handleFileChange} 
-              disabled={isProcessing}
-            />
-            {file && (
-              <div className="text-xs text-muted-foreground">
-                {file.name} ({Math.round(file.size / 1024)} KB)
-              </div>
-            )}
-          </div>
-          
-          {isProcessing && (
-            <div className="space-y-2">
-              <Label>Processing document...</Label>
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {progress}% complete - OCR is analyzing the document
-              </p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
-              Error: {error}
-            </div>
-          )}
-        </form>
-      </CardContent>
-      <CardFooter className="border-t bg-muted/50 px-6 py-4">
-        <div className="flex justify-end w-full">
-          <Button 
-            type="submit" 
-            onClick={handleSubmit}
-            disabled={!file || isProcessing}
-          >
-            {isProcessing ? 'Processing...' : 'Upload Document'}
-          </Button>
+        )}
+      </div>
+      
+      {isProcessing && (
+        <div className="space-y-2">
+          <Label>Processing document...</Label>
+          <Progress value={progress} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {progress}% complete - OCR is analyzing the document
+          </p>
         </div>
-      </CardFooter>
-    </Card>
+      )}
+      
+      {error && (
+        <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
+          Error: {error}
+        </div>
+      )}
+      
+      <div className="mt-4 flex justify-end">
+        <Button 
+          type="submit"
+          disabled={!file || isProcessing}
+        >
+          {isProcessing ? 'Processing...' : 'Upload Document'}
+        </Button>
+      </div>
+    </form>
   );
 };
 

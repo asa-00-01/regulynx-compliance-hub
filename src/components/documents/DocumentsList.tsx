@@ -57,7 +57,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
   };
 
   return (
-    <Tabs defaultValue={activeTab} className="w-full" onValueChange={onTabChange}>
+    <Tabs defaultValue={activeTab} value={activeTab} className="w-full" onValueChange={onTabChange}>
       <TabsList className="mb-4">
         <TabsTrigger value="all">All Documents</TabsTrigger>
         <TabsTrigger value="pending">Pending</TabsTrigger>

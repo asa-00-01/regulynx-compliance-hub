@@ -24,13 +24,22 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
     }
   };
   
-  const handleReviewClick = () => {
-    navigate('/documents');
+  const handleReviewClick = (docId?: string) => {
+    if (docId) {
+      navigate(`/documents?docId=${docId}`);
+    } else {
+      navigate('/documents');
+    }
   };
   
   const handleViewAllClick = () => {
     navigate('/documents');
   };
+
+  // Sort documents to show most recent first and limit to 5
+  const recentDocs = [...documents]
+    .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+    .slice(0, 5);
   
   return (
     <Card>
@@ -58,8 +67,12 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                   <div className="h-4 bg-muted rounded w-1/2 ml-auto"></div>
                 </div>
               ))
+            ) : recentDocs.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                No documents uploaded yet.
+              </div>
             ) : (
-              documents.map((doc) => (
+              recentDocs.map((doc) => (
                 <div key={doc.id} className="grid grid-cols-5 p-3 items-center">
                   <div className="font-medium">{doc.fileName}</div>
                   <div>
@@ -87,12 +100,12 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline" onClick={handleViewAllClick}>
+                    <Button size="sm" variant="outline" onClick={() => handleViewAllClick()}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
                     {doc.status === 'pending' && canApproveDocuments() && (
-                      <Button size="sm" onClick={handleReviewClick}>
+                      <Button size="sm" onClick={() => handleReviewClick(doc.id)}>
                         Review
                       </Button>
                     )}

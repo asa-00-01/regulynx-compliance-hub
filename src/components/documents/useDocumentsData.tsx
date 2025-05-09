@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Document, DocumentStatus } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/use-permissions';
 import { ensureMockDocuments } from './mockDocumentData';
 
@@ -54,7 +54,7 @@ export const useDocumentsData = () => {
         documentList = data;
         
         // If no documents found or in development mode, add mock data
-        if (documentList.length === 0 || process.env.NODE_ENV === 'development') {
+        if (documentList.length === 0 && process.env.NODE_ENV === 'development') {
           documentList = ensureMockDocuments(documentList);
         }
         
