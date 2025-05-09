@@ -1,9 +1,9 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UserVerificationTable from '@/components/kyc/UserVerificationTable';
 import { KYCUser, UserFlags } from '@/types/kyc';
-import { useRiskCalculation, UserRiskData } from '@/hooks/useRiskCalculation';
+import { UserRiskData } from '@/hooks/useRiskCalculation';
 
 interface KYCUserTableProps {
   users: (KYCUser & { flags: UserFlags })[];
@@ -24,20 +24,6 @@ const KYCUserTable: React.FC<KYCUserTableProps> = ({
   flaggedUsers,
   onFlagUser
 }) => {
-  // Precompute risk data for all users
-  const riskDataMap = useMemo(() => {
-    const map = new Map<string, UserRiskData>();
-    
-    if (!isLoading) {
-      users.forEach(user => {
-        const riskData = useRiskCalculation(user);
-        map.set(user.id, riskData);
-      });
-    }
-    
-    return map;
-  }, [users, isLoading]);
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -59,7 +45,6 @@ const KYCUserTable: React.FC<KYCUserTableProps> = ({
           isLoading={isLoading}
           flaggedUsers={flaggedUsers}
           onFlagUser={onFlagUser}
-          riskDataMap={riskDataMap}
         />
       </CardContent>
     </Card>

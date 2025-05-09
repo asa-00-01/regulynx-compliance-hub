@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { User } from 'lucide-react';
 import RiskBadge from '@/components/common/RiskBadge';
-import { useRiskCalculation } from '@/hooks/useRiskCalculation';
+import { UserRiskData } from '@/hooks/useRiskCalculation';
 
 // Import the tab components
 import UserOverviewTab from './modal-tabs/UserOverviewTab';
@@ -34,7 +34,77 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onOpenChange 
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const userRiskData = useRiskCalculation(user);
+  const [userRiskData, setUserRiskData] = useState<UserRiskData | null>(null);
+  
+  // Calculate risk data on component mount
+  useEffect(() => {
+    const calculateRiskData = () => {
+      // Mock transaction data
+      const transactionCount = Math.floor(Math.random() * 20) + 1;
+      const recentTransactionAmount = Math.floor(Math.random() * 49000) + 1000;
+      const transactionCountries = (() => {
+        const countries = ['Sweden', 'Norway', 'Russia', 'Germany', 'Iran', 'Somalia', 'USA'];
+        const count = Math.floor(Math.random() * 3) + 1;
+        const result = [];
+        for (let i = 0; i < count; i++) {
+          const randomIndex = Math.floor(Math.random() * countries.length);
+          result.push(countries[randomIndex]);
+        }
+        return result;
+      })();
+      
+      // Check for missing KYC fields
+      const missingKYCFields = [];
+      if (!user.phoneNumber) missingKYCFields.push('Phone Number');
+      if (!user.address) missingKYCFields.push('Address');
+      if (!user.identityNumber) missingKYCFields.push('Identity Number');
+      if (!user.flags.is_email_confirmed) missingKYCFields.push('Email Confirmation');
+      
+      // Define high risk countries
+      const HIGH_RISK_COUNTRIES = [
+        { countryName: 'Iran', riskLevel: 'high' },
+        { countryName: 'Somalia', riskLevel: 'high' },
+        { countryName: 'Russia', riskLevel: 'high' }
+      ];
+
+      // Calculate risk factors
+      const riskFactors = {
+        highAmount: recentTransactionAmount > 10000,
+        highRiskCountry: transactionCountries.some(country => 
+          HIGH_RISK_COUNTRIES.some(riskCountry => 
+            riskCountry.countryName === country && riskCountry.riskLevel === 'high'
+          )
+        ),
+        highFrequency: transactionCount > 10,
+        incompleteKYC: missingKYCFields.length > 0
+      };
+      
+      // Calculate risk score based on risk factors
+      let riskScore = 0;
+      if (riskFactors.highAmount) riskScore += 40;
+      if (riskFactors.highRiskCountry) riskScore += 30;
+      if (riskFactors.highFrequency) riskScore += 20;
+      if (riskFactors.incompleteKYC) riskScore += 10;
+      
+      // Add slight randomization (+/- 5 points)
+      riskScore += Math.floor(Math.random() * 10) - 5;
+      
+      // Ensure score is within 0-100 range
+      riskScore = Math.max(0, Math.min(100, riskScore));
+      
+      setUserRiskData({
+        userId: user.id,
+        riskScore,
+        transactionCount,
+        recentTransactionAmount,
+        transactionCountries,
+        missingKYCFields,
+        riskFactors
+      });
+    };
+    
+    calculateRiskData();
+  }, [user]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,7 +146,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
           </TabsList>
           
           <TabsContent value="overview">
-            <UserOverviewTab user={user} userRiskData={userRiskData} />
+            {userRiskData && <UserOverviewTab user={user} userRiskData={userRiskData} />}
           </TabsContent>
           
           <TabsContent value="documents">
@@ -84,7 +154,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
           </TabsContent>
           
           <TabsContent value="risk">
-            <RiskAnalysisTab userRiskData={userRiskData} user={user} />
+            {userRiskData && <RiskAnalysisTab userRiskData={userRiskData} user={user} />}
           </TabsContent>
           
           <TabsContent value="case">
