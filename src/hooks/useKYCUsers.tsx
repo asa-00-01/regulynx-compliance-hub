@@ -120,7 +120,8 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
     }, 1500);
   };
 
-  const showResetFilters = searchTerm || riskFilter !== 'all' || sortField !== 'name' || sortOrder !== 'asc' || activeTab !== 'all';
+  // Fix: Ensure showResetFilters is always a boolean value
+  const showResetFilters: boolean = Boolean(searchTerm || riskFilter !== 'all' || sortField !== 'name' || sortOrder !== 'asc' || activeTab !== 'all');
 
   return {
     activeTab,
