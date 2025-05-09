@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useComplianceCases } from '@/hooks/useComplianceCases';
 import { useAuth } from '@/context/AuthContext';
@@ -11,11 +11,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import NewCaseDialog from '@/components/cases/NewCaseDialog';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
+  const [initialCaseData, setInitialCaseData] = useState<any>(null);
+  
+  const location = useLocation();
   
   const {
     cases,
@@ -31,6 +35,16 @@ const ComplianceCases = () => {
     assignCase,
     createCase,
   } = useComplianceCases(user);
+  
+  // Check if we need to create a case based on location state
+  useEffect(() => {
+    if (location.state?.createCase && location.state?.userData) {
+      setInitialCaseData(location.state.userData);
+      setShowNewCaseDialog(true);
+      // Clear the location state to prevent modal reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
@@ -96,6 +110,7 @@ const ComplianceCases = () => {
         onOpenChange={setShowNewCaseDialog}
         onCreateCase={createCase}
         currentUser={user}
+        initialData={initialCaseData}
       />
     </DashboardLayout>
   );

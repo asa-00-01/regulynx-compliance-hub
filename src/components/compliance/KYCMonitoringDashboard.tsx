@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Card,
@@ -26,7 +25,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentStatus } from '@/types/supabase';
-import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle } from 'lucide-react';
+import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle, FileText } from 'lucide-react';
+import CustomerMonitoringActions from './CustomerMonitoringActions';
+import { useNavigate } from 'react-router-dom';
 
 // Mock customer data for demonstration
 const mockCustomers = [
@@ -114,7 +115,10 @@ const KYCMonitoringDashboard = () => {
   const [kycFilter, setKYCFilter] = useState<string>('all');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [countryFilter, setCountryFilter] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [actionModalOpen, setActionModalOpen] = useState<boolean>(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Filter customers based on selected filters
   const filteredCustomers = customers.filter((customer) => {
@@ -141,24 +145,46 @@ const KYCMonitoringDashboard = () => {
 
   // Action handlers
   const handleReview = (customerId: string) => {
-    toast({
-      title: "Review initiated",
-      description: `Starting review for customer ${customerId}`,
-    });
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setSelectedCustomer(customer);
+      setActionModalOpen(true);
+    }
   };
 
   const handleFlag = (customerId: string) => {
-    toast({
-      title: "Customer flagged",
-      description: `Customer ${customerId} has been flagged for review`,
-    });
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setSelectedCustomer(customer);
+      setActionModalOpen(true);
+    }
   };
 
   const handleViewProfile = (customerId: string) => {
-    toast({
-      title: "Viewing profile",
-      description: `Opening profile for customer ${customerId}`,
-    });
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      toast({
+        title: "Viewing profile",
+        description: `Opening profile for ${customer.name}`,
+      });
+    }
+  };
+  
+  const handleCreateCase = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      // Navigate to compliance cases page with customer data
+      navigate('/compliance-cases', { 
+        state: { 
+          createCase: true,
+          userData: {
+            userId: customer.id,
+            userName: customer.name,
+            riskScore: customer.riskScore
+          }
+        }
+      });
+    }
   };
 
   const getRiskScoreClass = (score: number) => {
@@ -348,6 +374,7 @@ const KYCMonitoringDashboard = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleReview(customer.id)}
+                          title="Review"
                         >
                           <FilePenLine className="h-4 w-4" />
                           <span className="sr-only">Review</span>
@@ -356,6 +383,7 @@ const KYCMonitoringDashboard = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleFlag(customer.id)}
+                          title="Flag"
                         >
                           <Flag className="h-4 w-4" />
                           <span className="sr-only">Flag</span>
@@ -363,7 +391,17 @@ const KYCMonitoringDashboard = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => handleCreateCase(customer.id)}
+                          title="Create Case"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span className="sr-only">Create Case</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleViewProfile(customer.id)}
+                          title="View Profile"
                         >
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">View</span>
@@ -377,6 +415,20 @@ const KYCMonitoringDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Customer Action Modal */}
+      {selectedCustomer && (
+        <CustomerMonitoringActions
+          customerId={selectedCustomer.id}
+          customerName={selectedCustomer.name}
+          riskScore={selectedCustomer.riskScore}
+          open={actionModalOpen}
+          onClose={() => {
+            setActionModalOpen(false);
+            setSelectedCustomer(null);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -56,3 +56,25 @@ export interface CaseSummary {
   casesByType: Record<string, number>;
   casesByStatus: Record<string, number>;
 }
+
+// New interfaces for customer monitoring
+export interface CustomerMonitoringAction {
+  id: string;
+  type: 'review' | 'flag' | 'case_creation' | 'document_request' | 'restriction';
+  customerId: string;
+  description: string;
+  createdAt: string;
+  createdBy: string;
+  status: 'pending' | 'completed' | 'canceled';
+}
+
+export interface CustomerRiskOverride {
+  id: string;
+  customerId: string;
+  originalScore: number;
+  overrideScore: number;
+  reason: string;
+  createdAt: string;
+  createdBy: string;
+  expiresAt?: string;
+}

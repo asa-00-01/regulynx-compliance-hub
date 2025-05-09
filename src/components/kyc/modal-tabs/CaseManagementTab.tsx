@@ -100,22 +100,22 @@ const CaseManagementTab: React.FC<CaseManagementTabProps> = ({
     setIsSubmitting(true);
     
     try {
-      // In a real implementation, this would create a case in the database
-      // For now, we'll just show a toast notification
-      setTimeout(() => {
-        toast({
-          title: "Case Created",
-          description: `Compliance case created for ${userName}.`,
-        });
-        setIsSubmitting(false);
-        
-        // Navigate to the compliance cases page
-        setTimeout(() => {
-          navigate('/compliance-cases');
-        }, 500);
-        
-        onClose();
-      }, 1000);
+      // Navigate to the compliance cases page with initial data
+      navigate('/compliance-cases', {
+        state: {
+          createCase: true,
+          userData: {
+            userId: userId,
+            userName: userName,
+            description: caseNotes,
+            type: 'kyc',
+            source: 'kyc_flag',
+            riskScore: isPEP ? 70 : 50
+          }
+        }
+      });
+      
+      onClose();
     } catch (error) {
       toast({
         title: "Error",

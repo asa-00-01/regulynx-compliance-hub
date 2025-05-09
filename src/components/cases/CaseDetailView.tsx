@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -34,7 +33,10 @@ import {
   FileTextIcon,
   AlertTriangleIcon,
   ShieldIcon,
-  ClockIcon
+  ClockIcon,
+  FileInput,
+  Send,
+  MailIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { complianceOfficers } from '@/mocks/casesData';
@@ -63,6 +65,10 @@ const CaseDetailView: React.FC<CaseDetailViewProps> = ({
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusNote, setStatusNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documentRequestDialogOpen, setDocumentRequestDialogOpen] = useState(false);
+  const [documentRequest, setDocumentRequest] = useState('');
+  const [communicationDialogOpen, setCommunicationDialogOpen] = useState(false);
+  const [communicationMessage, setCommunicationMessage] = useState('');
 
   // Helper functions
   const getCaseTypeIcon = (type: string) => {
@@ -166,6 +172,52 @@ const CaseDetailView: React.FC<CaseDetailViewProps> = ({
     setIsSubmitting(true);
     await onAssign(caseItem.id, officer.id, officer.name);
     setIsSubmitting(false);
+  };
+
+  const handleRequestDocuments = async () => {
+    if (!documentRequest.trim()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // For demo purposes, we'll just add this as a case action
+      const result = await onAddNote(caseItem.id, `Document request: ${documentRequest}`);
+      
+      if (result) {
+        setDocumentRequest('');
+        setDocumentRequestDialogOpen(false);
+        
+        // In a real implementation, this would also send a notification to the user
+        // For now just show a toast message via the note action
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSendCommunication = async () => {
+    if (!communicationMessage.trim()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // For demo purposes, we'll just add this as a case action
+      const result = await onAddNote(caseItem.id, `Communication sent: ${communicationMessage}`);
+      
+      if (result) {
+        setCommunicationMessage('');
+        setCommunicationDialogOpen(false);
+        
+        // In a real implementation, this would also send a notification to the user
+        // For now just show a toast message via the note action
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -355,7 +407,21 @@ const CaseDetailView: React.FC<CaseDetailViewProps> = ({
                 className="min-h-[100px]"
               />
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setDocumentRequestDialogOpen(true)}
+              >
+                <FileInput className="h-4 w-4 mr-2" />
+                Request Documents
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setCommunicationDialogOpen(true)}
+              >
+                <MailIcon className="h-4 w-4 mr-2" />
+                Send Communication
+              </Button>
               <Button 
                 onClick={handleAddNote} 
                 disabled={!note.trim() || isSubmitting}
@@ -439,6 +505,84 @@ const CaseDetailView: React.FC<CaseDetailViewProps> = ({
           </div>
         </CardFooter>
       </Card>
+
+      {/* Document Request Dialog */}
+      <Dialog open={documentRequestDialogOpen} onOpenChange={setDocumentRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Additional Documents</DialogTitle>
+            <DialogDescription>
+              Request documentation from the customer for further verification
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Document Details</label>
+              <Textarea
+                placeholder="Specify which documents you need from the customer..."
+                value={documentRequest}
+                onChange={(e) => setDocumentRequest(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDocumentRequestDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRequestDocuments}
+              disabled={isSubmitting || !documentRequest.trim()}
+            >
+              <Send className="mr-1 h-4 w-4" />
+              Send Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Communication Dialog */}
+      <Dialog open={communicationDialogOpen} onOpenChange={setCommunicationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Communication</DialogTitle>
+            <DialogDescription>
+              Send a message to the customer regarding this case
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Message</label>
+              <Textarea
+                placeholder="Type your message to the customer..."
+                value={communicationMessage}
+                onChange={(e) => setCommunicationMessage(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCommunicationDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendCommunication}
+              disabled={isSubmitting || !communicationMessage.trim()}
+            >
+              <Send className="mr-1 h-4 w-4" />
+              Send Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

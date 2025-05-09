@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ComplianceCase, User } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 interface ComplianceCasesCardProps {
   complianceCases: ComplianceCase[];
@@ -12,6 +13,20 @@ interface ComplianceCasesCardProps {
 }
 
 const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: ComplianceCasesCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleViewAllCases = () => {
+    navigate('/compliance-cases');
+  };
+  
+  const handleViewCase = (caseItem: ComplianceCase) => {
+    navigate('/compliance-cases', {
+      state: {
+        viewCase: caseItem.id
+      }
+    });
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -41,6 +56,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                   <div 
                     key={caseItem.id} 
                     className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/30 cursor-pointer"
+                    onClick={() => handleViewCase(caseItem)}
                   >
                     <div>
                       <div className="font-medium">{caseItem.type.toUpperCase()}</div>
@@ -59,7 +75,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                     </div>
                   </div>
                 ))}
-                <Button size="sm" variant="outline" className="w-full">
+                <Button size="sm" variant="outline" className="w-full" onClick={handleViewAllCases}>
                   View All Cases
                 </Button>
               </div>
@@ -73,6 +89,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                   <div 
                     key={caseItem.id} 
                     className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/30 cursor-pointer"
+                    onClick={() => handleViewCase(caseItem)}
                   >
                     <div>
                       <div className="font-medium">{caseItem.type.toUpperCase()}</div>
@@ -85,7 +102,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                     </div>
                   </div>
               ))}
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full" onClick={handleViewAllCases}>
                 View All High Risk Cases
               </Button>
             </div>
@@ -98,6 +115,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                   <div 
                     key={caseItem.id} 
                     className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/30 cursor-pointer"
+                    onClick={() => handleViewCase(caseItem)}
                   >
                     <div>
                       <div className="font-medium">{caseItem.type.toUpperCase()}</div>
@@ -116,7 +134,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
                     </div>
                   </div>
               ))}
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full" onClick={handleViewAllCases}>
                 View All My Cases
               </Button>
             </div>

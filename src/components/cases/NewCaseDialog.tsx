@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ComplianceCaseDetails, CasePriority } from '@/types/case';
 import { User } from '@/types';
 import {
@@ -28,13 +28,22 @@ interface NewCaseDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreateCase: (caseData: Partial<ComplianceCaseDetails>) => Promise<ComplianceCaseDetails | null>;
   currentUser?: User;
+  initialData?: {
+    userId?: string;
+    userName?: string;
+    riskScore?: number;
+    description?: string;
+    type?: 'kyc' | 'aml' | 'sanctions';
+    source?: string;
+  };
 }
 
 const NewCaseDialog: React.FC<NewCaseDialogProps> = ({ 
   open, 
   onOpenChange,
   onCreateCase,
-  currentUser
+  currentUser,
+  initialData
 }) => {
   const [formData, setFormData] = useState<Partial<ComplianceCaseDetails>>({
     type: 'kyc',
@@ -46,6 +55,21 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
     source: 'manual'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize form data with initial data if provided
+  useEffect(() => {
+    if (initialData && open) {
+      setFormData(prevData => ({
+        ...prevData,
+        userId: initialData.userId || prevData.userId,
+        userName: initialData.userName || prevData.userName,
+        riskScore: initialData.riskScore || prevData.riskScore,
+        description: initialData.description || prevData.description,
+        type: initialData.type || prevData.type,
+        source: (initialData.source as CaseSource) || prevData.source
+      }));
+    }
+  }, [initialData, open]);
   
   // Update form field
   const updateField = (field: keyof ComplianceCaseDetails, value: any) => {
@@ -203,6 +227,25 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="source">Source</Label>
+              <Select
+                value={formData.source as string}
+                onValueChange={(value) => updateField('source', value)}
+              >
+                <SelectTrigger id="source">
+                  <SelectValue placeholder="Select case source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="transaction_alert">Transaction Alert</SelectItem>
+                  <SelectItem value="kyc_flag">KYC Flag</SelectItem>
+                  <SelectItem value="sanctions_hit">Sanctions Hit</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">

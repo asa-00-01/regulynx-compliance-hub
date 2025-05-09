@@ -9,6 +9,7 @@ import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const AMLMonitoringPage = () => {
   const [activeTab, setActiveTab] = useState('transactions');
@@ -23,6 +24,7 @@ const AMLMonitoringPage = () => {
     onlyFlagged: false
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleViewTransactionDetails = (transaction: AMLTransaction) => {
     setSelectedTransaction(transaction);
@@ -43,11 +45,21 @@ const AMLMonitoringPage = () => {
   };
 
   const handleCreateCase = (transaction: AMLTransaction) => {
-    toast({
-      title: 'Case Created',
-      description: `A compliance case has been created for transaction ${transaction.id.substring(0, 8)}...`,
+    // Navigate to compliance cases page with initial case data
+    navigate('/compliance-cases', {
+      state: {
+        createCase: true,
+        userData: {
+          userId: transaction.senderId,
+          userName: transaction.senderName,
+          description: `Suspicious transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency}`,
+          type: 'aml',
+          source: 'transaction_alert',
+          riskScore: transaction.riskScore,
+        }
+      }
     });
-    // In a real application, we would create a case in the database
+    
     setDetailsModalOpen(false);
   };
 
