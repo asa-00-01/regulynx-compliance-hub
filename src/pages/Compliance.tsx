@@ -10,7 +10,8 @@ import ComplianceCaseManagement from '@/components/compliance/ComplianceCaseMana
 import RedFlagsAlerts from '@/components/compliance/RedFlagsAlerts';
 import UserActivityLogs from '@/components/compliance/UserActivityLogs';
 import { usePermissions } from '@/hooks/use-permissions';
-import { UserCheck, CircleDollarSign, FileSearch, Shield, FileText, AlertTriangle } from 'lucide-react';
+import { UserCheck, CircleDollarSign, FileSearch, Shield, FileText, AlertTriangle, Users } from 'lucide-react';
+import UserOverviewSection from '@/components/compliance/UserOverviewSection';
 
 const Compliance = () => {
   const [activeTab, setActiveTab] = useState('kyc-monitoring');
@@ -26,7 +27,7 @@ const Compliance = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Link to="/kyc-verification">
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
@@ -62,6 +63,15 @@ const Compliance = () => {
               </Button>
             </div>
           </Link>
+          
+          <Link to="/user-case">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <Users className="h-10 w-10 text-indigo-500" />
+                <span className="font-medium">User Case View</span>
+              </Button>
+            </div>
+          </Link>
         </div>
 
         <Tabs 
@@ -70,12 +80,13 @@ const Compliance = () => {
           onValueChange={setActiveTab}
           className="space-y-4"
         >
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <TabsTrigger value="kyc-monitoring">KYC Monitoring</TabsTrigger>
             <TabsTrigger value="risk-scoring">Risk Scoring</TabsTrigger>
             <TabsTrigger value="case-management">Case Management</TabsTrigger>
             <TabsTrigger value="alerts">Red Flags & Alerts</TabsTrigger>
             <TabsTrigger value="activity-logs">Activity Logs</TabsTrigger>
+            <TabsTrigger value="user-overview">User Overview</TabsTrigger>
           </TabsList>
           
           <TabsContent value="kyc-monitoring" className="space-y-4">
@@ -103,6 +114,10 @@ const Compliance = () => {
           
           <TabsContent value="activity-logs" className="space-y-4">
             <UserActivityLogs />
+          </TabsContent>
+          
+          <TabsContent value="user-overview" className="space-y-4">
+            <UserOverviewSection />
           </TabsContent>
         </Tabs>
       </div>

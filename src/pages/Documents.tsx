@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useDocumentsData } from '@/components/documents/useDocumentsData';
@@ -8,8 +8,15 @@ import DocumentsGrid from '@/components/documents/DocumentsGrid';
 import DocumentVerificationView from '@/components/documents/DocumentVerificationView';
 import DocumentDetailsModal from '@/components/documents/DocumentDetailsModal';
 import DocumentOverview from '@/components/documents/DocumentOverview';
+import { useSearchParams } from 'react-router-dom';
+import { useCompliance } from '@/context/ComplianceContext';
+import UserCard from '@/components/user/UserCard';
 
 const Documents = () => {
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
+  const { getUserById } = useCompliance();
+
   const {
     documents,
     loading,
@@ -22,8 +29,16 @@ const Documents = () => {
     showDetailsModal,
     setShowDetailsModal,
     documentForReview,
-    setDocumentForReview
+    setDocumentForReview,
+    filterByUserId
   } = useDocumentsData();
+
+  // Set user filter if provided in URL
+  useEffect(() => {
+    if (userId) {
+      filterByUserId(userId);
+    }
+  }, [userId, filterByUserId]);
 
   const handleViewDocument = (doc: any) => {
     setSelectedDocument(doc);
@@ -39,6 +54,8 @@ const Documents = () => {
     fetchDocuments();
   };
 
+  const userDetails = userId ? getUserById(userId) : null;
+
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'support']}>
       <div className="w-full max-w-7xl mx-auto space-y-6">
@@ -46,8 +63,16 @@ const Documents = () => {
           <h1 className="text-3xl font-bold tracking-tight">Document Management</h1>
           <p className="text-muted-foreground">
             Upload, verify and manage KYC documents
+            {userDetails && ` - Viewing documents for ${userDetails.fullName}`}
           </p>
         </div>
+
+        {/* Show user card if filtering by user */}
+        {userId && userDetails && (
+          <div className="mb-4 max-w-md">
+            <UserCard userId={userId} />
+          </div>
+        )}
 
         {/* Document Overview */}
         <DocumentOverview documents={documents} />
@@ -64,6 +89,7 @@ const Documents = () => {
           onUploadComplete={fetchDocuments}
           onViewDocument={handleViewDocument}
           onReviewDocument={handleReviewDocument}
+          userIdFilter={userId || undefined}
         />
 
         {/* Document Review Section */}

@@ -1,132 +1,136 @@
 
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Eye, Flag, FileText } from 'lucide-react';
-import { AMLTransaction, HIGH_RISK_COUNTRIES } from '@/types/aml';
-import { formatCurrency } from '@/lib/utils';
-import RiskBadge from '../common/RiskBadge';
+import { AMLTransaction } from '@/types/aml';
+import { Badge } from '@/components/ui/badge';
+import RiskBadge from '@/components/common/RiskBadge';
+import { useCompliance } from '@/context/ComplianceContext';
+import { useNavigate } from 'react-router-dom';
 
 interface TransactionsOverviewTableProps {
   transactions: AMLTransaction[];
   onViewDetails: (transaction: AMLTransaction) => void;
   onFlagTransaction: (transaction: AMLTransaction) => void;
   onCreateCase: (transaction: AMLTransaction) => void;
+  showUserColumn?: boolean;
 }
 
-const TransactionsOverviewTable = ({ 
-  transactions,
-  onViewDetails,
+const TransactionsOverviewTable: React.FC<TransactionsOverviewTableProps> = ({ 
+  transactions, 
+  onViewDetails, 
   onFlagTransaction,
-  onCreateCase
-}: TransactionsOverviewTableProps) => {
-  const isHighRiskCountry = (countryCode: string) => {
-    return HIGH_RISK_COUNTRIES.some(country => 
-      country.countryCode === countryCode && 
-      country.riskLevel === 'high'
-    );
+  onCreateCase,
+  showUserColumn = true
+}) => {
+  const navigate = useNavigate();
+  const { setSelectedUser } = useCompliance();
+  
+  const handleUserClick = (userId: string) => {
+    setSelectedUser(userId);
+    navigate(`/user-case/${userId}`);
   };
-
+  
   return (
     <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Transaction ID</TableHead>
-            <TableHead>Sender</TableHead>
+            {showUserColumn && <TableHead>Sender</TableHead>}
             <TableHead>Amount</TableHead>
-            <TableHead>Countries</TableHead>
-            <TableHead>Reason</TableHead>
+            <TableHead>Destination</TableHead>
+            <TableHead>Date</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Risk</TableHead>
+            <TableHead>Risk Score</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {transactions.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
-                No transactions found
+              <TableCell colSpan={showUserColumn ? 8 : 7} className="text-center h-24">
+                No transactions found with the current filters.
               </TableCell>
             </TableRow>
           ) : (
-            transactions.map((transaction) => (
+            transactions.map(transaction => (
               <TableRow 
                 key={transaction.id}
-                className={transaction.isSuspect ? "bg-red-50/30" : ""}
+                className={transaction.isSuspect ? "bg-red-50/30" : undefined}
               >
-                <TableCell className="font-mono text-xs">
+                <TableCell className="font-medium">
                   {transaction.id.substring(0, 8)}...
                 </TableCell>
-                <TableCell>{transaction.senderName}</TableCell>
-                <TableCell>
-                  {formatCurrency(transaction.senderAmount, transaction.senderCurrency)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <Badge 
-                      variant={isHighRiskCountry(transaction.senderCountryCode) ? "destructive" : "outline"}
-                      className="w-fit"
+                
+                {showUserColumn && (
+                  <TableCell>
+                    <Button
+                      variant="link"
+                      className="h-auto p-0"
+                      onClick={() => handleUserClick(transaction.senderUserId)}
                     >
-                      {transaction.senderCountryCode}
-                    </Badge>
-                    <Badge 
-                      variant={isHighRiskCountry(transaction.receiverCountryCode) ? "destructive" : "outline"}
-                      className="w-fit"
-                    >
-                      {transaction.receiverCountryCode}
-                    </Badge>
-                  </div>
-                </TableCell>
+                      {transaction.senderName}
+                    </Button>
+                  </TableCell>
+                )}
+                
                 <TableCell>
-                  <span className="capitalize">{transaction.reasonForSending}</span>
+                  {transaction.senderAmount} {transaction.senderCurrency}
                 </TableCell>
+                
                 <TableCell>
-                  <Badge 
+                  {transaction.receiverCountryCode}
+                </TableCell>
+                
+                <TableCell>
+                  {new Date(transaction.timestamp).toLocaleDateString()}
+                </TableCell>
+                
+                <TableCell>
+                  <Badge
                     variant={
-                      transaction.status === 'flagged' ? "warning" :
-                      transaction.status === 'failed' ? "destructive" :
-                      transaction.status === 'completed' ? "default" : "secondary"
+                      transaction.status === 'completed'
+                        ? 'default'
+                        : transaction.status === 'flagged'
+                        ? 'destructive'
+                        : transaction.status === 'failed'
+                        ? 'secondary'
+                        : 'outline'
                     }
                   >
                     {transaction.status}
                   </Badge>
-                  {transaction.isSuspect && (
-                    <Badge variant="destructive" className="ml-2">Suspect</Badge>
-                  )}
                 </TableCell>
+                
                 <TableCell>
-                  <RiskBadge score={transaction.riskScore} showText={false} />
+                  <RiskBadge score={transaction.riskScore} />
                 </TableCell>
+                
                 <TableCell>
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2">
                     <Button 
-                      size="sm" 
-                      variant="outline"
+                      variant="ghost" 
+                      size="sm"
                       onClick={() => onViewDetails(transaction)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
+                    
                     <Button 
-                      size="sm" 
-                      variant="secondary"
+                      variant={transaction.isSuspect ? "default" : "outline"} 
+                      size="sm"
                       onClick={() => onFlagTransaction(transaction)}
                     >
                       <Flag className="h-4 w-4 mr-1" />
-                      Flag
+                      {transaction.isSuspect ? 'Flagged' : 'Flag'}
                     </Button>
+                    
                     <Button 
-                      size="sm" 
-                      variant="default"
+                      variant="secondary" 
+                      size="sm"
                       onClick={() => onCreateCase(transaction)}
                     >
                       <FileText className="h-4 w-4 mr-1" />

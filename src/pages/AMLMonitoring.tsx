@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,22 +9,40 @@ import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useCompliance } from '@/context/ComplianceContext';
+import UserCard from '@/components/user/UserCard';
 
 const AMLMonitoringPage = () => {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get('userId');
+  
+  const { getUserById } = useCompliance();
   const [activeTab, setActiveTab] = useState('transactions');
   const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     dateRange: '30days',
-    minAmount: undefined,
-    maxAmount: undefined,
-    country: undefined,
-    riskLevel: 'all',
-    onlyFlagged: false
+    minAmount: undefined as number | undefined,
+    maxAmount: undefined as number | undefined,
+    country: undefined as string | undefined,
+    riskLevel: 'all' as string,
+    onlyFlagged: false,
+    userId: userId || undefined as string | undefined
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Update filters when URL changes
+  useEffect(() => {
+    if (userId) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        userId
+      }));
+    }
+  }, [userId]);
 
   const handleViewTransactionDetails = (transaction: AMLTransaction) => {
     setSelectedTransaction(transaction);
@@ -65,6 +83,11 @@ const AMLMonitoringPage = () => {
 
   // Apply filters to transactions
   const filteredTransactions = mockTransactions.filter(transaction => {
+    // User filter
+    if (filters.userId && transaction.senderUserId !== filters.userId) {
+      return false;
+    }
+    
     // Date range filter would be applied here in a real app
     
     // Min amount filter
@@ -105,6 +128,8 @@ const AMLMonitoringPage = () => {
     return true;
   });
 
+  const userDetails = filters.userId ? getUserById(filters.userId) : null;
+
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
       <div className="space-y-6">
@@ -112,8 +137,16 @@ const AMLMonitoringPage = () => {
           <h1 className="text-3xl font-bold tracking-tight">AML Transaction Monitoring</h1>
           <p className="text-muted-foreground">
             Monitor transactions for suspicious patterns and AML compliance
+            {userDetails && ` - Viewing transactions for ${userDetails.fullName}`}
           </p>
         </div>
+
+        {/* Show user card if filtering by user */}
+        {filters.userId && (
+          <div className="mb-4 max-w-md">
+            <UserCard userId={filters.userId} />
+          </div>
+        )}
 
         <Tabs defaultValue="transactions" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
@@ -127,6 +160,7 @@ const AMLMonitoringPage = () => {
               <TransactionFilters 
                 filters={filters}
                 onFilterChange={handleFilterChange}
+                allowUserFilter={!filters.userId}
               />
               
               <Card>
@@ -136,6 +170,7 @@ const AMLMonitoringPage = () => {
                     onViewDetails={handleViewTransactionDetails}
                     onFlagTransaction={handleFlagTransaction}
                     onCreateCase={handleCreateCase}
+                    showUserColumn={!filters.userId}
                   />
                 </CardContent>
               </Card>
