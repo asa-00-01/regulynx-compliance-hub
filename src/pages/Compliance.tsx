@@ -10,7 +10,7 @@ import ComplianceCaseManagement from '@/components/compliance/ComplianceCaseMana
 import RedFlagsAlerts from '@/components/compliance/RedFlagsAlerts';
 import UserActivityLogs from '@/components/compliance/UserActivityLogs';
 import { usePermissions } from '@/hooks/use-permissions';
-import { UserCheck, CircleDollarSign, FileSearch, Shield } from 'lucide-react';
+import { UserCheck, CircleDollarSign, FileSearch, Shield, FileText, AlertTriangle } from 'lucide-react';
 
 const Compliance = () => {
   const [activeTab, setActiveTab] = useState('kyc-monitoring');
@@ -36,6 +36,15 @@ const Compliance = () => {
             </div>
           </Link>
           
+          <Link to="/compliance-cases">
+            <div className="h-full">
+              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
+                <FileText className="h-10 w-10 text-purple-500" />
+                <span className="font-medium">Compliance Cases</span>
+              </Button>
+            </div>
+          </Link>
+          
           <Link to="/aml-monitoring">
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
@@ -48,17 +57,8 @@ const Compliance = () => {
           <Link to="/sar-center">
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
-                <FileSearch className="h-10 w-10 text-amber-500" />
+                <AlertTriangle className="h-10 w-10 text-amber-500" />
                 <span className="font-medium">SAR Center</span>
-              </Button>
-            </div>
-          </Link>
-          
-          <Link to="/risk-analysis">
-            <div className="h-full">
-              <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
-                <Shield className="h-10 w-10 text-purple-500" />
-                <span className="font-medium">Risk Analysis</span>
               </Button>
             </div>
           </Link>
@@ -87,6 +87,13 @@ const Compliance = () => {
           </TabsContent>
           
           <TabsContent value="case-management" className="space-y-4">
+            <div className="mb-4 flex justify-end">
+              <Link to="/compliance-cases">
+                <Button>
+                  View Full Case Management Module
+                </Button>
+              </Link>
+            </div>
             <ComplianceCaseManagement />
           </TabsContent>
           

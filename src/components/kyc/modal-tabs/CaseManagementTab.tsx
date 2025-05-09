@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KYCStatus } from '@/types/kyc';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface CaseManagementTabProps {
   userId: string;
@@ -27,6 +28,7 @@ const CaseManagementTab: React.FC<CaseManagementTabProps> = ({
   const [kycStatus, setKycStatus] = useState<KYCStatus>(isPEP ? 'information_requested' : initialStatus);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleApproveKYC = async () => {
     setIsSubmitting(true);
@@ -106,6 +108,12 @@ const CaseManagementTab: React.FC<CaseManagementTabProps> = ({
           description: `Compliance case created for ${userName}.`,
         });
         setIsSubmitting(false);
+        
+        // Navigate to the compliance cases page
+        setTimeout(() => {
+          navigate('/compliance-cases');
+        }, 500);
+        
         onClose();
       }, 1000);
     } catch (error) {

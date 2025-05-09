@@ -1,137 +1,138 @@
-
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
-import { 
-  Home, 
-  FileText, 
-  Shield, 
-  Users, 
-  BarChart2, 
-  Settings, 
-  Clock, 
-  AlertCircle,
-  BarChart,
+import {
+  Home,
+  Shield,
+  Users,
+  FileText,
   FileSearch,
+  CircleDollarSign,
+  LineChart,
+  PieChart,
+  FileWarning,
+  History,
   UserCheck,
-  CircleDollarSign
 } from 'lucide-react';
-import { UserRole } from '@/types';
-import { useIsMobile } from '@/hooks/useIsMobile';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/utils';
 
-interface SidebarProps {
-  isOpen: boolean;
+interface NavItemProps {
+  title: string;
+  href: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  allowedRoles: string[];
 }
 
-const roleBasedNavItems: Record<UserRole, { path: string; label: string; icon: React.ReactNode }[]> = {
-  complianceOfficer: [
-    { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/kyc-verification', label: 'KYC Verification', icon: <UserCheck className="h-5 w-5" /> },
-    { path: '/aml-monitoring', label: 'AML Monitoring', icon: <CircleDollarSign className="h-5 w-5" /> },
-    { path: '/documents', label: 'Documents', icon: <FileText className="h-5 w-5" /> },
-    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/compliance', label: 'Compliance', icon: <Shield className="h-5 w-5" /> },
-    { path: '/sar-center', label: 'SAR Center', icon: <FileSearch className="h-5 w-5" /> },
-    { path: '/risk-analysis', label: 'Risk Analysis', icon: <BarChart2 className="h-5 w-5" /> },
-  ],
-  admin: [
-    { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/kyc-verification', label: 'KYC Verification', icon: <UserCheck className="h-5 w-5" /> },
-    { path: '/aml-monitoring', label: 'AML Monitoring', icon: <CircleDollarSign className="h-5 w-5" /> },
-    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/sar-center', label: 'SAR Center', icon: <FileSearch className="h-5 w-5" /> },
-    { path: '/users', label: 'User Management', icon: <Users className="h-5 w-5" /> },
-    { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
-    { path: '/settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> },
-    { path: '/audit-logs', label: 'Audit Logs', icon: <Clock className="h-5 w-5" /> },
-  ],
-  executive: [
-    { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/transactions', label: 'Transactions', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/reports', label: 'Reports', icon: <BarChart2 className="h-5 w-5" /> },
-    { path: '/compliance', label: 'Compliance Overview', icon: <Shield className="h-5 w-5" /> },
-  ],
-  support: [
-    { path: '/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/customers', label: 'Customers', icon: <Users className="h-5 w-5" /> },
-    { path: '/documents', label: 'Documents', icon: <FileText className="h-5 w-5" /> },
-    { path: '/alerts', label: 'Alerts', icon: <AlertCircle className="h-5 w-5" /> },
-  ],
-};
-
-const Sidebar = ({ isOpen }: SidebarProps) => {
+const Sidebar = () => {
   const { user } = useAuth();
-  
-  if (!user) return null;
-  
-  const navItems = user ? roleBasedNavItems[user.role] : [];
+  const location = useLocation();
+
+  const navigationItems = [
+    {
+      title: 'Dashboard',
+      href: '/dashboard',
+      icon: Home,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
+    },
+    {
+      title: 'Compliance',
+      href: '/compliance',
+      icon: Shield,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'Compliance Cases',
+      href: '/compliance-cases',
+      icon: FileText,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'KYC Verification',
+      href: '/kyc-verification',
+      icon: UserCheck,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'Transactions',
+      href: '/transactions',
+      icon: CircleDollarSign,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'Documents',
+      href: '/documents',
+      icon: FileSearch,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'AML Monitoring',
+      href: '/aml-monitoring',
+      icon: LineChart,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'Risk Analysis',
+      href: '/risk-analysis',
+      icon: PieChart,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+    },
+    {
+      title: 'SAR Center',
+      href: '/sar-center',
+      icon: FileWarning,
+      allowedRoles: ['admin', 'complianceOfficer'],
+    },
+    {
+      title: 'Users',
+      href: '/users',
+      icon: Users,
+      allowedRoles: ['admin'],
+    },
+    {
+      title: 'Audit Logs',
+      href: '/audit-logs',
+      icon: History,
+      allowedRoles: ['admin', 'complianceOfficer'],
+    },
+  ];
 
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-20 flex w-64 flex-col border-r bg-sidebar transition-all duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-16"
-      )}
-    >
-      <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-        <div className={cn(
-          "flex items-center",
-          isOpen ? "justify-start" : "justify-center w-full"
-        )}>
-          {isOpen ? (
-            <>
-              <div className="text-sidebar-foreground font-bold text-xl tracking-tight">
-                Regulynx
-              </div>
-            </>
-          ) : (
-            <div className="text-sidebar-foreground font-bold text-xl">R</div>
-          )}
-        </div>
+    <div className="flex flex-col h-full bg-gray-50 border-r py-4">
+      <div className="px-4 mb-4">
+        <h1 className="text-lg font-bold">AML Compliance Tool</h1>
       </div>
-      
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="grid items-start px-2 gap-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                )
-              }
-            >
-              {item.icon}
-              {isOpen && <span>{item.label}</span>}
-            </NavLink>
-          ))}
-        </nav>
+      <nav className="flex-1">
+        <ul>
+          {navigationItems.map((item) => {
+            if (!user || !item.allowedRoles.includes(user.role)) {
+              return null;
+            }
+
+            return (
+              <li key={item.title}>
+                <NavLink
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200",
+                      isActive ? "bg-gray-200" : "text-gray-700"
+                    )
+                  }
+                >
+                  <item.icon className="w-4 h-4 mr-2" />
+                  {item.title}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <div className="mt-auto px-4 py-2 text-center text-muted-foreground">
+        <p className="text-xs">
+          © {new Date().getFullYear()} Company Inc.
+        </p>
       </div>
-      
-      <div className="border-t border-sidebar-border p-4">
-        <div className={cn(
-          "flex items-center gap-3",
-          isOpen ? "justify-start" : "justify-center"
-        )}>
-          <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-accent-foreground">
-            {user?.name?.substring(0, 1).toUpperCase()}
-          </div>
-          {isOpen && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-sidebar-foreground">
-                {user?.name}
-              </p>
-              <p className="text-xs text-sidebar-foreground/70">{user?.role}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </aside>
+    </div>
   );
 };
 

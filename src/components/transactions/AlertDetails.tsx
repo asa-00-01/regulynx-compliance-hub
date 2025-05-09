@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -13,6 +12,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useNavigate } from 'react-router-dom';
 
 interface AlertDetailsProps {
   alert: TransactionAlert | null;
@@ -36,6 +36,7 @@ const AlertDetails = ({
   canManageAlerts,
 }: AlertDetailsProps) => {
   const [note, setNote] = useState('');
+  const navigate = useNavigate();
 
   if (!alert) return null;
 
@@ -55,6 +56,17 @@ const AlertDetails = ({
     if (note.trim() && onAddNote) {
       onAddNote(alert.id, note.trim());
       setNote('');
+    }
+  };
+
+  // Handle creating a compliance case
+  const handleCreateComplianceCase = () => {
+    if (onCreateCase) {
+      onCreateCase(alert.id);
+      // Navigate to the compliance cases page
+      setTimeout(() => {
+        navigate('/compliance-cases');
+      }, 1000);
     }
   };
 
@@ -200,7 +212,7 @@ const AlertDetails = ({
               </Button>
               <Button
                 variant="default"
-                onClick={() => onCreateCase?.(alert.id)}
+                onClick={handleCreateComplianceCase}
               >
                 Create Compliance Case
               </Button>
