@@ -84,16 +84,16 @@ const TransactionFiltersComponent = ({
           <div className="space-y-2">
             <Label>Payment Method</Label>
             <Select
-              value={filters.methods?.[0] || ''}
+              value={filters.methods?.[0] || 'all'}
               onValueChange={(value) =>
-                updateFilters({ methods: value ? [value] : undefined })
+                updateFilters({ methods: value !== 'all' ? [value] : undefined })
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All methods" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All methods</SelectItem>
+                <SelectItem value="all">All methods</SelectItem>
                 <SelectItem value="card">Card</SelectItem>
                 <SelectItem value="bank">Bank Transfer</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
