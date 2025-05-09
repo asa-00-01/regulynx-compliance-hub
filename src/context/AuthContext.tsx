@@ -37,7 +37,7 @@ const mockUsers: User[] = [
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  authLoaded: boolean; // Added missing property
+  authLoaded: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   signup: (email: string, password: string, role: UserRole) => Promise<void>;
@@ -50,7 +50,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authLoaded, setAuthLoaded] = useState(false); // Added missing state
+  const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
     // Check for saved user in localStorage (mock persistence)
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
-    setAuthLoaded(true); // Set authLoaded to true when authentication check is complete
+    setAuthLoaded(true);
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{ 
         user, 
         loading, 
-        authLoaded, // Added missing property
+        authLoaded,
         login, 
         logout, 
         signup,

@@ -16,6 +16,9 @@ import UserCase from './pages/UserCase';
 import { ComplianceProvider } from './context/ComplianceContext';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
+import AuditLogs from './pages/AuditLogs';
+import RiskAnalysis from './pages/RiskAnalysis';
+import Transactions from './pages/Transactions';
 
 function App() {
   const { authLoaded } = useAuth();
@@ -35,6 +38,14 @@ function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -102,6 +113,30 @@ function App() {
           element={
             <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
               <UserCase />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audit-logs"
+          element={
+            <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
+              <AuditLogs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/risk-analysis"
+          element={
+            <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+              <RiskAnalysis />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+              <Transactions />
             </ProtectedRoute>
           }
         />

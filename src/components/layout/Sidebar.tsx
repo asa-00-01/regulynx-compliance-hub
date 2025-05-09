@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Home,
@@ -62,7 +63,7 @@ const Sidebar = () => {
       title: 'Documents',
       href: '/documents',
       icon: FileSearch,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {
       title: 'AML Monitoring',
