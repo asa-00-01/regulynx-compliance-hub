@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ComplianceCaseDetails, CasePriority } from '@/types/case';
+import { ComplianceCaseDetails, CasePriority, CaseSource } from '@/types/case';
 import { User } from '@/types';
 import {
   Dialog,

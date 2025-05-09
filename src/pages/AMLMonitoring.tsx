@@ -50,7 +50,7 @@ const AMLMonitoringPage = () => {
       state: {
         createCase: true,
         userData: {
-          userId: transaction.senderId,
+          userId: transaction.senderUserId,
           userName: transaction.senderName,
           description: `Suspicious transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency}`,
           type: 'aml',
