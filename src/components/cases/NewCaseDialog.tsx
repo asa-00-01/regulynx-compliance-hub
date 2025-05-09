@@ -178,18 +178,23 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="assignTo">Assign To (Optional)</Label>
                 <Select
-                  value={formData.assignedTo || ''}
+                  value={formData.assignedTo || "unassigned"}
                   onValueChange={(value) => {
-                    const officer = complianceOfficers.find(o => o.id === value);
-                    updateField('assignedTo', value);
-                    updateField('assignedToName', officer?.name || '');
+                    if (value === "unassigned") {
+                      updateField('assignedTo', undefined);
+                      updateField('assignedToName', undefined);
+                    } else {
+                      const officer = complianceOfficers.find(o => o.id === value);
+                      updateField('assignedTo', value);
+                      updateField('assignedToName', officer?.name || '');
+                    }
                   }}
                 >
                   <SelectTrigger id="assignTo">
                     <SelectValue placeholder="Select assignee" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {complianceOfficers.map((officer) => (
                       <SelectItem key={officer.id} value={officer.id}>
                         {officer.name}

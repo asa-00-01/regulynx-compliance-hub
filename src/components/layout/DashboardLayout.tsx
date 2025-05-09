@@ -43,7 +43,7 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
           sidebarOpen ? "w-64" : "w-16"
         }`}
       >
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar />
       </div>
       
       {/* Main content area with dynamic margin */}
