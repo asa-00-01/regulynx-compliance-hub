@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useDocumentsData } from '@/components/documents/useDocumentsData';
@@ -16,6 +16,7 @@ const Documents = () => {
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
   const { getUserById } = useCompliance();
+  const [userIdFilter, setUserIdFilter] = useState<string | undefined>(undefined);
 
   const {
     documents,
@@ -30,15 +31,19 @@ const Documents = () => {
     setShowDetailsModal,
     documentForReview,
     setDocumentForReview,
-    filterByUserId
   } = useDocumentsData();
+
+  // Filter documents by user ID
+  const filteredDocuments = userIdFilter
+    ? documents.filter(doc => doc.user_id === userIdFilter)
+    : documents;
 
   // Set user filter if provided in URL
   useEffect(() => {
     if (userId) {
-      filterByUserId(userId);
+      setUserIdFilter(userId);
     }
-  }, [userId, filterByUserId]);
+  }, [userId]);
 
   const handleViewDocument = (doc: any) => {
     setSelectedDocument(doc);
@@ -75,21 +80,20 @@ const Documents = () => {
         )}
 
         {/* Document Overview */}
-        <DocumentOverview documents={documents} />
+        <DocumentOverview documents={filteredDocuments} />
 
         {/* Statistics Cards */}
         <DocumentStats stats={stats} />
 
         {/* Document Upload and List Grid */}
         <DocumentsGrid
-          documents={documents}
+          documents={filteredDocuments}
           loading={loading}
           activeTab={activeTab}
           onTabChange={(value) => setActiveTab(value as typeof activeTab)}
           onUploadComplete={fetchDocuments}
           onViewDocument={handleViewDocument}
           onReviewDocument={handleReviewDocument}
-          userIdFilter={userId || undefined}
         />
 
         {/* Document Review Section */}

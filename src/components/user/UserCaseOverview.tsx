@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -247,8 +246,8 @@ const UserCaseOverview: React.FC = () => {
                         {selectedUser.documents.map((doc) => (
                           <TableRow key={doc.id}>
                             <TableCell className="font-medium capitalize">{doc.type}</TableCell>
-                            <TableCell>{doc.file_name}</TableCell>
-                            <TableCell>{new Date(doc.upload_date).toLocaleDateString()}</TableCell>
+                            <TableCell>{doc.fileName}</TableCell>
+                            <TableCell>{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <Badge
                                 variant={
