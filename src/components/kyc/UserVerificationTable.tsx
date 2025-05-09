@@ -9,9 +9,9 @@ import UserDetailModal from './UserDetailModal';
 import RiskBadge from '../common/RiskBadge';
 import UserFlagsDisplay from './UserFlagsDisplay';
 import { TooltipHelp } from '@/components/ui/tooltip-custom';
-import { useRiskCalculation } from '@/hooks/useRiskCalculation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { UserRiskData } from '@/hooks/useRiskCalculation';
 
 interface UserVerificationTableProps {
   users: (KYCUser & { flags: UserFlags })[];
@@ -21,6 +21,8 @@ interface UserVerificationTableProps {
   isLoading?: boolean;
   flaggedUsers?: string[];
   onFlagUser?: (userId: string) => void;
+  // Add a new prop for precomputed risk data
+  riskDataMap?: Map<string, UserRiskData>;
 }
 
 const UserVerificationTable = ({ 
@@ -30,7 +32,8 @@ const UserVerificationTable = ({
   sortOrder = 'asc',
   isLoading = false,
   flaggedUsers = [],
-  onFlagUser
+  onFlagUser,
+  riskDataMap = new Map()
 }: UserVerificationTableProps) => {
   const [selectedUser, setSelectedUser] = useState<(KYCUser & { flags: UserFlags }) | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -140,8 +143,9 @@ const UserVerificationTable = ({
             </TableRow>
           ) : (
             users.map((user) => {
-              const riskData = useRiskCalculation(user);
               const isFlagged = flaggedUsers?.includes(user.id);
+              // Get risk data from the map instead of calling the hook
+              const riskData = riskDataMap.get(user.id);
               
               return (
                 <TableRow key={user.id} className={isFlagged ? "bg-yellow-50/30" : ""}>
@@ -174,27 +178,31 @@ const UserVerificationTable = ({
                     <UserFlagsDisplay flags={user.flags} />
                   </TableCell>
                   <TableCell>
-                    <TooltipHelp content={
-                      <>
-                        <div className="font-medium mb-1">Risk factors:</div>
-                        <ul className="list-disc pl-4 space-y-1 text-xs">
-                          {riskData.riskFactors.highAmount && <li>High transaction amount</li>}
-                          {riskData.riskFactors.highRiskCountry && <li>High-risk countries</li>}
-                          {riskData.riskFactors.highFrequency && <li>High transaction frequency</li>}
-                          {riskData.riskFactors.incompleteKYC && <li>Incomplete KYC information</li>}
-                        </ul>
-                      </>
-                    }>
-                      <RiskBadge score={user.flags.riskScore} />
-                    </TooltipHelp>
+                    {riskData && (
+                      <TooltipHelp content={
+                        <>
+                          <div className="font-medium mb-1">Risk factors:</div>
+                          <ul className="list-disc pl-4 space-y-1 text-xs">
+                            {riskData.riskFactors.highAmount && <li>High transaction amount</li>}
+                            {riskData.riskFactors.highRiskCountry && <li>High-risk countries</li>}
+                            {riskData.riskFactors.highFrequency && <li>High transaction frequency</li>}
+                            {riskData.riskFactors.incompleteKYC && <li>Incomplete KYC information</li>}
+                          </ul>
+                        </>
+                      }>
+                        <RiskBadge score={user.flags.riskScore} />
+                      </TooltipHelp>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{riskData.transactionCount} transactions</span>
-                      <span className="text-xs text-muted-foreground">
-                        Last: {riskData.recentTransactionAmount.toLocaleString()} SEK
-                      </span>
-                    </div>
+                    {riskData && (
+                      <div className="flex flex-col">
+                        <span className="font-medium">{riskData.transactionCount} transactions</span>
+                        <span className="text-xs text-muted-foreground">
+                          Last: {riskData.recentTransactionAmount.toLocaleString()} SEK
+                        </span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
