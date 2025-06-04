@@ -93,8 +93,8 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
                   <TableCell className="font-medium">{document.file_name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(document.status)}
-                      {getStatusBadge(document.status)}
+                      {getStatusIcon(document.status as DocumentStatus)}
+                      {getStatusBadge(document.status as DocumentStatus)}
                     </div>
                   </TableCell>
                   <TableCell>
