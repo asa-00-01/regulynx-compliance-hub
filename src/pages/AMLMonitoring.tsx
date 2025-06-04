@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import TransactionsOverviewTable from '@/components/aml/TransactionsOverviewTable';
 import TransactionFilters from '@/components/aml/TransactionFilters';
+import PatternAnalysisTab from '@/components/aml/PatternAnalysisTab';
 import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
@@ -178,14 +179,7 @@ const AMLMonitoringPage = () => {
           </TabsContent>
           
           <TabsContent value="patterns">
-            <Card>
-              <CardContent className="pt-6 min-h-[400px] flex items-center justify-center">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold">Pattern Analysis</h3>
-                  <p className="text-muted-foreground">This feature is coming soon</p>
-                </div>
-              </CardContent>
-            </Card>
+            <PatternAnalysisTab />
           </TabsContent>
           
           <TabsContent value="reports">
