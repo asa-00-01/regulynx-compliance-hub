@@ -179,6 +179,83 @@ export type Database = {
         }
         Relationships: []
       }
+      risk_matches: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          match_data: Json | null
+          matched_at: string | null
+          rule_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          match_data?: Json | null
+          matched_at?: string | null
+          rule_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          match_data?: Json | null
+          matched_at?: string | null
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_matches_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "rules"
+            referencedColumns: ["rule_id"]
+          },
+        ]
+      }
+      rules: {
+        Row: {
+          category: string
+          condition: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          risk_score: number
+          rule_id: string
+          rule_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          condition: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          risk_score: number
+          rule_id: string
+          rule_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          condition?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          risk_score?: number
+          rule_id?: string
+          rule_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

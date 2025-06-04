@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSARData } from '@/hooks/useSARData';
 import PatternCard from '@/components/sar/PatternCard';
 import MatchesList from '@/components/sar/MatchesList';
-import { AlertTriangle, TrendingUp, Clock, Search } from 'lucide-react';
+import RiskRulesDisplay from '@/components/aml/RiskRulesDisplay';
+import { AlertTriangle, TrendingUp, Clock, Search, Shield } from 'lucide-react';
 
 const PatternAnalysisTab = () => {
   const { patterns, getPatternMatches, createAlertFromMatch, createSARFromMatch } = useSARData();
@@ -47,7 +48,7 @@ const PatternAnalysisTab = () => {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -85,12 +86,25 @@ const PatternAnalysisTab = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Risk Rules</p>
+                <p className="text-2xl font-bold">19</p>
+              </div>
+              <Shield className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
+            <TabsTrigger value="risk-rules">Risk Rules Engine</TabsTrigger>
             <TabsTrigger value="matches" disabled={!selectedPatternId}>
               Pattern Matches
               {selectedPattern && (
@@ -182,6 +196,23 @@ const PatternAnalysisTab = () => {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="risk-rules" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Rule-Based Risk Scoring Engine
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Evaluate transactions and users against 19 pre-defined risk rules
+              </p>
+            </CardHeader>
+            <CardContent>
+              <RiskRulesDisplay />
             </CardContent>
           </Card>
         </TabsContent>
