@@ -36,10 +36,6 @@ const getEntityBadgeStyle = (entity: string) => {
 
 interface AuditLogWithProfile extends AuditLog {
   user_name?: string;
-  profiles?: {
-    name?: string;
-    [key: string]: any;
-  } | null;
 }
 
 const AuditLogs = () => {
@@ -49,30 +45,59 @@ const AuditLogs = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   
-  // Function to fetch audit logs with profiles joined
+  // Function to fetch audit logs with manual join to profiles
   const fetchAuditLogs = async () => {
-    let query = supabase
+    let auditQuery = supabase
       .from('audit_logs')
-      .select(`
-        *,
-        profiles(name)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
     
     // Apply entity filter if selected
     if (entityFilter !== 'all') {
-      query = query.eq('entity', entityFilter);
+      auditQuery = auditQuery.eq('entity', entityFilter);
     }
     
-    const { data, error } = await query;
+    const { data: auditLogs, error: auditError } = await auditQuery;
     
-    if (error) {
-      console.error('Error fetching audit logs:', error);
-      throw error;
+    if (auditError) {
+      console.error('Error fetching audit logs:', auditError);
+      throw auditError;
     }
     
-    return data as AuditLogWithProfile[];
+    // Get unique user IDs from audit logs
+    const userIds = Array.from(new Set(
+      auditLogs
+        ?.filter(log => log.user_id)
+        .map(log => log.user_id)
+    )) as string[];
+    
+    // Fetch profiles for these user IDs
+    let profiles: any[] = [];
+    if (userIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', userIds);
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Don't throw error for profiles, just continue without user names
+      } else {
+        profiles = profilesData || [];
+      }
+    }
+    
+    // Create a map for quick profile lookup
+    const profileMap = new Map(profiles.map(profile => [profile.id, profile.name]));
+    
+    // Combine audit logs with user names
+    const auditLogsWithProfiles: AuditLogWithProfile[] = auditLogs?.map(log => ({
+      ...log,
+      user_name: log.user_id ? profileMap.get(log.user_id) : undefined
+    })) || [];
+    
+    return auditLogsWithProfiles;
   };
   
   // Query for fetching audit logs
@@ -89,16 +114,7 @@ const AuditLogs = () => {
     
     return auditLogs.filter(log => {
       const searchString = searchTerm.toLowerCase();
-      
-      // Transform the data to include user_name
-      let userName = 'System';
-      
-      // Check if profiles exists and has a name property
-      if (log.profiles) {
-        if (typeof log.profiles === 'object' && 'name' in log.profiles && log.profiles.name) {
-          userName = log.profiles.name;
-        }
-      }
+      const userName = log.user_name || 'System';
       
       // Search in various fields
       return (
@@ -122,20 +138,13 @@ const AuditLogs = () => {
     }
     
     // Transform data for CSV
-    const csvData = auditLogs.map(log => {
-      let userName = 'System';
-      if (log.profiles && typeof log.profiles === 'object' && 'name' in log.profiles && log.profiles.name) {
-        userName = log.profiles.name;
-      }
-      
-      return {
-        Date: new Date(log.created_at).toLocaleString(),
-        User: userName,
-        Action: log.action,
-        Entity: log.entity,
-        Details: JSON.stringify(log.details),
-      };
-    });
+    const csvData = auditLogs.map(log => ({
+      Date: new Date(log.created_at).toLocaleString(),
+      User: log.user_name || 'System',
+      Action: log.action,
+      Entity: log.entity,
+      Details: JSON.stringify(log.details),
+    }));
     
     // Create CSV content
     const headers = Object.keys(csvData[0]);
@@ -261,36 +270,29 @@ const AuditLogs = () => {
                 </div>
                 <div className="divide-y">
                   {filteredLogs.length > 0 ? (
-                    filteredLogs.map((log) => {
-                      let userName = 'System';
-                      if (log.profiles && typeof log.profiles === 'object' && 'name' in log.profiles && log.profiles.name) {
-                        userName = log.profiles.name;
-                      }
-                      
-                      return (
-                        <div key={log.id} className="grid grid-cols-5 p-3 items-center">
-                          <div className="text-sm">
-                            {new Date(log.created_at).toLocaleString()}
-                          </div>
-                          <div className="font-medium">
-                            {userName}
-                          </div>
-                          <div>
-                            <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
-                              {log.action}
-                            </span>
-                          </div>
-                          <div>
-                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getEntityBadgeStyle(log.entity)}`}>
-                              {log.entity}
-                            </span>
-                          </div>
-                          <div className="text-sm truncate max-w-xs" title={JSON.stringify(log.details)}>
-                            {log.details ? JSON.stringify(log.details) : '-'}
-                          </div>
+                    filteredLogs.map((log) => (
+                      <div key={log.id} className="grid grid-cols-5 p-3 items-center">
+                        <div className="text-sm">
+                          {new Date(log.created_at).toLocaleString()}
                         </div>
-                      );
-                    })
+                        <div className="font-medium">
+                          {log.user_name || 'System'}
+                        </div>
+                        <div>
+                          <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                            {log.action}
+                          </span>
+                        </div>
+                        <div>
+                          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getEntityBadgeStyle(log.entity)}`}>
+                            {log.entity}
+                          </span>
+                        </div>
+                        <div className="text-sm truncate max-w-xs" title={JSON.stringify(log.details)}>
+                          {log.details ? JSON.stringify(log.details) : '-'}
+                        </div>
+                      </div>
+                    ))
                   ) : (
                     <div className="p-4 text-center">
                       <p className="text-muted-foreground">No audit logs found</p>
