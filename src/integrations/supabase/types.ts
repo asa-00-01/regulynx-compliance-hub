@@ -114,8 +114,8 @@ export type Database = {
           file_name: string
           file_path: string
           id: string
-          status: Database["public"]["Enums"]["document_status"]
-          type: Database["public"]["Enums"]["document_type"]
+          status: string
+          type: string
           updated_at: string
           upload_date: string
           user_id: string
@@ -128,8 +128,8 @@ export type Database = {
           file_name: string
           file_path: string
           id?: string
-          status?: Database["public"]["Enums"]["document_status"]
-          type: Database["public"]["Enums"]["document_type"]
+          status: string
+          type: string
           updated_at?: string
           upload_date?: string
           user_id: string
@@ -142,8 +142,8 @@ export type Database = {
           file_name?: string
           file_path?: string
           id?: string
-          status?: Database["public"]["Enums"]["document_status"]
-          type?: Database["public"]["Enums"]["document_type"]
+          status?: string
+          type?: string
           updated_at?: string
           upload_date?: string
           user_id?: string
