@@ -20,9 +20,15 @@ export const badgeVariants = cva(
         success:
           "border-transparent bg-green-500 text-green-50 hover:bg-green-500/80",
       },
+      size: {
+        default: "px-2.5 py-0.5 text-xs",
+        sm: "px-1.5 py-0 text-xs",
+        lg: "px-3 py-0.5 text-sm",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )

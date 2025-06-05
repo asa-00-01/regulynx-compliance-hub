@@ -13,6 +13,7 @@ export interface UnifiedUserData {
   identityNumber?: string;
   phoneNumber?: string;
   address?: string;
+  countryOfResidence?: string;
   createdAt: string;
   kycStatus: 'verified' | 'pending' | 'rejected' | 'information_requested';
   kycFlags: UserFlags;
