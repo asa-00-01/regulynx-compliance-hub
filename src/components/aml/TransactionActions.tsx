@@ -1,23 +1,14 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AMLTransaction } from '@/types/aml';
-import { Flag, AlertTriangle, FileText, User, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import TransactionActionButtons from './TransactionActionButtons';
+import TransactionInvestigationActions from './TransactionInvestigationActions';
+import TransactionSummary from './TransactionSummary';
 
 interface TransactionActionsProps {
   transaction: AMLTransaction;
@@ -137,121 +128,24 @@ const TransactionActions: React.FC<TransactionActionsProps> = ({ transaction, on
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Immediate Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 text-red-600 hover:text-red-700"
-              >
-                <Flag className="h-4 w-4" />
-                Flag Transaction
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Flag Transaction</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to flag this transaction as suspicious? 
-                  This will mark it for immediate compliance review.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleFlagTransaction}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Flag Transaction
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCreateCase}
-            disabled={loading === 'case'}
-            className="flex items-center gap-2"
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Create Case
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCreateSAR}
-            disabled={loading === 'sar'}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            Create SAR
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewUserProfile}
-            disabled={loading === 'profile'}
-            className="flex items-center gap-2"
-          >
-            <User className="h-4 w-4" />
-            User Profile
-          </Button>
-        </div>
+        <TransactionActionButtons
+          transaction={transaction}
+          loading={loading}
+          onFlagTransaction={handleFlagTransaction}
+          onCreateCase={handleCreateCase}
+          onCreateSAR={handleCreateSAR}
+          onViewUserProfile={handleViewUserProfile}
+        />
 
         {/* Investigation Actions */}
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium mb-3">Investigation</h4>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewUserTransactions}
-              disabled={loading === 'transactions'}
-              className="w-full justify-start"
-            >
-              View All User Transactions
-            </Button>
-          </div>
-        </div>
+        <TransactionInvestigationActions
+          transaction={transaction}
+          loading={loading}
+          onViewUserTransactions={handleViewUserTransactions}
+        />
 
         {/* Transaction Details Summary */}
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium mb-3">Transaction Summary</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex justify-between">
-              <span>Amount:</span>
-              <span className="font-medium">
-                {transaction.senderAmount.toLocaleString()} {transaction.senderCurrency}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Method:</span>
-              <Badge variant="outline" size="sm">
-                {transaction.method}
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Status:</span>
-              <Badge 
-                variant={transaction.isSuspect ? 'destructive' : 'default'} 
-                size="sm"
-              >
-                {transaction.status}
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Corridor:</span>
-              <span className="text-xs">
-                {transaction.senderCountryCode} → {transaction.receiverCountryCode}
-              </span>
-            </div>
-          </div>
-        </div>
+        <TransactionSummary transaction={transaction} />
       </CardContent>
     </Card>
   );
