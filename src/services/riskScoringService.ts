@@ -58,7 +58,7 @@ function evaluateCondition(condition: any, data: any): boolean {
     case 'or':
       return operands.some((op: any) => evaluateCondition(op, data));
     case '%':
-      return getValue(operands[0], data) % getValue(operands[1], data);
+      return (getValue(operands[0], data) % getValue(operands[1], data)) === 0;
     default:
       return false;
   }
