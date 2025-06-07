@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UnifiedUserData } from '@/context/compliance/types';
-import { useRiskScoring } from '@/hooks/useRiskScoring';
+import { useRiskScoringUnified } from '@/hooks/useRiskScoringUnified';
 import RiskRulesDisplay from '@/components/aml/RiskRulesDisplay';
 import { AlertTriangle } from 'lucide-react';
 
@@ -11,7 +11,7 @@ interface UserRiskScoringProps {
 }
 
 const UserRiskScoring: React.FC<UserRiskScoringProps> = ({ user }) => {
-  const { riskAssessment, loading, error, runAssessment } = useRiskScoring(user);
+  const { riskAssessment, loading, error, runAssessment } = useRiskScoringUnified(user);
 
   if (loading) {
     return (
