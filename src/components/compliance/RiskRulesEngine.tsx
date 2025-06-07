@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -68,7 +67,14 @@ const RiskRulesEngine: React.FC = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setRules(data || []);
+      
+      // Type cast the data to ensure category matches our union type
+      const typedRules = (data || []).map(rule => ({
+        ...rule,
+        category: rule.category as 'transaction' | 'kyc' | 'behavioral'
+      }));
+      
+      setRules(typedRules);
     } catch (error) {
       console.error('Error loading rules:', error);
       toast({
