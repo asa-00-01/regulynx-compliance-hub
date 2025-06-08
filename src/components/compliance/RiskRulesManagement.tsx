@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -65,7 +64,7 @@ const RiskRulesManagement: React.FC = () => {
           receiverCurrency: 'USD' as const,
           senderCountryCode: 'US',
           receiverCountryCode: 'GB',
-          method: 'bank_transfer' as const,
+          method: 'bank' as const,
           timestamp: new Date().toISOString(),
           status: 'completed' as const,
           reasonForSending: 'Business payment',
