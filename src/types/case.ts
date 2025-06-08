@@ -1,8 +1,7 @@
-
 import { User } from "./index";
 
 export type CasePriority = 'low' | 'medium' | 'high' | 'critical';
-export type CaseSource = 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system';
+export type CaseSource = 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment';
 
 export interface ComplianceCaseDetails {
   id: string;

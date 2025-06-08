@@ -9,7 +9,7 @@ export interface User {
   avatarUrl?: string;
 }
 
-export type DocumentStatus = 'pending' | 'verified' | 'rejected';
+export type DocumentStatus = 'pending' | 'verified' | 'rejected' | 'information_requested';
 
 export interface Document {
   id: string;

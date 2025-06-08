@@ -209,12 +209,14 @@ const KYCMonitoringDashboard = () => {
     return "bg-red-100 text-red-800";
   };
 
-  const getKYCStatusClass = (status: DocumentStatus) => {
+  const getKYCStatusClass = (status: string) => {
     switch (status) {
       case 'verified':
         return "bg-green-100 text-green-800";
       case 'pending':
         return "bg-yellow-100 text-yellow-800";
+      case 'information_requested':
+        return "bg-orange-100 text-orange-800";
       case 'rejected':
         return "bg-red-100 text-red-800";
       default:
@@ -305,6 +307,7 @@ const KYCMonitoringDashboard = () => {
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="verified">Verified</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="information_requested">Information Requested</SelectItem>
                 </SelectContent>
               </Select>
             </div>

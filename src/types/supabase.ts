@@ -1,8 +1,7 @@
-
 import { Database } from '@/integrations/supabase/types';
 
 // Export specific types from the Supabase schema
-export type DocumentStatus = Database['public']['Enums']['document_status'];
+export type DocumentStatus = 'pending' | 'verified' | 'rejected' | 'information_requested';
 export type CaseType = Database['public']['Enums']['case_type'];
 export type CaseStatus = Database['public']['Enums']['case_status'];
 export type DocumentType = Database['public']['Enums']['document_type'];
