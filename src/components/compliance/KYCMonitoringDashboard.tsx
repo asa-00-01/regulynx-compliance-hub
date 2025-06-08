@@ -28,6 +28,7 @@ import { DocumentStatus } from '@/types/supabase';
 import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle, FileText } from 'lucide-react';
 import CustomerMonitoringActions from './CustomerMonitoringActions';
 import { useNavigate } from 'react-router-dom';
+import { unifiedMockData } from '@/mocks/centralizedMockData';
 
 // Mock customer data for demonstration
 const mockCustomers = [
@@ -111,7 +112,22 @@ const mockCustomers = [
 ];
 
 const KYCMonitoringDashboard = () => {
-  const [customers, setCustomers] = useState(mockCustomers);
+  // Transform unified data to dashboard format
+  const transformedCustomers = unifiedMockData.map(user => ({
+    id: user.id,
+    name: user.fullName,
+    email: user.email,
+    kycStatus: user.kycStatus,
+    riskScore: user.riskScore,
+    lastTransaction: user.transactions.length > 0 
+      ? user.transactions[0].timestamp 
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    country: user.countryOfResidence || 'Unknown',
+    transactions: user.transactions.length,
+    amount: user.transactions.reduce((sum, tx) => sum + tx.senderAmount, 0),
+  }));
+
+  const [customers, setCustomers] = useState(transformedCustomers);
   const [kycFilter, setKYCFilter] = useState<string>('all');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [countryFilter, setCountryFilter] = useState<string>('');

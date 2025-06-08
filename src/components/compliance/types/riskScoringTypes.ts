@@ -1,4 +1,3 @@
-
 // Risk factor weights (should be configurable in a real system)
 export const RISK_WEIGHTS = {
   COUNTRY: 0.35,
@@ -25,49 +24,16 @@ export const COUNTRY_RISK = {
   'DEFAULT': 0.5
 };
 
-// Mock user data with risk factors
-export const mockUsers = [
-  {
-    id: '1',
-    name: 'John Doe',
-    country: 'Sweden',
-    transactionFrequency: 5, // per month
-    transactionAmount: 3000, // SEK
-    kycStatus: 'verified',
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    country: 'Denmark',
-    transactionFrequency: 8,
-    transactionAmount: 7500,
-    kycStatus: 'pending',
-  },
-  {
-    id: '3',
-    name: 'Ahmed Hassan',
-    country: 'Turkey',
-    transactionFrequency: 12,
-    transactionAmount: 15000,
-    kycStatus: 'pending',
-  },
-  {
-    id: '4',
-    name: 'Sofia Rodriguez',
-    country: 'Colombia',
-    transactionFrequency: 3,
-    transactionAmount: 12000,
-    kycStatus: 'rejected',
-  },
-  {
-    id: '5',
-    name: 'Alexander Petrov',
-    country: 'Russia',
-    transactionFrequency: 15,
-    transactionAmount: 25000,
-    kycStatus: 'verified',
-  },
-];
+// Transform centralized data to risk scoring format
+import { unifiedMockData } from '@/mocks/centralizedMockData';
+export const mockUsers = unifiedMockData.map(user => ({
+  id: user.id,
+  name: user.fullName,
+  country: user.countryOfResidence || 'Unknown',
+  transactionFrequency: user.transactions.length,
+  transactionAmount: user.transactions.reduce((sum, tx) => sum + tx.senderAmount, 0) / Math.max(1, user.transactions.length),
+  kycStatus: user.kycStatus,
+}));
 
 export type UserWithRiskScore = {
   id: string;

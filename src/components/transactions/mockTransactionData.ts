@@ -1,5 +1,26 @@
-
 import { Transaction, TransactionAlert } from '@/types/transaction';
+import { mockTransactionsCollection } from '@/mocks/centralizedMockData';
+
+// Transform AML transactions to Transaction format
+const transformAMLToTransaction = (amlTx: any): Transaction => ({
+  id: amlTx.id,
+  userId: amlTx.senderUserId,
+  userName: amlTx.senderName,
+  amount: amlTx.senderAmount,
+  currency: amlTx.senderCurrency as Transaction['currency'],
+  timestamp: amlTx.timestamp,
+  originCountry: amlTx.senderCountryCode,
+  destinationCountry: amlTx.receiverCountryCode,
+  method: amlTx.method as Transaction['method'],
+  description: amlTx.reasonForSending,
+  riskScore: amlTx.riskScore,
+  flagged: amlTx.isSuspect
+});
+
+// Use centralized transaction data
+export const generateMockTransactions = (count = 20): Transaction[] => {
+  return mockTransactionsCollection.slice(0, count).map(transformAMLToTransaction);
+};
 
 // List of high risk countries (for demonstration)
 export const HIGH_RISK_COUNTRIES = [
@@ -111,48 +132,6 @@ export const generateMockTransaction = (
   transaction.flagged = overrides.flagged ?? (transaction.riskScore > 70);
   
   return transaction;
-};
-
-// Generate a set of mock transactions
-export const generateMockTransactions = (count = 20): Transaction[] => {
-  const transactions: Transaction[] = [];
-  
-  // Generate most transactions normally
-  for (let i = 0; i < count - 3; i++) {
-    transactions.push(generateMockTransaction());
-  }
-  
-  // Add three pre-flagged high-risk transactions
-  
-  // 1. Large amount to high-risk country
-  transactions.push(generateMockTransaction({
-    amount: 75000,
-    destinationCountry: HIGH_RISK_COUNTRIES[0],
-    riskScore: 95,
-    flagged: true,
-    description: 'Large transfer to high-risk jurisdiction'
-  }));
-  
-  // 2. Suspicious pattern of multiple cash deposits
-  transactions.push(generateMockTransaction({
-    amount: 9000,
-    method: 'cash',
-    riskScore: 85,
-    flagged: true,
-    description: 'Cash deposit just below reporting threshold'
-  }));
-  
-  // 3. Crypto transaction to suspicious country
-  transactions.push(generateMockTransaction({
-    amount: 15000,
-    method: 'crypto',
-    destinationCountry: HIGH_RISK_COUNTRIES[2],
-    riskScore: 90,
-    flagged: true,
-    description: 'Crypto transfer to sanctioned country'
-  }));
-  
-  return transactions;
 };
 
 // Generate mock alerts based on transactions

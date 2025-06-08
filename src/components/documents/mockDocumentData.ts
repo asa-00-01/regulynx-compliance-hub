@@ -1,5 +1,5 @@
-
 import { Document, DocumentStatus, DocumentType } from '@/types/supabase';
+import { mockDocumentsCollection } from '@/mocks/centralizedMockData';
 
 // Generate a random date in the past 30 days
 const randomPastDate = () => {
@@ -51,8 +51,26 @@ export const generateMockDocument = (
 
 // Generate a set of mock documents
 export const generateMockDocuments = (count = 5): Document[] => {
+  // Return a subset of centralized documents if available
+  if (mockDocumentsCollection.length > 0) {
+    return mockDocumentsCollection.slice(0, count).map(doc => ({
+      id: doc.id,
+      user_id: doc.userId,
+      file_name: doc.fileName,
+      file_path: `documents/${doc.userId}/${doc.id}.pdf`,
+      type: doc.type as DocumentType,
+      upload_date: doc.uploadDate,
+      status: doc.status as DocumentStatus,
+      verified_by: doc.verifiedBy,
+      verification_date: doc.verificationDate,
+      extracted_data: doc.extractedData,
+      created_at: doc.uploadDate,
+      updated_at: doc.uploadDate
+    }));
+  }
+
+  // Fallback to generated documents
   const documents: Document[] = [];
-  
   const statuses: DocumentStatus[] = ['pending', 'verified', 'rejected'];
   const types: DocumentType[] = ['passport', 'id', 'license'];
   
@@ -68,7 +86,20 @@ export const generateMockDocuments = (count = 5): Document[] => {
 // Add mock documents to the existing documents list if it's empty
 export const ensureMockDocuments = (documents: Document[]): Document[] => {
   if (documents.length === 0) {
-    return generateMockDocuments(8);
+    return mockDocumentsCollection.map(doc => ({
+      id: doc.id,
+      user_id: doc.userId,
+      file_name: doc.fileName,
+      file_path: `documents/${doc.userId}/${doc.id}.pdf`,
+      type: doc.type as DocumentType,
+      upload_date: doc.uploadDate,
+      status: doc.status as DocumentStatus,
+      verified_by: doc.verifiedBy,
+      verification_date: doc.verificationDate,
+      extracted_data: doc.extractedData,
+      created_at: doc.uploadDate,
+      updated_at: doc.uploadDate
+    }));
   }
   return documents;
 };

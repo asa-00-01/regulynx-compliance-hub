@@ -1,134 +1,19 @@
 
 import { AMLTransaction } from '@/types/aml';
+import { mockTransactionsCollection } from '@/mocks/centralizedMockData';
 
-export const mockTransactions: AMLTransaction[] = [
-  {
-    id: 'tx_123456789',
-    senderUserId: '1',
-    senderName: 'John Smith',
-    receiverUserId: '2',
-    receiverName: 'Jane Doe',
-    senderAmount: 5000,
-    senderCurrency: 'USD',
-    receiverAmount: 4950,
-    receiverCurrency: 'USD',
-    senderCountryCode: 'US',
-    receiverCountryCode: 'US',
-    timestamp: '2023-06-01T14:30:00Z',
-    status: 'completed',
-    reasonForSending: 'business payment',
-    method: 'bank',
-    isSuspect: false,
-    riskScore: 15
-  },
-  {
-    id: 'tx_987654321',
-    senderUserId: '2',
-    senderName: 'Jane Doe',
-    receiverUserId: '3',
-    receiverName: 'Robert Johnson',
-    senderAmount: 12000,
-    senderCurrency: 'USD',
-    receiverAmount: 11000,
-    receiverCurrency: 'EUR',
-    senderCountryCode: 'US',
-    receiverCountryCode: 'FR',
-    timestamp: '2023-06-02T09:45:00Z',
-    status: 'completed',
-    reasonForSending: 'investment',
-    method: 'bank',
-    isSuspect: false,
-    riskScore: 35
-  },
-  {
-    id: 'tx_456789123',
-    senderUserId: '3',
-    senderName: 'Robert Johnson',
-    receiverUserId: '4',
-    receiverName: 'Maria Garcia',
-    senderAmount: 25000,
-    senderCurrency: 'USD',
-    receiverAmount: 23000,
-    receiverCurrency: 'EUR',
-    senderCountryCode: 'US',
-    receiverCountryCode: 'ES',
-    timestamp: '2023-06-03T11:20:00Z',
-    status: 'flagged',
-    reasonForSending: 'property purchase',
-    method: 'bank',
-    isSuspect: true,
-    riskScore: 75,
-    notes: ['Large amount', 'Unusual activity for this user']
-  },
-  {
-    id: 'tx_789123456',
-    senderUserId: '4',
-    senderName: 'Maria Garcia',
-    receiverUserId: '5',
-    receiverName: 'Ahmed Khalid',
-    senderAmount: 3000,
-    senderCurrency: 'EUR',
-    receiverAmount: 3500,
-    receiverCurrency: 'USD',
-    senderCountryCode: 'ES',
-    receiverCountryCode: 'IR',
-    timestamp: '2023-06-04T16:10:00Z',
-    status: 'flagged',
-    reasonForSending: 'family support',
-    method: 'mobile',
-    isSuspect: true,
-    riskScore: 85,
-    notes: ['High-risk country', 'Destination on sanctions list']
-  },
-  {
-    id: 'tx_321654987',
-    senderUserId: '5',
-    senderName: 'Ahmed Khalid',
-    senderAmount: 1500,
-    senderCurrency: 'USD',
-    receiverAmount: 1500,
-    receiverCurrency: 'USD',
-    senderCountryCode: 'IR',
-    receiverCountryCode: 'SY',
-    timestamp: '2023-06-05T10:30:00Z',
-    status: 'failed',
-    reasonForSending: 'goods purchase',
-    method: 'bank',
-    isSuspect: true,
-    riskScore: 95,
-    notes: ['Sanctioned individual', 'Prohibited transaction']
-  },
-  {
-    id: 'tx_654987321',
-    senderUserId: '1',
-    senderName: 'John Smith',
-    receiverUserId: '3',
-    receiverName: 'Robert Johnson',
-    senderAmount: 7500,
-    senderCurrency: 'USD',
-    receiverAmount: 7500,
-    receiverCurrency: 'USD',
-    senderCountryCode: 'US',
-    receiverCountryCode: 'US',
-    timestamp: '2023-06-06T15:15:00Z',
-    status: 'completed',
-    reasonForSending: 'services payment',
-    method: 'bank',
-    isSuspect: false,
-    riskScore: 20
-  }
-];
+export const mockTransactions: AMLTransaction[] = mockTransactionsCollection;
 
 export const mockRiskDistribution = [
-  { name: 'Low Risk', value: 42, color: '#10b981' },
-  { name: 'Medium Risk', value: 28, color: '#f59e0b' },
-  { name: 'High Risk', value: 12, color: '#ef4444' },
+  { name: 'Low Risk', value: mockTransactions.filter(t => t.riskScore <= 30).length, color: '#10b981' },
+  { name: 'Medium Risk', value: mockTransactions.filter(t => t.riskScore > 30 && t.riskScore <= 70).length, color: '#f59e0b' },
+  { name: 'High Risk', value: mockTransactions.filter(t => t.riskScore > 70).length, color: '#ef4444' },
 ];
 
 export const mockComplianceMetrics = {
-  totalTransactions: 1425,
-  flaggedTransactions: 87,
-  verifiedUsers: 320,
-  sanctionedUsers: 5,
-  pepUsers: 18
+  totalTransactions: mockTransactions.length,
+  flaggedTransactions: mockTransactions.filter(t => t.isSuspect).length,
+  verifiedUsers: mockTransactionsCollection.length,
+  sanctionedUsers: 2, // From centralized data
+  pepUsers: 1 // From centralized data
 };
