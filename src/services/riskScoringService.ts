@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AMLTransaction } from '@/types/aml';
 import { UnifiedUserData } from '@/context/compliance/types';
@@ -82,47 +81,58 @@ function prepareTransactionData(transaction: AMLTransaction): any {
     amount: transaction.senderAmount,
     sender_country: transaction.senderCountryCode,
     receiver_country: transaction.receiverCountryCode,
-    country: transaction.senderCountryCode, // For country-based rules
+    country: transaction.senderCountryCode,
     transaction_hour: new Date(transaction.timestamp).getHours(),
     involves_crypto: transaction.method === 'crypto',
     payment_method: transaction.method,
-    // Mock additional data for demo purposes
-    frequency_24h: Math.floor(Math.random() * 10),
-    amount_7d: transaction.senderAmount * (Math.floor(Math.random() * 5) + 1),
-    transactions_5min: Math.floor(Math.random() * 5),
-    failed_logins_24h: Math.floor(Math.random() * 15),
-    ip_country: transaction.senderCountryCode,
-    profile_country: transaction.senderCountryCode,
+    // Enhanced data based on the rules we created
+    frequency_24h: Math.floor(Math.random() * 10) + 1,
+    unique_recipients_7d: Math.floor(Math.random() * 15) + 1,
+    unique_countries_30d: Math.floor(Math.random() * 8) + 1,
+    non_eu_countries_30d: Math.floor(Math.random() * 5),
   };
 }
 
 // Transform user data for rule evaluation
 function prepareUserData(user: UnifiedUserData): any {
+  // Mock income sources based on user data
+  const incomeSourceOptions = ['employment', 'social_support', 'self_employment', 'gift_inheritance', 'property_sale', 'business_other'];
+  const mockIncomeSource = incomeSourceOptions[Math.floor(Math.random() * incomeSourceOptions.length)];
+  
   return {
     is_pep: user.isPEP,
     kyc_completion: user.kycStatus === 'verified' ? 100 : 60,
     sanctions_match: user.isSanctioned,
     age: user.dateOfBirth ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear() : 30,
-    monthly_volume: user.riskScore * 1000, // Mock calculation
-    occupation: 'general', // Mock data
+    monthly_volume: user.riskScore * 1000,
+    income_source: mockIncomeSource,
     cdd_score: user.riskScore,
     shell_company_risk: user.riskScore > 70,
-    failed_logins_24h: Math.floor(Math.random() * 15),
+    non_eu_countries_kyc: Math.floor(Math.random() * 5),
   };
 }
 
 export async function evaluateTransactionRisk(transaction: AMLTransaction): Promise<RiskAssessmentResult> {
   try {
-    // Fetch active rules
+    console.log('Evaluating transaction risk for:', transaction.id);
+    
+    // Fetch active transaction and behavioral rules
     const { data: rules, error } = await supabase
       .from('rules')
       .select('*')
       .eq('is_active', true)
       .in('category', ['transaction', 'behavioral']);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching rules:', error);
+      throw error;
+    }
+
+    console.log('Found rules:', rules?.length);
 
     const transactionData = prepareTransactionData(transaction);
+    console.log('Transaction data prepared:', transactionData);
+    
     const matchedRules: RiskMatch[] = [];
     let totalRiskScore = 0;
 
@@ -130,6 +140,8 @@ export async function evaluateTransactionRisk(transaction: AMLTransaction): Prom
     for (const rule of rules || []) {
       try {
         if (evaluateCondition(rule.condition, transactionData)) {
+          console.log(`Rule matched: ${rule.rule_name} (Score: ${rule.risk_score})`);
+          
           const riskMatch: RiskMatch = {
             rule_id: rule.rule_id,
             rule_name: rule.rule_name,
@@ -159,11 +171,14 @@ export async function evaluateTransactionRisk(transaction: AMLTransaction): Prom
       }
     }
 
-    return {
+    const result = {
       total_risk_score: Math.min(totalRiskScore, 100), // Cap at 100
       matched_rules: matchedRules,
       rule_categories: [...new Set(matchedRules.map(r => r.category))],
     };
+
+    console.log('Transaction risk assessment result:', result);
+    return result;
   } catch (error) {
     console.error('Error evaluating transaction risk:', error);
     return {
@@ -176,6 +191,8 @@ export async function evaluateTransactionRisk(transaction: AMLTransaction): Prom
 
 export async function evaluateUserRisk(user: UnifiedUserData): Promise<RiskAssessmentResult> {
   try {
+    console.log('Evaluating user risk for:', user.id);
+    
     // Fetch active KYC rules
     const { data: rules, error } = await supabase
       .from('rules')
@@ -183,9 +200,16 @@ export async function evaluateUserRisk(user: UnifiedUserData): Promise<RiskAsses
       .eq('is_active', true)
       .eq('category', 'kyc');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching KYC rules:', error);
+      throw error;
+    }
+
+    console.log('Found KYC rules:', rules?.length);
 
     const userData = prepareUserData(user);
+    console.log('User data prepared:', userData);
+    
     const matchedRules: RiskMatch[] = [];
     let totalRiskScore = 0;
 
@@ -193,6 +217,8 @@ export async function evaluateUserRisk(user: UnifiedUserData): Promise<RiskAsses
     for (const rule of rules || []) {
       try {
         if (evaluateCondition(rule.condition, userData)) {
+          console.log(`Rule matched: ${rule.rule_name} (Score: ${rule.risk_score})`);
+          
           const riskMatch: RiskMatch = {
             rule_id: rule.rule_id,
             rule_name: rule.rule_name,
@@ -222,11 +248,14 @@ export async function evaluateUserRisk(user: UnifiedUserData): Promise<RiskAsses
       }
     }
 
-    return {
+    const result = {
       total_risk_score: Math.min(totalRiskScore, 100), // Cap at 100
       matched_rules: matchedRules,
       rule_categories: [...new Set(matchedRules.map(r => r.category))],
     };
+
+    console.log('User risk assessment result:', result);
+    return result;
   } catch (error) {
     console.error('Error evaluating user risk:', error);
     return {

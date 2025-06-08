@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Card,
@@ -25,91 +26,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentStatus } from '@/types/supabase';
-import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle, FileText } from 'lucide-react';
+import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle, FileText, Play, Loader2 } from 'lucide-react';
 import CustomerMonitoringActions from './CustomerMonitoringActions';
 import { useNavigate } from 'react-router-dom';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
-
-// Mock customer data for demonstration
-const mockCustomers = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    kycStatus: 'verified' as DocumentStatus,
-    riskScore: 25,
-    lastTransaction: '2025-05-01T14:30:00Z',
-    country: 'Sweden',
-    transactions: 5,
-    amount: 3000,
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'janesmith@example.com',
-    kycStatus: 'pending' as DocumentStatus,
-    riskScore: 45,
-    lastTransaction: '2025-05-02T10:15:00Z',
-    country: 'Denmark',
-    transactions: 8,
-    amount: 7500,
-  },
-  {
-    id: '3',
-    name: 'Ahmed Hassan',
-    email: 'ahmed@example.com',
-    kycStatus: 'pending' as DocumentStatus,
-    riskScore: 60,
-    lastTransaction: '2025-05-01T08:45:00Z',
-    country: 'Turkey',
-    transactions: 12,
-    amount: 15000,
-  },
-  {
-    id: '4',
-    name: 'Sofia Rodriguez',
-    email: 'sofia@example.com',
-    kycStatus: 'rejected' as DocumentStatus,
-    riskScore: 85,
-    lastTransaction: '2025-04-30T16:20:00Z',
-    country: 'Colombia',
-    transactions: 3,
-    amount: 12000,
-  },
-  {
-    id: '5',
-    name: 'Alexander Petrov',
-    email: 'alexander@example.com',
-    kycStatus: 'verified' as DocumentStatus,
-    riskScore: 75,
-    lastTransaction: '2025-05-03T09:10:00Z',
-    country: 'Russia',
-    transactions: 15,
-    amount: 25000,
-  },
-  {
-    id: '6',
-    name: 'Lisa Chen',
-    email: 'lisa@example.com',
-    kycStatus: 'verified' as DocumentStatus,
-    riskScore: 15,
-    lastTransaction: '2025-05-02T11:40:00Z',
-    country: 'Singapore',
-    transactions: 4,
-    amount: 5000,
-  },
-  {
-    id: '7',
-    name: 'David Johnson',
-    email: 'david@example.com',
-    kycStatus: 'pending' as DocumentStatus,
-    riskScore: 50,
-    lastTransaction: '2025-05-01T13:25:00Z',
-    country: 'UK',
-    transactions: 7,
-    amount: 8500,
-  },
-];
+import { evaluateUserRisk } from '@/services/riskScoringService';
 
 const KYCMonitoringDashboard = () => {
   // Transform unified data to dashboard format
@@ -133,6 +54,7 @@ const KYCMonitoringDashboard = () => {
   const [countryFilter, setCountryFilter] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [actionModalOpen, setActionModalOpen] = useState<boolean>(false);
+  const [runningAssessment, setRunningAssessment] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -158,6 +80,50 @@ const KYCMonitoringDashboard = () => {
   const pendingReviews = customers.filter(c => c.kycStatus === 'pending').length;
   const highRiskUsers = customers.filter(c => c.riskScore > 70).length;
   const recentAlerts = 3; // Mock value for demonstration
+
+  // Risk Assessment function
+  const runRiskAssessment = async () => {
+    setRunningAssessment(true);
+    try {
+      let assessedCount = 0;
+      const updatedCustomers = [...customers];
+
+      for (const customer of customers) {
+        try {
+          // Find the corresponding user in unified data
+          const userData = unifiedMockData.find(u => u.id === customer.id);
+          if (userData) {
+            console.log(`Running risk assessment for user: ${customer.name}`);
+            const riskResult = await evaluateUserRisk(userData);
+            
+            // Update the customer's risk score
+            const customerIndex = updatedCustomers.findIndex(c => c.id === customer.id);
+            if (customerIndex !== -1) {
+              updatedCustomers[customerIndex].riskScore = riskResult.total_risk_score;
+            }
+            assessedCount++;
+          }
+        } catch (error) {
+          console.error(`Error assessing user ${customer.name}:`, error);
+        }
+      }
+
+      setCustomers(updatedCustomers);
+      toast({
+        title: 'Risk Assessment Complete',
+        description: `Successfully assessed ${assessedCount} out of ${customers.length} customers`,
+      });
+    } catch (error) {
+      console.error('Error running risk assessment:', error);
+      toast({
+        title: 'Assessment Error',
+        description: 'Failed to complete risk assessment',
+        variant: 'destructive'
+      });
+    } finally {
+      setRunningAssessment(false);
+    }
+  };
 
   // Action handlers
   const handleReview = (customerId: string) => {
@@ -284,10 +250,26 @@ const KYCMonitoringDashboard = () => {
       {/* Filters Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Customer Monitoring</CardTitle>
-          <CardDescription>
-            Filter and manage customer KYC and compliance status
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Customer Monitoring</CardTitle>
+              <CardDescription>
+                Filter and manage customer KYC and compliance status
+              </CardDescription>
+            </div>
+            <Button
+              onClick={runRiskAssessment}
+              disabled={runningAssessment}
+              className="flex items-center gap-2"
+            >
+              {runningAssessment ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {runningAssessment ? 'Running Assessment...' : 'Run Risk Assessment'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
@@ -371,7 +353,7 @@ const KYCMonitoringDashboard = () => {
                           customer.kycStatus
                         )}`}
                       >
-                        {customer.kycStatus.charAt(0).toUpperCase() + customer.kycStatus.slice(1)}
+                        {customer.kycStatus.charAt(0).toUpperCase() + customer.kycStatus.slice(1).replace('_', ' ')}
                       </span>
                     </TableCell>
                     <TableCell>
