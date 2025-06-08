@@ -69,7 +69,7 @@ const RiskRulesManagement: React.FC = () => {
           receiverCurrency: 'USD' as const,
           senderCountryCode: 'AF', // High risk country
           receiverCountryCode: 'US',
-          method: 'direct_integration' as const, // High risk method
+          method: 'crypto' as const, // Changed from 'direct_integration' to valid TransactionMethod
           timestamp: new Date().toISOString(),
           status: 'completed' as const,
           reasonForSending: 'Business payment',
