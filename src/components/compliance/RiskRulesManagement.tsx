@@ -56,30 +56,40 @@ const RiskRulesManagement: React.FC = () => {
         {
           id: 'tx_001',
           senderUserId: 'user_001',
+          senderName: 'John Smith',
           receiverUserId: 'user_002',
+          receiverName: 'Jane Doe',
           senderAmount: 15000,
           receiverAmount: 14850,
-          senderCurrency: 'USD',
-          receiverCurrency: 'USD',
+          senderCurrency: 'USD' as const,
+          receiverCurrency: 'USD' as const,
           senderCountryCode: 'US',
           receiverCountryCode: 'GB',
-          method: 'bank_transfer',
+          method: 'bank_transfer' as const,
           timestamp: new Date().toISOString(),
-          status: 'completed'
+          status: 'completed' as const,
+          reasonForSending: 'Business payment',
+          isSuspect: false,
+          riskScore: 25
         },
         {
           id: 'tx_002',
           senderUserId: 'user_003',
+          senderName: 'Ahmed Hassan',
           receiverUserId: 'user_004',
+          receiverName: 'Michael Johnson',
           senderAmount: 50000,
           receiverAmount: 49500,
-          senderCurrency: 'USD',
-          receiverCurrency: 'USD',
+          senderCurrency: 'USD' as const,
+          receiverCurrency: 'USD' as const,
           senderCountryCode: 'AF',
           receiverCountryCode: 'US',
-          method: 'crypto',
+          method: 'crypto' as const,
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago (night time)
-          status: 'completed'
+          status: 'completed' as const,
+          reasonForSending: 'Investment',
+          isSuspect: true,
+          riskScore: 75
         }
       ];
 
