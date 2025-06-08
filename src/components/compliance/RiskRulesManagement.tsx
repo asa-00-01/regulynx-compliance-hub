@@ -5,18 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Settings, Play, Loader2 } from 'lucide-react';
 import { useRiskRulesManagement, Rule } from '@/hooks/useRiskRulesManagement';
-import { evaluateTransactionRisk, evaluateUserRisk } from '@/services/riskScoringService';
-import { useCompliance } from '@/context/compliance';
-import { useToast } from '@/hooks/use-toast';
+import { useGlobalRiskAssessment } from '@/hooks/useGlobalRiskAssessment';
 import RuleFormDialog from './RuleFormDialog';
 import RulesTable from './RulesTable';
 
 const RiskRulesManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
-  const [runningAssessment, setRunningAssessment] = useState(false);
-  const { state } = useCompliance();
-  const { toast } = useToast();
 
   const {
     rules,
@@ -26,125 +21,14 @@ const RiskRulesManagement: React.FC = () => {
     deleteRule
   } = useRiskRulesManagement(selectedCategory);
 
+  const { runGlobalAssessment, runningAssessment } = useGlobalRiskAssessment();
+
   const handleEditRule = (rule: Rule) => {
     setEditingRule(rule);
   };
 
   const handleCloseDialog = () => {
     setEditingRule(null);
-  };
-
-  const runGlobalAssessment = async () => {
-    setRunningAssessment(true);
-    try {
-      let totalAssessments = 0;
-      let successfulAssessments = 0;
-
-      console.log('Starting global risk assessment...');
-
-      // Run assessments for all users
-      for (const user of state.users) {
-        try {
-          totalAssessments++;
-          console.log(`Assessing user: ${user.fullName}`);
-          const result = await evaluateUserRisk(user);
-          console.log(`User ${user.fullName} assessment result:`, result);
-          successfulAssessments++;
-        } catch (error) {
-          console.error(`Error assessing user ${user.id}:`, error);
-        }
-      }
-
-      // Create mock transactions for demonstration
-      const mockTransactions = [
-        {
-          id: 'tx_high_risk_001',
-          senderUserId: 'user_001',
-          senderName: 'Ahmed Hassan',
-          receiverUserId: 'user_002',
-          receiverName: 'Jane Doe',
-          senderAmount: 18000,
-          receiverAmount: 17850,
-          senderCurrency: 'USD' as const,
-          receiverCurrency: 'USD' as const,
-          senderCountryCode: 'AF', // High risk country
-          receiverCountryCode: 'US',
-          method: 'crypto' as const, // Changed from 'direct_integration' to valid TransactionMethod
-          timestamp: new Date().toISOString(),
-          status: 'completed' as const,
-          reasonForSending: 'Business payment',
-          isSuspect: true,
-          riskScore: 75
-        },
-        {
-          id: 'tx_medium_risk_002',
-          senderUserId: 'user_003',
-          senderName: 'Michael Johnson',
-          receiverUserId: 'user_004',
-          receiverName: 'Sofia Rodriguez',
-          senderAmount: 8500,
-          receiverAmount: 8400,
-          senderCurrency: 'USD' as const,
-          receiverCurrency: 'USD' as const,
-          senderCountryCode: 'US',
-          receiverCountryCode: 'CO',
-          method: 'bank' as const,
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          status: 'completed' as const,
-          reasonForSending: 'Investment',
-          isSuspect: false,
-          riskScore: 45
-        },
-        {
-          id: 'tx_low_risk_003',
-          senderUserId: 'user_005',
-          senderName: 'Lisa Chen',
-          receiverUserId: 'user_006',
-          receiverName: 'David Johnson',
-          senderAmount: 2500,
-          receiverAmount: 2475,
-          senderCurrency: 'USD' as const,
-          receiverCurrency: 'USD' as const,
-          senderCountryCode: 'SG',
-          receiverCountryCode: 'UK',
-          method: 'bank' as const,
-          timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          status: 'completed' as const,
-          reasonForSending: 'Personal transfer',
-          isSuspect: false,
-          riskScore: 15
-        }
-      ];
-
-      // Run assessments for mock transactions
-      for (const transaction of mockTransactions) {
-        try {
-          totalAssessments++;
-          console.log(`Assessing transaction: ${transaction.id}`);
-          const result = await evaluateTransactionRisk(transaction);
-          console.log(`Transaction ${transaction.id} assessment result:`, result);
-          successfulAssessments++;
-        } catch (error) {
-          console.error(`Error assessing transaction ${transaction.id}:`, error);
-        }
-      }
-
-      toast({
-        title: 'Assessment Complete',
-        description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities`,
-      });
-
-      console.log(`Global assessment completed: ${successfulAssessments}/${totalAssessments} successful`);
-    } catch (error) {
-      console.error('Error running global assessment:', error);
-      toast({
-        title: 'Assessment Error',
-        description: 'Failed to complete risk assessment',
-        variant: 'destructive'
-      });
-    } finally {
-      setRunningAssessment(false);
-    }
   };
 
   return (
