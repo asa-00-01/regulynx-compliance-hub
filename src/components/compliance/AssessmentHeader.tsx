@@ -13,6 +13,19 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
   onRunAssessment,
   isRunningAssessment
 }) => {
+  const handleRunAssessment = () => {
+    console.log('=== ASSESSMENT BUTTON CLICKED ===');
+    console.log('isRunningAssessment:', isRunningAssessment);
+    console.log('onRunAssessment function:', typeof onRunAssessment);
+    
+    if (typeof onRunAssessment === 'function') {
+      console.log('Calling onRunAssessment...');
+      onRunAssessment();
+    } else {
+      console.error('onRunAssessment is not a function!');
+    }
+  };
+
   return (
     <CardHeader>
       <div className="flex items-center justify-between">
@@ -26,10 +39,7 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
           </CardDescription>
         </div>
         <Button 
-          onClick={() => {
-            console.log('Run Assessment button clicked');
-            onRunAssessment();
-          }}
+          onClick={handleRunAssessment}
           disabled={isRunningAssessment}
           className="flex items-center gap-2"
         >

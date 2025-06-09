@@ -14,14 +14,25 @@ const RiskRulesEngine: React.FC = () => {
   const { runGlobalAssessment, runningAssessment } = useGlobalRiskAssessment();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
+  console.log('RiskRulesEngine rendering:', {
+    runGlobalAssessment: typeof runGlobalAssessment,
+    runningAssessment,
+    usersCount: usersWithRiskScores.length
+  });
+
   // Mock active rules count for now - in a real implementation this would come from a hook
   const activeRulesCount = 5; // This would be calculated from the actual rules data
+
+  const handleRunAssessment = () => {
+    console.log('=== RiskRulesEngine handleRunAssessment called ===');
+    runGlobalAssessment();
+  };
 
   return (
     <div className="space-y-6">
       <Card>
         <AssessmentHeader 
-          onRunAssessment={runGlobalAssessment}
+          onRunAssessment={handleRunAssessment}
           isRunningAssessment={runningAssessment}
         />
         <CardContent>

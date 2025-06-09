@@ -11,10 +11,13 @@ export function useGlobalRiskAssessment() {
   const { toast } = useToast();
 
   const runGlobalAssessment = async () => {
+    console.log('=== STARTING GLOBAL RISK ASSESSMENT ===');
     setRunningAssessment(true);
+    
     try {
       let totalAssessments = 0;
       let successfulAssessments = 0;
+      let errors: string[] = [];
 
       console.log('Starting global risk assessment...');
 
@@ -31,11 +34,13 @@ export function useGlobalRiskAssessment() {
         try {
           totalAssessments++;
           console.log(`Assessing user: ${user.fullName} (${user.id}) - Risk Score: ${user.riskScore}`);
+          
           const result = await evaluateUserRisk(user);
           console.log(`User ${user.fullName} assessment result:`, result);
           successfulAssessments++;
         } catch (error) {
           console.error(`Error assessing user ${user.id}:`, error);
+          errors.push(`User ${user.fullName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
@@ -48,28 +53,41 @@ export function useGlobalRiskAssessment() {
         try {
           totalAssessments++;
           console.log(`Assessing transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency} - Risk Score: ${transaction.riskScore}`);
+          
           const result = await evaluateTransactionRisk(transaction);
           console.log(`Transaction ${transaction.id} assessment result:`, result);
           successfulAssessments++;
         } catch (error) {
           console.error(`Error assessing transaction ${transaction.id}:`, error);
+          errors.push(`Transaction ${transaction.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
       console.log(`Assessment completed: ${successfulAssessments}/${totalAssessments} successful`);
+      console.log('Errors encountered:', errors);
 
-      toast({
-        title: 'Assessment Complete',
-        description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities (${usersToAssess.length} users, ${mockTransactions.length} transactions)`,
-      });
+      if (errors.length > 0) {
+        console.warn('Some assessments failed:', errors);
+        toast({
+          title: 'Assessment Completed with Warnings',
+          description: `Completed ${successfulAssessments}/${totalAssessments} assessments. ${errors.length} failed.`,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Assessment Complete',
+          description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities (${usersToAssess.length} users, ${mockTransactions.length} transactions)`,
+        });
+      }
     } catch (error) {
-      console.error('Error running global assessment:', error);
+      console.error('Critical error in global assessment:', error);
       toast({
         title: 'Assessment Error',
         description: `Failed to complete risk assessment: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive'
       });
     } finally {
+      console.log('=== GLOBAL RISK ASSESSMENT COMPLETED ===');
       setRunningAssessment(false);
     }
   };
