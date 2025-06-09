@@ -1,18 +1,32 @@
 
 import { useEffect, useState } from 'react';
 import { 
-  mockUsers, 
   COUNTRY_RISK, 
   RISK_WEIGHTS, 
   UserWithRiskScore,
   RiskDistributionItem 
 } from '../types/riskScoringTypes';
+import { unifiedMockData } from '@/mocks/centralizedMockData';
 
 export function useRiskScoring() {
   const [usersWithRiskScores, setUsersWithRiskScores] = useState<UserWithRiskScore[]>([]);
   const [riskDistribution, setRiskDistribution] = useState<RiskDistributionItem[]>([]);
 
   useEffect(() => {
+    console.log('Loading risk scoring data from centralized mock data...');
+    
+    // Transform unified mock data to risk scoring format
+    const mockUsers = unifiedMockData.map(user => ({
+      id: user.id,
+      name: user.fullName,
+      country: user.countryOfResidence || 'Unknown',
+      transactionFrequency: user.transactions.length,
+      transactionAmount: user.transactions.reduce((sum, tx) => sum + tx.senderAmount, 0) / Math.max(1, user.transactions.length),
+      kycStatus: user.kycStatus,
+    }));
+
+    console.log('Transformed users for risk scoring:', mockUsers.length);
+    
     // Calculate risk scores for all users
     const scoredUsers = mockUsers.map(user => {
       // Country risk (0.1 to 0.9 based on country risk tier)
@@ -34,6 +48,7 @@ export function useRiskScoring() {
       let kycRisk = 0.1; // Verified
       if (user.kycStatus === 'pending') kycRisk = 0.5;
       if (user.kycStatus === 'rejected') kycRisk = 0.9;
+      if (user.kycStatus === 'information_requested') kycRisk = 0.7;
       
       // Calculate weighted risk score (0-100)
       const weightedRiskScore = 
@@ -48,7 +63,7 @@ export function useRiskScoring() {
       // Add a simulated previous score for trend visualization
       const previousScore = Math.max(0, Math.min(100, riskScore + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 10)));
       
-      return {
+      const scoredUser = {
         ...user,
         riskScore,
         previousScore,
@@ -57,6 +72,18 @@ export function useRiskScoring() {
         amountRisk: Math.round(amountRisk * 100),
         kycRisk: Math.round(kycRisk * 100)
       };
+
+      console.log(`Risk score calculated for ${user.name}:`, {
+        riskScore,
+        factors: {
+          country: scoredUser.countryRisk,
+          frequency: scoredUser.frequencyRisk,
+          amount: scoredUser.amountRisk,
+          kyc: scoredUser.kycRisk
+        }
+      });
+
+      return scoredUser;
     });
     
     setUsersWithRiskScores(scoredUsers);
@@ -66,11 +93,14 @@ export function useRiskScoring() {
     const mediumRisk = scoredUsers.filter(u => u.riskScore > 30 && u.riskScore <= 70).length;
     const highRisk = scoredUsers.filter(u => u.riskScore > 70).length;
     
-    setRiskDistribution([
+    const distribution = [
       { name: 'Low Risk (0-30)', value: lowRisk, color: '#4caf50' },
       { name: 'Medium Risk (31-70)', value: mediumRisk, color: '#ff9800' },
       { name: 'High Risk (71-100)', value: highRisk, color: '#f44336' },
-    ]);
+    ];
+
+    console.log('Risk distribution calculated:', distribution);
+    setRiskDistribution(distribution);
     
   }, []);
 

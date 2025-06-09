@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { evaluateTransactionRisk, evaluateUserRisk } from '@/services/riskScoringService';
 import { useCompliance } from '@/context/compliance';
 import { useToast } from '@/hooks/use-toast';
-import { getMockTransactions } from '@/utils/mockAssessmentData';
+import { getMockTransactions, getMockUsers } from '@/utils/mockAssessmentData';
 
 export function useGlobalRiskAssessment() {
   const [runningAssessment, setRunningAssessment] = useState(false);
@@ -17,24 +17,20 @@ export function useGlobalRiskAssessment() {
       let successfulAssessments = 0;
 
       console.log('Starting global risk assessment...');
-      console.log('Available users:', state.users?.length || 0);
 
-      // Check if we have users to assess
-      if (!state.users || state.users.length === 0) {
-        console.warn('No users found in state for assessment');
-        toast({
-          title: 'No Users Found',
-          description: 'No users available for risk assessment',
-          variant: 'destructive'
-        });
-        return;
-      }
+      // Get users from centralized mock data
+      const mockUsers = getMockUsers();
+      console.log('Available mock users:', mockUsers.length);
+
+      // Use mock users if state users are empty, otherwise use state users
+      const usersToAssess = state.users.length > 0 ? state.users : mockUsers;
+      console.log('Users to assess:', usersToAssess.length);
 
       // Run assessments for all users
-      for (const user of state.users) {
+      for (const user of usersToAssess) {
         try {
           totalAssessments++;
-          console.log(`Assessing user: ${user.fullName} (${user.id})`);
+          console.log(`Assessing user: ${user.fullName} (${user.id}) - Risk Score: ${user.riskScore}`);
           const result = await evaluateUserRisk(user);
           console.log(`User ${user.fullName} assessment result:`, result);
           successfulAssessments++;
@@ -43,24 +39,20 @@ export function useGlobalRiskAssessment() {
         }
       }
 
-      // Get mock transactions and run assessments
-      console.log('Getting mock transactions...');
+      // Get transactions from centralized mock data
       const mockTransactions = getMockTransactions();
-      console.log('Mock transactions count:', mockTransactions?.length || 0);
+      console.log('Available mock transactions:', mockTransactions.length);
 
-      if (!mockTransactions || mockTransactions.length === 0) {
-        console.warn('No mock transactions found for assessment');
-      } else {
-        for (const transaction of mockTransactions) {
-          try {
-            totalAssessments++;
-            console.log(`Assessing transaction: ${transaction.id}`);
-            const result = await evaluateTransactionRisk(transaction);
-            console.log(`Transaction ${transaction.id} assessment result:`, result);
-            successfulAssessments++;
-          } catch (error) {
-            console.error(`Error assessing transaction ${transaction.id}:`, error);
-          }
+      // Run assessments for all transactions
+      for (const transaction of mockTransactions) {
+        try {
+          totalAssessments++;
+          console.log(`Assessing transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency} - Risk Score: ${transaction.riskScore}`);
+          const result = await evaluateTransactionRisk(transaction);
+          console.log(`Transaction ${transaction.id} assessment result:`, result);
+          successfulAssessments++;
+        } catch (error) {
+          console.error(`Error assessing transaction ${transaction.id}:`, error);
         }
       }
 
@@ -68,7 +60,7 @@ export function useGlobalRiskAssessment() {
 
       toast({
         title: 'Assessment Complete',
-        description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities`,
+        description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities (${usersToAssess.length} users, ${mockTransactions.length} transactions)`,
       });
     } catch (error) {
       console.error('Error running global assessment:', error);

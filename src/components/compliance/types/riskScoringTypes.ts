@@ -1,3 +1,4 @@
+
 // Risk factor weights (should be configurable in a real system)
 export const RISK_WEIGHTS = {
   COUNTRY: 0.35,
@@ -8,32 +9,29 @@ export const RISK_WEIGHTS = {
 
 // Country risk tiers
 export const COUNTRY_RISK = {
+  'United States': 0.1,
   'Sweden': 0.1,
   'Norway': 0.1,
   'Finland': 0.1,
   'Denmark': 0.1,
   'Germany': 0.2,
-  'UK': 0.2,
+  'United Kingdom': 0.2,
   'France': 0.2,
   'Spain': 0.3,
+  'Canada': 0.1,
+  'China': 0.4,
+  'India': 0.3,
+  'Poland': 0.2,
+  'Brazil': 0.4,
   'Turkey': 0.6,
   'Russia': 0.7,
   'Colombia': 0.8,
-  'Nigeria': 0.9,
+  'Egypt': 0.5,
+  'United Arab Emirates': 0.4,
+  'Saudi Arabia': 0.6,
   // Default for unlisted countries
   'DEFAULT': 0.5
 };
-
-// Transform centralized data to risk scoring format
-import { unifiedMockData } from '@/mocks/centralizedMockData';
-export const mockUsers = unifiedMockData.map(user => ({
-  id: user.id,
-  name: user.fullName,
-  country: user.countryOfResidence || 'Unknown',
-  transactionFrequency: user.transactions.length,
-  transactionAmount: user.transactions.reduce((sum, tx) => sum + tx.senderAmount, 0) / Math.max(1, user.transactions.length),
-  kycStatus: user.kycStatus,
-}));
 
 export type UserWithRiskScore = {
   id: string;

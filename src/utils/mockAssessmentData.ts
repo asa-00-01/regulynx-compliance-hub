@@ -1,64 +1,38 @@
 
+import { mockTransactionsCollection, unifiedMockData } from '@/mocks/centralizedMockData';
 import { AMLTransaction } from '@/types/aml';
+import { UnifiedUserData } from '@/context/compliance/types';
 
-export function getMockTransactions(): AMLTransaction[] {
-  return [
-    {
-      id: 'tx_high_risk_001',
-      senderUserId: 'user_001',
-      senderName: 'Ahmed Hassan',
-      receiverUserId: 'user_002',
-      receiverName: 'Jane Doe',
-      senderAmount: 18000,
-      receiverAmount: 17850,
-      senderCurrency: 'USD' as const,
-      receiverCurrency: 'USD' as const,
-      senderCountryCode: 'AF', // High risk country
-      receiverCountryCode: 'US',
-      method: 'crypto' as const,
-      timestamp: new Date().toISOString(),
-      status: 'completed' as const,
-      reasonForSending: 'Business payment',
-      isSuspect: true,
-      riskScore: 75
-    },
-    {
-      id: 'tx_medium_risk_002',
-      senderUserId: 'user_003',
-      senderName: 'Michael Johnson',
-      receiverUserId: 'user_004',
-      receiverName: 'Sofia Rodriguez',
-      senderAmount: 8500,
-      receiverAmount: 8400,
-      senderCurrency: 'USD' as const,
-      receiverCurrency: 'USD' as const,
-      senderCountryCode: 'US',
-      receiverCountryCode: 'CO',
-      method: 'bank' as const,
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-      reasonForSending: 'Investment',
-      isSuspect: false,
-      riskScore: 45
-    },
-    {
-      id: 'tx_low_risk_003',
-      senderUserId: 'user_005',
-      senderName: 'Lisa Chen',
-      receiverUserId: 'user_006',
-      receiverName: 'David Johnson',
-      senderAmount: 2500,
-      receiverAmount: 2475,
-      senderCurrency: 'USD' as const,
-      receiverCurrency: 'USD' as const,
-      senderCountryCode: 'SG',
-      receiverCountryCode: 'UK',
-      method: 'bank' as const,
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-      reasonForSending: 'Personal transfer',
-      isSuspect: false,
-      riskScore: 15
-    }
-  ];
-}
+// Export mock transactions for risk assessment
+export const getMockTransactions = (): AMLTransaction[] => {
+  console.log('Getting mock transactions from centralized data...');
+  console.log('Available transactions:', mockTransactionsCollection.length);
+  return mockTransactionsCollection;
+};
+
+// Export mock users for risk assessment
+export const getMockUsers = (): UnifiedUserData[] => {
+  console.log('Getting mock users from centralized data...');
+  console.log('Available users:', unifiedMockData.length);
+  return unifiedMockData;
+};
+
+// Helper function to get high-risk users for testing
+export const getHighRiskUsers = (): UnifiedUserData[] => {
+  return unifiedMockData.filter(user => user.riskScore > 70);
+};
+
+// Helper function to get high-risk transactions for testing
+export const getHighRiskTransactions = (): AMLTransaction[] => {
+  return mockTransactionsCollection.filter(tx => tx.riskScore > 70);
+};
+
+// Get transactions for a specific user
+export const getTransactionsForUser = (userId: string): AMLTransaction[] => {
+  return mockTransactionsCollection.filter(tx => tx.senderUserId === userId);
+};
+
+// Get user by ID
+export const getMockUserById = (userId: string): UnifiedUserData | null => {
+  return unifiedMockData.find(user => user.id === userId) || null;
+};
