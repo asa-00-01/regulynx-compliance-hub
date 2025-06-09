@@ -13,12 +13,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Plus, Edit, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Plus, Edit, Trash2, Shield, Eye, EyeOff, Play, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import RiskDistributionChart from './RiskDistributionChart';
 import RiskScoreTable from './RiskScoreTable';
 import { useRiskScoring } from './hooks/useRiskScoring';
+import { useGlobalRiskAssessment } from '@/hooks/useGlobalRiskAssessment';
 
 interface Rule {
   id: string;
@@ -35,6 +36,7 @@ interface Rule {
 
 const RiskRulesEngine: React.FC = () => {
   const { usersWithRiskScores, riskDistribution, getRiskScoreClass } = useRiskScoring();
+  const { runGlobalAssessment, runningAssessment } = useGlobalRiskAssessment();
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -249,13 +251,32 @@ const RiskRulesEngine: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Risk Scoring Engine
-          </CardTitle>
-          <CardDescription>
-            Manage risk assessment rules and monitor user risk distribution
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Risk Scoring Engine
+              </CardTitle>
+              <CardDescription>
+                Manage risk assessment rules and monitor user risk distribution
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => {
+                console.log('Run Assessment button clicked');
+                runGlobalAssessment();
+              }}
+              disabled={runningAssessment}
+              className="flex items-center gap-2"
+            >
+              {runningAssessment ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {runningAssessment ? 'Running Assessment...' : 'Run Assessment'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview" className="space-y-4">
