@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { createWorker } from 'tesseract.js';
-import { Document } from '@/types';
 
 interface OCRResult {
   extractedText: string;
@@ -25,13 +24,27 @@ export function useDocumentOCR() {
     setError(null);
 
     try {
+      // Check if file is an image format that Tesseract can handle
+      const supportedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/tiff'];
+      
+      if (!supportedImageTypes.includes(file.type)) {
+        console.log('File type not supported for OCR:', file.type);
+        // For non-image files (like PDFs), return a basic result without OCR
+        setProgress(100);
+        return {
+          extractedText: '',
+          extractedData: {}
+        };
+      }
+
       // Convert File to data URL for Tesseract
       const imageData = URL.createObjectURL(file);
       
+      setProgress(20);
+      
       const worker = await createWorker('eng');
       
-      // Manual progress updates since worker.setProgressHandler is not available
-      setProgress(20);
+      setProgress(40);
       
       const result = await worker.recognize(imageData);
       
@@ -52,8 +65,15 @@ export function useDocumentOCR() {
         extractedData,
       };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      throw err;
+      console.error('OCR processing error:', err);
+      setError(err instanceof Error ? err.message : 'OCR processing failed');
+      
+      // Even if OCR fails, we can still allow the document upload
+      // Return empty result instead of throwing
+      return {
+        extractedText: '',
+        extractedData: {}
+      };
     } finally {
       setIsProcessing(false);
     }

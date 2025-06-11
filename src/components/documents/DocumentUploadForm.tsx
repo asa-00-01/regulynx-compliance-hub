@@ -23,6 +23,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DocumentType>('passport');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(preSelectedCustomerId || '');
+  const [isUploading, setIsUploading] = useState(false);
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -66,15 +67,21 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       return;
     }
     
+    setIsUploading(true);
+    
     try {
-      // Process document with OCR
+      // Process document with OCR (this will handle errors gracefully now)
+      console.log('Starting OCR processing for file:', file.name, 'type:', file.type);
       const result = await processImage(file);
+      console.log('OCR processing completed:', result);
       
       // Create a unique file path
       const timestamp = new Date().getTime();
       const fileExt = file.name.split('.').pop();
       const documentUserId = canApproveDocuments() ? selectedCustomerId : user.id;
       const filePath = `${documentUserId}/${documentType}_${timestamp}.${fileExt}`;
+      
+      console.log('Inserting document record with path:', filePath);
       
       // Insert document record in database
       const { data: documentData, error: documentError } = await supabase
@@ -91,8 +98,11 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
         .single();
       
       if (documentError) {
-        throw documentError;
+        console.error('Database error:', documentError);
+        throw new Error(`Database error: ${documentError.message}`);
       }
+
+      console.log('Document record created successfully:', documentData);
 
       toast({
         title: "Success",
@@ -123,8 +133,12 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
         description: error instanceof Error ? error.message : "An unknown error occurred while uploading the document",
         variant: "destructive"
       });
+    } finally {
+      setIsUploading(false);
     }
   };
+
+  const isFormDisabled = isProcessing || isUploading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,6 +156,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
         <Select 
           value={documentType}
           onValueChange={(value) => setDocumentType(value as DocumentType)}
+          disabled={isFormDisabled}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select document type" />
@@ -161,7 +176,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
           type="file" 
           accept="image/png, image/jpeg, application/pdf"
           onChange={handleFileChange} 
-          disabled={isProcessing}
+          disabled={isFormDisabled}
         />
         {file && (
           <div className="text-xs text-muted-foreground">
@@ -181,17 +196,19 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       )}
       
       {error && (
-        <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
-          Error: {error}
+        <div className="p-3 bg-yellow-50 text-yellow-700 text-sm rounded-md border border-yellow-200">
+          <strong>OCR Warning:</strong> {error}
+          <br />
+          <span className="text-xs">Document will still be uploaded without text extraction.</span>
         </div>
       )}
       
       <div className="mt-4 flex justify-end">
         <Button 
           type="submit"
-          disabled={!file || isProcessing}
+          disabled={!file || isFormDisabled}
         >
-          {isProcessing ? 'Processing...' : 'Upload Document'}
+          {isUploading ? 'Uploading...' : isProcessing ? 'Processing...' : 'Upload Document'}
         </Button>
       </div>
     </form>
