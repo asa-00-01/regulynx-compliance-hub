@@ -21,6 +21,9 @@ const CustomerSelector: React.FC<CustomerSelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const { state } = useCompliance();
 
+  // Debug log to see if users are loaded
+  console.log('CustomerSelector - users in state:', state.users);
+
   const filteredCustomers = state.users.filter(user => 
     user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,6 +31,16 @@ const CustomerSelector: React.FC<CustomerSelectorProps> = ({
   );
 
   const selectedCustomer = state.users.find(user => user.id === selectedCustomerId);
+
+  // Show loading state if no users are loaded yet
+  if (state.users.length === 0) {
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <div className="text-sm text-muted-foreground">Loading customers...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
