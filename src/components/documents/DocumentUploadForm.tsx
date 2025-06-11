@@ -11,17 +11,22 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import CustomerSelector from './CustomerSelector';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface DocumentUploadFormProps {
   onUploadComplete: () => void;
+  preSelectedCustomerId?: string;
 }
 
-const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
+const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: DocumentUploadFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DocumentType>('passport');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(preSelectedCustomerId || '');
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { canApproveDocuments } = usePermissions();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -50,6 +55,16 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       });
       return;
     }
+
+    // For compliance officers, require customer selection
+    if (canApproveDocuments() && !selectedCustomerId) {
+      toast({
+        title: "Error",
+        description: "Please select a customer for this document",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       // Process document with OCR
@@ -58,13 +73,14 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       // Create a unique file path
       const timestamp = new Date().getTime();
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/${documentType}_${timestamp}.${fileExt}`;
+      const documentUserId = canApproveDocuments() ? selectedCustomerId : user.id;
+      const filePath = `${documentUserId}/${documentType}_${timestamp}.${fileExt}`;
       
       // Insert document record in database
       const { data: documentData, error: documentError } = await supabase
         .from('documents')
         .insert({
-          user_id: user.id,
+          user_id: documentUserId,
           type: documentType,
           file_name: file.name,
           file_path: filePath,
@@ -93,6 +109,9 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
       
       // Reset form state
       setFile(null);
+      if (!preSelectedCustomerId) {
+        setSelectedCustomerId('');
+      }
       
       // Notify parent component to refresh the documents list
       onUploadComplete();
@@ -109,6 +128,15 @@ const DocumentUploadForm = ({ onUploadComplete }: DocumentUploadFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Customer Selection - only show for compliance officers */}
+      {canApproveDocuments() && !preSelectedCustomerId && (
+        <CustomerSelector
+          selectedCustomerId={selectedCustomerId}
+          onCustomerSelect={setSelectedCustomerId}
+          label="Customer"
+        />
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="documentType">Document Type</Label>
         <Select 
