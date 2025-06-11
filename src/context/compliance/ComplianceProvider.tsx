@@ -24,17 +24,19 @@ export const ComplianceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   
   // Initialize with mock data
   useEffect(() => {
+    console.log('ComplianceProvider: Initializing mock data...');
     const generatedUsers = initializeMockData();
+    console.log('ComplianceProvider: Generated users:', generatedUsers.length);
     
     dispatch({ type: 'SET_GLOBAL_FILTERS', payload: initialState.globalFilters });
     
-    // Set mock users in state
-    generatedUsers.forEach(user => {
-      dispatch({ 
-        type: 'UPDATE_USER_DATA', 
-        payload: user
-      });
+    // Set all users at once instead of one by one
+    dispatch({ 
+      type: 'SET_USERS', 
+      payload: generatedUsers
     });
+    
+    console.log('ComplianceProvider: Users dispatched to state');
   }, []);
   
   const operations = useComplianceOperations(state, dispatch);
