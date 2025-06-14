@@ -13,6 +13,7 @@ import {
   History,
   UserCheck,
   User,
+  Bot,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -34,6 +35,12 @@ const Sidebar = () => {
       title: 'Dashboard',
       href: '/dashboard',
       icon: Home,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
+    },
+    {
+      title: 'AI Agent',
+      href: '/ai-agent',
+      icon: Bot,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {

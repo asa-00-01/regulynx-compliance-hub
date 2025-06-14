@@ -21,6 +21,7 @@ import { Toaster } from '@/components/ui/toaster';
 import AuditLogs from './pages/AuditLogs';
 import RiskAnalysis from './pages/RiskAnalysis';
 import Transactions from './pages/Transactions';
+import AIAgent from './pages/AIAgent';
 
 function App() {
   const { authLoaded, isAuthenticated, loading } = useAuth();
@@ -68,6 +69,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-agent"
+          element={
+            <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive', 'support']}>
+              <AIAgent />
             </ProtectedRoute>
           }
         />
