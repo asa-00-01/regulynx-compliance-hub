@@ -88,13 +88,13 @@ const UserOverviewSection: React.FC = () => {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Users className="h-5 w-5" /> 
-            User Overview
-            <TooltipHelp content="Monitor and manage all users in your system. Use filters and tabs to quickly find specific user groups based on risk levels, PEP status, sanctions, or case history.">
-              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipHelp>
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5" /> 
+              User Overview
+            </CardTitle>
+            <TooltipHelp content="Monitor and manage all users in your system. Use filters and tabs to quickly find specific user groups based on risk levels, PEP status, sanctions, or case history." />
+          </div>
         </CardHeader>
         <CardContent>
           <Alert className="mb-4">
@@ -107,17 +107,18 @@ const UserOverviewSection: React.FC = () => {
           <div className="mb-4 flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <TooltipHelp content="Search for users by entering their full name or email address. The search is case-insensitive and matches partial text.">
-                <Input
-                  placeholder="Search by name or email..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </TooltipHelp>
+              <Input
+                placeholder="Search by name or email..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute right-2 top-2.5">
+                <TooltipHelp content="Search for users by entering their full name or email address. The search is case-insensitive and matches partial text." />
+              </div>
             </div>
             <div className="flex gap-2">
-              <TooltipHelp content="Filter users by their risk assessment level. High risk users (75+) require immediate attention, medium risk (50-74) need monitoring, and low risk (<50) are considered safe.">
+              <div className="relative">
                 <select
                   className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={riskFilter}
@@ -128,49 +129,60 @@ const UserOverviewSection: React.FC = () => {
                   <option value="medium">Medium Risk (50-74)</option>
                   <option value="low">Low Risk (<50)</option>
                 </select>
-              </TooltipHelp>
-              <TooltipHelp content="Clear all applied filters and return to showing all users">
+                <div className="absolute right-2 top-2.5">
+                  <TooltipHelp content="Filter users by their risk assessment level. High risk users (75+) require immediate attention, medium risk (50-74) need monitoring, and low risk (<50) are considered safe." />
+                </div>
+              </div>
+              <div className="relative">
                 <Button variant="outline" onClick={() => {
                   setSearchQuery('');
                   setRiskFilter('all');
                 }}>
                   Reset
                 </Button>
-              </TooltipHelp>
+                <div className="absolute -right-6 top-2.5">
+                  <TooltipHelp content="Clear all applied filters and return to showing all users" />
+                </div>
+              </div>
             </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5">
-              <TabsTrigger value="all">
-                <TooltipHelp content="View all users in the system regardless of their status">
-                  All Users 
-                  <Badge variant="outline" className="ml-2">{state.users.length}</Badge>
-                </TooltipHelp>
+              <TabsTrigger value="all" className="relative">
+                All Users 
+                <Badge variant="outline" className="ml-2">{state.users.length}</Badge>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                  <TooltipHelp content="View all users in the system regardless of their status" />
+                </div>
               </TabsTrigger>
-              <TabsTrigger value="pep">
-                <TooltipHelp content="Politically Exposed Persons - individuals who hold or have held prominent public positions and require enhanced due diligence">
-                  PEP
-                  <Badge variant="outline" className="ml-2">{pepCount}</Badge>
-                </TooltipHelp>
+              <TabsTrigger value="pep" className="relative">
+                PEP
+                <Badge variant="outline" className="ml-2">{pepCount}</Badge>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                  <TooltipHelp content="Politically Exposed Persons - individuals who hold or have held prominent public positions and require enhanced due diligence" />
+                </div>
               </TabsTrigger>
-              <TabsTrigger value="sanctioned">
-                <TooltipHelp content="Users who appear on sanctions lists and are subject to regulatory restrictions">
-                  Sanctioned
-                  <Badge variant="outline" className="ml-2">{sanctionedCount}</Badge>
-                </TooltipHelp>
+              <TabsTrigger value="sanctioned" className="relative">
+                Sanctioned
+                <Badge variant="outline" className="ml-2">{sanctionedCount}</Badge>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                  <TooltipHelp content="Users who appear on sanctions lists and are subject to regulatory restrictions" />
+                </div>
               </TabsTrigger>
-              <TabsTrigger value="high-risk">
-                <TooltipHelp content="Users with risk scores of 75 or higher requiring immediate attention and enhanced monitoring">
-                  High Risk
-                  <Badge variant="outline" className="ml-2">{highRiskCount}</Badge>
-                </TooltipHelp>
+              <TabsTrigger value="high-risk" className="relative">
+                High Risk
+                <Badge variant="outline" className="ml-2">{highRiskCount}</Badge>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                  <TooltipHelp content="Users with risk scores of 75 or higher requiring immediate attention and enhanced monitoring" />
+                </div>
               </TabsTrigger>
-              <TabsTrigger value="with-cases">
-                <TooltipHelp content="Users who have active or historical compliance cases that require investigation or follow-up">
-                  With Cases
-                  <Badge variant="outline" className="ml-2">{withCasesCount}</Badge>
-                </TooltipHelp>
+              <TabsTrigger value="with-cases" className="relative">
+                With Cases
+                <Badge variant="outline" className="ml-2">{withCasesCount}</Badge>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                  <TooltipHelp content="Users who have active or historical compliance cases that require investigation or follow-up" />
+                </div>
               </TabsTrigger>
             </TabsList>
             
