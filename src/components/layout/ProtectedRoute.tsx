@@ -1,22 +1,23 @@
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, memo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/context/AuthContext';
+import LoadingWrapper from '../common/LoadingWrapper';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRoles?: UserRole[];
 }
 
-const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
+const ProtectedRoute = memo(({ children, requiredRoles }: ProtectedRouteProps) => {
   const { user, isAuthenticated, authLoaded } = useAuth();
 
   // Show loading while auth is being determined
   if (!authLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
+      <LoadingWrapper isLoading={true}>
+        <div></div>
+      </LoadingWrapper>
     );
   }
 
@@ -35,6 +36,8 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
   }
 
   return <>{children}</>;
-};
+});
+
+ProtectedRoute.displayName = 'ProtectedRoute';
 
 export default ProtectedRoute;
