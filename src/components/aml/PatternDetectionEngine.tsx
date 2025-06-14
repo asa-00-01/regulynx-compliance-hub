@@ -7,6 +7,8 @@ import { Search, AlertTriangle, TrendingUp, Clock, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast';
 import { mockTransactions } from './mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
+import PatternDetailsModal from './PatternDetailsModal';
+import TransactionDetailsModal from './TransactionDetailsModal';
 
 interface DetectedPattern {
   id: string;
@@ -22,6 +24,10 @@ interface DetectedPattern {
 const PatternDetectionEngine: React.FC = () => {
   const [patterns, setPatterns] = useState<DetectedPattern[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedPattern, setSelectedPattern] = useState<DetectedPattern | null>(null);
+  const [isPatternDetailsOpen, setIsPatternDetailsOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
+  const [isTransactionDetailsOpen, setIsTransactionDetailsOpen] = useState(false);
   const { toast } = useToast();
 
   const runPatternAnalysis = async () => {
@@ -91,6 +97,43 @@ const PatternDetectionEngine: React.FC = () => {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleViewDetails = (pattern: DetectedPattern) => {
+    setSelectedPattern(pattern);
+    setIsPatternDetailsOpen(true);
+  };
+
+  const handleViewTransaction = (transaction: AMLTransaction) => {
+    setSelectedTransaction(transaction);
+    setIsTransactionDetailsOpen(true);
+  };
+
+  const handleFlagTransaction = (transaction: AMLTransaction) => {
+    // Update the transaction in patterns
+    setPatterns(prevPatterns =>
+      prevPatterns.map(pattern => ({
+        ...pattern,
+        transactions: pattern.transactions.map(t =>
+          t.id === transaction.id
+            ? { ...t, isSuspect: !t.isSuspect, status: !t.isSuspect ? 'flagged' : 'completed' }
+            : t
+        )
+      }))
+    );
+
+    toast({
+      title: transaction.isSuspect ? "Transaction Unflagged" : "Transaction Flagged",
+      description: `Transaction ${transaction.id.substring(0, 8)}... has been ${transaction.isSuspect ? 'unflagged' : 'flagged as suspicious'}`,
+      variant: transaction.isSuspect ? "default" : "destructive",
+    });
+  };
+
+  const handleCreateCase = (transaction: AMLTransaction) => {
+    toast({
+      title: "AML Case Created",
+      description: `Investigation case created for transaction ${transaction.id.substring(0, 8)}...`,
+    });
   };
 
   const getCategoryIcon = (category: string) => {
@@ -210,7 +253,11 @@ const PatternDetectionEngine: React.FC = () => {
                         <span className="text-xs text-muted-foreground">
                           Last detected: {new Date(pattern.lastDetected).toLocaleString()}
                         </span>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(pattern)}
+                        >
                           View Details
                         </Button>
                       </div>
@@ -281,6 +328,25 @@ const PatternDetectionEngine: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Pattern Details Modal */}
+      <PatternDetailsModal
+        pattern={selectedPattern}
+        open={isPatternDetailsOpen}
+        onOpenChange={setIsPatternDetailsOpen}
+        onViewTransaction={handleViewTransaction}
+        onFlagTransaction={handleFlagTransaction}
+        onCreateCase={handleCreateCase}
+      />
+
+      {/* Transaction Details Modal */}
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        open={isTransactionDetailsOpen}
+        onOpenChange={setIsTransactionDetailsOpen}
+        onFlag={handleFlagTransaction}
+        onCreateCase={handleCreateCase}
+      />
     </div>
   );
 };
