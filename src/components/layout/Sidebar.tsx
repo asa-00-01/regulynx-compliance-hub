@@ -12,6 +12,7 @@ import {
   FileWarning,
   History,
   UserCheck,
+  User,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -94,6 +95,12 @@ const Sidebar = () => {
       href: '/audit-logs',
       icon: History,
       allowedRoles: ['admin', 'complianceOfficer'],
+    },
+    {
+      title: 'Profile',
+      href: '/profile',
+      icon: User,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
   ];
 

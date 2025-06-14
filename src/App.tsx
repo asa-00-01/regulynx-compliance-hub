@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import AuthPage from './pages/AuthPage';
@@ -10,6 +11,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import ComplianceCases from './pages/ComplianceCases';
 import SARCenter from './pages/SARCenter';
 import Unauthorized from './pages/Unauthorized';
+import Profile from './pages/Profile';
 import { useAuth } from './context/AuthContext';
 import Compliance from './pages/Compliance';
 import UserCase from './pages/UserCase';
@@ -58,6 +60,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />
