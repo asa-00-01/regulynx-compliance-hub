@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
+import LanguageSelector from '@/components/common/LanguageSelector';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -64,6 +65,8 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageSelector />
+        
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-regulynx-red-alert"></span>
