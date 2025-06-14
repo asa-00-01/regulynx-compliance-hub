@@ -64,7 +64,7 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
       <div className={`flex flex-col flex-1 w-full min-w-0 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="h-full">
+          <div className="h-full p-6">
             {children}
           </div>
         </main>

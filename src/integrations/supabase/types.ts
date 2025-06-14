@@ -158,7 +158,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          role: string
+          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
@@ -166,7 +166,7 @@ export type Database = {
           created_at?: string
           id: string
           name: string
-          role: string
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
@@ -174,7 +174,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Relationships: []
@@ -261,13 +261,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       case_status: "open" | "resolved" | "escalated"
       case_type: "kyc" | "aml" | "sanctions"
       document_status: "pending" | "verified" | "rejected"
       document_type: "passport" | "id" | "license"
+      user_role: "complianceOfficer" | "admin" | "executive" | "support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -387,6 +391,7 @@ export const Constants = {
       case_type: ["kyc", "aml", "sanctions"],
       document_status: ["pending", "verified", "rejected"],
       document_type: ["passport", "id", "license"],
+      user_role: ["complianceOfficer", "admin", "executive", "support"],
     },
   },
 } as const
