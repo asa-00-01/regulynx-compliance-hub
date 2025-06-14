@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +34,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import TransactionDetails from '@/components/transactions/TransactionDetails';
 import { Transaction } from '@/types/transaction';
+import { useNavigate } from 'react-router-dom';
+import { useCompliance } from '@/context/ComplianceContext';
 
 // Mock transaction data with proper Transaction type
 const initialMockTransactions: Transaction[] = [
@@ -123,6 +124,8 @@ const Transactions = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { setSelectedUser } = useCompliance();
 
   // Filter and sort transactions
   const filteredAndSortedTransactions = useMemo(() => {
@@ -199,9 +202,67 @@ const Transactions = () => {
   };
 
   const handleCreateCase = (transaction: Transaction) => {
+    // Navigate to compliance cases with transaction data
+    navigate('/compliance-cases', {
+      state: {
+        createCase: true,
+        userData: {
+          userId: transaction.userId,
+          userName: transaction.userName,
+          description: `Suspicious transaction: ${transaction.id} - Amount: ${transaction.amount} ${transaction.currency}`,
+          type: 'transaction',
+          source: 'transaction_monitoring',
+          riskScore: transaction.riskScore,
+          transactionData: transaction
+        }
+      }
+    });
+
     toast({
       title: "Case Created",
       description: `Investigation case created for transaction ${transaction.id.substring(0, 8)}...`,
+    });
+  };
+
+  const handleViewUserProfile = (transaction: Transaction) => {
+    // Set the selected user and navigate to user case view
+    setSelectedUser(transaction.userId);
+    navigate(`/user-case/${transaction.userId}`, {
+      state: {
+        returnTo: '/transactions'
+      }
+    });
+
+    toast({
+      title: "User Profile",
+      description: `Opening profile for ${transaction.userName}`,
+    });
+  };
+
+  const handleCreateSAR = (transaction: Transaction) => {
+    // Navigate to SAR center with transaction data
+    navigate('/sar-center', {
+      state: {
+        createSAR: true,
+        transactionData: {
+          id: transaction.id,
+          userId: transaction.userId,
+          userName: transaction.userName,
+          amount: transaction.amount,
+          currency: transaction.currency,
+          timestamp: transaction.timestamp,
+          originCountry: transaction.originCountry,
+          destinationCountry: transaction.destinationCountry,
+          method: transaction.method,
+          description: transaction.description,
+          riskScore: transaction.riskScore
+        }
+      }
+    });
+
+    toast({
+      title: "SAR Creation",
+      description: "Navigating to create Suspicious Activity Report",
     });
   };
 
@@ -384,30 +445,47 @@ const Transactions = () => {
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-1 flex-wrap">
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleViewDetails(transaction)}
+                              title="View Details"
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewUserProfile(transaction)}
+                              title="View User Profile"
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant={transaction.flagged ? "default" : "outline"} 
                               size="sm"
                               onClick={() => handleFlagTransaction(transaction)}
+                              title={transaction.flagged ? "Unflag Transaction" : "Flag Transaction"}
                             >
-                              <Flag className="h-4 w-4 mr-1" />
-                              {transaction.flagged ? 'Flagged' : 'Flag'}
+                              <Flag className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="secondary" 
                               size="sm"
                               onClick={() => handleCreateCase(transaction)}
+                              title="Create Investigation Case"
                             >
-                              <FileText className="h-4 w-4 mr-1" />
-                              Case
+                              <AlertTriangle className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleCreateSAR(transaction)}
+                              title="Create SAR"
+                              className="text-orange-600 hover:text-orange-700"
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

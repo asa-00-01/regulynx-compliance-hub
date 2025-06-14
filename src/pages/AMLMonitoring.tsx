@@ -1,210 +1,340 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import TransactionsOverviewTable from '@/components/aml/TransactionsOverviewTable';
-import TransactionFilters from '@/components/aml/TransactionFilters';
-import PatternAnalysisTab from '@/components/aml/PatternAnalysisTab';
-import { mockTransactions } from '@/components/aml/mockTransactionData';
-import { AMLTransaction } from '@/types/aml';
-import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Shield, AlertTriangle, TrendingUp, Users, Search, Filter, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCompliance } from '@/context/ComplianceContext';
-import UserCard from '@/components/user/UserCard';
+import TransactionsOverviewTable from '@/components/aml/TransactionsOverviewTable';
+import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
+import TransactionFilters from '@/components/aml/TransactionFilters';
+import PatternDetectionEngine from '@/components/aml/PatternDetectionEngine';
+import { mockAMLTransactions } from '@/components/aml/mockTransactionData';
+import { AMLTransaction } from '@/types/aml';
 
-const AMLMonitoringPage = () => {
-  const location = useLocation();
+const AMLMonitoring = () => {
   const [searchParams] = useSearchParams();
-  const userId = searchParams.get('userId');
+  const userIdFromParams = searchParams.get('userId');
   
-  const { getUserById } = useCompliance();
-  const [activeTab, setActiveTab] = useState('transactions');
+  const [transactions, setTransactions] = useState<AMLTransaction[]>(mockAMLTransactions);
   const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState({
     dateRange: '30days',
-    minAmount: undefined as number | undefined,
-    maxAmount: undefined as number | undefined,
-    country: undefined as string | undefined,
-    riskLevel: 'all' as string,
-    onlyFlagged: false,
-    userId: userId || undefined as string | undefined
+    riskLevel: 'all',
+    status: 'all',
+    amountRange: 'all',
+    userId: userIdFromParams || ''
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setSelectedUser } = useCompliance();
 
-  // Update filters when URL changes
-  useEffect(() => {
-    if (userId) {
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        userId
-      }));
-    }
-  }, [userId]);
+  // Filter transactions based on current filters
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(transaction => {
+      // User filter
+      if (filters.userId && transaction.senderUserId !== filters.userId) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          transaction.id.toLowerCase().includes(searchLower) ||
+          transaction.senderName.toLowerCase().includes(searchLower) ||
+          transaction.receiverName?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      
+      // Risk level filter
+      if (filters.riskLevel !== 'all') {
+        const riskScore = transaction.riskScore;
+        switch (filters.riskLevel) {
+          case 'low':
+            if (riskScore >= 30) return false;
+            break;
+          case 'medium':
+            if (riskScore < 30 || riskScore >= 70) return false;
+            break;
+          case 'high':
+            if (riskScore < 70) return false;
+            break;
+        }
+      }
+      
+      // Status filter
+      if (filters.status !== 'all' && transaction.status !== filters.status) {
+        return false;
+      }
+      
+      // Amount range filter
+      if (filters.amountRange !== 'all') {
+        const amount = transaction.senderAmount;
+        switch (filters.amountRange) {
+          case 'small':
+            if (amount >= 1000) return false;
+            break;
+          case 'medium':
+            if (amount < 1000 || amount >= 10000) return false;
+            break;
+          case 'large':
+            if (amount < 10000) return false;
+            break;
+        }
+      }
+      
+      return true;
+    });
+  }, [transactions, filters, searchTerm]);
 
-  const handleViewTransactionDetails = (transaction: AMLTransaction) => {
+  // Calculate metrics
+  const totalTransactions = filteredTransactions.length;
+  const flaggedTransactions = filteredTransactions.filter(t => t.isSuspect).length;
+  const highRiskTransactions = filteredTransactions.filter(t => t.riskScore >= 70).length;
+  const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.senderAmount, 0);
+
+  const handleViewDetails = (transaction: AMLTransaction) => {
     setSelectedTransaction(transaction);
-    setDetailsModalOpen(true);
-  };
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters({ ...filters, ...newFilters });
+    setIsDetailsModalOpen(true);
   };
 
   const handleFlagTransaction = (transaction: AMLTransaction) => {
+    setTransactions(prevTransactions =>
+      prevTransactions.map(t =>
+        t.id === transaction.id
+          ? { ...t, isSuspect: !t.isSuspect, status: !t.isSuspect ? 'flagged' : 'completed' }
+          : t
+      )
+    );
+
     toast({
-      title: 'Transaction Flagged',
-      description: `Transaction ${transaction.id.substring(0, 8)}... has been flagged for review.`,
+      title: transaction.isSuspect ? "Transaction Unflagged" : "Transaction Flagged",
+      description: `Transaction ${transaction.id.substring(0, 8)}... has been ${transaction.isSuspect ? 'unflagged' : 'flagged as suspicious'}`,
+      variant: transaction.isSuspect ? "default" : "destructive",
     });
-    // In a real application, we would update the transaction status in the database
-    setDetailsModalOpen(false);
   };
 
   const handleCreateCase = (transaction: AMLTransaction) => {
-    // Navigate to compliance cases page with initial case data
     navigate('/compliance-cases', {
       state: {
         createCase: true,
         userData: {
           userId: transaction.senderUserId,
           userName: transaction.senderName,
-          description: `Suspicious transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency}`,
+          description: `AML Alert: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency}`,
           type: 'aml',
-          source: 'transaction_alert',
+          source: 'aml_monitoring',
           riskScore: transaction.riskScore,
+          transactionData: transaction
         }
       }
     });
-    
-    setDetailsModalOpen(false);
+
+    toast({
+      title: "AML Case Created",
+      description: `Investigation case created for transaction ${transaction.id.substring(0, 8)}...`,
+    });
   };
 
-  // Apply filters to transactions
-  const filteredTransactions = mockTransactions.filter(transaction => {
-    // User filter
-    if (filters.userId && transaction.senderUserId !== filters.userId) {
-      return false;
-    }
-    
-    // Date range filter would be applied here in a real app
-    
-    // Min amount filter
-    if (filters.minAmount && transaction.senderAmount < filters.minAmount) {
-      return false;
-    }
-    
-    // Max amount filter
-    if (filters.maxAmount && transaction.senderAmount > filters.maxAmount) {
-      return false;
-    }
-    
-    // Country filter
-    if (filters.country && 
-        transaction.senderCountryCode !== filters.country && 
-        transaction.receiverCountryCode !== filters.country) {
-      return false;
-    }
-    
-    // Risk level filter
-    if (filters.riskLevel !== 'all') {
-      if (filters.riskLevel === 'high' && transaction.riskScore < 75) {
-        return false;
+  const handleCreateSAR = (transaction: AMLTransaction) => {
+    navigate('/sar-center', {
+      state: {
+        createSAR: true,
+        transactionData: transaction
       }
-      if (filters.riskLevel === 'medium' && (transaction.riskScore < 50 || transaction.riskScore >= 75)) {
-        return false;
-      }
-      if (filters.riskLevel === 'low' && transaction.riskScore >= 50) {
-        return false;
-      }
-    }
-    
-    // Flagged filter
-    if (filters.onlyFlagged && !transaction.isSuspect) {
-      return false;
-    }
-    
-    return true;
-  });
+    });
 
-  const userDetails = filters.userId ? getUserById(filters.userId) : null;
+    toast({
+      title: "SAR Creation",
+      description: "Navigating to create Suspicious Activity Report",
+    });
+  };
+
+  const handleViewUserProfile = (userId: string) => {
+    setSelectedUser(userId);
+    navigate(`/user-case/${userId}`, {
+      state: {
+        returnTo: '/aml-monitoring'
+      }
+    });
+  };
+
+  const handleExportTransactions = () => {
+    const csvContent = [
+      ['ID', 'Date', 'Sender', 'Amount', 'Currency', 'Destination', 'Status', 'Risk Score', 'Flagged'].join(','),
+      ...filteredTransactions.map(tx => [
+        tx.id,
+        new Date(tx.timestamp).toLocaleDateString(),
+        tx.senderName,
+        tx.senderAmount,
+        tx.senderCurrency,
+        tx.receiverCountryCode,
+        tx.status,
+        tx.riskScore,
+        tx.isSuspect ? 'Yes' : 'No'
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aml-transactions-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Complete",
+      description: `${filteredTransactions.length} transactions exported to CSV`,
+    });
+  };
 
   return (
-    <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
+    <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">AML Transaction Monitoring</h1>
+          <h1 className="text-3xl font-bold tracking-tight">AML Monitoring</h1>
           <p className="text-muted-foreground">
-            Monitor transactions for suspicious patterns and AML compliance
-            {userDetails && ` - Viewing transactions for ${userDetails.fullName}`}
+            Monitor transactions for anti-money laundering compliance
           </p>
         </div>
 
-        {/* Show user card if filtering by user */}
-        {filters.userId && (
-          <div className="mb-4 max-w-md">
-            <UserCard userId={filters.userId} />
-          </div>
-        )}
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalTransactions}</div>
+              <p className="text-xs text-muted-foreground">
+                In current filter
+              </p>
+            </CardContent>
+          </Card>
 
-        <Tabs defaultValue="transactions" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Flagged Transactions</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{flaggedTransactions}</div>
+              <p className="text-xs text-muted-foreground">
+                Require review
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">High Risk</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{highRiskTransactions}</div>
+              <p className="text-xs text-muted-foreground">
+                Risk score ≥ 70
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ${totalAmount.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                In filtered transactions
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="patterns">Pattern Analysis</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="overview">Transaction Overview</TabsTrigger>
+            <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="transactions">
-            <div className="space-y-4">
-              <TransactionFilters 
+
+          <TabsContent value="overview" className="space-y-4">
+            {/* Filters and Search */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search transactions..."
+                  className="pl-8 w-full sm:w-[300px]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <TransactionFilters
                 filters={filters}
-                onFilterChange={handleFilterChange}
-                allowUserFilter={!filters.userId}
+                onFiltersChange={setFilters}
               />
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <TransactionsOverviewTable 
-                    transactions={filteredTransactions}
-                    onViewDetails={handleViewTransactionDetails}
-                    onFlagTransaction={handleFlagTransaction}
-                    onCreateCase={handleCreateCase}
-                    showUserColumn={!filters.userId}
-                  />
-                </CardContent>
-              </Card>
+
+              <Button variant="outline" className="ml-auto" onClick={handleExportTransactions}>
+                <Download className="mr-2 h-4 w-4" />
+                Export ({filteredTransactions.length})
+              </Button>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="patterns">
-            <PatternAnalysisTab />
-          </TabsContent>
-          
-          <TabsContent value="reports">
+
+            {/* Transactions Table */}
             <Card>
-              <CardContent className="pt-6 min-h-[400px] flex items-center justify-center">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold">AML Reports</h3>
-                  <p className="text-muted-foreground">This feature is coming soon</p>
-                </div>
+              <CardHeader>
+                <CardTitle>AML Transaction Monitoring</CardTitle>
+                <CardDescription>
+                  Review transactions for suspicious activity and compliance violations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TransactionsOverviewTable
+                  transactions={filteredTransactions}
+                  onViewDetails={handleViewDetails}
+                  onFlagTransaction={handleFlagTransaction}
+                  onCreateCase={handleCreateCase}
+                  showUserColumn={!filters.userId}
+                />
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      </div>
 
-      {/* Transaction Details Modal */}
-      <TransactionDetailsModal
-        transaction={selectedTransaction}
-        open={detailsModalOpen}
-        onOpenChange={setDetailsModalOpen}
-        onFlag={handleFlagTransaction}
-        onCreateCase={handleCreateCase}
-      />
+          <TabsContent value="patterns" className="space-y-4">
+            <PatternDetectionEngine />
+          </TabsContent>
+        </Tabs>
+
+        {/* Transaction Details Modal */}
+        <TransactionDetailsModal
+          transaction={selectedTransaction}
+          open={isDetailsModalOpen}
+          onOpenChange={setIsDetailsModalOpen}
+          onCreateCase={handleCreateCase}
+          onCreateSAR={handleCreateSAR}
+          onViewUserProfile={handleViewUserProfile}
+        />
+      </div>
     </DashboardLayout>
   );
 };
 
-export default AMLMonitoringPage;
+export default AMLMonitoring;

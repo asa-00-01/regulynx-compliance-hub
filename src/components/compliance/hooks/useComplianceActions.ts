@@ -2,37 +2,37 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { LoadingState, CaseType, NavigationParams } from '../types/complianceActionsTypes';
+import { UnifiedUserData } from '@/context/compliance/types';
+import { useCompliance } from '@/context/ComplianceContext';
 
-export function useComplianceActions(user: any, onActionTaken?: () => void) {
-  const [loading, setLoading] = useState<LoadingState>(null);
+export function useComplianceActions(user: UnifiedUserData, onActionTaken?: () => void) {
+  const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setSelectedUser } = useCompliance();
 
-  const handleCreateCase = async (caseType: CaseType) => {
-    setLoading('createCase');
+  const handleCreateCase = async () => {
+    setLoading('case');
     try {
-      const navigationParams: NavigationParams = {
-        userId: user.id,
-        userName: user.fullName,
-        description: `${caseType} case for user: ${user.fullName} (Risk Score: ${user.riskScore})`,
-        type: caseType,
-        source: 'compliance_review',
-        riskScore: user.riskScore,
-      };
-
       navigate('/compliance-cases', {
         state: {
           createCase: true,
-          userData: navigationParams
+          userData: {
+            userId: user.id,
+            userName: user.fullName,
+            description: `Compliance review for ${user.fullName} - Risk Score: ${user.riskScore}`,
+            type: 'compliance',
+            source: 'user_profile',
+            riskScore: user.riskScore,
+          }
         }
       });
 
       toast({
-        title: 'Case Creation',
-        description: `Navigating to create ${caseType} case for ${user.fullName}`,
+        title: 'Case Created',
+        description: `Compliance case created for ${user.fullName}`,
       });
-
+      
       onActionTaken?.();
     } finally {
       setLoading(null);
@@ -42,11 +42,13 @@ export function useComplianceActions(user: any, onActionTaken?: () => void) {
   const handleFlagUser = async () => {
     setLoading('flag');
     try {
+      // In a real app, this would update the user status in the database
       toast({
         title: 'User Flagged',
-        description: `${user.fullName} has been flagged for compliance review`,
+        description: `${user.fullName} has been flagged for review`,
         variant: 'destructive',
       });
+      
       onActionTaken?.();
     } finally {
       setLoading(null);
@@ -57,11 +59,16 @@ export function useComplianceActions(user: any, onActionTaken?: () => void) {
     setLoading('kyc');
     try {
       navigate('/kyc-verification', {
-        state: { selectedUserId: user.id }
+        state: {
+          userId: user.id,
+          userName: user.fullName,
+          currentStatus: user.kycStatus
+        }
       });
+
       toast({
         title: 'KYC Review',
-        description: `Opening KYC review for ${user.fullName}`,
+        description: `Opening KYC verification for ${user.fullName}`,
       });
     } finally {
       setLoading(null);
@@ -71,9 +78,8 @@ export function useComplianceActions(user: any, onActionTaken?: () => void) {
   const handleDocumentReview = async () => {
     setLoading('documents');
     try {
-      navigate('/documents', {
-        state: { filterUserId: user.id }
-      });
+      navigate(`/documents?userId=${user.id}`);
+
       toast({
         title: 'Document Review',
         description: `Opening document review for ${user.fullName}`,
@@ -87,9 +93,44 @@ export function useComplianceActions(user: any, onActionTaken?: () => void) {
     setLoading('transactions');
     try {
       navigate(`/aml-monitoring?userId=${user.id}`);
+      
       toast({
-        title: 'Transaction Review',
-        description: `Opening transaction monitoring for ${user.fullName}`,
+        title: 'Transaction History',
+        description: `Viewing transactions for ${user.fullName}`,
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleCreateSAR = async () => {
+    setLoading('sar');
+    try {
+      navigate('/sar-center', {
+        state: {
+          createSAR: true,
+          userData: user
+        }
+      });
+
+      toast({
+        title: 'SAR Creation',
+        description: 'Navigating to create Suspicious Activity Report',
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleViewFullProfile = async () => {
+    setLoading('profile');
+    try {
+      setSelectedUser(user.id);
+      navigate(`/user-case/${user.id}`);
+      
+      toast({
+        title: 'Full Profile',
+        description: `Opening complete profile for ${user.fullName}`,
       });
     } finally {
       setLoading(null);
@@ -102,6 +143,8 @@ export function useComplianceActions(user: any, onActionTaken?: () => void) {
     handleFlagUser,
     handleKYCReview,
     handleDocumentReview,
-    handleViewTransactions
+    handleViewTransactions,
+    handleCreateSAR,
+    handleViewFullProfile
   };
 }
