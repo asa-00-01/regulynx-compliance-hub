@@ -12,20 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { AMLTransaction } from '@/types/aml';
+import { DetectedPattern } from '@/types/pattern';
 import { formatCurrency } from '@/lib/utils';
 import { AlertTriangle, TrendingUp, Clock, Search, Eye, Flag, FileText } from 'lucide-react';
 import RiskBadge from '../common/RiskBadge';
-
-interface DetectedPattern {
-  id: string;
-  name: string;
-  description: string;
-  category: 'structuring' | 'high_risk_corridor' | 'time_pattern' | 'velocity';
-  severity: 'low' | 'medium' | 'high';
-  matchCount: number;
-  lastDetected: string;
-  transactions: AMLTransaction[];
-}
 
 interface PatternDetailsModalProps {
   pattern: DetectedPattern | null;
