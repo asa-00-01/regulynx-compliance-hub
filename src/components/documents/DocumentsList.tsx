@@ -1,14 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Document, DocumentStatus } from '@/types/supabase';
 import DocumentActionButtons from './DocumentActionButtons';
+import DocumentsPagination from './DocumentsPagination';
 import { CheckCircle, Clock, XCircle, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useCompliance } from '@/context/ComplianceContext';
 import { usePermissions } from '@/hooks/use-permissions';
+import { usePagination } from '@/hooks/usePagination';
 
 interface DocumentsListProps {
   documents: Document[];
@@ -33,10 +35,28 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
 }) => {
   const { state } = useCompliance();
   const { canApproveDocuments } = usePermissions();
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   const filteredDocuments = activeTab === 'all'
     ? documents
     : documents.filter(doc => doc.status === activeTab);
+
+  const {
+    currentData: paginatedDocuments,
+    currentPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+    hasNextPage,
+    hasPrevPage,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+  } = usePagination({ 
+    data: filteredDocuments, 
+    itemsPerPage 
+  });
   
   const getStatusIcon = (status: DocumentStatus) => {
     switch (status) {
@@ -73,94 +93,133 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
 
   const showSelection = canApproveDocuments() && onDocumentSelect;
 
+  const handleSelectAll = (checked: boolean) => {
+    if (!onDocumentSelect) return;
+    
+    if (checked) {
+      // Select all documents on current page
+      paginatedDocuments.forEach(doc => {
+        if (!selectedDocuments.includes(doc.id)) {
+          onDocumentSelect(doc.id);
+        }
+      });
+    } else {
+      // Deselect all documents on current page
+      paginatedDocuments.forEach(doc => {
+        if (selectedDocuments.includes(doc.id)) {
+          onDocumentSelect(doc.id);
+        }
+      });
+    }
+  };
+
+  const currentPageSelectedCount = paginatedDocuments.filter(doc => 
+    selectedDocuments.includes(doc.id)
+  ).length;
+
   return (
-    <Tabs defaultValue={activeTab} value={activeTab} className="w-full" onValueChange={onTabChange}>
-      <TabsList className="mb-4">
-        <TabsTrigger value="all">All Documents</TabsTrigger>
-        <TabsTrigger value="pending">Pending</TabsTrigger>
-        <TabsTrigger value="verified">Verified</TabsTrigger>
-        <TabsTrigger value="rejected">Rejected</TabsTrigger>
-      </TabsList>
-      <div className="relative overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {showSelection && (
-                <TableHead className="w-[50px]">
-                  <Checkbox
-                    checked={selectedDocuments.length === filteredDocuments.length && filteredDocuments.length > 0}
-                    indeterminate={selectedDocuments.length > 0 && selectedDocuments.length < filteredDocuments.length}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        filteredDocuments.forEach(doc => onDocumentSelect(doc.id));
-                      } else {
-                        selectedDocuments.forEach(id => onDocumentSelect(id));
-                      }
-                    }}
-                  />
-                </TableHead>
-              )}
-              <TableHead className="w-[200px]">Filename</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Uploaded Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+    <div className="space-y-4">
+      <Tabs defaultValue={activeTab} value={activeTab} className="w-full" onValueChange={onTabChange}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Documents</TabsTrigger>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="verified">Verified</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected</TabsTrigger>
+        </TabsList>
+        
+        <div className="relative overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={showSelection ? 6 : 5} className="text-center">
-                  Loading documents...
-                </TableCell>
-              </TableRow>
-            ) : filteredDocuments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={showSelection ? 6 : 5} className="text-center">
-                  No documents found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredDocuments.map((document) => (
-                <TableRow key={document.id}>
-                  {showSelection && (
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedDocuments.includes(document.id)}
-                        onCheckedChange={() => onDocumentSelect(document.id)}
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell className="font-medium">{document.file_name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{getCustomerName(document.user_id)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(document.status as DocumentStatus)}
-                      {getStatusBadge(document.status as DocumentStatus)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(document.upload_date)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DocumentActionButtons
-                      document={document}
-                      onViewDocument={onViewDocument}
-                      onReviewDocument={onReviewDocument}
+                {showSelection && (
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={currentPageSelectedCount === paginatedDocuments.length && paginatedDocuments.length > 0}
+                      indeterminate={currentPageSelectedCount > 0 && currentPageSelectedCount < paginatedDocuments.length}
+                      onCheckedChange={handleSelectAll}
                     />
+                  </TableHead>
+                )}
+                <TableHead className="w-[200px]">Filename</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Uploaded Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={showSelection ? 6 : 5} className="text-center">
+                    Loading documents...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </Tabs>
+              ) : paginatedDocuments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={showSelection ? 6 : 5} className="text-center">
+                    No documents found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedDocuments.map((document) => (
+                  <TableRow key={document.id}>
+                    {showSelection && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedDocuments.includes(document.id)}
+                          onCheckedChange={() => onDocumentSelect(document.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className="font-medium">{document.file_name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{getCustomerName(document.user_id)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(document.status as DocumentStatus)}
+                        {getStatusBadge(document.status as DocumentStatus)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {formatDate(document.upload_date)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DocumentActionButtons
+                        document={document}
+                        onViewDocument={onViewDocument}
+                        onReviewDocument={onReviewDocument}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        
+        {/* Pagination */}
+        {!loading && filteredDocuments.length > 0 && (
+          <DocumentsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            hasNextPage={hasNextPage}
+            hasPrevPage={hasPrevPage}
+            onPageChange={goToPage}
+            onItemsPerPageChange={setItemsPerPage}
+            onNextPage={goToNextPage}
+            onPrevPage={goToPrevPage}
+          />
+        )}
+      </Tabs>
+    </div>
   );
 };
 

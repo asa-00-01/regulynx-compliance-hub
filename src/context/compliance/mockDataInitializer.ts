@@ -102,7 +102,7 @@ export const initializeMockData = (): UnifiedUserData[] => {
       }
     ];
 
-    // Generate transactions for each user
+    // Generate transactions for each user with proper currency types
     const transactions = [
       {
         id: `tx_${userId}_1`,
@@ -114,8 +114,8 @@ export const initializeMockData = (): UnifiedUserData[] => {
         status: 'completed' as const,
         senderAmount: 5000,
         receiverAmount: 4950,
-        senderCurrency: 'USD',
-        receiverCurrency: 'USD',
+        senderCurrency: 'USD' as const,
+        receiverCurrency: 'USD' as const,
         senderCountryCode: 'US',
         receiverCountryCode: 'GB',
         method: 'bank' as const,
@@ -133,8 +133,8 @@ export const initializeMockData = (): UnifiedUserData[] => {
         status: 'completed' as const,
         senderAmount: 3000,
         receiverAmount: 2950,
-        senderCurrency: 'EUR',
-        receiverCurrency: 'EUR',
+        senderCurrency: 'EUR' as const,
+        receiverCurrency: 'EUR' as const,
         senderCountryCode: 'DE',
         receiverCountryCode: 'FR',
         method: 'bank' as const,
