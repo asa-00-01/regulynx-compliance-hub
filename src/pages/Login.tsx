@@ -1,221 +1,119 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth, UserRole } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { Shield, AlertCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const Login = () => {
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupName, setSignupName] = useState('');
-  const [signupRole, setSignupRole] = useState<UserRole>('support');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  const { login, signup } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setLoading(true);
 
     try {
-      await login(loginEmail, loginPassword);
+      await login(email, password);
       toast({
-        title: 'Success',
-        description: 'Successfully logged in!',
+        title: 'Login successful',
+        description: 'Welcome to Regulynx',
       });
       navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      setError(error.message || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      setError('Invalid email or password');
       toast({
-        title: 'Login Failed',
-        description: error.message || 'Please check your credentials and try again.',
         variant: 'destructive',
+        title: 'Authentication failed',
+        description: 'Please check your credentials and try again.',
       });
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      await signup(signupEmail, signupPassword, signupRole, signupName);
-      toast({
-        title: 'Success',
-        description: 'Account created! Please check your email to confirm your account.',
-      });
-      // Clear form
-      setSignupEmail('');
-      setSignupPassword('');
-      setSignupName('');
-      setSignupRole('support');
-    } catch (error: any) {
-      console.error('Signup failed:', error);
-      setError(error.message || 'Signup failed. Please try again.');
-      toast({
-        title: 'Signup Failed',
-        description: error.message || 'Please check your information and try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="flex justify-center">
-            <Shield className="h-12 w-12 text-blue-600" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            AML Compliance Tool
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Anti-Money Laundering Compliance Management System
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Regulynx</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Compliance & Business Operations
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Access Your Account</CardTitle>
+            <CardTitle className="text-xl">Log in to your account</CardTitle>
+            <CardDescription>
+              Enter your email and password to access the dashboard
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Logging in...' : 'Login'}
-                  </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div>
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      placeholder="Create a password"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="signup-role">Role</Label>
-                    <Select value={signupRole} onValueChange={(value: UserRole) => setSignupRole(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="support">Support</SelectItem>
-                        <SelectItem value="executive">Executive</SelectItem>
-                        <SelectItem value="complianceOfficer">Compliance Officer</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Creating Account...' : 'Sign Up'}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-            {error && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="compliance@regulynx.com"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <a
+                    href="#"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
           </CardContent>
+          <CardFooter className="flex justify-center text-sm">
+            <p className="text-center text-sm text-muted-foreground">
+              Demo accounts - Email: [role]@regulynx.com | Password: password
+            </p>
+          </CardFooter>
         </Card>
-
-        <div className="text-center text-sm text-gray-600">
-          <p>Demo credentials for testing:</p>
-          <p className="font-mono text-xs mt-1">
-            Any email with password: password123
-          </p>
-        </div>
       </div>
     </div>
   );

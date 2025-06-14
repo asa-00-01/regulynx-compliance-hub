@@ -9,39 +9,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
-  const { user, isAuthenticated, authLoaded, session } = useAuth();
-
-  console.log('ProtectedRoute check:', { 
-    authLoaded, 
-    isAuthenticated, 
-    user: !!user, 
-    session: !!session,
-    userRole: user?.role,
-    requiredRoles 
-  });
+  const { user, isAuthenticated, authLoaded } = useAuth();
 
   // Show loading while auth is being determined
   if (!authLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading authentication...</div>
+        <div className="animate-pulse">Loading...</div>
       </div>
     );
   }
 
-  // If not authenticated (no session), redirect to login
-  if (!session) {
-    console.log('No session found, redirecting to login');
-    return <Navigate to="/login" replace />;
-  }
-
-  // If we have a session but no user profile yet, show loading
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading user profile...</div>
-      </div>
-    );
+  // If not authenticated, redirect to auth page
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
   }
 
   // If roles are required, check if user has necessary permissions
@@ -49,7 +30,6 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
     const hasRequiredRole = user && requiredRoles.includes(user.role);
     
     if (!hasRequiredRole) {
-      console.log('User does not have required role:', { userRole: user.role, requiredRoles });
       return <Navigate to="/unauthorized" replace />;
     }
   }
