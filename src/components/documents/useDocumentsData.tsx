@@ -1,11 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { Document, DocumentStatus } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
+import { Document, DocumentStatus } from '@/types/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/use-permissions';
-import { ensureMockDocuments } from './mockDocumentData';
 
 export const useDocumentsData = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -14,90 +12,57 @@ export const useDocumentsData = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
-  const { toast } = useToast();
   const { user } = useAuth();
   const { canApproveDocuments } = usePermissions();
 
-  // Statistics
-  const [stats, setStats] = useState({
-    pending: 0,
-    verified: 0,
-    rejected: 0,
-    total: 0
-  });
-
-  // Fetch documents
   const fetchDocuments = async () => {
-    if (!user) return;
+    if (!user) {
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     
     try {
-      setLoading(true);
+      console.log('Fetching documents for user:', user.id);
+      console.log('User can approve documents:', canApproveDocuments());
       
-      // For admin/compliance officers, fetch all documents
-      // For regular users, fetch only their own documents
-      let query = supabase
+      // With RLS policies in place, the query will automatically filter documents
+      // based on the user's permissions:
+      // - Regular users will only see their own documents
+      // - Compliance officers and admins will see all documents
+      const { data, error } = await supabase
         .from('documents')
-        .select('*');
-      
-      if (!canApproveDocuments()) {
-        query = query.eq('user_id', user.id);
-      }
-        
-      const { data, error } = await query
+        .select('*')
         .order('upload_date', { ascending: false });
-      
-      if (error) throw error;
-      
-      let documentList: Document[] = [];
-      
-      if (data) {
-        documentList = data;
-        
-        // If no documents found or in development mode, add mock data
-        if (documentList.length === 0 && process.env.NODE_ENV === 'development') {
-          documentList = ensureMockDocuments(documentList);
-        }
-        
-        setDocuments(documentList);
-        
-        // Update stats
-        setStats({
-          pending: documentList.filter(doc => doc.status === 'pending').length,
-          verified: documentList.filter(doc => doc.status === 'verified').length,
-          rejected: documentList.filter(doc => doc.status === 'rejected').length,
-          total: documentList.length
-        });
+
+      if (error) {
+        console.error('Error fetching documents:', error);
+        throw error;
       }
+
+      console.log(`Fetched ${data?.length || 0} documents`);
+      setDocuments(data || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
-      toast({
-        title: "Error fetching documents",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-      
-      // In case of error, use mock data in development
-      if (process.env.NODE_ENV === 'development') {
-        const mockDocs = ensureMockDocuments([]);
-        setDocuments(mockDocs);
-        setStats({
-          pending: mockDocs.filter(doc => doc.status === 'pending').length,
-          verified: mockDocs.filter(doc => doc.status === 'verified').length,
-          rejected: mockDocs.filter(doc => doc.status === 'rejected').length,
-          total: mockDocs.length
-        });
-      }
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch documents on mount and when user changes
   useEffect(() => {
-    if (user) {
-      fetchDocuments();
-    }
+    fetchDocuments();
   }, [user]);
+
+  // Calculate stats based on the fetched documents
+  const stats = {
+    total: documents.length,
+    pending: documents.filter(doc => doc.status === 'pending').length,
+    verified: documents.filter(doc => doc.status === 'verified').length,
+    rejected: documents.filter(doc => doc.status === 'rejected').length,
+  };
 
   return {
     documents,
@@ -111,8 +76,6 @@ export const useDocumentsData = () => {
     showDetailsModal,
     setShowDetailsModal,
     documentForReview,
-    setDocumentForReview
+    setDocumentForReview,
   };
 };
-
-export default useDocumentsData;

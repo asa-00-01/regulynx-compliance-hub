@@ -82,8 +82,12 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       const filePath = `${documentUserId}/${documentType}_${timestamp}.${fileExt}`;
       
       console.log('Inserting document record with path:', filePath);
+      console.log('Document user ID:', documentUserId);
+      console.log('Current authenticated user:', user.id);
       
-      // Insert document record in database
+      // For compliance officers uploading on behalf of customers, we need to ensure
+      // the RLS policies allow this. Since compliance officers have permission to 
+      // insert/update all documents, this should work with our current policies.
       const { data: documentData, error: documentError } = await supabase
         .from('documents')
         .insert({
@@ -99,7 +103,13 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       
       if (documentError) {
         console.error('Database error:', documentError);
-        throw new Error(`Database error: ${documentError.message}`);
+        
+        // Provide more specific error messages based on the error type
+        if (documentError.message.includes('row-level security')) {
+          throw new Error('Permission denied: You do not have permission to upload documents for this user. Please check your authentication status.');
+        } else {
+          throw new Error(`Database error: ${documentError.message}`);
+        }
       }
 
       console.log('Document record created successfully:', documentData);
