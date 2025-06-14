@@ -37,7 +37,7 @@ import TransactionDetails from '@/components/transactions/TransactionDetails';
 import { Transaction } from '@/types/transaction';
 
 // Mock transaction data with proper Transaction type
-const mockTransactions: Transaction[] = [
+const initialMockTransactions: Transaction[] = [
   {
     id: "tx-123456",
     userId: "user-1",
@@ -114,6 +114,7 @@ type SortField = 'timestamp' | 'amount' | 'riskScore' | 'id';
 type SortOrder = 'asc' | 'desc';
 
 const Transactions = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>(initialMockTransactions);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -125,7 +126,7 @@ const Transactions = () => {
 
   // Filter and sort transactions
   const filteredAndSortedTransactions = useMemo(() => {
-    let filtered = mockTransactions.filter(transaction => {
+    let filtered = transactions.filter(transaction => {
       const matchesSearch = (
         transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         transaction.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,7 +165,7 @@ const Transactions = () => {
     });
 
     return filtered;
-  }, [mockTransactions, searchTerm, statusFilter, typeFilter, sortField, sortOrder]);
+  }, [transactions, searchTerm, statusFilter, typeFilter, sortField, sortOrder]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -181,10 +182,19 @@ const Transactions = () => {
   };
 
   const handleFlagTransaction = (transaction: Transaction) => {
+    // Update the transaction's flagged state
+    setTransactions(prevTransactions => 
+      prevTransactions.map(t => 
+        t.id === transaction.id 
+          ? { ...t, flagged: !t.flagged }
+          : t
+      )
+    );
+
     toast({
-      title: "Transaction Flagged",
-      description: `Transaction ${transaction.id.substring(0, 8)}... has been flagged for review`,
-      variant: "destructive",
+      title: transaction.flagged ? "Transaction Unflagged" : "Transaction Flagged",
+      description: `Transaction ${transaction.id.substring(0, 8)}... has been ${transaction.flagged ? 'unflagged' : 'flagged for review'}`,
+      variant: transaction.flagged ? "default" : "destructive",
     });
   };
 
