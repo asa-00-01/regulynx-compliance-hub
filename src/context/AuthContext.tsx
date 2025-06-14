@@ -36,13 +36,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        setSession(session);
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
-        if (session?.user) {
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+
+        if (isMounted) {
+          if (initialSession) {
+            await handleSession(initialSession);
+          } else {
+            setSession(null);
+            setUser(null);
+          }
+          setLoading(false);
+          setAuthLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (isMounted) {
+          setLoading(false);
+          setAuthLoaded(true);
+        }
+      }
+    };
+
+    const handleSession = async (session: Session | null) => {
+      setSession(session);
+      
+      if (session?.user) {
+        try {
           // Fetch user profile from the profiles table
           const { data: profile, error } = await supabase
             .from('profiles')
@@ -70,25 +98,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             };
             setUser(basicUser);
           }
-        } else {
-          setUser(null);
+        } catch (profileError) {
+          console.error('Error handling user profile:', profileError);
+          // Fallback user creation
+          const basicUser: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            role: 'support',
+            name: session.user.email || '',
+          };
+          setUser(basicUser);
         }
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         
-        setLoading(false);
-        setAuthLoaded(true);
+        if (isMounted) {
+          await handleSession(session);
+          if (!authLoaded) {
+            setLoading(false);
+            setAuthLoaded(true);
+          }
+        }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // The onAuthStateChange will handle setting the user
-      if (!session) {
-        setLoading(false);
-        setAuthLoaded(true);
-      }
-    });
+    // Initialize auth
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
