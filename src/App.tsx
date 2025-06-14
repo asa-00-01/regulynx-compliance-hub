@@ -1,7 +1,7 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import AuthPage from './pages/AuthPage';
+import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import AMLMonitoring from './pages/AMLMonitoring';
 import KYCVerification from './pages/KYCVerification';
@@ -21,12 +21,14 @@ import RiskAnalysis from './pages/RiskAnalysis';
 import Transactions from './pages/Transactions';
 
 function App() {
-  const { authLoaded, isAuthenticated } = useAuth();
+  const { authLoaded, isAuthenticated, loading } = useAuth();
 
-  if (!authLoaded) {
+  console.log('App render - authLoaded:', authLoaded, 'isAuthenticated:', isAuthenticated, 'loading:', loading);
+
+  if (!authLoaded || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-lg">Loading application...</div>
       </div>
     );
   }
@@ -34,7 +36,12 @@ function App() {
   return (
     <ComplianceProvider>
       <Routes>
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth" element={
+          isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthPage />
+        } />
+        <Route path="/login" element={
+          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+        } />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/"
@@ -42,7 +49,7 @@ function App() {
             isAuthenticated ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <Navigate to="/auth" replace />
+              <Navigate to="/login" replace />
             )
           }
         />

@@ -29,6 +29,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Mock user for testing
+const MOCK_USER: User = {
+  id: 'mock-user-123',
+  email: 'compliance@regulynx.com',
+  role: 'complianceOfficer',
+  name: 'Mock Compliance Officer',
+  avatarUrl: undefined,
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -36,176 +45,89 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        // Get initial session
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-        }
-
-        if (isMounted) {
-          if (initialSession) {
-            await handleSession(initialSession);
-          } else {
-            setSession(null);
-            setUser(null);
-          }
-          setLoading(false);
-          setAuthLoaded(true);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (isMounted) {
-          setLoading(false);
-          setAuthLoaded(true);
-        }
-      }
-    };
-
-    const handleSession = async (session: Session | null) => {
-      setSession(session);
+    // Simulate authentication initialization with mock user
+    const initializeMockAuth = () => {
+      console.log('Initializing mock authentication...');
       
-      if (session?.user) {
-        try {
-          // Fetch user profile from the profiles table
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile && !error) {
-            const userWithProfile: User = {
-              id: session.user.id,
-              email: session.user.email || '',
-              role: profile.role as UserRole,
-              name: profile.name || session.user.email || '',
-              avatarUrl: profile.avatar_url || undefined,
-            };
-            setUser(userWithProfile);
-          } else {
-            console.error('Error fetching profile:', error);
-            // Create a basic user object if profile fetch fails
-            const basicUser: User = {
-              id: session.user.id,
-              email: session.user.email || '',
-              role: 'support', // Default role
-              name: session.user.email || '',
-            };
-            setUser(basicUser);
-          }
-        } catch (profileError) {
-          console.error('Error handling user profile:', profileError);
-          // Fallback user creation
-          const basicUser: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            role: 'support',
-            name: session.user.email || '',
-          };
-          setUser(basicUser);
+      // Set mock user as authenticated
+      setUser(MOCK_USER);
+      
+      // Create a mock session object
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        expires_at: Date.now() + 3600000,
+        token_type: 'bearer',
+        user: {
+          id: MOCK_USER.id,
+          email: MOCK_USER.email,
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }
-      } else {
-        setUser(null);
-      }
+      } as Session;
+      
+      setSession(mockSession);
+      setLoading(false);
+      setAuthLoaded(true);
+      
+      console.log('Mock authentication initialized with user:', MOCK_USER);
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
-        if (isMounted) {
-          await handleSession(session);
-          if (!authLoaded) {
-            setLoading(false);
-            setAuthLoaded(true);
-          }
-        }
-      }
-    );
-
-    // Initialize auth
-    initializeAuth();
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    // Initialize after a short delay to simulate real auth
+    const timer = setTimeout(initializeMockAuth, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (!data.user) {
-      throw new Error('No user returned from login');
-    }
-
-    // Fetch user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-      throw new Error('Failed to fetch user profile');
-    }
-
-    const userWithProfile: User = {
-      id: data.user.id,
-      email: data.user.email || '',
-      role: profile.role as UserRole,
-      name: profile.name || data.user.email || '',
-      avatarUrl: profile.avatar_url || undefined,
-    };
-
-    return userWithProfile;
+    console.log('Mock login attempt for:', email);
+    
+    // Simulate login delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Always return the mock user for any login attempt
+    setUser(MOCK_USER);
+    
+    const mockSession = {
+      access_token: 'mock-access-token',
+      refresh_token: 'mock-refresh-token',
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      token_type: 'bearer',
+      user: {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    } as Session;
+    
+    setSession(mockSession);
+    
+    return MOCK_USER;
   };
 
   const signup = async (email: string, password: string, role: UserRole): Promise<void> => {
-    const redirectUrl = `${window.location.origin}/`;
+    console.log('Mock signup attempt for:', email, 'with role:', role);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: email.split('@')[0],
-          role: role,
-        }
-      }
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (!data.user) {
-      throw new Error('No user returned from signup');
-    }
-
-    // The profile will be created automatically by the handle_new_user trigger
+    // Simulate signup delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // For mock, just simulate successful signup
+    // In real implementation, this would create a new user
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-    }
+    console.log('Mock logout');
     setUser(null);
     setSession(null);
   };
