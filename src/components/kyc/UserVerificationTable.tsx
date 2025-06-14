@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -102,61 +103,59 @@ const UserVerificationTable = ({
 
   if (isLoading) {
     return (
-      <div>
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Identity Number</TableHead>
-                <TableHead>Flags</TableHead>
-                <TableHead>Risk Score</TableHead>
-                <TableHead>Transactions</TableHead>
-                <TableHead>Actions</TableHead>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="h-12 px-6 font-semibold">Full Name</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Email</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Identity Number</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Flags</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Risk Score</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Transactions</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array(5).fill(0).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-32" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-40" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-28" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-24" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-16" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-5 w-32" /></TableCell>
+                <TableCell className="px-6 py-4"><Skeleton className="h-9 w-32" /></TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array(5).fill(0).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-9 w-32" /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-lg overflow-hidden bg-white">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="h-12 px-6 font-semibold">
               <SortableHeader field="name">Full Name</SortableHeader>
             </TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Identity Number</TableHead>
-            <TableHead>Flags</TableHead>
-            <TableHead>
+            <TableHead className="h-12 px-6 font-semibold">Email</TableHead>
+            <TableHead className="h-12 px-6 font-semibold">Identity Number</TableHead>
+            <TableHead className="h-12 px-6 font-semibold">Flags</TableHead>
+            <TableHead className="h-12 px-6 font-semibold">
               <SortableHeader field="risk">Risk Score</SortableHeader>
             </TableHead>
-            <TableHead>Transactions</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="h-12 px-6 font-semibold">Transactions</TableHead>
+            <TableHead className="h-12 px-6 font-semibold text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                 No users found
               </TableCell>
             </TableRow>
@@ -167,36 +166,46 @@ const UserVerificationTable = ({
               const riskData = riskDataMap.get(user.id);
               
               return (
-                <TableRow key={user.id} className={isFlagged ? "bg-yellow-50/30" : ""}>
-                  <TableCell className="font-medium">
-                    {user.fullName}
-                    {user.flags.is_verified_pep && (
-                      <TooltipHelp content="Politically Exposed Person - Enhanced due diligence required">
-                        <Badge variant="warning" className="ml-2">PEP</Badge>
-                      </TooltipHelp>
-                    )}
-                    {user.flags.is_sanction_list && (
-                      <TooltipHelp content="This user appears on a sanctions list - All transactions are blocked">
-                        <Badge variant="destructive" className="ml-2">Sanctioned</Badge>
-                      </TooltipHelp>
-                    )}
+                <TableRow key={user.id} className={`border-b hover:bg-muted/30 ${isFlagged ? "bg-yellow-50/50" : ""}`}>
+                  <TableCell className="px-6 py-4">
+                    <div className="space-y-1">
+                      <div className="font-medium text-gray-900">{user.fullName}</div>
+                      <div className="flex items-center gap-2">
+                        {user.flags.is_verified_pep && (
+                          <TooltipHelp content="Politically Exposed Person - Enhanced due diligence required">
+                            <Badge variant="warning" className="text-xs">PEP</Badge>
+                          </TooltipHelp>
+                        )}
+                        {user.flags.is_sanction_list && (
+                          <TooltipHelp content="This user appears on a sanctions list - All transactions are blocked">
+                            <Badge variant="destructive" className="text-xs">Sanctioned</Badge>
+                          </TooltipHelp>
+                        )}
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    {user.email}
-                    {!user.flags.is_email_confirmed && (
-                      <TooltipHelp content="Email address has not been verified">
-                        <Badge variant="outline" className="ml-2">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          Unconfirmed
-                        </Badge>
-                      </TooltipHelp>
-                    )}
+                  <TableCell className="px-6 py-4">
+                    <div className="space-y-1">
+                      <div className="text-sm text-gray-900">{user.email}</div>
+                      {!user.flags.is_email_confirmed && (
+                        <TooltipHelp content="Email address has not been verified">
+                          <Badge variant="outline" className="text-xs">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Unconfirmed
+                          </Badge>
+                        </TooltipHelp>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell>{user.identityNumber || <span className="text-muted-foreground italic">Missing</span>}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4">
+                    <span className="text-sm text-gray-900">
+                      {user.identityNumber || <span className="text-muted-foreground italic">Missing</span>}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
                     <UserFlagsDisplay flags={user.flags} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4">
                     {riskData && (
                       <TooltipHelp content={
                         <>
@@ -209,24 +218,33 @@ const UserVerificationTable = ({
                           </ul>
                         </>
                       }>
-                        <RiskBadge score={user.flags.riskScore} />
+                        <div className="inline-block">
+                          <RiskBadge score={user.flags.riskScore} />
+                        </div>
                       </TooltipHelp>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4">
                     {riskData && (
-                      <div className="flex flex-col">
-                        <span className="font-medium">{riskData.transactionCount} transactions</span>
-                        <span className="text-xs text-muted-foreground">
+                      <div className="space-y-1">
+                        <div className="font-medium text-sm text-gray-900">
+                          {riskData.transactionCount} transactions
+                        </div>
+                        <div className="text-xs text-muted-foreground">
                           Last: {riskData.recentTransactionAmount.toLocaleString()} SEK
-                        </span>
+                        </div>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => handleViewDetails(user)}>
-                        <Eye className="h-4 w-4 mr-1" />
+                  <TableCell className="px-6 py-4">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleViewDetails(user)}
+                        className="h-8"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
                         Details
                       </Button>
                       
@@ -235,8 +253,9 @@ const UserVerificationTable = ({
                         variant={isFlagged ? "default" : "secondary"}
                         onClick={() => handleFlagUser(user)}
                         title={isFlagged ? "Remove flag" : "Flag for review"}
+                        className="h-8"
                       >
-                        <Flag className="h-4 w-4 mr-1" />
+                        <Flag className="h-3 w-3 mr-1" />
                         {isFlagged ? 'Flagged' : 'Flag'}
                       </Button>
                       
@@ -246,11 +265,12 @@ const UserVerificationTable = ({
                         disabled={user.flags.is_sanction_list || processingAction === user.id}
                         onClick={() => handleCreateCase(user)}
                         title={user.flags.is_sanction_list ? "Actions limited for sanctioned users" : "Create compliance case"}
+                        className="h-8"
                       >
                         {processingAction === user.id ? (
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                         ) : (
-                          <FileText className="h-4 w-4 mr-1" />
+                          <FileText className="h-3 w-3 mr-1" />
                         )}
                         Case
                       </Button>
