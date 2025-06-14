@@ -128,7 +128,7 @@ const UserOverviewSection: React.FC = () => {
                   <option value="all">All Risk Levels</option>
                   <option value="high">High Risk (75+)</option>
                   <option value="medium">Medium Risk (50-74)</option>
-                  <option value="low">Low Risk (<50)</option>
+                  <option value="low">Low Risk (&lt;50)</option>
                 </select>
                 <div className="absolute right-2 top-2.5">
                   <TooltipHelp content="Filter users by their risk assessment level. High risk users (75+) require immediate attention, medium risk (50-74) need monitoring, and low risk (<50) are considered safe." />
