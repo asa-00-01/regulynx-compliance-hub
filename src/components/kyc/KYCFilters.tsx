@@ -42,7 +42,9 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <TooltipHelp content="Search for users by their full name or email address. Use partial matches to find users quickly." />
+          <div className="absolute right-2 top-2.5">
+            <TooltipHelp content="Search for users by their full name or email address. Use partial matches to find users quickly." />
+          </div>
         </div>
       </div>
       
@@ -63,7 +65,9 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
               </SelectGroup>
             </SelectContent>
           </Select>
-          <TooltipHelp content="Filter users by their calculated risk level. High risk users (75+) require immediate attention and enhanced due diligence." />
+          <div className="absolute right-2 top-2.5">
+            <TooltipHelp content="Filter users by their calculated risk level. High risk users (75+) require immediate attention and enhanced due diligence." />
+          </div>
         </div>
 
         <div className="relative">
@@ -73,7 +77,9 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
               ? `Risk Score ${sortOrder === 'asc' ? '↑' : '↓'}` 
               : 'Sort by Risk'}
           </Button>
-          <TooltipHelp content="Sort users by their risk score in ascending (lowest first) or descending (highest first) order to prioritize review." />
+          <div className="absolute right-2 top-2.5">
+            <TooltipHelp content="Sort users by their risk score in ascending (lowest first) or descending (highest first) order to prioritize review." />
+          </div>
         </div>
 
         <div className="relative">
@@ -81,7 +87,9 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
             <DownloadCloud className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <TooltipHelp content="Export the current filtered list of users to CSV format for offline analysis or reporting purposes." />
+          <div className="absolute right-2 top-2.5">
+            <TooltipHelp content="Export the current filtered list of users to CSV format for offline analysis or reporting purposes." />
+          </div>
         </div>
         
         {showResetButton && (
@@ -89,7 +97,9 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
             <Button variant="ghost" onClick={handleResetFilters}>
               Clear Filters
             </Button>
-            <TooltipHelp content="Clear all applied filters and return to the default view showing all users." />
+            <div className="absolute right-2 top-2.5">
+              <TooltipHelp content="Clear all applied filters and return to the default view showing all users." />
+            </div>
           </div>
         )}
       </div>
