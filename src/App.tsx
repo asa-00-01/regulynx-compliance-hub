@@ -1,11 +1,9 @@
 
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
 import { ComplianceProvider } from './context/ComplianceContext';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import LoadingWrapper from './components/common/LoadingWrapper';
 import './App.css';
 
 // Lazy load components for better performance
@@ -35,12 +33,6 @@ const AppLoadingFallback = () => (
 );
 
 function App() {
-  const { authLoaded, isAuthenticated } = useAuth();
-
-  if (!authLoaded) {
-    return <AppLoadingFallback />;
-  }
-
   return (
     <ErrorBoundary>
       <ComplianceProvider>
@@ -51,13 +43,7 @@ function App() {
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route
                 path="/"
-                element={
-                  isAuthenticated ? (
-                    <Navigate to="/dashboard" replace />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
+                element={<Navigate to="/dashboard" replace />}
               />
               <Route
                 path="/dashboard"
