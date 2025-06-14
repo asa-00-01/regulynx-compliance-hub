@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,15 +21,21 @@ export const useAuthState = () => {
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in, fetching profile...');
-          const userProfile = await fetchUserProfile(session.user);
-          if (userProfile) {
-            setUser(userProfile);
-            setSession(session);
-            console.log('User profile set:', userProfile);
-          } else {
-            console.error('Failed to fetch user profile');
+          try {
+            const userProfile = await fetchUserProfile(session.user);
+            if (userProfile) {
+              setUser(userProfile);
+              setSession(session);
+              console.log('User profile set:', userProfile);
+            } else {
+              console.error('Failed to fetch user profile, but setting session anyway');
+              setUser(null);
+              setSession(session); // Still set session even if profile fails
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
             setUser(null);
-            setSession(null);
+            setSession(session); // Still set session even if profile fails
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
@@ -39,18 +46,19 @@ export const useAuthState = () => {
           setSession(session);
           // Keep existing user if available, or fetch if not
           if (!user) {
-            const userProfile = await fetchUserProfile(session.user);
-            if (userProfile) {
-              setUser(userProfile);
+            try {
+              const userProfile = await fetchUserProfile(session.user);
+              if (userProfile) {
+                setUser(userProfile);
+              }
+            } catch (error) {
+              console.error('Error fetching profile on token refresh:', error);
             }
           }
         }
         
         // Always mark auth as loaded after processing any auth event
-        if (!authLoaded) {
-          console.log('Setting authLoaded to true');
-          setAuthLoaded(true);
-        }
+        setAuthLoaded(true);
       }
     );
 
@@ -68,11 +76,21 @@ export const useAuthState = () => {
 
         if (initialSession?.user) {
           console.log('Initial session found, fetching profile...');
-          const userProfile = await fetchUserProfile(initialSession.user);
-          if (userProfile) {
-            setUser(userProfile);
+          try {
+            const userProfile = await fetchUserProfile(initialSession.user);
+            if (userProfile) {
+              setUser(userProfile);
+              setSession(initialSession);
+              console.log('Initial user profile set:', userProfile);
+            } else {
+              console.error('Failed to fetch initial profile, but setting session anyway');
+              setUser(null);
+              setSession(initialSession);
+            }
+          } catch (error) {
+            console.error('Error fetching initial profile:', error);
+            setUser(null);
             setSession(initialSession);
-            console.log('Initial user profile set:', userProfile);
           }
         } else {
           console.log('No initial session found');
