@@ -98,12 +98,17 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-r py-4">
-      <div className="px-4 mb-4">
-        <h1 className="text-lg font-bold">AML Compliance Tool</h1>
+    <div className="flex flex-col h-full bg-card border-r border-border shadow-sm">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-lg font-bold text-foreground tracking-tight">
+          AML Compliance Tool
+        </h1>
       </div>
-      <nav className="flex-1">
-        <ul>
+      
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1 px-3">
           {navigationItems.map((item) => {
             if (!user || !item.allowedRoles.includes(user.role)) {
               return null;
@@ -115,21 +120,27 @@ const Sidebar = () => {
                   to={item.href}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-200",
-                      isActive ? "bg-gray-200" : "text-gray-700"
+                      "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      isActive 
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
                     )
                   }
                 >
-                  <item.icon className="w-4 h-4 mr-2" />
-                  {item.title}
+                  <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="truncate">{item.title}</span>
                 </NavLink>
               </li>
             );
           })}
         </ul>
       </nav>
-      <div className="mt-auto px-4 py-2 text-center text-muted-foreground">
-        <p className="text-xs">
+      
+      {/* Footer */}
+      <div className="mt-auto px-6 py-4 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center">
           © {new Date().getFullYear()} Company Inc.
         </p>
       </div>

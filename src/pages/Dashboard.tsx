@@ -31,55 +31,76 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name}. Here's your compliance overview for today.
-          </p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+          {/* Header Section */}
+          <div className="space-y-3">
+            <div className="flex flex-col space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Dashboard
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Welcome back, {user?.name || 'User'}. Here's your compliance overview for today.
+              </p>
+            </div>
+          </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {Array(4).fill(null).map((_, index) => (
-              <div key={index} className="animate-pulse">
-                <div className="h-24 bg-muted rounded"></div>
+          {/* Metrics Cards Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Key Metrics</h2>
+            {loading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {Array(4).fill(null).map((_, index) => (
+                  <div key={index} className="animate-pulse">
+                    <div className="h-32 bg-muted rounded-lg border"></div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {highlightedStats.map((stat, index) => (
+                  <DashboardMetricsCard
+                    key={index}
+                    title={stat.title}
+                    value={stat.value}
+                    change={stat.change}
+                    changeType={stat.changeType}
+                    icon={iconMap[stat.icon as keyof typeof iconMap]}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {highlightedStats.map((stat, index) => (
-              <DashboardMetricsCard
-                key={index}
-                title={stat.title}
-                value={stat.value}
-                change={stat.change}
-                changeType={stat.changeType}
-                icon={iconMap[stat.icon as keyof typeof iconMap]}
-              />
-            ))}
-          </div>
-        )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <RiskScoreChart data={riskScoreData} loading={loading} />
+          {/* Primary Charts Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Risk Analysis</h2>
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+              <div className="xl:col-span-2">
+                <RiskScoreChart data={riskScoreData} loading={loading} />
+              </div>
+              <div className="xl:col-span-1">
+                <ComplianceCasesCard 
+                  complianceCases={complianceCases} 
+                  loading={loading} 
+                  currentUser={user} 
+                />
+              </div>
+            </div>
           </div>
-          <ComplianceCasesCard 
-            complianceCases={complianceCases} 
-            loading={loading} 
-            currentUser={user} 
-          />
-        </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <RecentDocumentsTable documents={recentDocuments} loading={loading} />
-          </div>
-          <div className="space-y-6">
-            <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
-            <RiskDistributionChart data={mockRiskDistribution} loading={loading} />
+          {/* Secondary Information Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Recent Activity & Compliance</h2>
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+              <div className="xl:col-span-2">
+                <RecentDocumentsTable documents={recentDocuments} loading={loading} />
+              </div>
+              <div className="xl:col-span-1 space-y-6">
+                <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
+                <RiskDistributionChart data={mockRiskDistribution} loading={loading} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

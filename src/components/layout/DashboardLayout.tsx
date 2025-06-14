@@ -37,24 +37,36 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar with fixed positioning */}
+      {/* Sidebar with improved responsive behavior */}
       <div 
-        className={`fixed inset-y-0 left-0 z-20 transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-64" : "w-16"
+        className={`${
+          isMobile 
+            ? `fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
+                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : `relative transition-all duration-300 ease-in-out ${
+                sidebarOpen ? "w-64" : "w-16"
+              }`
         }`}
       >
         <Sidebar />
       </div>
       
-      {/* Main content area with dynamic margin */}
-      <div 
-        className={`flex flex-col flex-1 w-full transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "ml-64" : "ml-16"
-        }`}
-      >
+      {/* Mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+          onClick={toggleSidebar}
+        />
+      )}
+      
+      {/* Main content area with improved layout */}
+      <div className={`flex flex-col flex-1 w-full min-w-0 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-background">
+          <div className="h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
