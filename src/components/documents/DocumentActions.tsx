@@ -6,6 +6,7 @@ import { Eye, Download, FileText, User, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useCompliance } from '@/context/ComplianceContext';
+import { TooltipHelp } from '@/components/ui/tooltip-custom';
 
 interface DocumentActionsProps {
   document: Document;
@@ -67,51 +68,61 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
 
   return (
     <div className="flex gap-2 flex-wrap">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onViewDocument(document)}
-        title="View Document"
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleDownload}
-        title="Download Document"
-      >
-        <Download className="h-4 w-4" />
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onReviewDocument(document)}
-        title="Review Document"
-      >
-        <FileText className="h-4 w-4" />
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleViewUserProfile}
-        title="View User Profile"
-      >
-        <User className="h-4 w-4" />
-      </Button>
-      
-      {(document.status === 'rejected' || document.status === 'pending') && (
+      <TooltipHelp content="View the document content and details in a modal window">
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleCreateCase}
-          title="Create Investigation Case"
+          onClick={() => onViewDocument(document)}
+          title="View Document"
         >
-          <AlertTriangle className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
         </Button>
+      </TooltipHelp>
+      
+      <TooltipHelp content="Download the original document file to your computer">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDownload}
+          title="Download Document"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      </TooltipHelp>
+      
+      <TooltipHelp content="Open the document verification interface to review extracted data and approve or reject the document">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onReviewDocument(document)}
+          title="Review Document"
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+      </TooltipHelp>
+      
+      <TooltipHelp content="Navigate to the user's profile to view their complete information and compliance history">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleViewUserProfile}
+          title="View User Profile"
+        >
+          <User className="h-4 w-4" />
+        </Button>
+      </TooltipHelp>
+      
+      {(document.status === 'rejected' || document.status === 'pending') && (
+        <TooltipHelp content="Create an investigation case for document-related compliance issues that require further review">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCreateCase}
+            title="Create Investigation Case"
+          >
+            <AlertTriangle className="h-4 w-4" />
+          </Button>
+        </TooltipHelp>
       )}
     </div>
   );
