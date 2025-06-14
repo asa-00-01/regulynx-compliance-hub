@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import LanguageSelector from '@/components/common/LanguageSelector';
 
 interface NavItemProps {
   title: string;
@@ -29,82 +31,83 @@ interface NavItemProps {
 const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const navigationItems = [
     {
-      title: 'Dashboard',
+      title: t('navigation.dashboard'),
       href: '/dashboard',
       icon: Home,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {
-      title: 'AI Agent',
+      title: t('navigation.aiAgent'),
       href: '/ai-agent',
       icon: Bot,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {
-      title: 'Compliance',
+      title: t('navigation.compliance'),
       href: '/compliance',
       icon: Shield,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'Compliance Cases',
+      title: t('navigation.complianceCases'),
       href: '/compliance-cases',
       icon: FileText,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'KYC Verification',
+      title: t('navigation.kycVerification'),
       href: '/kyc-verification',
       icon: UserCheck,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'Transactions',
+      title: t('navigation.transactions'),
       href: '/transactions',
       icon: CircleDollarSign,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'Documents',
+      title: t('navigation.documents'),
       href: '/documents',
       icon: FileSearch,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {
-      title: 'AML Monitoring',
+      title: t('navigation.amlMonitoring'),
       href: '/aml-monitoring',
       icon: LineChart,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'Risk Analysis',
+      title: t('navigation.riskAnalysis'),
       href: '/risk-analysis',
       icon: PieChart,
       allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
-      title: 'SAR Center',
+      title: t('navigation.sarCenter'),
       href: '/sar-center',
       icon: FileWarning,
       allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
-      title: 'Users',
+      title: t('navigation.users'),
       href: '/users',
       icon: Users,
       allowedRoles: ['admin'],
     },
     {
-      title: 'Audit Logs',
+      title: t('navigation.auditLogs'),
       href: '/audit-logs',
       icon: History,
       allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
-      title: 'Profile',
+      title: t('navigation.profile'),
       href: '/profile',
       icon: User,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
@@ -152,8 +155,13 @@ const Sidebar = () => {
         </ul>
       </nav>
       
+      {/* Language Selector */}
+      <div className="px-6 py-4 border-t border-border">
+        <LanguageSelector />
+      </div>
+      
       {/* Footer */}
-      <div className="mt-auto px-6 py-4 border-t border-border">
+      <div className="px-6 py-4 border-t border-border">
         <p className="text-xs text-muted-foreground text-center">
           © {new Date().getFullYear()} Company Inc.
         </p>

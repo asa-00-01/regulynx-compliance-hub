@@ -1,0 +1,64 @@
+
+{
+  "navigation": {
+    "dashboard": "Instrumentpanel",
+    "aiAgent": "AI-agent",
+    "compliance": "Regelefterlevnad",
+    "complianceCases": "Regelefterlevnadsfall",
+    "kycVerification": "KYC-verifiering",
+    "transactions": "Transaktioner",
+    "documents": "Dokument",
+    "amlMonitoring": "AML-övervakning",
+    "riskAnalysis": "Riskanalys",
+    "sarCenter": "SAR-center",
+    "users": "Användare",
+    "auditLogs": "Revisionsloggar",
+    "profile": "Profil"
+  },
+  "aiAgent": {
+    "title": "AI-agent",
+    "subtitle": "Chatta med vår AI-assistent för regelefterlevnadsinsikter och support",
+    "connected": "Ansluten till företagets RAG-system",
+    "online": "Online",
+    "placeholder": "Fråga om regelefterlevnad, AML-övervakning, riskbedömning...",
+    "sendButton": "Skicka",
+    "keyboardHint": "Tryck Enter för att skicka, Shift+Enter för ny rad",
+    "thinking": "AI tänker...",
+    "welcomeMessage": "Hej! Jag är din AI-assistent för regelefterlevnad. Jag kan hjälpa dig med AML-övervakning, riskbedömning, ärendehantering och regulatorisk vägledning. Hur kan jag hjälpa dig idag?"
+  },
+  "profile": {
+    "notifications": "Aviseringsinställningar",
+    "notificationsDesc": "Konfigurera hur du vill ta emot aviseringar",
+    "emailNotifications": "E-postaviseringar",
+    "emailNotificationsDesc": "Ta emot aviseringar via e-post",
+    "browserNotifications": "Webbläsaraviseringar",
+    "browserNotificationsDesc": "Ta emot push-aviseringar i din webbläsare",
+    "weeklySummary": "Veckosammanfattning",
+    "weeklySummaryDesc": "Ta emot en veckosammanfattning av regelefterlevnadsaktiviteter",
+    "newCaseAlerts": "Nya ärendevarningar",
+    "newCaseAlertsDesc": "Bli aviserad när ett nytt regelefterlevnadsärende skapas",
+    "highRiskAlerts": "Högriskvarningar",
+    "highRiskAlertsDesc": "Bli aviserad om förändringar i högriskpoäng",
+    "displaySettings": "Displayinställningar",
+    "displaySettingsDesc": "Anpassa hur Regulynx visas för dig",
+    "theme": "Tema",
+    "language": "Språk",
+    "light": "Ljust",
+    "dark": "Mörkt",
+    "system": "System",
+    "exportData": "Exportera data",
+    "exportDataDesc": "Ladda ner dina personuppgifter från plattformen",
+    "exportDesc": "Du kan exportera alla dina personuppgifter och aktivitetshistorik från plattformen i olika format.",
+    "exportCsv": "Exportera som CSV",
+    "exportJson": "Exportera som JSON",
+    "exportPdf": "Exportera som PDF",
+    "savePreferences": "Spara inställningar",
+    "saving": "Sparar...",
+    "preferencesSuccess": "Inställningar sparade framgångsrikt"
+  },
+  "common": {
+    "loading": "Laddar applikation...",
+    "selectTheme": "Välj tema",
+    "selectLanguage": "Välj språk"
+  }
+}

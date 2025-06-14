@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import AuthPage from './pages/AuthPage';
@@ -22,16 +21,19 @@ import AuditLogs from './pages/AuditLogs';
 import RiskAnalysis from './pages/RiskAnalysis';
 import Transactions from './pages/Transactions';
 import AIAgent from './pages/AIAgent';
+import { useTranslation } from 'react-i18next';
+import './i18n/config';
 
 function App() {
   const { authLoaded, isAuthenticated, loading } = useAuth();
+  const { t } = useTranslation();
 
   console.log('App render - authLoaded:', authLoaded, 'isAuthenticated:', isAuthenticated, 'loading:', loading);
 
   if (!authLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-lg">Loading application...</div>
+        <div className="animate-pulse text-lg">{t('common.loading')}</div>
       </div>
     );
   }

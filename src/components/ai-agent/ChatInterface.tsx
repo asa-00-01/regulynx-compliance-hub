@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ChatHeader from './ChatHeader';
@@ -16,10 +17,11 @@ interface Message {
 }
 
 const ChatInterface = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your AI compliance assistant. I can help you with AML monitoring, risk assessment, case management, and regulatory guidance. How can I assist you today?",
+      content: t('aiAgent.welcomeMessage'),
       role: 'assistant',
       timestamp: new Date(),
       tools: ['RAG System', 'Compliance Database']

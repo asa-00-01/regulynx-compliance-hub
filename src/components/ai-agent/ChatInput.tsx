@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
@@ -12,6 +13,8 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading }: ChatInputProps) => {
+  const { t } = useTranslation();
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -26,7 +29,7 @@ const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading }: Chat
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask about compliance, AML monitoring, risk assessment..."
+          placeholder={t('aiAgent.placeholder')}
           className="flex-1"
           disabled={isLoading}
         />
@@ -34,12 +37,13 @@ const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading }: Chat
           onClick={onSendMessage}
           disabled={!inputValue.trim() || isLoading}
           size="icon"
+          title={t('aiAgent.sendButton')}
         >
           <Send className="w-4 h-4" />
         </Button>
       </div>
       <p className="text-xs text-muted-foreground mt-2">
-        Press Enter to send, Shift+Enter for new line
+        {t('aiAgent.keyboardHint')}
       </p>
     </div>
   );

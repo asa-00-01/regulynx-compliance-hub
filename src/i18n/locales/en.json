@@ -1,0 +1,64 @@
+
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "aiAgent": "AI Agent",
+    "compliance": "Compliance",
+    "complianceCases": "Compliance Cases",
+    "kycVerification": "KYC Verification",
+    "transactions": "Transactions",
+    "documents": "Documents",
+    "amlMonitoring": "AML Monitoring",
+    "riskAnalysis": "Risk Analysis",
+    "sarCenter": "SAR Center",
+    "users": "Users",
+    "auditLogs": "Audit Logs",
+    "profile": "Profile"
+  },
+  "aiAgent": {
+    "title": "AI Agent",
+    "subtitle": "Chat with our AI assistant for compliance insights and support",
+    "connected": "Connected to company RAG system",
+    "online": "Online",
+    "placeholder": "Ask about compliance, AML monitoring, risk assessment...",
+    "sendButton": "Send",
+    "keyboardHint": "Press Enter to send, Shift+Enter for new line",
+    "thinking": "AI is thinking...",
+    "welcomeMessage": "Hello! I'm your AI compliance assistant. I can help you with AML monitoring, risk assessment, case management, and regulatory guidance. How can I assist you today?"
+  },
+  "profile": {
+    "notifications": "Notification Preferences",
+    "notificationsDesc": "Configure how you want to receive notifications",
+    "emailNotifications": "Email Notifications",
+    "emailNotificationsDesc": "Receive notifications via email",
+    "browserNotifications": "Browser Notifications",
+    "browserNotificationsDesc": "Receive push notifications in your browser",
+    "weeklySummary": "Weekly Summary",
+    "weeklySummaryDesc": "Receive a weekly summary of compliance activities",
+    "newCaseAlerts": "New Case Alerts",
+    "newCaseAlertsDesc": "Be notified when a new compliance case is created",
+    "highRiskAlerts": "High Risk Alerts",
+    "highRiskAlertsDesc": "Be notified of high-risk score changes",
+    "displaySettings": "Display Settings",
+    "displaySettingsDesc": "Customize how Regulynx appears to you",
+    "theme": "Theme",
+    "language": "Language",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "exportData": "Export Data",
+    "exportDataDesc": "Download your personal data from the platform",
+    "exportDesc": "You can export all your personal data and activity history from the platform in various formats.",
+    "exportCsv": "Export as CSV",
+    "exportJson": "Export as JSON",
+    "exportPdf": "Export as PDF",
+    "savePreferences": "Save Preferences",
+    "saving": "Saving...",
+    "preferencesSuccess": "Preferences saved successfully"
+  },
+  "common": {
+    "loading": "Loading application...",
+    "selectTheme": "Select theme",
+    "selectLanguage": "Select language"
+  }
+}

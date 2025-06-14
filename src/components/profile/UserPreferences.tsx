@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 
 const UserPreferences = () => {
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState({
     email: true,
     browser: true,
@@ -16,11 +18,14 @@ const UserPreferences = () => {
     riskAlerts: true,
   });
   const [theme, setTheme] = useState('system');
-  const [language, setLanguage] = useState('en');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleLanguageChange = (value: string) => {
+    i18n.changeLanguage(value);
   };
 
   const savePreferences = () => {
@@ -29,7 +34,7 @@ const UserPreferences = () => {
     // Mock API call
     setTimeout(() => {
       setIsSubmitting(false);
-      toast.success('Preferences saved successfully');
+      toast.success(t('profile.preferencesSuccess'));
     }, 1000);
   };
 
@@ -37,15 +42,15 @@ const UserPreferences = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>Configure how you want to receive notifications</CardDescription>
+          <CardTitle>{t('profile.notifications')}</CardTitle>
+          <CardDescription>{t('profile.notificationsDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="email-notifications" className="font-medium">Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                <Label htmlFor="email-notifications" className="font-medium">{t('profile.emailNotifications')}</Label>
+                <p className="text-sm text-muted-foreground">{t('profile.emailNotificationsDesc')}</p>
               </div>
               <Switch 
                 id="email-notifications" 
@@ -56,8 +61,8 @@ const UserPreferences = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="browser-notifications" className="font-medium">Browser Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive push notifications in your browser</p>
+                <Label htmlFor="browser-notifications" className="font-medium">{t('profile.browserNotifications')}</Label>
+                <p className="text-sm text-muted-foreground">{t('profile.browserNotificationsDesc')}</p>
               </div>
               <Switch 
                 id="browser-notifications" 
@@ -68,8 +73,8 @@ const UserPreferences = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="weekly-notifications" className="font-medium">Weekly Summary</Label>
-                <p className="text-sm text-muted-foreground">Receive a weekly summary of compliance activities</p>
+                <Label htmlFor="weekly-notifications" className="font-medium">{t('profile.weeklySummary')}</Label>
+                <p className="text-sm text-muted-foreground">{t('profile.weeklySummaryDesc')}</p>
               </div>
               <Switch 
                 id="weekly-notifications" 
@@ -80,8 +85,8 @@ const UserPreferences = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="new-case" className="font-medium">New Case Alerts</Label>
-                <p className="text-sm text-muted-foreground">Be notified when a new compliance case is created</p>
+                <Label htmlFor="new-case" className="font-medium">{t('profile.newCaseAlerts')}</Label>
+                <p className="text-sm text-muted-foreground">{t('profile.newCaseAlertsDesc')}</p>
               </div>
               <Switch 
                 id="new-case" 
@@ -92,8 +97,8 @@ const UserPreferences = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="risk-alerts" className="font-medium">High Risk Alerts</Label>
-                <p className="text-sm text-muted-foreground">Be notified of high-risk score changes</p>
+                <Label htmlFor="risk-alerts" className="font-medium">{t('profile.highRiskAlerts')}</Label>
+                <p className="text-sm text-muted-foreground">{t('profile.highRiskAlertsDesc')}</p>
               </div>
               <Switch 
                 id="risk-alerts" 
@@ -107,37 +112,34 @@ const UserPreferences = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Display Settings</CardTitle>
-          <CardDescription>Customize how Regulynx appears to you</CardDescription>
+          <CardTitle>{t('profile.displaySettings')}</CardTitle>
+          <CardDescription>{t('profile.displaySettingsDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="theme">Theme</Label>
+              <Label htmlFor="theme">{t('profile.theme')}</Label>
               <Select value={theme} onValueChange={setTheme}>
                 <SelectTrigger id="theme">
-                  <SelectValue placeholder="Select theme" />
+                  <SelectValue placeholder={t('common.selectTheme')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="light">{t('profile.light')}</SelectItem>
+                  <SelectItem value="dark">{t('profile.dark')}</SelectItem>
+                  <SelectItem value="system">{t('profile.system')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="language">Language</Label>
-              <Select value={language} onValueChange={setLanguage}>
+              <Label htmlFor="language">{t('profile.language')}</Label>
+              <Select value={i18n.language} onValueChange={handleLanguageChange}>
                 <SelectTrigger id="language">
-                  <SelectValue placeholder="Select language" />
+                  <SelectValue placeholder={t('common.selectLanguage')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="sv">Swedish</SelectItem>
-                  <SelectItem value="fi">Finnish</SelectItem>
-                  <SelectItem value="no">Norwegian</SelectItem>
-                  <SelectItem value="da">Danish</SelectItem>
+                  <SelectItem value="sv">Svenska</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -145,24 +147,24 @@ const UserPreferences = () => {
         </CardContent>
         <CardFooter className="flex justify-end">
           <Button onClick={savePreferences} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Preferences'}
+            {isSubmitting ? t('profile.saving') : t('profile.savePreferences')}
           </Button>
         </CardFooter>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Export Data</CardTitle>
-          <CardDescription>Download your personal data from the platform</CardDescription>
+          <CardTitle>{t('profile.exportData')}</CardTitle>
+          <CardDescription>{t('profile.exportDataDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            You can export all your personal data and activity history from the platform in various formats.
+            {t('profile.exportDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline">Export as CSV</Button>
-            <Button variant="outline">Export as JSON</Button>
-            <Button variant="outline">Export as PDF</Button>
+            <Button variant="outline">{t('profile.exportCsv')}</Button>
+            <Button variant="outline">{t('profile.exportJson')}</Button>
+            <Button variant="outline">{t('profile.exportPdf')}</Button>
           </div>
         </CardContent>
       </Card>
