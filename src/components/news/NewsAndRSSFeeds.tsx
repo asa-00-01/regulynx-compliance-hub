@@ -37,8 +37,15 @@ const NewsAndRSSFeeds = () => {
       feed.organization.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  const categories = ['all', 'aml', 'kyc', 'sanctions', 'regulatory', 'compliance', 'fintech'];
-  const sources = ['all', 'fincen', 'fatf', 'ofac', 'sec', 'cftc', 'federal-register', 'ecb'];
+  const categories = [
+    'all', 'aml', 'kyc', 'sanctions', 'regulatory', 'compliance', 'fintech',
+    'eu-regulation', 'sweden-regulation'
+  ];
+  
+  const sources = [
+    'all', 'fincen', 'fatf', 'ofac', 'sec', 'cftc', 'federal-register', 'ecb-banking',
+    'eba', 'esma', 'european-commission', 'finansinspektionen', 'riksbank', 'skatteverket'
+  ];
 
   return (
     <div className="space-y-6">
@@ -46,7 +53,7 @@ const NewsAndRSSFeeds = () => {
         <div>
           <h1 className="text-3xl font-bold">News & RSS Feeds</h1>
           <p className="text-muted-foreground mt-2">
-            Stay updated with the latest regulatory news and compliance updates
+            Stay updated with the latest regulatory news and compliance updates from US, EU, and Swedish authorities
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -76,25 +83,31 @@ const NewsAndRSSFeeds = () => {
             </div>
             <div className="flex gap-2">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>
-                      {category === 'all' ? 'All Categories' : category.toUpperCase()}
+                      {category === 'all' ? 'All Categories' : 
+                       category === 'eu-regulation' ? 'EU Regulation' :
+                       category === 'sweden-regulation' ? 'Sweden Regulation' :
+                       category.toUpperCase()}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
                   {sources.map(source => (
                     <SelectItem key={source} value={source}>
-                      {source === 'all' ? 'All Sources' : source.toUpperCase()}
+                      {source === 'all' ? 'All Sources' : 
+                       source === 'ecb-banking' ? 'ECB Banking' :
+                       source === 'european-commission' ? 'EU Commission' :
+                       source.toUpperCase()}
                     </SelectItem>
                   ))}
                 </SelectContent>

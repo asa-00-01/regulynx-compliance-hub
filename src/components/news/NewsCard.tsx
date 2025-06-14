@@ -19,6 +19,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ newsItem }) => {
       regulatory: 'bg-purple-100 text-purple-800',
       compliance: 'bg-green-100 text-green-800',
       fintech: 'bg-indigo-100 text-indigo-800',
+      'eu-regulation': 'bg-yellow-100 text-yellow-800',
+      'sweden-regulation': 'bg-cyan-100 text-cyan-800',
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
@@ -31,12 +33,20 @@ const NewsCard: React.FC<NewsCardProps> = ({ newsItem }) => {
     });
   };
 
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      'eu-regulation': 'EU REG',
+      'sweden-regulation': 'SE REG',
+    };
+    return labels[category] || category.toUpperCase();
+  };
+
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <Badge className={getCategoryColor(newsItem.category)}>
-            {newsItem.category.toUpperCase()}
+            {getCategoryLabel(newsItem.category)}
           </Badge>
           <div className="flex items-center text-xs text-muted-foreground">
             <Calendar className="h-3 w-3 mr-1" />
