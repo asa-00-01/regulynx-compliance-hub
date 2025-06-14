@@ -1,9 +1,11 @@
 
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import { ComplianceProvider } from './context/ComplianceContext';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import LoadingWrapper from './components/common/LoadingWrapper';
 import './App.css';
 
 // Lazy load components for better performance
@@ -22,7 +24,6 @@ const AuditLogs = React.lazy(() => import('./pages/AuditLogs'));
 const RiskAnalysis = React.lazy(() => import('./pages/RiskAnalysis'));
 const Transactions = React.lazy(() => import('./pages/Transactions'));
 const ProtectedRoute = React.lazy(() => import('./components/layout/ProtectedRoute'));
-const Index = React.lazy(() => import('./pages/Index'));
 
 const AppLoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -34,17 +35,30 @@ const AppLoadingFallback = () => (
 );
 
 function App() {
-  console.log('App component rendering...');
-  
+  const { authLoaded, isAuthenticated } = useAuth();
+
+  if (!authLoaded) {
+    return <AppLoadingFallback />;
+  }
+
   return (
     <ErrorBoundary>
       <ComplianceProvider>
         <div className="min-h-screen bg-background">
           <Suspense fallback={<AppLoadingFallback />}>
             <Routes>
-              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/dashboard" replace />
+                  ) : (
+                    <Navigate to="/auth" replace />
+                  )
+                }
+              />
               <Route
                 path="/dashboard"
                 element={

@@ -1,38 +1,93 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useParams } from 'react-router-dom';
+import UserCaseOverview from '@/components/user/UserCaseOverview';
+import { useCompliance } from '@/context/ComplianceContext';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const UserCase = () => {
-  const { userId } = useParams();
-  console.log('UserCase page rendering...', { userId });
+const UserCasePage = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  const { setSelectedUser, getUserById } = useCompliance();
+  const navigate = useNavigate();
+  
+  // Determine which user ID to use (URL param or query param)
+  const userIdToUse = userId || searchParams.get('userId');
+  
+  // Back button path
+  const backPath = searchParams.get('returnTo') || '/compliance';
+  
+  // Set the selected user on component mount
+  useEffect(() => {
+    if (userIdToUse) {
+      setSelectedUser(userIdToUse);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      setSelectedUser(null);
+    };
+  }, [userIdToUse, setSelectedUser]);
+  
+  // Check if the user exists
+  const userExists = userIdToUse ? !!getUserById(userIdToUse) : false;
   
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-      <div className="w-full space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">User Case</h1>
-          <p className="text-muted-foreground">
-            {userId ? `Detailed case view for user ${userId}` : 'User case management'}
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="p-6 bg-card rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">User Profile</h3>
-            <p className="text-muted-foreground">User information and verification status</p>
-          </div>
-          <div className="p-6 bg-card rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">Transaction History</h3>
-            <p className="text-muted-foreground">User transaction patterns</p>
-          </div>
-          <div className="p-6 bg-card rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">Risk Profile</h3>
-            <p className="text-muted-foreground">Risk assessment and scoring</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate(backPath)}
+              className="mb-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+            <h1 className="text-3xl font-bold tracking-tight">User Case Overview</h1>
+            <p className="text-muted-foreground">
+              View all compliance data for a user in one place
+            </p>
           </div>
         </div>
+        
+        {!userIdToUse && (
+          <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
+            <div className="text-center">
+              <h3 className="text-lg font-medium">No User Selected</h3>
+              <p className="text-muted-foreground mt-1">
+                Please select a user from the KYC, AML, or compliance modules
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {userIdToUse && !userExists && (
+          <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
+            <div className="text-center">
+              <h3 className="text-lg font-medium">User Not Found</h3>
+              <p className="text-muted-foreground mt-1">
+                The requested user could not be found
+              </p>
+              <Button 
+                onClick={() => navigate('/compliance')}
+                className="mt-4"
+                variant="outline"
+              >
+                Return to Compliance
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {userIdToUse && userExists && <UserCaseOverview />}
       </div>
     </DashboardLayout>
   );
 };
 
-export default UserCase;
+export default UserCasePage;
