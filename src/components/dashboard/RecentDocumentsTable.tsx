@@ -48,18 +48,18 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
         <CardDescription>Latest uploaded documents awaiting review</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
-          <div className="grid grid-cols-5 p-3 bg-muted/50 text-xs font-medium">
-            <div>Document</div>
-            <div>Type</div>
-            <div>Upload Date</div>
-            <div>Status</div>
+        <div className="rounded-md border overflow-hidden">
+          <div className="hidden md:grid md:grid-cols-5 p-3 bg-muted/50 text-xs font-medium">
+            <div className="truncate">Document</div>
+            <div className="truncate">Type</div>
+            <div className="truncate">Upload Date</div>
+            <div className="truncate">Status</div>
             <div className="text-right">Action</div>
           </div>
           <div className="divide-y">
             {loading ? (
               Array(4).fill(null).map((_, i) => (
-                <div key={i} className="grid grid-cols-5 p-3 items-center animate-pulse">
+                <div key={i} className="grid grid-cols-1 md:grid-cols-5 p-3 items-center animate-pulse gap-2">
                   <div className="h-4 bg-muted rounded w-3/4"></div>
                   <div className="h-4 bg-muted rounded w-1/2"></div>
                   <div className="h-4 bg-muted rounded w-2/3"></div>
@@ -73,19 +73,25 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
               </div>
             ) : (
               recentDocs.map((doc) => (
-                <div key={doc.id} className="grid grid-cols-5 p-3 items-center">
-                  <div className="font-medium">{doc.fileName}</div>
-                  <div>
+                <div key={doc.id} className="grid grid-cols-1 md:grid-cols-5 p-3 items-center gap-2">
+                  <div className="font-medium truncate pr-2 min-w-0">
+                    <span className="md:hidden text-xs text-muted-foreground">Document: </span>
+                    {doc.fileName}
+                  </div>
+                  <div className="truncate min-w-0">
+                    <span className="md:hidden text-xs text-muted-foreground">Type: </span>
                     <span className="capitalize">{doc.type}</span>
                   </div>
-                  <div>
+                  <div className="truncate min-w-0">
+                    <span className="md:hidden text-xs text-muted-foreground">Uploaded: </span>
                     {new Date(doc.uploadDate).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
                     })}
                   </div>
-                  <div>
+                  <div className="min-w-0">
+                    <span className="md:hidden text-xs text-muted-foreground">Status: </span>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(doc.status)}
                       <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
@@ -99,7 +105,7 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                       </span>
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-start md:justify-end gap-2 min-w-0">
                     <Button size="sm" variant="outline" onClick={() => handleViewAllClick()}>
                       <Eye className="h-4 w-4 mr-1" />
                       View

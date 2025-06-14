@@ -61,7 +61,7 @@ const KYCFilters: React.FC<KYCFiltersProps> = ({
                 <SelectItem value="high">High Risk (75+)</SelectItem>
                 <SelectItem value="medium">Medium Risk (50-74)</SelectItem>
                 <SelectItem value="low">Low Risk (25-49)</SelectItem>
-                <SelectItem value="minimal">Minimal Risk (<25)</SelectItem>
+                <SelectItem value="minimal">Minimal Risk (&lt;25)</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
