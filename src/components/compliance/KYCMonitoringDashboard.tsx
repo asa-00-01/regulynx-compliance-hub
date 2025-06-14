@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Card,
@@ -31,6 +30,17 @@ import CustomerMonitoringActions from './CustomerMonitoringActions';
 import { useNavigate } from 'react-router-dom';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
 import { evaluateUserRisk } from '@/services/riskScoringService';
+import { usePagination } from '@/hooks/usePagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useCompliance } from '@/context/ComplianceContext';
 
 const KYCMonitoringDashboard = () => {
   // Transform unified data to dashboard format
@@ -57,6 +67,7 @@ const KYCMonitoringDashboard = () => {
   const [runningAssessment, setRunningAssessment] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setSelectedUser } = useCompliance();
 
   // Filter customers based on selected filters
   const filteredCustomers = customers.filter((customer) => {
@@ -73,6 +84,24 @@ const KYCMonitoringDashboard = () => {
       customer.country.toLowerCase().includes(countryFilter.toLowerCase());
     
     return matchesKYC && matchesRisk && matchesCountry;
+  });
+
+  // Add pagination
+  const {
+    currentData: paginatedCustomers,
+    currentPage,
+    totalPages,
+    totalItems,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex
+  } = usePagination({ 
+    data: filteredCustomers, 
+    itemsPerPage: 10 
   });
 
   // Count metrics
@@ -145,9 +174,16 @@ const KYCMonitoringDashboard = () => {
   const handleViewProfile = (customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     if (customer) {
+      setSelectedUser(customerId);
+      navigate(`/user-case/${customerId}`, {
+        state: {
+          returnTo: '/compliance'
+        }
+      });
+      
       toast({
-        title: "Viewing profile",
-        description: `Opening profile for ${customer.name}`,
+        title: "User Profile",
+        description: `Opening complete profile for ${customer.name}`,
       });
     }
   };
@@ -155,7 +191,6 @@ const KYCMonitoringDashboard = () => {
   const handleCreateCase = (customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     if (customer) {
-      // Navigate to compliance cases page with customer data
       navigate('/compliance-cases', { 
         state: { 
           createCase: true,
@@ -169,6 +204,7 @@ const KYCMonitoringDashboard = () => {
     }
   };
 
+  // Helper functions
   const getRiskScoreClass = (score: number) => {
     if (score <= 30) return "bg-green-100 text-green-800";
     if (score <= 70) return "bg-yellow-100 text-yellow-800";
@@ -272,6 +308,7 @@ const KYCMonitoringDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Filter controls */}
           <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
             <div className="w-full md:w-1/3">
               <label className="text-sm font-medium text-muted-foreground">
@@ -325,6 +362,16 @@ const KYCMonitoringDashboard = () => {
             </div>
           </div>
 
+          {/* Pagination Info */}
+          <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
+            <div>
+              Showing {startIndex} to {endIndex} of {totalItems} customers
+            </div>
+            <div>
+              Page {currentPage} of {totalPages}
+            </div>
+          </div>
+
           {/* Customer Table */}
           <div className="mt-6 rounded-md border">
             <Table>
@@ -339,7 +386,7 @@ const KYCMonitoringDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCustomers.map((customer) => (
+                {paginatedCustomers.map((customer) => (
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">
                       <div>
@@ -405,7 +452,7 @@ const KYCMonitoringDashboard = () => {
                           title="View Profile"
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
+                          <span className="sr-only">View Profile</span>
                         </Button>
                       </div>
                     </TableCell>
@@ -413,6 +460,60 @@ const KYCMonitoringDashboard = () => {
                 ))}
               </TableBody>
             </Table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="border-t p-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={goToPrevPage}
+                        className={!hasPrevPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // Show first page, last page, current page, and pages around current
+                        return page === 1 || 
+                               page === totalPages || 
+                               Math.abs(page - currentPage) <= 1;
+                      })
+                      .map((page, index, array) => {
+                        // Add ellipsis if there's a gap
+                        const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                        
+                        return (
+                          <React.Fragment key={page}>
+                            {showEllipsisBefore && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                            <PaginationItem>
+                              <PaginationLink
+                                onClick={() => goToPage(page)}
+                                isActive={currentPage === page}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </React.Fragment>
+                        );
+                      })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={goToNextPage}
+                        className={!hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

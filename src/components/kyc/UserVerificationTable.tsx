@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,16 @@ import { TooltipHelp } from '@/components/ui/tooltip-custom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { UserRiskData, calculateUserRiskData } from '@/hooks/useRiskCalculation';
+import { usePagination } from '@/hooks/usePagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface UserVerificationTableProps {
   users: (KYCUser & { flags: UserFlags })[];
@@ -41,13 +50,30 @@ const UserVerificationTable = ({
   // Calculate risk data for all users at the component level
   const [riskDataMap, setRiskDataMap] = useState<Map<string, UserRiskData>>(new Map());
   
+  // Add pagination
+  const {
+    currentData: paginatedUsers,
+    currentPage,
+    totalPages,
+    totalItems,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex
+  } = usePagination({ 
+    data: users, 
+    itemsPerPage: 10 
+  });
+  
   // Use effect to calculate risk data for each user
   useEffect(() => {
     const calculateRiskData = async () => {
       const newRiskDataMap = new Map<string, UserRiskData>();
       
       if (!isLoading) {
-        // Calculate risk data for each user
         for (const user of users) {
           const userRiskData = calculateUserRiskData(user);
           newRiskDataMap.set(user.id, userRiskData);
@@ -135,153 +161,219 @@ const UserVerificationTable = ({
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="h-12 px-6 font-semibold">
-              <SortableHeader field="name">Full Name</SortableHeader>
-            </TableHead>
-            <TableHead className="h-12 px-6 font-semibold">Email</TableHead>
-            <TableHead className="h-12 px-6 font-semibold">Identity Number</TableHead>
-            <TableHead className="h-12 px-6 font-semibold">Flags</TableHead>
-            <TableHead className="h-12 px-6 font-semibold">
-              <SortableHeader field="risk">Risk Score</SortableHeader>
-            </TableHead>
-            <TableHead className="h-12 px-6 font-semibold">Transactions</TableHead>
-            <TableHead className="h-12 px-6 font-semibold text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                No users found
-              </TableCell>
+    <div className="space-y-4">
+      {/* Pagination Info */}
+      {users.length > 0 && (
+        <div className="flex justify-between items-center text-sm text-muted-foreground">
+          <div>
+            Showing {startIndex} to {endIndex} of {totalItems} users
+          </div>
+          <div>
+            Page {currentPage} of {totalPages}
+          </div>
+        </div>
+      )}
+
+      <div className="border rounded-lg overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="h-12 px-6 font-semibold">
+                <SortableHeader field="name">Full Name</SortableHeader>
+              </TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Email</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Identity Number</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Flags</TableHead>
+              <TableHead className="h-12 px-6 font-semibold">
+                <SortableHeader field="risk">Risk Score</SortableHeader>
+              </TableHead>
+              <TableHead className="h-12 px-6 font-semibold">Transactions</TableHead>
+              <TableHead className="h-12 px-6 font-semibold text-right">Actions</TableHead>
             </TableRow>
-          ) : (
-            users.map((user) => {
-              const isFlagged = flaggedUsers?.includes(user.id);
-              // Get risk data from the map
-              const riskData = riskDataMap.get(user.id);
-              
-              return (
-                <TableRow key={user.id} className={`border-b hover:bg-muted/30 ${isFlagged ? "bg-yellow-50/50" : ""}`}>
-                  <TableCell className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="font-medium text-gray-900">{user.fullName}</div>
-                      <div className="flex items-center gap-2">
-                        {user.flags.is_verified_pep && (
-                          <TooltipHelp content="Politically Exposed Person - Enhanced due diligence required">
-                            <Badge variant="warning" className="text-xs">PEP</Badge>
-                          </TooltipHelp>
-                        )}
-                        {user.flags.is_sanction_list && (
-                          <TooltipHelp content="This user appears on a sanctions list - All transactions are blocked">
-                            <Badge variant="destructive" className="text-xs">Sanctioned</Badge>
+          </TableHeader>
+          <TableBody>
+            {paginatedUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  No users found
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedUsers.map((user) => {
+                const isFlagged = flaggedUsers?.includes(user.id);
+                // Get risk data from the map
+                const riskData = riskDataMap.get(user.id);
+                
+                return (
+                  <TableRow key={user.id} className={`border-b hover:bg-muted/30 ${isFlagged ? "bg-yellow-50/50" : ""}`}>
+                    <TableCell className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-900">{user.fullName}</div>
+                        <div className="flex items-center gap-2">
+                          {user.flags.is_verified_pep && (
+                            <TooltipHelp content="Politically Exposed Person - Enhanced due diligence required">
+                              <Badge variant="warning" className="text-xs">PEP</Badge>
+                            </TooltipHelp>
+                          )}
+                          {user.flags.is_sanction_list && (
+                            <TooltipHelp content="This user appears on a sanctions list - All transactions are blocked">
+                              <Badge variant="destructive" className="text-xs">Sanctioned</Badge>
+                            </TooltipHelp>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-900">{user.email}</div>
+                        {!user.flags.is_email_confirmed && (
+                          <TooltipHelp content="Email address has not been verified">
+                            <Badge variant="outline" className="text-xs">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Unconfirmed
+                            </Badge>
                           </TooltipHelp>
                         )}
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="text-sm text-gray-900">{user.email}</div>
-                      {!user.flags.is_email_confirmed && (
-                        <TooltipHelp content="Email address has not been verified">
-                          <Badge variant="outline" className="text-xs">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Unconfirmed
-                          </Badge>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <span className="text-sm text-gray-900">
+                        {user.identityNumber || <span className="text-muted-foreground italic">Missing</span>}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <UserFlagsDisplay flags={user.flags} />
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      {riskData && (
+                        <TooltipHelp content={
+                          <>
+                            <div className="font-medium mb-1">Risk factors:</div>
+                            <ul className="list-disc pl-4 space-y-1 text-xs">
+                              {riskData.riskFactors.highAmount && <li>High transaction amount</li>}
+                              {riskData.riskFactors.highRiskCountry && <li>High-risk countries</li>}
+                              {riskData.riskFactors.highFrequency && <li>High transaction frequency</li>}
+                              {riskData.riskFactors.incompleteKYC && <li>Incomplete KYC information</li>}
+                            </ul>
+                          </>
+                        }>
+                          <div className="inline-block">
+                            <RiskBadge score={user.flags.riskScore} />
+                          </div>
                         </TooltipHelp>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {user.identityNumber || <span className="text-muted-foreground italic">Missing</span>}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <UserFlagsDisplay flags={user.flags} />
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    {riskData && (
-                      <TooltipHelp content={
-                        <>
-                          <div className="font-medium mb-1">Risk factors:</div>
-                          <ul className="list-disc pl-4 space-y-1 text-xs">
-                            {riskData.riskFactors.highAmount && <li>High transaction amount</li>}
-                            {riskData.riskFactors.highRiskCountry && <li>High-risk countries</li>}
-                            {riskData.riskFactors.highFrequency && <li>High transaction frequency</li>}
-                            {riskData.riskFactors.incompleteKYC && <li>Incomplete KYC information</li>}
-                          </ul>
-                        </>
-                      }>
-                        <div className="inline-block">
-                          <RiskBadge score={user.flags.riskScore} />
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      {riskData && (
+                        <div className="space-y-1">
+                          <div className="font-medium text-sm text-gray-900">
+                            {riskData.transactionCount} transactions
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Last: {riskData.recentTransactionAmount.toLocaleString()} SEK
+                          </div>
                         </div>
-                      </TooltipHelp>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    {riskData && (
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-gray-900">
-                          {riskData.transactionCount} transactions
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Last: {riskData.recentTransactionAmount.toLocaleString()} SEK
-                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleViewDetails(user)}
+                          className="h-8"
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Details
+                        </Button>
+                        
+                        <Button 
+                          size="sm" 
+                          variant={isFlagged ? "default" : "secondary"}
+                          onClick={() => handleFlagUser(user)}
+                          title={isFlagged ? "Remove flag" : "Flag for review"}
+                          className="h-8"
+                        >
+                          <Flag className="h-3 w-3 mr-1" />
+                          {isFlagged ? 'Flagged' : 'Flag'}
+                        </Button>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          disabled={user.flags.is_sanction_list || processingAction === user.id}
+                          onClick={() => handleCreateCase(user)}
+                          title={user.flags.is_sanction_list ? "Actions limited for sanctioned users" : "Create compliance case"}
+                          className="h-8"
+                        >
+                          {processingAction === user.id ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <FileText className="h-3 w-3 mr-1" />
+                          )}
+                          Case
+                        </Button>
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => handleViewDetails(user)}
-                        className="h-8"
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Details
-                      </Button>
-                      
-                      <Button 
-                        size="sm" 
-                        variant={isFlagged ? "default" : "secondary"}
-                        onClick={() => handleFlagUser(user)}
-                        title={isFlagged ? "Remove flag" : "Flag for review"}
-                        className="h-8"
-                      >
-                        <Flag className="h-3 w-3 mr-1" />
-                        {isFlagged ? 'Flagged' : 'Flag'}
-                      </Button>
-                      
-                      <Button 
-                        size="sm" 
-                        variant="default"
-                        disabled={user.flags.is_sanction_list || processingAction === user.id}
-                        onClick={() => handleCreateCase(user)}
-                        title={user.flags.is_sanction_list ? "Actions limited for sanctioned users" : "Create compliance case"}
-                        className="h-8"
-                      >
-                        {processingAction === user.id ? (
-                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                        ) : (
-                          <FileText className="h-3 w-3 mr-1" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="border-t p-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={goToPrevPage}
+                    className={!hasPrevPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    return page === 1 || 
+                           page === totalPages || 
+                           Math.abs(page - currentPage) <= 1;
+                  })
+                  .map((page, index, array) => {
+                    const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                    
+                    return (
+                      <React.Fragment key={page}>
+                        {showEllipsisBefore && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
                         )}
-                        Case
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => goToPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </React.Fragment>
+                    );
+                  })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={goToNextPage}
+                    className={!hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
 
       {selectedUser && (
         <UserDetailModal
