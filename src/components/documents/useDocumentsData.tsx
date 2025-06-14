@@ -12,11 +12,12 @@ export const useDocumentsData = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { canApproveDocuments } = usePermissions();
 
   const fetchDocuments = async () => {
-    if (!user) {
+    if (!user || !session) {
+      console.log('No authenticated user or session found');
       setDocuments([]);
       setLoading(false);
       return;
@@ -53,8 +54,13 @@ export const useDocumentsData = () => {
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, [user]);
+    if (user && session) {
+      fetchDocuments();
+    } else {
+      setDocuments([]);
+      setLoading(false);
+    }
+  }, [user, session]);
 
   // Calculate stats based on the fetched documents
   const stats = {

@@ -26,7 +26,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
   const [isUploading, setIsUploading] = useState(false);
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { canApproveDocuments } = usePermissions();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,10 +48,10 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       return;
     }
 
-    if (!user) {
+    if (!user || !session) {
       toast({
-        title: "Error",
-        description: "You must be logged in to upload documents",
+        title: "Authentication Error",
+        description: "You must be logged in to upload documents. Please sign in again.",
         variant: "destructive"
       });
       return;
@@ -84,10 +84,9 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       console.log('Inserting document record with path:', filePath);
       console.log('Document user ID:', documentUserId);
       console.log('Current authenticated user:', user.id);
+      console.log('Session exists:', !!session);
       
-      // For compliance officers uploading on behalf of customers, we need to ensure
-      // the RLS policies allow this. Since compliance officers have permission to 
-      // insert/update all documents, this should work with our current policies.
+      // Insert document record
       const { data: documentData, error: documentError } = await supabase
         .from('documents')
         .insert({
@@ -106,7 +105,9 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
         
         // Provide more specific error messages based on the error type
         if (documentError.message.includes('row-level security')) {
-          throw new Error('Permission denied: You do not have permission to upload documents for this user. Please check your authentication status.');
+          throw new Error('Permission denied: You do not have permission to upload documents. Please check your authentication status and try signing in again.');
+        } else if (documentError.code === '42501') {
+          throw new Error('Permission denied: Please ensure you are properly authenticated and try again.');
         } else {
           throw new Error(`Database error: ${documentError.message}`);
         }
@@ -149,6 +150,17 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
   };
 
   const isFormDisabled = isProcessing || isUploading;
+
+  // Show authentication warning if not properly authenticated
+  if (!user || !session) {
+    return (
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+        <p className="text-yellow-800 text-sm">
+          Please sign in to upload documents. You will be redirected to the login page.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

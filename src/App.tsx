@@ -1,7 +1,7 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
+import AuthPage from './pages/AuthPage';
 import NotFound from './pages/NotFound';
 import AMLMonitoring from './pages/AMLMonitoring';
 import KYCVerification from './pages/KYCVerification';
@@ -21,7 +21,7 @@ import RiskAnalysis from './pages/RiskAnalysis';
 import Transactions from './pages/Transactions';
 
 function App() {
-  const { authLoaded } = useAuth();
+  const { authLoaded, isAuthenticated } = useAuth();
 
   if (!authLoaded) {
     return (
@@ -34,14 +34,16 @@ function App() {
   return (
     <ComplianceProvider>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
           }
         />
         <Route

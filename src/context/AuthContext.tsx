@@ -1,38 +1,19 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, UserRole } from '../types';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock authentication service - would be replaced with Supabase Auth
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'compliance@regulynx.com',
-    role: 'complianceOfficer',
-    name: 'Alex Nordström',
-    avatarUrl: 'https://i.pravatar.cc/150?img=1',
-  },
-  {
-    id: '2',
-    email: 'admin@regulynx.com',
-    role: 'admin',
-    name: 'Johan Berg',
-    avatarUrl: 'https://i.pravatar.cc/150?img=2',
-  },
-  {
-    id: '3',
-    email: 'executive@regulynx.com',
-    role: 'executive',
-    name: 'Lena Wikström',
-    avatarUrl: 'https://i.pravatar.cc/150?img=3',
-  },
-  {
-    id: '4',
-    email: 'support@regulynx.com',
-    role: 'support',
-    name: 'Astrid Lindqvist',
-    avatarUrl: 'https://i.pravatar.cc/150?img=4',
-  },
-];
+// Define the user role type to match your existing types
+export type UserRole = 'complianceOfficer' | 'admin' | 'executive' | 'support';
+
+// Extended user interface that includes profile data
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  name: string;
+  avatarUrl?: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -43,63 +24,143 @@ interface AuthContextType {
   signup: (email: string, password: string, role: UserRole) => Promise<void>;
   isAuthenticated: boolean;
   canAccess: (requiredRoles: UserRole[]) => boolean;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
-    // Check for saved user in localStorage (mock persistence)
-    const savedUser = localStorage.getItem('regulynx-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-    setAuthLoaded(true);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile from the profiles table
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile && !error) {
+            const userWithProfile: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: profile.role as UserRole,
+              name: profile.name || session.user.email || '',
+              avatarUrl: profile.avatar_url || undefined,
+            };
+            setUser(userWithProfile);
+          } else {
+            console.error('Error fetching profile:', error);
+            // Create a basic user object if profile fetch fails
+            const basicUser: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'support', // Default role
+              name: session.user.email || '',
+            };
+            setUser(basicUser);
+          }
+        } else {
+          setUser(null);
+        }
+        
+        setLoading(false);
+        setAuthLoaded(true);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // The onAuthStateChange will handle setting the user
+      if (!session) {
+        setLoading(false);
+        setAuthLoaded(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
-    // This is a mock implementation - would be replaced with actual Supabase auth
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const user = mockUsers.find(u => u.email === email);
-        if (user && password === 'password') { // Mock password check
-          setUser(user);
-          localStorage.setItem('regulynx-user', JSON.stringify(user));
-          resolve(user);
-        } else {
-          reject(new Error('Invalid email or password'));
-        }
-      }, 800); // Simulate network delay
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data.user) {
+      throw new Error('No user returned from login');
+    }
+
+    // Fetch user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const userWithProfile: User = {
+      id: data.user.id,
+      email: data.user.email || '',
+      role: profile.role as UserRole,
+      name: profile.name || data.user.email || '',
+      avatarUrl: profile.avatar_url || undefined,
+    };
+
+    return userWithProfile;
   };
 
   const signup = async (email: string, password: string, role: UserRole): Promise<void> => {
-    // This would be replaced with actual Supabase auth signup
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const newUser: User = {
-          id: `${mockUsers.length + 1}`,
-          email,
-          role,
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
           name: email.split('@')[0],
-        };
-        
-        mockUsers.push(newUser);
-        setUser(newUser);
-        localStorage.setItem('regulynx-user', JSON.stringify(newUser));
-        resolve();
-      }, 800);
+          role: role,
+        }
+      }
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data.user) {
+      throw new Error('No user returned from signup');
+    }
+
+    // The profile will be created automatically by the handle_new_user trigger
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+    }
     setUser(null);
-    localStorage.removeItem('regulynx-user');
+    setSession(null);
   };
 
   const canAccess = (requiredRoles: UserRole[]): boolean => {
@@ -116,8 +177,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login, 
         logout, 
         signup,
-        isAuthenticated: !!user,
-        canAccess
+        isAuthenticated: !!user && !!session,
+        canAccess,
+        session
       }}
     >
       {children}
