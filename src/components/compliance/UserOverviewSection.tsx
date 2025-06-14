@@ -8,6 +8,16 @@ import { useCompliance } from '@/context/ComplianceContext';
 import UserCard from '@/components/user/UserCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { usePagination } from '@/hooks/usePagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 const UserOverviewSection: React.FC = () => {
   const { state } = useCompliance();
@@ -44,6 +54,25 @@ const UserOverviewSection: React.FC = () => {
     }
     
     return matchesSearch && matchesRisk;
+  });
+
+  // Add pagination
+  const {
+    currentData: paginatedUsers,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex
+  } = usePagination({ 
+    data: filteredUsers, 
+    itemsPerPage: 12 
   });
   
   const pepCount = state.users.filter(user => user.isPEP).length;
@@ -115,8 +144,20 @@ const UserOverviewSection: React.FC = () => {
             </TabsList>
             
             <TabsContent value={activeTab} className="mt-4">
+              {/* Pagination Info */}
+              {filteredUsers.length > 0 && (
+                <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
+                  <div>
+                    Showing {startIndex} to {endIndex} of {totalItems} users
+                  </div>
+                  <div>
+                    Page {currentPage} of {totalPages}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredUsers.length === 0 ? (
+                {paginatedUsers.length === 0 ? (
                   <div className="col-span-full text-center py-8">
                     <p className="text-muted-foreground">No users found matching your criteria.</p>
                     <Button 
@@ -132,11 +173,65 @@ const UserOverviewSection: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  filteredUsers.map(user => (
+                  paginatedUsers.map(user => (
                     <UserCard key={user.id} userId={user.id} />
                   ))
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={goToPrevPage}
+                          className={!hasPrevPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          // Show first page, last page, current page, and pages around current
+                          return page === 1 || 
+                                 page === totalPages || 
+                                 Math.abs(page - currentPage) <= 1;
+                        })
+                        .map((page, index, array) => {
+                          // Add ellipsis if there's a gap
+                          const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                          
+                          return (
+                            <React.Fragment key={page}>
+                              {showEllipsisBefore && (
+                                <PaginationItem>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              )}
+                              <PaginationItem>
+                                <PaginationLink
+                                  onClick={() => goToPage(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </React.Fragment>
+                          );
+                        })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={goToNextPage}
+                          className={!hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
