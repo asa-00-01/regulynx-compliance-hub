@@ -65,6 +65,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+
+        if (mounted) {
+          console.log('Initial session check:', session?.user?.id);
+          setSession(session);
+          
+          if (session?.user) {
+            try {
+              const userWithProfile = await fetchUserProfile(session.user);
+              setUser(userWithProfile);
+            } catch (error) {
+              console.error('Error processing user profile:', error);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
+          
+          setLoading(false);
+          setAuthLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+          setAuthLoaded(true);
+        }
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -98,14 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // The onAuthStateChange will handle setting the user
-      if (!session && mounted) {
-        setLoading(false);
-        setAuthLoaded(true);
-      }
-    });
+    // Initialize auth
+    initializeAuth();
 
     return () => {
       mounted = false;

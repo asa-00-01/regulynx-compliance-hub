@@ -22,6 +22,7 @@ const AuditLogs = React.lazy(() => import('./pages/AuditLogs'));
 const RiskAnalysis = React.lazy(() => import('./pages/RiskAnalysis'));
 const Transactions = React.lazy(() => import('./pages/Transactions'));
 const ProtectedRoute = React.lazy(() => import('./components/layout/ProtectedRoute'));
+const Index = React.lazy(() => import('./pages/Index'));
 
 const AppLoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -41,12 +42,9 @@ function App() {
         <div className="min-h-screen bg-background">
           <Suspense fallback={<AppLoadingFallback />}>
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
-              <Route
-                path="/"
-                element={<Navigate to="/dashboard" replace />}
-              />
               <Route
                 path="/dashboard"
                 element={
