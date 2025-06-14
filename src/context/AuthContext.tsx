@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,85 +35,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [authLoaded, setAuthLoaded] = useState(false);
 
-  const fetchUserProfile = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', supabaseUser.id)
-      .single();
-
-    if (profile && !error) {
-      return {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        role: profile.role as UserRole,
-        name: profile.name || supabaseUser.email || '',
-        avatarUrl: profile.avatar_url || undefined,
-      };
-    } else {
-      console.error('Error fetching profile:', error);
-      // Create a basic user object if profile fetch fails
-      return {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        role: 'support', // Default role
-        name: supabaseUser.email || '',
-      };
-    }
-  }, []);
-
   useEffect(() => {
-    let mounted = true;
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         
         if (session?.user) {
-          try {
-            const userWithProfile = await fetchUserProfile(session.user);
-            if (mounted) {
-              setUser(userWithProfile);
-            }
-          } catch (error) {
-            console.error('Error processing user profile:', error);
-            if (mounted) {
-              setUser(null);
-            }
+          // Fetch user profile from the profiles table
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile && !error) {
+            const userWithProfile: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: profile.role as UserRole,
+              name: profile.name || session.user.email || '',
+              avatarUrl: profile.avatar_url || undefined,
+            };
+            setUser(userWithProfile);
+          } else {
+            console.error('Error fetching profile:', error);
+            // Create a basic user object if profile fetch fails
+            const basicUser: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'support', // Default role
+              name: session.user.email || '',
+            };
+            setUser(basicUser);
           }
         } else {
-          if (mounted) {
-            setUser(null);
-          }
+          setUser(null);
         }
         
-        if (mounted) {
-          setLoading(false);
-          setAuthLoaded(true);
-        }
+        setLoading(false);
+        setAuthLoaded(true);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       // The onAuthStateChange will handle setting the user
-      if (!session && mounted) {
+      if (!session) {
         setLoading(false);
         setAuthLoaded(true);
       }
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [fetchUserProfile]);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<User> => {
+  const login = async (email: string, password: string): Promise<User> => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -127,10 +105,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('No user returned from login');
     }
 
-    return await fetchUserProfile(data.user);
-  }, [fetchUserProfile]);
+    // Fetch user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
 
-  const signup = useCallback(async (email: string, password: string, role: UserRole): Promise<void> => {
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const userWithProfile: User = {
+      id: data.user.id,
+      email: data.user.email || '',
+      role: profile.role as UserRole,
+      name: profile.name || data.user.email || '',
+      avatarUrl: profile.avatar_url || undefined,
+    };
+
+    return userWithProfile;
+  };
+
+  const signup = async (email: string, password: string, role: UserRole): Promise<void> => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -154,38 +152,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // The profile will be created automatically by the handle_new_user trigger
-  }, []);
+  };
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
     }
     setUser(null);
     setSession(null);
-  }, []);
+  };
 
-  const canAccess = useCallback((requiredRoles: UserRole[]): boolean => {
+  const canAccess = (requiredRoles: UserRole[]): boolean => {
     if (!user) return false;
     return requiredRoles.includes(user.role);
-  }, [user]);
-
-  const isAuthenticated = useMemo(() => !!user && !!session, [user, session]);
-
-  const contextValue = useMemo(() => ({
-    user,
-    loading,
-    authLoaded,
-    login,
-    logout,
-    signup,
-    isAuthenticated,
-    canAccess,
-    session
-  }), [user, loading, authLoaded, login, logout, signup, isAuthenticated, canAccess, session]);
+  };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        authLoaded,
+        login, 
+        logout, 
+        signup,
+        isAuthenticated: !!user && !!session,
+        canAccess,
+        session
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

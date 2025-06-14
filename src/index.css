@@ -91,50 +91,25 @@
   * {
     @apply border-border;
   }
-  
-  html {
-    font-size: 16px;
-    scroll-behavior: smooth;
-  }
-  
   body {
     @apply bg-background text-foreground font-ibm-plex;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-  
   h1, h2, h3, h4, h5, h6 {
     @apply font-ibm-plex font-medium tracking-tight;
-    text-wrap: balance;
-  }
-
-  /* Performance optimizations */
-  img {
-    content-visibility: auto;
-  }
-
-  /* Improve focus states for accessibility */
-  :focus-visible {
-    @apply ring-2 ring-ring ring-offset-2 ring-offset-background outline-none;
   }
 }
 
 @layer components {
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-card-hover;
-    will-change: box-shadow;
+    @apply transition-shadow duration-200 hover:shadow-card-hover;
   }
   
   .stat-card {
     @apply bg-card rounded-lg border p-6 shadow-sm transition-all hover:shadow-md;
-    contain: layout;
   }
   
   .document-item {
     @apply flex items-center justify-between rounded-md border p-4 hover:bg-muted/50;
-    contain: layout;
   }
   
   .status-badge {
@@ -142,63 +117,26 @@
   }
   
   .status-pending {
-    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300;
+    @apply bg-yellow-100 text-yellow-800;
   }
   
   .status-verified {
-    @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300;
+    @apply bg-green-100 text-green-800;
   }
   
   .status-rejected {
-    @apply bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300;
+    @apply bg-red-100 text-red-800;
   }
   
   .risk-low {
-    @apply text-green-500 dark:text-green-400;
+    @apply text-green-500;
   }
   
   .risk-medium {
-    @apply text-yellow-500 dark:text-yellow-400;
+    @apply text-yellow-500;
   }
   
   .risk-high {
-    @apply text-red-500 dark:text-red-400;
-  }
-
-  /* Loading states */
-  .loading-shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-}
-
-/* Scrollbar styling for better UX */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-muted;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
-}
-
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
+    @apply text-red-500;
   }
 }
