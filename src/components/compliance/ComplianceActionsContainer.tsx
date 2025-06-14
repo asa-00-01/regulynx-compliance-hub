@@ -2,7 +2,7 @@
 import React from 'react';
 import { UnifiedUserData } from '@/context/compliance/types';
 import { useComplianceActions } from './hooks/useComplianceActions';
-import ComplianceActions from './ComplianceActions';
+import { Button } from '@/components/ui/button';
 
 interface ComplianceActionsContainerProps {
   user: UnifiedUserData;
@@ -71,7 +71,21 @@ const ComplianceActionsContainer: React.FC<ComplianceActionsContainerProps> = ({
     }
   ];
 
-  return <ComplianceActions actions={actions} />;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {actions.map((action, index) => (
+        <Button
+          key={index}
+          variant={action.variant}
+          onClick={action.onClick}
+          disabled={action.loading}
+          className="text-sm"
+        >
+          {action.loading ? 'Loading...' : action.label}
+        </Button>
+      ))}
+    </div>
+  );
 };
 
 export default ComplianceActionsContainer;

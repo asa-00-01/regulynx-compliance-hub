@@ -289,7 +289,7 @@ const AMLMonitoring = () => {
 
               <TransactionFilters
                 filters={filters}
-                onFiltersChange={setFilters}
+                onFilterChange={setFilters}
               />
 
               <Button variant="outline" className="ml-auto" onClick={handleExportTransactions}>
