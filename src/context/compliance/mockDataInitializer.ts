@@ -50,55 +50,64 @@ export const initializeMockData = (): UnifiedUserData[] => {
     const kycStatus = kycStatuses[Math.floor(Math.random() * kycStatuses.length)];
     const createdAt = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Generate documents for each user
+    // Generate documents for each user - matching the Document type from supabase
     const documents = [
       {
         id: `doc_${userId}_passport`,
-        userId: userId,
+        user_id: userId,
         type: 'passport' as const,
-        fileName: `passport_${userId.split('-')[0]}.pdf`,
-        uploadDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        file_name: `passport_${userId.split('-')[0]}.pdf`,
+        file_path: `documents/${userId}/passport_${userId.split('-')[0]}.pdf`,
+        upload_date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'verified' as const,
-        verifiedBy: 'admin_001',
-        verificationDate: new Date().toISOString(),
-        extractedData: {
+        verified_by: 'admin_001',
+        verification_date: new Date().toISOString(),
+        extracted_data: {
           name: userData.fullName,
           idNumber: userData.identityNumber,
           dateOfBirth: userData.dateOfBirth,
           nationality: userData.nationality
-        }
+        },
+        created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
         id: `doc_${userId}_id`,
-        userId: userId,
+        user_id: userId,
         type: 'id' as const,
-        fileName: `id_${userId.split('-')[0]}.pdf`,
-        uploadDate: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+        file_name: `id_${userId.split('-')[0]}.pdf`,
+        file_path: `documents/${userId}/id_${userId.split('-')[0]}.pdf`,
+        upload_date: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'pending' as const,
-        verifiedBy: { _type: 'undefined', value: 'undefined' },
-        verificationDate: { _type: 'undefined', value: 'undefined' },
-        extractedData: {
+        verified_by: null,
+        verification_date: null,
+        extracted_data: {
           name: userData.fullName,
           idNumber: userData.identityNumber,
           dateOfBirth: userData.dateOfBirth,
           nationality: userData.nationality
-        }
+        },
+        created_at: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: `doc_${userId}_license`,
-        userId: userId,
+        user_id: userId,
         type: 'license' as const,
-        fileName: `license_${userId.split('-')[0]}.pdf`,
-        uploadDate: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString(),
+        file_name: `license_${userId.split('-')[0]}.pdf`,
+        file_path: `documents/${userId}/license_${userId.split('-')[0]}.pdf`,
+        upload_date: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'rejected' as const,
-        verifiedBy: { _type: 'undefined', value: 'undefined' },
-        verificationDate: { _type: 'undefined', value: 'undefined' },
-        extractedData: {
+        verified_by: null,
+        verification_date: null,
+        extracted_data: {
           name: userData.fullName,
           idNumber: userData.identityNumber,
           dateOfBirth: userData.dateOfBirth,
           nationality: userData.nationality
-        }
+        },
+        created_at: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
 
