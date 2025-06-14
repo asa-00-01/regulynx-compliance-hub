@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,14 +14,14 @@ import TransactionsOverviewTable from '@/components/aml/TransactionsOverviewTabl
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
 import TransactionFilters from '@/components/aml/TransactionFilters';
 import PatternDetectionEngine from '@/components/aml/PatternDetectionEngine';
-import { mockAMLTransactions } from '@/components/aml/mockTransactionData';
+import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { AMLTransaction } from '@/types/aml';
 
 const AMLMonitoring = () => {
   const [searchParams] = useSearchParams();
   const userIdFromParams = searchParams.get('userId');
   
-  const [transactions, setTransactions] = useState<AMLTransaction[]>(mockAMLTransactions);
+  const [transactions, setTransactions] = useState<AMLTransaction[]>(mockTransactions);
   const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -31,7 +30,8 @@ const AMLMonitoring = () => {
     riskLevel: 'all',
     status: 'all',
     amountRange: 'all',
-    userId: userIdFromParams || ''
+    userId: userIdFromParams || '',
+    onlyFlagged: false
   });
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -328,9 +328,8 @@ const AMLMonitoring = () => {
           transaction={selectedTransaction}
           open={isDetailsModalOpen}
           onOpenChange={setIsDetailsModalOpen}
+          onFlag={handleFlagTransaction}
           onCreateCase={handleCreateCase}
-          onCreateSAR={handleCreateSAR}
-          onViewUserProfile={handleViewUserProfile}
         />
       </div>
     </DashboardLayout>
