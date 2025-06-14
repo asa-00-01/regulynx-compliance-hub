@@ -3,6 +3,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "aiAgent": "AI Agent",
+    "news": "News & RSS",
     "compliance": "Compliance",
     "complianceCases": "Compliance Cases",
     "kycVerification": "KYC Verification",

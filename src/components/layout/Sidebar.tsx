@@ -14,6 +14,7 @@ import {
   UserCheck,
   User,
   Bot,
+  Newspaper,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -44,6 +45,12 @@ const Sidebar = () => {
       title: t('navigation.aiAgent'),
       href: '/ai-agent',
       icon: Bot,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
+    },
+    {
+      title: t('navigation.news'),
+      href: '/news',
+      icon: Newspaper,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
     },
     {

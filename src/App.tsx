@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import AuthPage from './pages/AuthPage';
@@ -21,6 +22,7 @@ import AuditLogs from './pages/AuditLogs';
 import RiskAnalysis from './pages/RiskAnalysis';
 import Transactions from './pages/Transactions';
 import AIAgent from './pages/AIAgent';
+import News from './pages/News';
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 
@@ -79,6 +81,14 @@ function App() {
           element={
             <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive', 'support']}>
               <AIAgent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/news"
+          element={
+            <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive', 'support']}>
+              <News />
             </ProtectedRoute>
           }
         />

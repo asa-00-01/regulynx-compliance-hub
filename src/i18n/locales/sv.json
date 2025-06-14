@@ -3,6 +3,7 @@
   "navigation": {
     "dashboard": "Instrumentpanel",
     "aiAgent": "AI-agent",
+    "news": "Nyheter & RSS",
     "compliance": "Regelefterlevnad",
     "complianceCases": "Regelefterlevnadsfall",
     "kycVerification": "KYC-verifiering",
