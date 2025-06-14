@@ -12,12 +12,12 @@ export const useDocumentsData = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
-  const { user, session } = useAuth();
+  const { user, session, isAuthenticated } = useAuth();
   const { canApproveDocuments } = usePermissions();
 
   const fetchDocuments = async () => {
-    if (!user || !session) {
-      console.log('No authenticated user or session found');
+    if (!isAuthenticated || !session) {
+      console.log('User not authenticated, skipping document fetch');
       setDocuments([]);
       setLoading(false);
       return;
@@ -26,7 +26,7 @@ export const useDocumentsData = () => {
     setLoading(true);
     
     try {
-      console.log('Fetching documents for user:', user.id);
+      console.log('Fetching documents for authenticated user:', user?.email);
       console.log('User can approve documents:', canApproveDocuments());
       
       // With RLS policies in place, the query will automatically filter documents
@@ -54,13 +54,13 @@ export const useDocumentsData = () => {
   };
 
   useEffect(() => {
-    if (user && session) {
+    if (isAuthenticated && session) {
       fetchDocuments();
     } else {
       setDocuments([]);
       setLoading(false);
     }
-  }, [user, session]);
+  }, [isAuthenticated, session, user]);
 
   // Calculate stats based on the fetched documents
   const stats = {
