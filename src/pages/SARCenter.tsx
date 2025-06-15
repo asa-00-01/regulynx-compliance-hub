@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,6 +6,7 @@ import SARList from '@/components/sar/SARList';
 import SARForm from '@/components/sar/SARForm';
 import PatternCard from '@/components/sar/PatternCard';
 import MatchesList from '@/components/sar/MatchesList';
+import GoAMLReporting from '@/components/sar/GoAMLReporting';
 import { SAR } from '@/types/sar';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -125,9 +125,10 @@ const SARCenter = () => {
           onValueChange={setActiveTab}
           className="space-y-4"
         >
-          <TabsList className="grid grid-cols-2 md:w-[400px]">
+          <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
             <TabsTrigger value="sar-list">SAR Center</TabsTrigger>
             <TabsTrigger value="pattern-explorer">Pattern Explorer</TabsTrigger>
+            <TabsTrigger value="goaml-reporting">goAML Reporting</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sar-list" className="space-y-4">
@@ -151,6 +152,10 @@ const SARCenter = () => {
                 />
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="goaml-reporting" className="space-y-4">
+            <GoAMLReporting />
           </TabsContent>
         </Tabs>
       </div>
