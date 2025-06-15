@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,7 @@ interface UserPreferences {
     riskAlerts: boolean;
   };
   theme: string;
+  language: string;
 }
 
 export interface ExtendedUser extends User {
