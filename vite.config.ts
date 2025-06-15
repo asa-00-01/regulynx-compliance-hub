@@ -1,3 +1,4 @@
+
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
@@ -21,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   test: {
-    globals: true,
+    globals: false, // Set to false to avoid potential type conflicts
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     css: true,
