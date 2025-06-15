@@ -45,4 +45,6 @@ export const mockComplianceCasesCollection = generateAllCases();
 
 // Legacy exports for backward compatibility
 export const baseCustomers = userProfiles;
-export { generateTransactionsForUser, generateDocumentsForUser, generateComplianceCasesForUser: generateCasesForUser } from './generators/transactionGenerator';
+export { generateTransactionsForUser } from './generators/transactionGenerator';
+export { generateDocumentsForUser } from './generators/documentGenerator';
+export { generateCasesForUser as generateComplianceCasesForUser } from './generators/caseGenerator';
