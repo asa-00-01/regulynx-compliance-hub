@@ -1,3 +1,4 @@
+
 import { config } from '@/config/environment';
 
 // Simulated API delay for realistic development experience
@@ -8,7 +9,7 @@ export const simulateDelay = (ms: number = MOCK_DELAY): Promise<void> => {
 };
 
 export abstract class BaseMockService {
-  protected static shouldUseMockData(): boolean {
+  public static shouldUseMockData(): boolean {
     return config.features.useMockData;
   }
 
