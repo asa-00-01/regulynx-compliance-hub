@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +18,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +31,12 @@ const Login = () => {
 
     if (user) {
       toast({
-        title: 'Login successful',
-        description: 'Welcome to Regulynx',
+        title: t('login.successTitle'),
+        description: t('login.successDescription'),
       });
       navigate('/dashboard');
     } else {
-      setError('Invalid email or password. Please check your credentials and try again.');
+      setError(t('login.error'));
     }
   };
 
@@ -43,15 +46,15 @@ const Login = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Regulynx</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Compliance & Business Operations
+            {t('login.subtitle')}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Log in to your account</CardTitle>
+            <CardTitle className="text-xl">{t('login.title')}</CardTitle>
             <CardDescription>
-              Enter your email and password to access the dashboard
+              {t('login.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -63,7 +66,7 @@ const Login = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('login.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -76,12 +79,12 @@ const Login = () => {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('login.passwordLabel')}</Label>
                   <a
                     href="#"
                     className="text-xs text-primary hover:underline"
                   >
-                    Forgot password?
+                    {t('login.forgotPassword')}
                   </a>
                 </div>
                 <Input
@@ -99,13 +102,13 @@ const Login = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? t('login.signingInButton') : t('login.signInButton')}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center text-sm">
             <p className="text-center text-sm text-muted-foreground">
-              Demo accounts - Email: [role]@regulynx.com | Password: password
+              {t('login.demoAccounts')}
             </p>
           </CardFooter>
         </Card>

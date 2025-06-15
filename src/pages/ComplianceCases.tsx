@@ -12,12 +12,14 @@ import NewCaseDialog from '@/components/cases/NewCaseDialog';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
   const [initialCaseData, setInitialCaseData] = useState<any>(null);
+  const { t } = useTranslation();
   
   const location = useLocation();
   
@@ -59,22 +61,22 @@ const ComplianceCases = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Compliance Cases</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('navigation.complianceCases')}</h1>
             <p className="text-muted-foreground">
-              Manage and track compliance cases
+              {t('complianceCases.description')}
             </p>
           </div>
           <Button onClick={() => setShowNewCaseDialog(true)}>
             <PlusIcon className="h-4 w-4 mr-2" />
-            New Case
+            {t('complianceCases.newCaseButton')}
           </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="cases">Cases</TabsTrigger>
-            {selectedCase && <TabsTrigger value="details">Case Details</TabsTrigger>}
+            <TabsTrigger value="dashboard">{t('navigation.dashboard')}</TabsTrigger>
+            <TabsTrigger value="cases">{t('complianceCases.tabCases')}</TabsTrigger>
+            {selectedCase && <TabsTrigger value="details">{t('complianceCases.tabCaseDetails')}</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="dashboard" className="space-y-4">

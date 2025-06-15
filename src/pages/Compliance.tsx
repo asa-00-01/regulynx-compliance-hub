@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,18 +11,20 @@ import UserActivityLogs from '@/components/compliance/UserActivityLogs';
 import { usePermissions } from '@/hooks/use-permissions';
 import { UserCheck, CircleDollarSign, FileSearch, Shield, FileText, AlertTriangle, Users } from 'lucide-react';
 import UserOverviewSection from '@/components/compliance/UserOverviewSection';
+import { useTranslation } from 'react-i18next';
 
 const Compliance = () => {
   const [activeTab, setActiveTab] = useState('kyc-monitoring');
   const { canManageCases } = usePermissions();
+  const { t } = useTranslation();
   
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Compliance & Risk Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('compliancePage.title')}</h1>
           <p className="text-muted-foreground">
-            Monitor and manage KYC compliance, risk scores, and compliance cases
+            {t('compliancePage.description')}
           </p>
         </div>
         
@@ -30,7 +33,7 @@ const Compliance = () => {
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
                 <UserCheck className="h-10 w-10 text-blue-500" />
-                <span className="font-medium">KYC Verification</span>
+                <span className="font-medium">{t('navigation.kycVerification')}</span>
               </Button>
             </div>
           </Link>
@@ -39,7 +42,7 @@ const Compliance = () => {
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
                 <FileText className="h-10 w-10 text-purple-500" />
-                <span className="font-medium">Compliance Cases</span>
+                <span className="font-medium">{t('navigation.complianceCases')}</span>
               </Button>
             </div>
           </Link>
@@ -48,7 +51,7 @@ const Compliance = () => {
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
                 <CircleDollarSign className="h-10 w-10 text-green-500" />
-                <span className="font-medium">AML Monitoring</span>
+                <span className="font-medium">{t('navigation.amlMonitoring')}</span>
               </Button>
             </div>
           </Link>
@@ -57,7 +60,7 @@ const Compliance = () => {
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
                 <AlertTriangle className="h-10 w-10 text-amber-500" />
-                <span className="font-medium">SAR Center</span>
+                <span className="font-medium">{t('navigation.sarCenter')}</span>
               </Button>
             </div>
           </Link>
@@ -66,7 +69,7 @@ const Compliance = () => {
             <div className="h-full">
               <Button variant="outline" className="w-full h-full p-6 flex flex-col items-center justify-center space-y-2">
                 <Users className="h-10 w-10 text-indigo-500" />
-                <span className="font-medium">User Case View</span>
+                <span className="font-medium">{t('compliancePage.userCaseViewButton')}</span>
               </Button>
             </div>
           </Link>
@@ -79,12 +82,12 @@ const Compliance = () => {
           className="space-y-4"
         >
           <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <TabsTrigger value="kyc-monitoring">KYC Monitoring</TabsTrigger>
-            <TabsTrigger value="risk-scoring">Risk Scoring</TabsTrigger>
-            <TabsTrigger value="case-management">Case Management</TabsTrigger>
-            <TabsTrigger value="alerts">Red Flags & Alerts</TabsTrigger>
-            <TabsTrigger value="activity-logs">Activity Logs</TabsTrigger>
-            <TabsTrigger value="user-overview">User Overview</TabsTrigger>
+            <TabsTrigger value="kyc-monitoring">{t('compliancePage.tabKycMonitoring')}</TabsTrigger>
+            <TabsTrigger value="risk-scoring">{t('compliancePage.tabRiskScoring')}</TabsTrigger>
+            <TabsTrigger value="case-management">{t('compliancePage.tabCaseManagement')}</TabsTrigger>
+            <TabsTrigger value="alerts">{t('compliancePage.tabAlerts')}</TabsTrigger>
+            <TabsTrigger value="activity-logs">{t('navigation.auditLogs')}</TabsTrigger>
+            <TabsTrigger value="user-overview">{t('compliancePage.tabUserOverview')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="kyc-monitoring" className="space-y-4">
@@ -99,7 +102,7 @@ const Compliance = () => {
             <div className="mb-4 flex justify-end">
               <Link to="/compliance-cases">
                 <Button>
-                  View Full Case Management Module
+                  {t('compliancePage.fullCaseManagementButton')}
                 </Button>
               </Link>
             </div>

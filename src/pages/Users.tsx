@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +9,14 @@ import UserSearch from '@/components/users/UserSearch';
 import UsersTable from '@/components/users/UsersTable';
 import AuditLog from '@/components/users/AuditLog';
 import EditUserDialog from '@/components/users/EditUserDialog';
+import { useTranslation } from 'react-i18next';
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleAddUser = (userData: Omit<User, 'id'>) => {
     const user: User = {
@@ -24,8 +27,8 @@ const Users = () => {
     setUsers([...users, user]);
     
     toast({
-      title: 'User added',
-      description: `${user.name} has been added successfully.`,
+      title: t('users.toast.userAddedTitle'),
+      description: t('users.toast.userAddedDescription', { name: user.name }),
     });
   };
 
@@ -36,8 +39,8 @@ const Users = () => {
     setUsers(users.filter(user => user.id !== id));
     
     toast({
-      title: 'User deleted',
-      description: `${userToDelete.name} has been removed.`,
+      title: t('users.toast.userDeletedTitle'),
+      description: t('users.toast.userDeletedDescription', { name: userToDelete.name }),
     });
   };
 
@@ -49,8 +52,8 @@ const Users = () => {
     setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
     setEditingUser(null);
     toast({
-      title: 'User updated',
-      description: `${updatedUser.name}'s details have been updated.`,
+      title: t('users.toast.userUpdatedTitle'),
+      description: t('users.toast.userUpdatedDescription', { name: updatedUser.name }),
     });
   };
 
@@ -67,9 +70,9 @@ const Users = () => {
     <DashboardLayout requiredRoles={['admin']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('users.title')}</h1>
           <p className="text-muted-foreground">
-            Manage users and their access permissions
+            {t('users.description')}
           </p>
         </div>
 
@@ -81,9 +84,9 @@ const Users = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>User List</CardTitle>
+            <CardTitle>{t('users.userListTitle')}</CardTitle>
             <CardDescription>
-              Manage and monitor all user accounts
+              {t('users.userListDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>

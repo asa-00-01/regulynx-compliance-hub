@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -7,12 +6,14 @@ import { useCompliance } from '@/context/ComplianceContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const UserCasePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const [searchParams] = useSearchParams();
   const { setSelectedUser, getUserById } = useCompliance();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Determine which user ID to use (URL param or query param)
   const userIdToUse = userId || searchParams.get('userId');
@@ -46,11 +47,11 @@ const UserCasePage = () => {
               onClick={() => navigate(backPath)}
               className="mb-2"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t('userCase.backButton')}
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">User Case Overview</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('userCase.title')}</h1>
             <p className="text-muted-foreground">
-              View all compliance data for a user in one place
+              {t('userCase.description')}
             </p>
           </div>
         </div>
@@ -58,9 +59,9 @@ const UserCasePage = () => {
         {!userIdToUse && (
           <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
             <div className="text-center">
-              <h3 className="text-lg font-medium">No User Selected</h3>
+              <h3 className="text-lg font-medium">{t('userCase.noUserSelectedTitle')}</h3>
               <p className="text-muted-foreground mt-1">
-                Please select a user from the KYC, AML, or compliance modules
+                {t('userCase.noUserSelectedDescription')}
               </p>
             </div>
           </div>
@@ -69,16 +70,16 @@ const UserCasePage = () => {
         {userIdToUse && !userExists && (
           <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
             <div className="text-center">
-              <h3 className="text-lg font-medium">User Not Found</h3>
+              <h3 className="text-lg font-medium">{t('userCase.userNotFoundTitle')}</h3>
               <p className="text-muted-foreground mt-1">
-                The requested user could not be found
+                {t('userCase.userNotFoundDescription')}
               </p>
               <Button 
                 onClick={() => navigate('/compliance')}
                 className="mt-4"
                 variant="outline"
               >
-                Return to Compliance
+                {t('userCase.returnToComplianceButton')}
               </Button>
             </div>
           </div>

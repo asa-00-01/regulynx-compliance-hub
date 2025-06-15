@@ -32,21 +32,21 @@ const AIAgent = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Lightbulb className="h-4 w-4" />
-                  Quick Tips
+                  {t('aiAgent.quickTipsTitle')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div>
-                  <strong>Ask about compliance:</strong> Get help with AML monitoring, KYC verification, and regulatory requirements.
+                  <strong>{t('aiAgent.tipComplianceStrong')}</strong> {t('aiAgent.tipComplianceText')}
                 </div>
                 <div>
-                  <strong>Risk assessment:</strong> Ask for explanations of risk scores, factors, and mitigation strategies.
+                  <strong>{t('aiAgent.tipRiskAssessmentStrong')}</strong> {t('aiAgent.tipRiskAssessmentText')}
                 </div>
                 <div>
-                  <strong>Case management:</strong> Get guidance on investigating cases and following compliance procedures.
+                  <strong>{t('aiAgent.tipCaseManagementStrong')}</strong> {t('aiAgent.tipCaseManagementText')}
                 </div>
                 <div>
-                  <strong>Document review:</strong> Ask about document verification processes and requirements.
+                  <strong>{t('aiAgent.tipDocumentReviewStrong')}</strong> {t('aiAgent.tipDocumentReviewText')}
                 </div>
               </CardContent>
             </Card>
@@ -54,7 +54,7 @@ const AIAgent = () => {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                <strong>Pro tip:</strong> Be specific in your questions. Instead of "Help with compliance," try "How do I investigate a high-risk transaction from a sanctioned country?"
+                <strong>{t('aiAgent.proTipStrong')}</strong> {t('aiAgent.proTipText')}
               </AlertDescription>
             </Alert>
 
@@ -62,16 +62,16 @@ const AIAgent = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Bot className="h-4 w-4" />
-                  AI Capabilities
+                  {t('aiAgent.capabilitiesTitle')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <div>• Real-time compliance guidance</div>
-                <div>• Risk assessment explanations</div>
-                <div>• Regulatory requirement lookups</div>
-                <div>• Case investigation support</div>
-                <div>• Document analysis assistance</div>
-                <div>• Best practice recommendations</div>
+                <div>{t('aiAgent.capability1')}</div>
+                <div>{t('aiAgent.capability2')}</div>
+                <div>{t('aiAgent.capability3')}</div>
+                <div>{t('aiAgent.capability4')}</div>
+                <div>{t('aiAgent.capability5')}</div>
+                <div>{t('aiAgent.capability6')}</div>
               </CardContent>
             </Card>
           </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,10 +10,12 @@ import { useAMLData } from '@/hooks/useAMLData';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const AMLMonitoring = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const location = useLocation();
+  const { t } = useTranslation();
   
   const {
     filteredTransactions,
@@ -58,9 +59,9 @@ const AMLMonitoring = () => {
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">AML Monitoring</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('navigation.amlMonitoring')}</h1>
           <p className="text-muted-foreground">
-            Monitor transactions for anti-money laundering compliance
+            {t('amlMonitoring.description')}
           </p>
         </div>
 
@@ -74,8 +75,8 @@ const AMLMonitoring = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Transaction Overview</TabsTrigger>
-            <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
+            <TabsTrigger value="overview">{t('amlMonitoring.tabOverview')}</TabsTrigger>
+            <TabsTrigger value="patterns">{t('aml.patternDetection')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -84,7 +85,7 @@ const AMLMonitoring = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search transactions..."
+                placeholder={t('amlMonitoring.searchPlaceholder')}
                 className="pl-8 w-full sm:w-[300px]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
