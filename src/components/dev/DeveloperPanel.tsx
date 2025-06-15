@@ -80,7 +80,7 @@ const DeveloperPanel: React.FC = () => {
           Dev Panel
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Developer Panel</DialogTitle>
           <DialogDescription>
