@@ -50,10 +50,19 @@ const generateEmailToken = (): string => {
   return Array.from({ length: 8 }, () => Math.random().toString(36).substring(2, 4)).join('-');
 };
 
+// Generate UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // Enhanced user profiles with realistic Swedish and international names
 export const enhancedUserProfiles: EnhancedUserProfile[] = [
   {
-    id: '550e8400-e29b-41d4-a716-446655440001',
+    id: generateUUID(),
     personalIdentityNumber: '198703242381',
     firstName: 'Elin',
     lastName: 'West',
@@ -84,7 +93,7 @@ export const enhancedUserProfiles: EnhancedUserProfile[] = [
     updatedAt: '2024-04-25 09:10:46',
   },
   {
-    id: '550e8400-e29b-41d4-a716-446655440002',
+    id: generateUUID(),
     personalIdentityNumber: '199205151234',
     firstName: 'Ahmed',
     lastName: 'Hassan',
@@ -115,7 +124,7 @@ export const enhancedUserProfiles: EnhancedUserProfile[] = [
     updatedAt: '2024-06-14 08:30:00',
   },
   {
-    id: '550e8400-e29b-41d4-a716-446655440003',
+    id: generateUUID(),
     personalIdentityNumber: '198912103456',
     firstName: 'Maria',
     lastName: 'Rodriguez',
@@ -144,7 +153,7 @@ export const enhancedUserProfiles: EnhancedUserProfile[] = [
     updatedAt: '2024-06-13 19:45:00',
   },
   {
-    id: '550e8400-e29b-41d4-a716-446655440004',
+    id: generateUUID(),
     personalIdentityNumber: '199408227890',
     firstName: 'Lars',
     lastName: 'Andersson',
@@ -172,7 +181,7 @@ export const enhancedUserProfiles: EnhancedUserProfile[] = [
     updatedAt: '2024-06-15 07:20:00',
   },
   {
-    id: '550e8400-e29b-41d4-a716-446655440005',
+    id: generateUUID(),
     personalIdentityNumber: '198506309876',
     firstName: 'Fatima',
     lastName: 'Al-Zahra',

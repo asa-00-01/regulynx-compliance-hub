@@ -2,6 +2,15 @@
 import { ComplianceCaseDetails } from '@/types/case';
 import { userProfiles } from './userGenerator';
 
+// Generate UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 const getRandomDateInPast = (daysBack: number): string => {
   const date = new Date();
   date.setDate(date.getDate() - Math.floor(Math.random() * daysBack));
@@ -9,11 +18,11 @@ const getRandomDateInPast = (daysBack: number): string => {
 };
 
 const complianceOfficers = [
-  { id: 'admin_001', name: 'Alex Nordström' },
-  { id: 'admin_002', name: 'Johan Berg' },
-  { id: 'admin_003', name: 'Lena Wikström' },
-  { id: 'admin_004', name: 'Maria Svensson' },
-  { id: 'admin_005', name: 'Erik Lindqvist' }
+  { id: generateUUID(), name: 'Alex Nordström' },
+  { id: generateUUID(), name: 'Johan Berg' },
+  { id: generateUUID(), name: 'Lena Wikström' },
+  { id: generateUUID(), name: 'Maria Svensson' },
+  { id: generateUUID(), name: 'Erik Lindqvist' }
 ];
 
 const getCaseType = (user: typeof userProfiles[0]): 'kyc' | 'aml' | 'sanctions' => {
@@ -76,7 +85,7 @@ export const generateCasesForUser = (user: typeof userProfiles[0]): ComplianceCa
     const updatedAt = new Date(new Date(createdAt).getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString();
     
     cases.push({
-      id: `case_${user.id}_${type}_${i + 1}`,
+      id: generateUUID(),
       userId: user.id,
       userName: user.fullName,
       createdAt,
@@ -90,9 +99,9 @@ export const generateCasesForUser = (user: typeof userProfiles[0]): ComplianceCa
       assignedToName: officer.name,
       priority,
       source: getCaseSource(user),
-      relatedTransactions: [`tx_${user.id}_1`, `tx_${user.id}_2`],
-      relatedAlerts: user.riskScore > 60 ? [`alert_${user.id}_1`] : [],
-      documents: [`doc_${user.id}_passport`, `doc_${user.id}_id`]
+      relatedTransactions: [generateUUID(), generateUUID()],
+      relatedAlerts: user.riskScore > 60 ? [generateUUID()] : [],
+      documents: [generateUUID(), generateUUID()]
     });
   }
   

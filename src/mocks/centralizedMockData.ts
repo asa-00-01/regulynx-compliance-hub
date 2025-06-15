@@ -41,13 +41,17 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
     const complianceCases = generateCasesForUser({
       id: profile.id,
       fullName: profile.fullName,
+      email: profile.email,
+      dateOfBirth: profile.dateOfBirth,
+      nationality: profile.nationality,
+      identityNumber: profile.personalIdentityNumber,
+      phoneNumber: profile.phoneNumber,
+      address: profile.address,
+      countryOfResidence: profile.countryOfResidence,
       riskScore: profile.riskScore,
       isPEP: profile.isPEP,
       isSanctioned: profile.isSanctioned,
-      kycStatus: profile.kycStatus,
-      nationality: profile.nationality,
-      countryOfResidence: profile.countryOfResidence,
-      dateOfBirth: profile.dateOfBirth
+      kycStatus: profile.kycStatus
     });
     
     // Enhanced notes based on user profile

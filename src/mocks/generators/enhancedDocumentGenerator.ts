@@ -2,6 +2,15 @@
 import { Document } from '@/types';
 import { EnhancedUserProfile } from './enhancedUserGenerator';
 
+// Generate UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export interface DocumentVerificationStep {
   step: number;
   name: string;
@@ -101,13 +110,13 @@ const generateMainIdentityDocument = (user: EnhancedUserProfile): EnhancedDocume
   ];
   
   return {
-    id: `doc_${user.id}_${isPassport ? 'passport' : 'id'}`,
+    id: generateUUID(),
     userId: user.id,
     type: isPassport ? 'passport' : 'id',
     fileName: `${isPassport ? 'passport' : 'national_id'}_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: documentStatus,
-    verifiedBy: documentStatus === 'verified' ? 'admin_001' : undefined,
+    verifiedBy: documentStatus === 'verified' ? generateUUID() : undefined,
     verificationDate: documentStatus === 'verified' ? 
       new Date(new Date(uploadDate).getTime() + 25 * 60 * 1000).toISOString() : undefined,
     extractedData: {
@@ -137,13 +146,13 @@ const generateAddressDocument = (user: EnhancedUserProfile): EnhancedDocument =>
     user.kycStatus === 'rejected' ? 'rejected' : 'pending';
   
   return {
-    id: `doc_${user.id}_address`,
+    id: generateUUID(),
     userId: user.id,
     type: 'license', // Using license type for address proof
     fileName: `address_proof_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: documentStatus,
-    verifiedBy: documentStatus === 'verified' ? 'admin_002' : undefined,
+    verifiedBy: documentStatus === 'verified' ? generateUUID() : undefined,
     verificationDate: documentStatus === 'verified' ? 
       new Date(new Date(uploadDate).getTime() + 2 * 60 * 60 * 1000).toISOString() : undefined,
     extractedData: {
@@ -180,7 +189,7 @@ const generateSourceOfFundsDocument = (user: EnhancedUserProfile): EnhancedDocum
   const uploadDate = new Date(Date.now() - Math.random() * 10 * 24 * 60 * 60 * 1000).toISOString();
   
   return {
-    id: `doc_${user.id}_source_of_funds`,
+    id: generateUUID(),
     userId: user.id,
     type: 'passport', // Using passport type for financial documents
     fileName: `source_of_funds_${user.firstName}_${user.lastName}.pdf`,
@@ -219,7 +228,7 @@ const generateFinancialDocument = (user: EnhancedUserProfile): EnhancedDocument 
   const uploadDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString();
   
   return {
-    id: `doc_${user.id}_financial`,
+    id: generateUUID(),
     userId: user.id,
     type: 'id',
     fileName: `bank_statement_${user.firstName}_${user.lastName}.pdf`,

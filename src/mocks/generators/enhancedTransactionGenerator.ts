@@ -2,6 +2,15 @@
 import { AMLTransaction } from '@/types/aml';
 import { EnhancedUserProfile } from './enhancedUserGenerator';
 
+// Generate UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // Generate realistic transaction patterns based on user profile
 export const generateRealisticTransactions = (user: EnhancedUserProfile): AMLTransaction[] => {
   const transactions: AMLTransaction[] = [];
@@ -79,10 +88,10 @@ export const generateRealisticTransactions = (user: EnhancedUserProfile): AMLTra
     if (user.isPEP) transactionRiskScore += 20;
     
     const transaction: AMLTransaction = {
-      id: `tx_${user.id}_${i + 1}`,
+      id: generateUUID(),
       senderUserId: user.id,
       senderName: user.fullName,
-      receiverUserId: `receiver_${user.id}_${i + 1}`,
+      receiverUserId: generateUUID(),
       receiverName: generateReceiverName(relationship),
       timestamp: transactionDate.toISOString(),
       status: Math.random() > 0.05 ? 'completed' : 'pending',

@@ -1,5 +1,13 @@
-
 import { UnifiedUserData } from '@/context/compliance/types';
+
+// Generate UUID v4
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 export interface BaseUserProfile {
   id: string;
@@ -20,7 +28,7 @@ export interface BaseUserProfile {
 // Comprehensive user profiles with realistic data
 export const userProfiles: BaseUserProfile[] = [
   {
-    id: 'user_001',
+    id: generateUUID(),
     fullName: 'John Smith',
     email: 'john.smith@email.com',
     dateOfBirth: '1985-03-15',
@@ -35,7 +43,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_002',
+    id: generateUUID(),
     fullName: 'Maria Garcia',
     email: 'maria.garcia@email.com',
     dateOfBirth: '1990-07-22',
@@ -50,7 +58,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_003',
+    id: generateUUID(),
     fullName: 'Ahmed Hassan',
     email: 'ahmed.hassan@email.com',
     dateOfBirth: '1978-12-03',
@@ -65,7 +73,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'pending'
   },
   {
-    id: 'user_004',
+    id: generateUUID(),
     fullName: 'Li Wei',
     email: 'li.wei@email.com',
     dateOfBirth: '1982-09-18',
@@ -80,7 +88,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_005',
+    id: generateUUID(),
     fullName: 'Sarah Johnson',
     email: 'sarah.johnson@email.com',
     dateOfBirth: '1995-01-12',
@@ -95,7 +103,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_006',
+    id: generateUUID(),
     fullName: 'Viktor Petrov',
     email: 'viktor.petrov@email.com',
     dateOfBirth: '1975-11-30',
@@ -110,7 +118,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'information_requested'
   },
   {
-    id: 'user_007',
+    id: generateUUID(),
     fullName: 'Fatima Al-Zahra',
     email: 'fatima.alzahra@email.com',
     dateOfBirth: '1988-04-25',
@@ -125,7 +133,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_008',
+    id: generateUUID(),
     fullName: 'Carlos Rodriguez',
     email: 'carlos.rodriguez@email.com',
     dateOfBirth: '1983-08-14',
@@ -140,7 +148,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'pending'
   },
   {
-    id: 'user_009',
+    id: generateUUID(),
     fullName: 'Emma Wilson',
     email: 'emma.wilson@email.com',
     dateOfBirth: '1992-06-08',
@@ -155,7 +163,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_010',
+    id: generateUUID(),
     fullName: 'Raj Patel',
     email: 'raj.patel@email.com',
     dateOfBirth: '1979-02-14',
@@ -170,7 +178,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_011',
+    id: generateUUID(),
     fullName: 'Anna Kowalski',
     email: 'anna.kowalski@email.com',
     dateOfBirth: '1987-10-05',
@@ -185,7 +193,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_012',
+    id: generateUUID(),
     fullName: 'Mohammad Al-Rashid',
     email: 'mohammad.alrashid@email.com',
     dateOfBirth: '1981-05-20',
@@ -200,7 +208,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'rejected'
   },
   {
-    id: 'user_013',
+    id: generateUUID(),
     fullName: 'Sophie Dubois',
     email: 'sophie.dubois@email.com',
     dateOfBirth: '1993-09-12',
@@ -215,7 +223,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_014',
+    id: generateUUID(),
     fullName: 'Klaus Mueller',
     email: 'klaus.mueller@email.com',
     dateOfBirth: '1976-12-28',
@@ -230,7 +238,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_015',
+    id: generateUUID(),
     fullName: 'Isabella Silva',
     email: 'isabella.silva@email.com',
     dateOfBirth: '1989-11-16',
@@ -245,7 +253,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'pending'
   },
   {
-    id: 'user_016',
+    id: generateUUID(),
     fullName: 'Hiroshi Tanaka',
     email: 'hiroshi.tanaka@email.com',
     dateOfBirth: '1984-07-11',
@@ -260,7 +268,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_017',
+    id: generateUUID(),
     fullName: 'Olga Volkov',
     email: 'olga.volkov@email.com',
     dateOfBirth: '1991-02-28',
@@ -275,7 +283,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'information_requested'
   },
   {
-    id: 'user_018',
+    id: generateUUID(),
     fullName: 'Peter Hansen',
     email: 'peter.hansen@email.com',
     dateOfBirth: '1980-11-14',
@@ -290,7 +298,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_019',
+    id: generateUUID(),
     fullName: 'Priya Sharma',
     email: 'priya.sharma@email.com',
     dateOfBirth: '1986-05-22',
@@ -305,7 +313,7 @@ export const userProfiles: BaseUserProfile[] = [
     kycStatus: 'verified'
   },
   {
-    id: 'user_020',
+    id: generateUUID(),
     fullName: 'Hassan Al-Mahmoud',
     email: 'hassan.almahmoud@email.com',
     dateOfBirth: '1977-09-03',
