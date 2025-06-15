@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Home,
@@ -20,6 +21,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/common/LanguageSelector';
+import { useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NavItemProps {
   title: string;
@@ -32,6 +35,8 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
   const { t } = useTranslation();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   const navigationItems = [
     {
@@ -123,9 +128,9 @@ const Sidebar = () => {
   return (
     <div className="flex flex-col h-full bg-card border-r border-border shadow-sm">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border">
+      <div className={cn("px-6 py-4 border-b border-border", isCollapsed && "px-2 py-4 flex justify-center")}>
         <h1 className="text-lg font-bold text-foreground tracking-tight">
-          {t('layout.sidebar.title')}
+          {isCollapsed ? "AML" : t('layout.sidebar.title')}
         </h1>
       </div>
       
@@ -137,24 +142,40 @@ const Sidebar = () => {
               return null;
             }
 
+            const navLink = (
+              <NavLink
+                to={item.href}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
+                    "hover:bg-accent hover:text-accent-foreground",
+                    "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                    isActive 
+                      ? "bg-primary text-primary-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground",
+                    isCollapsed && "justify-center"
+                  )
+                }
+              >
+                <item.icon className={cn("w-5 h-5 flex-shrink-0", !isCollapsed && "mr-3")} />
+                <span className={cn("truncate", isCollapsed && "hidden")}>{item.title}</span>
+              </NavLink>
+            );
+
             return (
               <li key={item.title}>
-                <NavLink
-                  to={item.href}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "text-muted-foreground hover:text-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">{item.title}</span>
-                </NavLink>
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {navLink}
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>{item.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  navLink
+                )}
               </li>
             );
           })}
@@ -162,12 +183,12 @@ const Sidebar = () => {
       </nav>
       
       {/* Language Selector */}
-      <div className="px-6 py-4 border-t border-border">
+      <div className={cn("px-6 py-4 border-t border-border", isCollapsed && "hidden")}>
         <LanguageSelector />
       </div>
       
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border">
+      <div className={cn("px-6 py-4 border-t border-border", isCollapsed && "hidden")}>
         <p className="text-xs text-muted-foreground text-center">
           {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
         </p>
