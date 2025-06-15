@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -128,10 +127,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => onFlagUser(user.id)}
-            className={flaggedUsers.includes(user.id) ? 'text-red-600' : ''}
+            className={flaggedUsers.includes(user.id) ? 'text-red-500' : ''}
             title={flaggedUsers.includes(user.id) ? 'Unflag User' : 'Flag User'}
           >
-            <Flag className="h-4 w-4" />
+            <Flag
+              className="h-4 w-4"
+              fill={flaggedUsers.includes(user.id) ? 'currentColor' : 'none'}
+            />
           </Button>
           
           {(user.flags.riskScore > 70 || user.flags.is_sanction_list) && (
