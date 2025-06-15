@@ -1,22 +1,25 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   requiredRoles?: UserRole[];
 }
 
-const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps) => {
+const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayoutProps) => {
   const { isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
+  const { state, toggle: toggleSidebar } = useSidebar();
+
+  const sidebarOpen = state === 'expanded';
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -27,10 +30,6 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
     }
   }, [isAuthenticated, navigate, canAccess, requiredRoles]);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
   }
@@ -38,38 +37,44 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar with improved responsive behavior */}
-      <div 
+      <div
         className={`${
-          isMobile 
+          isMobile
             ? `fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
               }`
             : `relative transition-all duration-300 ease-in-out ${
-                sidebarOpen ? "w-64" : "w-16"
+                sidebarOpen ? 'w-64' : 'w-20' // Adjusted collapsed width for better icon display
               }`
         }`}
       >
         <Sidebar />
       </div>
-      
+
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
-      
+
       {/* Main content area with improved layout */}
       <div className={`flex flex-col flex-1 w-full min-w-0 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="h-full p-6">
-            {children}
-          </div>
+          <div className="h-full p-6">{children}</div>
         </main>
       </div>
     </div>
+  );
+};
+
+const DashboardLayout = (props: DashboardLayoutProps) => {
+  return (
+    <SidebarProvider>
+      <DashboardLayoutContent {...props} />
+    </SidebarProvider>
   );
 };
 
