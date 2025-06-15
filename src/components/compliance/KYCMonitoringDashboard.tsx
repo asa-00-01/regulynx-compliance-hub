@@ -29,7 +29,7 @@ import { Flag, Eye, FilePenLine, Shield, AlertTriangle, Users, CheckCircle, File
 import CustomerMonitoringActions from './CustomerMonitoringActions';
 import { useNavigate } from 'react-router-dom';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
-import { evaluateUserRisk } from '@/services/riskScoringService';
+import { evaluateUserRisk } from '@/services/risk';
 import { usePagination } from '@/hooks/usePagination';
 import {
   Pagination,

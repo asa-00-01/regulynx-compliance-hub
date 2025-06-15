@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Shield, User, Activity, DollarSign } from 'lucide-react';
-import { getRulesByCategory, getRiskMatchesForEntity, evaluateTransactionRisk, evaluateUserRisk } from '@/services/riskScoringService';
+import { getRulesByCategory, getRiskMatchesForEntity, evaluateTransactionRisk, evaluateUserRisk } from '@/services/risk';
 import { AMLTransaction } from '@/types/aml';
 import { UnifiedUserData } from '@/context/compliance/types';
 import RiskBadge from '@/components/common/RiskBadge';

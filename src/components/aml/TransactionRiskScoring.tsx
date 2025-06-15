@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AMLTransaction } from '@/types/aml';
-import { useRiskScoringUnified } from '@/hooks/useRiskScoringUnified';
+import { useRiskScoring } from '@/hooks/useRiskScoring';
 import RiskRulesDisplay from './RiskRulesDisplay';
 import { AlertTriangle, Play, Loader2 } from 'lucide-react';
 
@@ -12,7 +12,7 @@ interface TransactionRiskScoringProps {
 }
 
 const TransactionRiskScoring: React.FC<TransactionRiskScoringProps> = ({ transaction }) => {
-  const { riskAssessment, loading, error, runAssessment } = useRiskScoringUnified(transaction);
+  const { riskAssessment, loading, error, runAssessment } = useRiskScoring(transaction);
 
   if (error) {
     return (

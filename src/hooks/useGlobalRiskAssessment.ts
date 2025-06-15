@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { evaluateTransactionRisk, evaluateUserRisk } from '@/services/riskScoringService';
+import { evaluateTransactionRisk, evaluateUserRisk } from '@/services/risk';
 import { useCompliance } from '@/context/compliance';
 import { useToast } from '@/hooks/use-toast';
 import { getMockTransactions, getMockUsers } from '@/utils/mockAssessmentData';
