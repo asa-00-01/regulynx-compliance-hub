@@ -29,6 +29,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 
 const Sidebar = () => {
@@ -128,7 +129,7 @@ const Sidebar = () => {
   return (
     <>
       <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
-        <h1 className="text-lg font-bold text-foreground tracking-tight">
+        <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">
           {isCollapsed ? "AML" : t('layout.sidebar.title')}
         </h1>
       </SidebarHeader>
@@ -160,15 +161,13 @@ const Sidebar = () => {
         </SidebarMenu>
       </SidebarContent>
       
+      <SidebarSeparator />
+      
       <SidebarFooter className={cn(isCollapsed && "hidden")}>
-        <div className="px-6 py-4 border-t border-border">
-            <LanguageSelector />
-        </div>
-        <div className="px-6 py-4 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center">
-            {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
-            </p>
-        </div>
+        <LanguageSelector />
+        <p className="text-xs text-sidebar-foreground/70 text-center">
+          {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
+        </p>
       </SidebarFooter>
     </>
   );
