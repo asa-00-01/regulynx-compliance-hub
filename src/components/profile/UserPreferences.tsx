@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -186,7 +185,7 @@ const UserPreferences = () => {
         <CardHeader>
           <CardTitle>{t('profile.exportData')}</CardTitle>
           <CardDescription>{t('profile.exportDataDesc')}</CardDescription>
-        </Header>
+        </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
             {t('profile.exportDesc')}
@@ -203,4 +202,3 @@ const UserPreferences = () => {
 };
 
 export default UserPreferences;
-
