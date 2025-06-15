@@ -78,7 +78,7 @@ const SARCenter = () => {
   const FormWrapper = ({ children }: { children: React.ReactNode }) => {
     return isDesktop ? (
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedSARId ? 'Edit SAR' : 'Create New SAR'}</DialogTitle>
             <DialogDescription>
@@ -101,7 +101,7 @@ const SARCenter = () => {
                 : 'Fill in the details to create a new suspicious activity report'}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-4">{children}</div>
+          <div className="px-4 pb-4 overflow-y-auto">{children}</div>
           <DrawerFooter className="pt-2 px-0"></DrawerFooter>
         </DrawerContent>
       </Drawer>
