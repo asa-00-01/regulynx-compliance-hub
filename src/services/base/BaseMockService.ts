@@ -1,4 +1,3 @@
-
 import { config } from '@/config/environment';
 
 // Simulated API delay for realistic development experience
@@ -8,17 +7,37 @@ export const simulateDelay = (ms: number = MOCK_DELAY): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-export class BaseMockService {
+export abstract class BaseMockService {
   protected static shouldUseMockData(): boolean {
     return config.features.useMockData;
   }
 
-  protected static async mockApiCall<T>(data: T, operation: string): Promise<T> {
+  protected static logDataOperation(operation: string, entityType: string, count?: number): void {
+    const emoji = this.getOperationEmoji(operation);
+    const countText = count !== undefined ? ` (${count} items)` : '';
+    console.log(`${emoji} ${operation} ${entityType}${countText} from mock service`);
+  }
+
+  private static getOperationEmoji(operation: string): string {
+    const emojiMap: Record<string, string> = {
+      'Fetching': '📊',
+      'Creating': '✨',
+      'Updating': '🔄',
+      'Deleting': '🗑️',
+      'Validating': '🔍',
+      'Loading': '⏳'
+    };
+    return emojiMap[operation] || '📝';
+  }
+
+  protected static async mockApiCall<T>(data: T, operation: string, entityType: string = 'data'): Promise<T> {
     if (!this.shouldUseMockData()) {
       throw new Error('Mock data is disabled. Use real API service.');
     }
+
+    const count = Array.isArray(data) ? data.length : undefined;
+    this.logDataOperation(operation, entityType, count);
     
-    console.log(`🔧 Mock API call: ${operation}`);
     await simulateDelay();
     return data;
   }

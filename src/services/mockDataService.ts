@@ -1,4 +1,3 @@
-
 import { NewsItem, RSSFeed } from '@/types/news';
 import { ComplianceCaseDetails } from '@/types/case';
 import { KYCUser, KYCVerification } from '@/types/kyc';
@@ -11,6 +10,8 @@ import { ComplianceCasesService } from './compliance/ComplianceCasesService';
 import { KYCService } from './kyc/KYCService';
 import { AMLService } from './aml/AMLService';
 import { UnifiedDataService } from './unified/UnifiedDataService';
+
+import { logValidationResults } from '@/mocks/validators/dataValidator';
 
 export class MockDataService extends BaseMockService {
   // News and RSS Feeds
@@ -54,6 +55,19 @@ export class MockDataService extends BaseMockService {
   static async mockApiCall<T>(data: T, operation: string): Promise<T> {
     return super.mockApiCall(data, operation);
   }
+
+  // Initialize and validate mock data
+  static validateData(): void {
+    if (this.shouldUseMockData()) {
+      console.log('🔍 Validating mock data consistency...');
+      logValidationResults();
+    }
+  }
+}
+
+// Auto-validate data in development
+if (MockDataService.shouldUseMockData()) {
+  MockDataService.validateData();
 }
 
 export default MockDataService;
