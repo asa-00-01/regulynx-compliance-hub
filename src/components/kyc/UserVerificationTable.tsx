@@ -214,7 +214,9 @@ const UserVerificationTable: React.FC<UserVerificationTableProps> = ({
                   </Button>
                   
                   {(user.flags.riskScore > 70 || user.flags.is_sanction_list) && (
-                    <AlertTriangle className="h-4 w-4 text-red-500" title="High Risk Alert" />
+                    <span title="High Risk Alert">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    </span>
                   )}
                 </div>
               </TableCell>
