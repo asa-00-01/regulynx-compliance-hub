@@ -1,4 +1,3 @@
-
 # Production Deployment Configuration
 
 This guide explains how to configure environment variables for production deployment of the Compliance Management System.
@@ -46,6 +45,11 @@ VITE_ENABLE_REMOTE_LOGGING="true"
 # Services
 VITE_NEWS_API_ENABLED="true"
 VITE_NEWS_REFRESH_INTERVAL="300000"
+
+# Analytics & Monitoring (Production)
+VITE_ANALYTICS_PROVIDER="google" # or "mixpanel", "amplitude"
+VITE_ERROR_REPORTING_PROVIDER="sentry" # or "bugsnag", "rollbar"
+VITE_PERFORMANCE_MONITORING_PROVIDER="newrelic" # or "datadog"
 ```
 
 ### Optional Environment Variables
@@ -172,3 +176,69 @@ VITE_ENABLE_ERROR_REPORTING="true"
 VITE_ENABLE_CSP="true"
 VITE_ENABLE_HSTS="true"
 ```
+
+## Analytics and Error Reporting Integration
+
+The application includes comprehensive analytics and error reporting capabilities:
+
+### Analytics Features
+- **Page View Tracking**: Automatically tracks page navigation
+- **User Action Tracking**: Monitors user interactions and compliance actions
+- **Compliance Event Tracking**: Specialized tracking for compliance-related activities
+- **Performance Monitoring**: Core Web Vitals and custom performance metrics
+
+### Error Reporting Features
+- **Global Error Handling**: Catches and reports unhandled errors
+- **Promise Rejection Handling**: Monitors unhandled promise rejections
+- **Context-Aware Reporting**: Includes user context and application state
+- **Development Mode Logging**: Console logging for debugging
+
+### Supported Analytics Providers
+The analytics service is designed to integrate with popular providers:
+- **Google Analytics 4**: Web analytics and user behavior tracking
+- **Mixpanel**: Event tracking and user analytics
+- **Amplitude**: Product analytics and user journey tracking
+
+### Supported Error Reporting Providers
+- **Sentry**: Error monitoring and performance tracking
+- **Bugsnag**: Error monitoring and stability management
+- **Rollbar**: Real-time error tracking and debugging
+
+### Integration Examples
+
+#### Google Analytics 4
+```javascript
+// In production, extend the analytics service:
+private async initializeAnalytics() {
+  if (process.env.VITE_GA4_MEASUREMENT_ID) {
+    gtag('config', process.env.VITE_GA4_MEASUREMENT_ID);
+  }
+}
+```
+
+#### Sentry Integration
+```javascript
+// In production, extend the error reporting service:
+private async initializeErrorReporting() {
+  if (process.env.VITE_SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.VITE_SENTRY_DSN,
+      environment: config.app.environment,
+    });
+  }
+}
+```
+
+### Development Mode Features
+- **Analytics Dashboard**: Visual dashboard showing tracked events
+- **Console Logging**: All events logged to browser console
+- **Real-time Monitoring**: Live view of analytics and errors
+
+### Production Configuration Checklist
+- [ ] Set `VITE_ENABLE_ANALYTICS="true"`
+- [ ] Set `VITE_ENABLE_ERROR_REPORTING="true"`
+- [ ] Set `VITE_ENABLE_PERFORMANCE_MONITORING="true"`
+- [ ] Configure analytics provider credentials (via Supabase secrets)
+- [ ] Configure error reporting provider credentials (via Supabase secrets)
+- [ ] Test analytics and error reporting in staging environment
+- [ ] Verify GDPR/privacy compliance for analytics tracking
