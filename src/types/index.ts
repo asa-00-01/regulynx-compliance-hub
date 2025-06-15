@@ -47,7 +47,7 @@ export interface Transaction {
   risk_score?: number;
 }
 
-export type UserRole = 'admin' | 'analyst' | 'viewer' | 'manager';
+export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
 
 export interface ComplianceCase {
   id: string;
@@ -70,4 +70,5 @@ export interface DashboardMetrics {
   pendingDocuments?: number;
   pendingKycReviews?: number;
   activeAlerts?: number;
+  riskScoreTrend?: number;
 }

@@ -5,7 +5,7 @@ import { generateAddressDocument } from './enhancedDocument/addressDocumentGener
 import { generateSourceOfFundsDocument, generateFinancialDocument } from './enhancedDocument/financialDocumentGenerator';
 import { EnhancedUserProfile } from './user/types';
 
-export { EnhancedDocument, DocumentVerificationStep } from './enhancedDocument/types';
+export type { EnhancedDocument, DocumentVerificationStep } from './enhancedDocument/types';
 
 export const generateEnhancedDocuments = (user: EnhancedUserProfile): EnhancedDocument[] => {
   const documents: EnhancedDocument[] = [];
