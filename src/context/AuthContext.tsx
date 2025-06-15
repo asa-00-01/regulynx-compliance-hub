@@ -54,12 +54,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         setLoading(true);
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
           
+          // A "not found" error is expected if profile doesn't exist.
+          // Any other error should be thrown.
+          if (error && error.code !== 'PGRST116') {
+            throw error;
+          }
+
           if (profile) {
             const userData: User = {
               id: session.user.id,
@@ -72,18 +78,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             };
             setUser(userData);
           } else {
-            console.warn("User is logged in but profile data not found.");
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              name: session.user.email || 'New User',
-              role: 'support',
-              riskScore: 0,
-              status: 'pending'
-            });
+            // This is critical: user is authenticated but has no profile.
+            console.error("CRITICAL: User is authenticated but no profile found in 'profiles' table. Forcing logout.");
+            toast.error("Your user profile is missing or corrupted. Please contact support. You will be logged out.");
+            await supabase.auth.signOut();
+            setUser(null);
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
+          toast.error("An error occurred while fetching your profile. Logging out.");
+          await supabase.auth.signOut();
           setUser(null);
         } finally {
           setLoading(false);
