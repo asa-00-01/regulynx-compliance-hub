@@ -69,7 +69,7 @@ const Sidebar = () => {
       title: t('navigation.kycVerification'),
       href: '/kyc-verification',
       icon: UserCheck,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+      allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
       title: t('navigation.transactions'),
@@ -81,13 +81,13 @@ const Sidebar = () => {
       title: t('navigation.documents'),
       href: '/documents',
       icon: FileSearch,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
+      allowedRoles: ['admin', 'complianceOfficer', 'support'],
     },
     {
       title: t('navigation.amlMonitoring'),
       href: '/aml-monitoring',
       icon: LineChart,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
+      allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
       title: t('navigation.riskAnalysis'),
@@ -100,12 +100,6 @@ const Sidebar = () => {
       href: '/sar-center',
       icon: FileWarning,
       allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: t('navigation.users'),
-      href: '/users',
-      icon: Users,
-      allowedRoles: ['admin'],
     },
     {
       title: t('navigation.auditLogs'),

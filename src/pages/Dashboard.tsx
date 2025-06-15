@@ -43,6 +43,19 @@ const Dashboard = () => {
                 Welcome back, {user?.name || 'User'}. Here's your compliance overview for today.
               </p>
             </div>
+            {user && (
+              <div className="text-sm text-muted-foreground bg-accent p-3 rounded-md border">
+                <p>
+                  Logged in as: <strong className="text-foreground">{user.email}</strong>
+                </p>
+                <p>
+                  Current Role: <strong className="text-foreground">{user.role}</strong>. This determines which sidebar links and features are available.
+                </p>
+                <p className="mt-1 text-xs">
+                  To test other roles, log out and use a different demo account (e.g., `admin@regulynx.com`, `compliance@regulynx.com`). Password is `password`.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Metrics Cards Section */}
