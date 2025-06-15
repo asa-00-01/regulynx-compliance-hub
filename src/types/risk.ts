@@ -24,3 +24,16 @@ export interface RiskAssessmentResult {
   matched_rules: RiskMatch[];
   rule_categories: string[];
 }
+
+export interface RiskMatchDisplay {
+  id: string;
+  rule_id: string;
+  matched_at: string;
+  match_data: any;
+  rules: {
+    rule_name: string;
+    description: string;
+    risk_score: number;
+    category: string;
+  };
+}
