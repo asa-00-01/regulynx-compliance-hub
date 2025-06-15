@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Full name is required'),
@@ -29,6 +30,7 @@ interface UserProfileFormProps {
 }
 
 const UserProfileForm = ({ user }: UserProfileFormProps) => {
+  const { t } = useTranslation();
   const { updateUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,8 +101,8 @@ const UserProfileForm = ({ user }: UserProfileFormProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Update your personal information and how others see you on the platform</CardDescription>
+        <CardTitle>{t('profile.profileInformation')}</CardTitle>
+        <CardDescription>{t('profile.profileInformationDesc')}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent>
