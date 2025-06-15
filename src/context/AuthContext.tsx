@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,15 +29,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     setLoading(true);
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        if (session) {
+    
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setAuthLoaded(true);
+      if (!initialSession) {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoaded) return;
+
+    const fetchProfile = async () => {
+      if (session?.user) {
+        setLoading(true);
+        try {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
-
+          
           if (profile) {
             const userData: User = {
               id: session.user.id,
@@ -49,7 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             };
             setUser(userData);
           } else {
-             setUser({
+            console.warn("User is logged in but profile data not found.");
+            setUser({
               id: session.user.id,
               email: session.user.email || '',
               name: session.user.email || 'New User',
@@ -57,30 +81,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               riskScore: 0,
               status: 'pending'
             });
-            console.warn("User is logged in but profile data not found.");
           }
-          setSession(session);
-        } else {
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
           setUser(null);
-          setSession(null);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Error in onAuthStateChange:", error);
+      } else {
         setUser(null);
-        setSession(null);
-      } finally {
         setLoading(false);
-        setAuthLoaded(true);
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
-  }, []);
+
+    fetchProfile();
+  }, [session, authLoaded]);
 
   const login = async (email: string, password: string): Promise<User | null> => {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
@@ -113,13 +130,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast.error(error.message);
       console.error('Login error:', error);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async (email: string, password: string, role: UserRole, name?: string): Promise<void> => {
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -136,20 +150,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       toast.error(error.message);
       console.error('Signup error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error(error.message);
       console.error('Logout error:', error);
     }
-    // onAuthStateChange will handle setting user/session to null
-    setLoading(false);
   };
 
   const canAccess = (requiredRoles: UserRole[]): boolean => {
