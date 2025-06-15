@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,9 +17,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import config from '@/config/environment';
 import { Settings, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDraggable } from '@/hooks/useDraggable';
 
 const DeveloperPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const devPanelButtonRef = useRef<HTMLButtonElement>(null);
+  const { style, onMouseDown } = useDraggable(devPanelButtonRef);
   
   const [apiConfig, setApiConfig] = useState({ baseUrl: config.api.baseUrl });
   const [appConfig, setAppConfig] = useState({ 
@@ -72,9 +75,12 @@ const DeveloperPanel: React.FC = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
+          ref={devPanelButtonRef}
           variant="outline"
           size="sm"
           className="fixed bottom-4 left-4 z-50"
+          style={style}
+          onMouseDown={onMouseDown}
         >
           <Settings className="h-4 w-4 mr-2" />
           Dev Panel

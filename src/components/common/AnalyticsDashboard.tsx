@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle, BarChart3, Eye, Settings } from 'lucide-react';
 import config from '@/config/environment';
 import { analytics, AnalyticsEvent, ErrorReport, PerformanceMetric } from '@/services/analytics';
+import { useDraggable } from '@/hooks/useDraggable';
 
 const AnalyticsDashboard: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([]);
   const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
+  const analyticsButtonRef = useRef<HTMLButtonElement>(null);
+  const { style, onMouseDown } = useDraggable(analyticsButtonRef);
 
   useEffect(() => {
     const handleEvent = (event: AnalyticsEvent) => {
@@ -47,10 +50,13 @@ const AnalyticsDashboard: React.FC = () => {
     <>
       {/* Toggle Button */}
       <Button
+        ref={analyticsButtonRef}
         onClick={() => setIsVisible(!isVisible)}
         className="fixed bottom-20 right-4 z-50"
         variant="outline"
         size="sm"
+        style={style}
+        onMouseDown={onMouseDown}
       >
         <BarChart3 className="h-4 w-4 mr-2" />
         Analytics
