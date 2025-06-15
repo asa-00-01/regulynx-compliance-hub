@@ -1,5 +1,4 @@
 
-```typescript
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
@@ -97,4 +96,3 @@ export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
 
   return { style, onMouseDown, hasInitialized };
 };
-```

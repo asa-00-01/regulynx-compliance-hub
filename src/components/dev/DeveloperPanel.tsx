@@ -1,5 +1,4 @@
 
-```typescript
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -156,4 +155,3 @@ const DeveloperPanel: React.FC = () => {
 };
 
 export default DeveloperPanel;
-```
