@@ -1,9 +1,7 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseFilters, CaseSummary } from '@/types/case';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
-import { config } from '@/config/environment';
 import { complianceCaseService } from './useComplianceCases/service';
 import { calculateCaseSummary } from './useComplianceCases/utils';
 import { useCaseActions } from './useComplianceCases/actions';
@@ -150,6 +148,5 @@ export function useComplianceCases(currentUser?: User): UseComplianceCasesReturn
     assignCase,
     createCase,
     fetchCases,
-    isMockMode: config.features.useMockData,
   };
 }

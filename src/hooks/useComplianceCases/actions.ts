@@ -3,7 +3,8 @@ import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { config } from '@/config/environment';
+import { supabase } from '@/integrations/supabase/client';
+import { CaseActionInsert } from '@/types/supabase';
 
 export const useCaseActions = (
   currentUser?: User,
@@ -16,32 +17,38 @@ export const useCaseActions = (
 
   const addCaseNote = useCallback(async (caseId: string, note: string) => {
     try {
-      const newAction: CaseAction = {
-        id: Date.now().toString(),
-        caseId: caseId,
-        actionBy: currentUser?.id || 'unknown',
-        actionByName: currentUser?.name || 'Unknown User',
-        actionDate: new Date().toISOString(),
-        actionType: 'note',
+      const newActionData: CaseActionInsert = {
+        case_id: caseId,
+        action_by: currentUser?.id,
+        action_by_name: currentUser?.name,
+        action_type: 'note',
         description: note,
       };
+
+      const { data, error } = await supabase
+        .from('case_actions')
+        .insert(newActionData)
+        .select()
+        .single();
+
+      if (error) throw error;
       
-      if (config.features.useMockData) {
-        // Use mock data - just add to local state
-        setCaseActions(prev => {
-          const updated = [...prev, newAction];
-          onCaseActionsUpdated?.(updated);
-          return updated;
-        });
-      } else {
-        // Use real Supabase API
-        // This would save to Supabase and then update local state
-        setCaseActions(prev => {
-          const updated = [...prev, newAction];
-          onCaseActionsUpdated?.(updated);
-          return updated;
-        });
-      }
+      const newAction: CaseAction = {
+        id: data.id,
+        caseId: data.case_id,
+        actionBy: data.action_by || '',
+        actionByName: data.action_by_name || 'System',
+        actionDate: data.action_date,
+        actionType: data.action_type,
+        description: data.description,
+        details: data.details,
+      };
+
+      setCaseActions(prev => {
+        const updated = [...prev, newAction];
+        onCaseActionsUpdated?.(updated);
+        return updated;
+      });
       
       toast({
         title: 'Note Added',
@@ -66,6 +73,13 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
+      const { error: updateError } = await supabase
+        .from('compliance_cases')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', caseId);
+      
+      if (updateError) throw updateError;
+      
       if (selectedCase?.id === caseId) {
         const updatedCase = { 
           ...selectedCase, 
@@ -75,15 +89,32 @@ export const useCaseActions = (
         onCaseUpdated?.(updatedCase);
       }
       
-      const newAction: CaseAction = {
-        id: Date.now().toString(),
-        caseId: caseId,
-        actionBy: currentUser?.id || 'unknown',
-        actionByName: currentUser?.name || 'Unknown User',
-        actionDate: new Date().toISOString(),
-        actionType: 'status_change',
+      const newActionData: CaseActionInsert = {
+        case_id: caseId,
+        action_by: currentUser?.id,
+        action_by_name: currentUser?.name || 'Unknown User',
+        action_type: 'status_change',
         description: `Case status changed to ${newStatus.replace(/_/g, ' ')}`,
         details: note ? { note } : undefined
+      };
+      
+      const { data, error: actionError } = await supabase
+        .from('case_actions')
+        .insert(newActionData)
+        .select()
+        .single();
+      
+      if (actionError) throw actionError;
+
+      const newAction: CaseAction = {
+        id: data.id,
+        caseId: data.case_id,
+        actionBy: data.action_by || '',
+        actionByName: data.action_by_name || 'System',
+        actionDate: data.action_date,
+        actionType: data.action_type,
+        description: data.description,
+        details: data.details,
       };
       
       setCaseActions(prev => {
@@ -115,6 +146,17 @@ export const useCaseActions = (
     assignToName: string
   ) => {
     try {
+       const { error: updateError } = await supabase
+        .from('compliance_cases')
+        .update({ 
+          assigned_to: assignToId, 
+          assigned_to_name: assignToName,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', caseId);
+
+      if (updateError) throw updateError;
+
       if (selectedCase?.id === caseId) {
         const updatedCase = { 
           ...selectedCase, 
@@ -125,16 +167,33 @@ export const useCaseActions = (
         onCaseUpdated?.(updatedCase);
       }
       
-      const newAction: CaseAction = {
-        id: Date.now().toString(),
-        caseId: caseId,
-        actionBy: currentUser?.id || 'unknown',
-        actionByName: currentUser?.name || 'Unknown User',
-        actionDate: new Date().toISOString(),
-        actionType: 'assignment',
+      const newActionData: CaseActionInsert = {
+        case_id: caseId,
+        action_by: currentUser?.id,
+        action_by_name: currentUser?.name || 'Unknown User',
+        action_type: 'assignment',
         description: `Case assigned to ${assignToName}`
       };
       
+      const { data, error: actionError } = await supabase
+        .from('case_actions')
+        .insert(newActionData)
+        .select()
+        .single();
+      
+      if (actionError) throw actionError;
+      
+      const newAction: CaseAction = {
+        id: data.id,
+        caseId: data.case_id,
+        actionBy: data.action_by || '',
+        actionByName: data.action_by_name || 'System',
+        actionDate: data.action_date,
+        actionType: data.action_type,
+        description: data.description,
+        details: data.details,
+      };
+
       setCaseActions(prev => {
         const updated = [...prev, newAction];
         onCaseActionsUpdated?.(updated);

@@ -41,27 +41,43 @@ export type Database = {
       }
       case_actions: {
         Row: {
-          action_by: string
-          action_description: string
+          action_by: string | null
+          action_by_name: string | null
+          action_date: string
+          action_type: Database["public"]["Enums"]["case_action_type"]
           case_id: string
-          created_at: string
+          description: string
+          details: Json | null
           id: string
         }
         Insert: {
-          action_by: string
-          action_description: string
+          action_by?: string | null
+          action_by_name?: string | null
+          action_date?: string
+          action_type: Database["public"]["Enums"]["case_action_type"]
           case_id: string
-          created_at?: string
+          description: string
+          details?: Json | null
           id?: string
         }
         Update: {
-          action_by?: string
-          action_description?: string
+          action_by?: string | null
+          action_by_name?: string | null
+          action_date?: string
+          action_type?: Database["public"]["Enums"]["case_action_type"]
           case_id?: string
-          created_at?: string
+          description?: string
+          details?: Json | null
           id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "case_actions_action_by_fkey"
+            columns: ["action_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "case_actions_case_id_fkey"
             columns: ["case_id"]
@@ -74,38 +90,87 @@ export type Database = {
       compliance_cases: {
         Row: {
           assigned_to: string | null
+          assigned_to_name: string | null
           created_at: string
+          created_by: string | null
           description: string
+          documents: string[] | null
           id: string
+          priority: Database["public"]["Enums"]["case_priority"]
+          related_alerts: string[] | null
+          related_transactions: string[] | null
+          resolved_at: string | null
           risk_score: number
+          source: Database["public"]["Enums"]["case_source"] | null
           status: Database["public"]["Enums"]["case_status"]
           type: Database["public"]["Enums"]["case_type"]
           updated_at: string
-          user_id: string
+          user_id: string | null
+          user_name: string | null
         }
         Insert: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           created_at?: string
+          created_by?: string | null
           description: string
+          documents?: string[] | null
           id?: string
+          priority: Database["public"]["Enums"]["case_priority"]
+          related_alerts?: string[] | null
+          related_transactions?: string[] | null
+          resolved_at?: string | null
           risk_score: number
+          source?: Database["public"]["Enums"]["case_source"] | null
           status?: Database["public"]["Enums"]["case_status"]
           type: Database["public"]["Enums"]["case_type"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          user_name?: string | null
         }
         Update: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string
+          documents?: string[] | null
           id?: string
+          priority?: Database["public"]["Enums"]["case_priority"]
+          related_alerts?: string[] | null
+          related_transactions?: string[] | null
+          resolved_at?: string | null
           risk_score?: number
+          source?: Database["public"]["Enums"]["case_source"] | null
           status?: Database["public"]["Enums"]["case_status"]
           type?: Database["public"]["Enums"]["case_type"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          user_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "compliance_cases_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -276,7 +341,27 @@ export type Database = {
       }
     }
     Enums: {
-      case_status: "open" | "resolved" | "escalated"
+      case_action_type:
+        | "note"
+        | "status_change"
+        | "assignment"
+        | "document_request"
+        | "escalation"
+        | "resolution"
+      case_priority: "low" | "medium" | "high" | "critical"
+      case_source:
+        | "manual"
+        | "transaction_alert"
+        | "kyc_flag"
+        | "sanctions_hit"
+        | "system"
+        | "risk_assessment"
+      case_status:
+        | "open"
+        | "under_review"
+        | "escalated"
+        | "pending_info"
+        | "closed"
       case_type: "kyc" | "aml" | "sanctions"
       document_status: "pending" | "verified" | "rejected"
       document_type: "passport" | "id" | "license"
@@ -397,7 +482,30 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      case_status: ["open", "resolved", "escalated"],
+      case_action_type: [
+        "note",
+        "status_change",
+        "assignment",
+        "document_request",
+        "escalation",
+        "resolution",
+      ],
+      case_priority: ["low", "medium", "high", "critical"],
+      case_source: [
+        "manual",
+        "transaction_alert",
+        "kyc_flag",
+        "sanctions_hit",
+        "system",
+        "risk_assessment",
+      ],
+      case_status: [
+        "open",
+        "under_review",
+        "escalated",
+        "pending_info",
+        "closed",
+      ],
       case_type: ["kyc", "aml", "sanctions"],
       document_status: ["pending", "verified", "rejected"],
       document_type: ["passport", "id", "license"],

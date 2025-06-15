@@ -1,4 +1,3 @@
-
 import { ComplianceCaseDetails, CaseAction, CaseFilters, CaseSummary } from '@/types/case';
 import { User } from '@/types';
 
@@ -24,7 +23,6 @@ export interface UseComplianceCasesReturn {
   ) => Promise<boolean>;
   createCase: (caseData: Partial<ComplianceCaseDetails>) => Promise<ComplianceCaseDetails | null>;
   fetchCases: () => Promise<void>;
-  isMockMode: boolean;
 }
 
 export interface CaseServiceOperations {
