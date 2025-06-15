@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,42 +29,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setLoading(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-        if (profile) {
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profile.name,
-            role: profile.role,
-            riskScore: profile.risk_score,
-            status: profile.status,
-            avatarUrl: profile.avatar_url,
-          };
-          setUser(userData);
+          if (profile) {
+            const userData: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: profile.name,
+              role: profile.role,
+              riskScore: profile.risk_score,
+              status: profile.status,
+              avatarUrl: profile.avatar_url,
+            };
+            setUser(userData);
+          } else {
+             setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.email || 'New User',
+              role: 'support',
+              riskScore: 0,
+              status: 'pending'
+            });
+            console.warn("User is logged in but profile data not found.");
+          }
+          setSession(session);
         } else {
-           setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.email || 'New User',
-            role: 'support',
-            riskScore: 0,
-            status: 'pending'
-          });
-          console.warn("User is logged in but profile data not found.");
+          setUser(null);
+          setSession(null);
         }
-        setSession(session);
-      } else {
+      } catch (error) {
+        console.error("Error in onAuthStateChange:", error);
         setUser(null);
         setSession(null);
+      } finally {
+        setLoading(false);
+        setAuthLoaded(true);
       }
-      setLoading(false);
-      setAuthLoaded(true);
     });
 
     return () => {

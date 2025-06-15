@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -23,22 +22,18 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    try {
-      await login(email, password);
+    const user = await login(email, password);
+
+    setLoading(false);
+
+    if (user) {
       toast({
         title: 'Login successful',
         description: 'Welcome to Regulynx',
       });
       navigate('/dashboard');
-    } catch (err) {
-      setError('Invalid email or password');
-      toast({
-        variant: 'destructive',
-        title: 'Authentication failed',
-        description: 'Please check your credentials and try again.',
-      });
-    } finally {
-      setLoading(false);
+    } else {
+      setError('Invalid email or password. Please check your credentials and try again.');
     }
   };
 
