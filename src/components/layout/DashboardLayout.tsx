@@ -34,7 +34,7 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
 
   return (
     <>
-      <ShadcnSidebar>
+      <ShadcnSidebar collapsible="icon">
         <LayoutSidebar />
       </ShadcnSidebar>
       <div className="flex flex-col flex-1 min-w-0">
@@ -50,7 +50,7 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
 const DashboardLayout = (props: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background overflow-hidden">
+      <div className="flex w-full h-screen bg-background overflow-hidden">
         <DashboardLayoutContent {...props} />
       </div>
     </SidebarProvider>
