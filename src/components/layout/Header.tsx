@@ -19,6 +19,10 @@ import NotificationBell from './NotificationBell';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { User } from '@/types';
+import { ComplianceCaseDetails as Case } from '@/types/case';
+import { Document } from '@/types';
+import { Transaction } from '@/types/transaction';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -119,9 +123,9 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
                 
                 {results.users.length > 0 && (
                   <CommandGroup heading="Users">
-                    {results.users.slice(0, 3).map((u: any) => (
+                    {results.users.slice(0, 3).map((u: User) => (
                       <CommandItem key={u.id} onSelect={() => handleSelect(`/user-case/${u.id}`)}>
-                        <span>{u.fullName} ({u.email})</span>
+                        <span>{u.name} ({u.email})</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -129,9 +133,9 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
 
                 {results.cases.length > 0 && (
                   <CommandGroup heading="Cases">
-                    {results.cases.slice(0, 3).map(c => (
-                      <CommandItem key={c.caseId} onSelect={() => handleSelect(`/compliance-cases/${c.caseId}`)}>
-                        <span>{c.subject}</span>
+                    {results.cases.slice(0, 3).map((c: Case) => (
+                      <CommandItem key={c.id} onSelect={() => handleSelect(`/compliance-cases/${c.id}`)}>
+                        <span>{c.description.substring(0, 50)}{c.description.length > 50 ? '...' : ''}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -139,9 +143,9 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
                 
                 {results.documents.length > 0 && (
                   <CommandGroup heading="Documents">
-                    {results.documents.slice(0, 3).map(doc => (
+                    {results.documents.slice(0, 3).map((doc: Document) => (
                       <CommandItem key={doc.id} onSelect={() => handleSelect('/documents')}>
-                        <span>{doc.name}</span>
+                        <span>{(doc as any).fileName}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -149,9 +153,9 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
                 
                 {results.transactions.length > 0 && (
                   <CommandGroup heading="Transactions">
-                    {results.transactions.slice(0, 3).map(t => (
+                    {results.transactions.slice(0, 3).map((t: Transaction) => (
                       <CommandItem key={t.id} onSelect={() => handleSelect('/transactions')}>
-                        <span>{t.id.substring(0,8)}... - {t.party} - {t.amount} {t.currency}</span>
+                        <span>{t.id.substring(0,8)}... - {(t as any).party} - {t.amount} {t.currency}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
