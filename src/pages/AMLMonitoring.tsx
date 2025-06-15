@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +7,8 @@ import AMLMetricsCards from '@/components/aml/AMLMetricsCards';
 import AMLFiltersSection from '@/components/aml/AMLFiltersSection';
 import AMLTransactionTableSection from '@/components/aml/AMLTransactionTableSection';
 import { useAMLData } from '@/hooks/useAMLData';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const AMLMonitoring = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -53,10 +54,20 @@ const AMLMonitoring = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            {/* Filters and Search */}
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search transactions..."
+                className="pl-8 w-full sm:w-[300px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Filters and Export */}
             <AMLFiltersSection
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
               filters={filters}
               onFilterChange={setFilters}
               filteredTransactionsCount={filteredTransactions.length}
