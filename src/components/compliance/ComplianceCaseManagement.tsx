@@ -6,28 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -35,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Flag, Eye, FilePenLine, Shield, Clock, AlertTriangle, Upload } from 'lucide-react';
+import CasesTable from './components/CasesTable';
+import CaseDetailsCard from './components/CaseDetailsCard';
 
 // Mock compliance case data
 const initialCases = [
@@ -161,9 +140,7 @@ const ComplianceCaseManagement = () => {
   const [cases, setCases] = useState(initialCases);
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [newNote, setNewNote] = useState('');
   const [uploadedEvidence, setUploadedEvidence] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Filter cases based on status
@@ -177,8 +154,8 @@ const ComplianceCaseManagement = () => {
   };
 
   // Handle adding a note
-  const handleAddNote = () => {
-    if (!newNote || !selectedCase) return;
+  const handleAddNote = (note: string) => {
+    if (!selectedCase) return;
 
     const updatedCase = {
       ...selectedCase,
@@ -186,7 +163,7 @@ const ComplianceCaseManagement = () => {
         ...selectedCase.history,
         {
           date: new Date().toISOString(),
-          action: `Note added: ${newNote}`,
+          action: `Note added: ${note}`,
           by: 'Alex Nordström' // Current user mock
         }
       ]
@@ -194,7 +171,6 @@ const ComplianceCaseManagement = () => {
 
     setCases(prev => prev.map(c => c.id === updatedCase.id ? updatedCase : c));
     setSelectedCase(updatedCase);
-    setNewNote('');
 
     toast({
       title: "Note added",
@@ -249,7 +225,6 @@ const ComplianceCaseManagement = () => {
 
     setCases(prev => prev.map(c => c.id === updatedCase.id ? updatedCase : c));
     setSelectedCase(updatedCase);
-    setDialogOpen(false);
 
     toast({
       title: "Status updated",
@@ -286,34 +261,6 @@ const ComplianceCaseManagement = () => {
     });
   };
 
-  // Helper function to get status badge color
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'open':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Open</Badge>;
-      case 'under-review':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Under Review</Badge>;
-      case 'closed':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Closed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  // Helper function to get case type icon
-  const getCaseTypeIcon = (type: string) => {
-    switch (type) {
-      case 'kyc':
-        return <FilePenLine className="h-4 w-4 text-blue-500" />;
-      case 'aml':
-        return <Flag className="h-4 w-4 text-red-500" />;
-      case 'sanctions':
-        return <Shield className="h-4 w-4 text-orange-500" />;
-      default:
-        return <AlertTriangle className="h-4 w-4" />;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -340,204 +287,21 @@ const ComplianceCaseManagement = () => {
             </div>
           </div>
 
-          {/* Cases Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Case</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-center">Risk Score</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCases.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center">No cases found</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCases.map((caseItem) => (
-                    <TableRow 
-                      key={caseItem.id}
-                      onClick={() => handleCaseClick(caseItem)}
-                      className="cursor-pointer hover:bg-gray-50"
-                    >
-                      <TableCell>
-                        <div className="font-medium">#{caseItem.id}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {caseItem.description}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          {getCaseTypeIcon(caseItem.type)}
-                          <span className="ml-2 capitalize">{caseItem.type}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{caseItem.userName}</TableCell>
-                      <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                      <TableCell>{new Date(caseItem.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-center">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            caseItem.riskScore > 70
-                              ? "bg-red-100 text-red-800"
-                              : caseItem.riskScore > 30
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {caseItem.riskScore}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <CasesTable cases={filteredCases} onCaseClick={handleCaseClick} />
         </CardContent>
       </Card>
 
       {/* Selected Case Details */}
       {selectedCase && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>
-                  Case #{selectedCase.id} - {selectedCase.userName}
-                </CardTitle>
-                <CardDescription>
-                  {new Date(selectedCase.createdAt).toLocaleString()} | Assigned to: {selectedCase.assignedTo}
-                </CardDescription>
-              </div>
-              <div className="flex items-center space-x-2">
-                {getStatusBadge(selectedCase.status)}
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                    selectedCase.riskScore > 70
-                      ? "bg-red-100 text-red-800"
-                      : selectedCase.riskScore > 30
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-green-100 text-green-800"
-                  }`}
-                >
-                  Risk: {selectedCase.riskScore}
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-sm font-medium mb-2">Description</h3>
-              <p className="text-sm">{selectedCase.description}</p>
-            </div>
-
-            {/* Case History Timeline */}
-            <div>
-              <h3 className="text-sm font-medium mb-2">Case History</h3>
-              <div className="space-y-3">
-                {selectedCase.history.map((item: any, index: number) => (
-                  <div key={index} className="flex">
-                    <div className="mr-4 flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mt-1"></div>
-                      <div className="h-full w-0.5 bg-gray-200 ml-1"></div>
-                    </div>
-                    <div className="pb-4">
-                      <div className="text-sm">{item.action}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(item.date).toLocaleString()} by {item.by}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Add Note Form */}
-            <div>
-              <h3 className="text-sm font-medium mb-2">Add Note</h3>
-              <div className="flex space-x-2">
-                <Textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Enter case note..."
-                  className="flex-1"
-                />
-                <Button onClick={handleAddNote}>Add Note</Button>
-              </div>
-            </div>
-
-            {/* Upload Evidence */}
-            <div>
-              <h3 className="text-sm font-medium mb-2">Upload Supporting Evidence</h3>
-              <div className="flex items-center space-x-2">
-                <Input type="file" className="flex-1" />
-                <Button onClick={handleEvidenceUpload}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                </Button>
-              </div>
-              {uploadedEvidence && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Uploaded: {uploadedEvidence}
-                </div>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <div>
-              <Select onValueChange={handleAssignCase}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Assign to..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {complianceOfficers.map((officer) => (
-                    <SelectItem key={officer.id} value={officer.id}>
-                      {officer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex space-x-2">
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>Change Status</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Update Case Status</DialogTitle>
-                    <DialogDescription>
-                      Select a new status for this case
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <Select onValueChange={handleStatusChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select new status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="under-review">Under Review</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardFooter>
-        </Card>
+        <CaseDetailsCard
+          selectedCase={selectedCase}
+          complianceOfficers={complianceOfficers}
+          onStatusChange={handleStatusChange}
+          onAssignCase={handleAssignCase}
+          onAddNote={handleAddNote}
+          onUploadEvidence={handleEvidenceUpload}
+          uploadedEvidence={uploadedEvidence}
+        />
       )}
     </div>
   );
