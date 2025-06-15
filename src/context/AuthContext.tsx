@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
+import { toast } from 'sonner';
 
 export type { User, UserRole };
 
@@ -10,26 +11,15 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   authLoaded: boolean;
-  login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
-  signup: (email: string, password: string, role: UserRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<User | null>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, role: UserRole, name?: string) => Promise<void>;
   isAuthenticated: boolean;
   canAccess: (requiredRoles: UserRole[]) => boolean;
   session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-// Mock user for testing
-const MOCK_USER: User = {
-  id: 'mock-user-123',
-  email: 'compliance@regulynx.com',
-  role: 'complianceOfficer',
-  name: 'Mock Compliance Officer',
-  avatarUrl: undefined,
-  riskScore: 25,
-  status: 'verified',
-};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,91 +28,122 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
-    // Simulate authentication initialization with mock user
-    const initializeMockAuth = () => {
-      console.log('Initializing mock authentication...');
-      
-      // Set mock user as authenticated
-      setUser(MOCK_USER);
-      
-      // Create a mock session object
-      const mockSession = {
-        access_token: 'mock-access-token',
-        refresh_token: 'mock-refresh-token',
-        expires_in: 3600,
-        expires_at: Date.now() + 3600000,
-        token_type: 'bearer',
-        user: {
-          id: MOCK_USER.id,
-          email: MOCK_USER.email,
-          aud: 'authenticated',
-          role: 'authenticated',
-          app_metadata: {},
-          user_metadata: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+    setLoading(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: profile.name,
+            role: profile.role,
+            riskScore: profile.risk_score,
+            status: profile.status,
+            avatarUrl: profile.avatar_url,
+          };
+          setUser(userData);
+        } else {
+           setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.email || 'New User',
+            role: 'support',
+            riskScore: 0,
+            status: 'pending'
+          });
+          console.warn("User is logged in but profile data not found.");
         }
-      } as Session;
-      
-      setSession(mockSession);
+        setSession(session);
+      } else {
+        setUser(null);
+        setSession(null);
+      }
       setLoading(false);
       setAuthLoaded(true);
-      
-      console.log('Mock authentication initialized with user:', MOCK_USER);
-    };
+    });
 
-    // Initialize after a short delay to simulate real auth
-    const timer = setTimeout(initializeMockAuth, 100);
-    
-    return () => clearTimeout(timer);
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string): Promise<User> => {
-    console.log('Mock login attempt for:', email);
-    
-    // Simulate login delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Always return the mock user for any login attempt
-    setUser(MOCK_USER);
-    
-    const mockSession = {
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
-      expires_in: 3600,
-      expires_at: Date.now() + 3600000,
-      token_type: 'bearer',
-      user: {
-        id: MOCK_USER.id,
-        email: MOCK_USER.email,
-        aud: 'authenticated',
-        role: 'authenticated',
-        app_metadata: {},
-        user_metadata: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+  const login = async (email: string, password: string): Promise<User | null> => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile) {
+          const userData: User = {
+            id: data.user.id,
+            email: data.user.email || '',
+            name: profile.name,
+            role: profile.role,
+            riskScore: profile.risk_score,
+            status: profile.status,
+            avatarUrl: profile.avatar_url,
+          };
+          return userData;
+        }
       }
-    } as Session;
-    
-    setSession(mockSession);
-    
-    return MOCK_USER;
+      return null;
+    } catch (error: any) {
+      toast.error(error.message);
+      console.error('Login error:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signup = async (email: string, password: string, role: UserRole): Promise<void> => {
-    console.log('Mock signup attempt for:', email, 'with role:', role);
-    
-    // Simulate signup delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // For mock, just simulate successful signup
-    // In real implementation, this would create a new user
+  const signup = async (email: string, password: string, role: UserRole, name?: string): Promise<void> => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role,
+            ...(name && { name }),
+          }
+        }
+      });
+      if (error) throw error;
+      toast.success('Signup successful! Please check your email to verify your account.');
+    } catch (error: any) {
+      toast.error(error.message);
+      console.error('Signup error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
-    console.log('Mock logout');
-    setUser(null);
-    setSession(null);
+    setLoading(true);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message);
+      console.error('Logout error:', error);
+    }
+    // onAuthStateChange will handle setting user/session to null
+    setLoading(false);
   };
 
   const canAccess = (requiredRoles: UserRole[]): boolean => {
@@ -156,4 +177,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
