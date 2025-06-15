@@ -1,26 +1,52 @@
+
 import { useState, useEffect } from 'react';
 import { NewsItem, RSSFeed } from '@/types/news';
+import { handleAPIError, withRetry } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const useNewsData = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [rssFeeds, setRssFeeds] = useState<RSSFeed[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading delay
-    const timer = setTimeout(() => {
-      setNewsItems(mockNewsItems);
-      setRssFeeds(mockRssFeeds);
-      setLoading(false);
-    }, 1000);
+    const loadNewsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Simulate API call with retry logic
+        await withRetry(async () => {
+          // In production, this would be actual API calls
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          setNewsItems(mockNewsItems);
+          setRssFeeds(mockRssFeeds);
+        }, 3, 1000);
+        
+      } catch (err) {
+        const error = handleAPIError(err, 'loading news data');
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    loadNewsData();
   }, []);
+
+  const refetch = async () => {
+    setError(null);
+    await loadNewsData();
+  };
 
   return {
     newsItems,
     rssFeeds,
     loading,
+    error,
+    refetch,
   };
 };
 
