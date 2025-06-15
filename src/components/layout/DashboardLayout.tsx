@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import Sidebar from './Sidebar';
+import LayoutSidebar from './Sidebar';
 import Header from './Header';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar, Sidebar as ShadcnSidebar } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,7 +15,6 @@ interface DashboardLayoutProps {
 const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayoutProps) => {
   const { isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { state, toggleSidebar } = useSidebar();
 
   const sidebarOpen = state === 'expanded';
@@ -35,45 +33,26 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar with improved responsive behavior */}
-      <div
-        className={`${
-          isMobile
-            ? `fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
-                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-              }`
-            : `relative transition-all duration-300 ease-in-out ${
-                sidebarOpen ? 'w-64' : 'w-20' // Adjusted collapsed width for better icon display
-              }`
-        }`}
-      >
-        <Sidebar />
-      </div>
-
-      {/* Mobile overlay */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
-
-      {/* Main content area with improved layout */}
-      <div className={`flex flex-col flex-1 w-full min-w-0 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
+    <>
+      <ShadcnSidebar>
+        <LayoutSidebar />
+      </ShadcnSidebar>
+      <div className="flex flex-col flex-1 min-w-0">
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className="flex-1 overflow-y-auto bg-background">
           <div className="h-full p-6">{children}</div>
         </main>
       </div>
-    </div>
+    </>
   );
 };
 
 const DashboardLayout = (props: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
-      <DashboardLayoutContent {...props} />
+      <div className="flex h-screen bg-background overflow-hidden">
+        <DashboardLayoutContent {...props} />
+      </div>
     </SidebarProvider>
   );
 };
