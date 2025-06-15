@@ -1,4 +1,3 @@
-
 # Deployment Guides
 
 This document provides deployment guides for various platforms.
@@ -29,19 +28,23 @@ This project includes a `Dockerfile` and `nginx.conf` for creating a production-
 
 ### Building the Image
 
-To build the Docker image, use the `docker build` command. You can pass environment variables required by the application at build time using `--build-arg`.
+To build the Docker image, use the `docker build` command. You can pass environment variables required by the application at build time using `--build-arg`. All variables defined in `src/config/environment.ts` can be configured this way.
 
-**Example Build Command:**
+**Example Production Build Command:**
 ```bash
 docker build -t your-app-name . \
-  --build-arg VITE_APP_NAME="Compliance Management System" \
+  --build-arg VITE_ENVIRONMENT="production" \
+  --build-arg VITE_APP_NAME="My Compliance App" \
   --build-arg VITE_APP_DOMAIN="app.example.com" \
   --build-arg VITE_SUPPORT_EMAIL="support@example.com" \
-  --build-arg VITE_SUPABASE_URL="https://your-supabase-url.supabase.co" \
-  --build-arg VITE_SUPABASE_ANON_KEY="your-supabase-anon-key"
+  --build-arg VITE_SUPABASE_URL="https://<your-project-ref>.supabase.co" \
+  --build-arg VITE_SUPABASE_ANON_KEY="<your-supabase-anon-key>" \
+  --build-arg VITE_LOG_LEVEL="error" \
+  --build-arg VITE_DEBUG_MODE="false" \
+  --build-arg VITE_ENABLE_ERROR_REPORTING="true"
 ```
 
-Refer to the `Dockerfile` and `src/config/environment.ts` for all available build arguments.
+Refer to the `Dockerfile` and `docs/environment-variables.md` for a complete list of all available build arguments.
 
 ### Running the Container
 

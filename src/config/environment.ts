@@ -1,4 +1,3 @@
-
 // Helper function to read development overrides from localStorage
 function getLocalStorageOverride<T>(key: string, defaultValue: T): T {
   // Ensure localStorage is available
@@ -33,8 +32,8 @@ export const config = {
   
   // Supabase Configuration
   supabase: {
-    url: 'https://mqsouubnefdyjyaxjcwr.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU'
+    url: import.meta.env.VITE_SUPABASE_URL || 'https://mqsouubnefdyjyaxjcwr.supabase.co',
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU'
   },
   
   // App Configuration
