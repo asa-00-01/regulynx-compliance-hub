@@ -1,73 +1,128 @@
-# Welcome to your Lovable project
 
-## Project info
+# Welcome to Regulynx - Your Compliance Management System
 
 **URL**: https://lovable.dev/projects/d23357aa-9dfa-4716-8772-f29155c8dd81
 
-## How can I edit this code?
+This project is a comprehensive Compliance Management System designed to help organizations manage KYC/AML processes, monitor transactions, analyze risks, and ensure regulatory compliance.
 
-There are several ways of editing your application.
+## Table of Contents
 
-**Use Lovable**
+- [Project Overview](#project-overview)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Directory Structure](#directory-structure)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [Deployment](#deployment)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d23357aa-9dfa-4716-8772-f29155c8dd81) and start prompting.
+## Project Overview
 
-Changes made via Lovable will be committed automatically to this repo.
+Regulynx is a modern, AI-powered web application for compliance professionals. It provides tools for:
+-   **Know Your Customer (KYC)**: Verifying customer identities and assessing risk.
+-   **Anti-Money Laundering (AML)**: Monitoring transactions for suspicious activity.
+-   **Risk Management**: Using a configurable rule engine to score users and transactions.
+-   **Case Management**: Tracking and managing compliance cases.
+-   **Reporting**: Generating Suspicious Activity Reports (SARs).
 
-**Use your preferred IDE**
+## Key Features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+-   **Dashboard**: A central overview of key compliance metrics.
+-   **AI Agent**: An AI-powered assistant to help with compliance queries.
+-   **News Feed**: Stays up-to-date with relevant compliance news.
+-   **KYC Verification**: A dedicated module for managing user verification processes.
+-   **Transaction Monitoring**: Real-time monitoring and analysis of transactions.
+-   **Risk Analysis**: Advanced tools for risk scoring and pattern detection.
+-   **Compliance Case Management**: A system for creating, assigning, and resolving cases.
+-   **User Management**: Tools for administrators to manage system users.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Architecture
 
-Follow these steps:
+The application follows a modern web architecture, separating frontend and backend concerns.
+
+### Frontend
+
+-   **Framework**: [React](https://reactjs.org/) with [Vite](https://vitejs.dev/) for a fast development experience.
+-   **Language**: [TypeScript](https://www.typescriptlang.org/) for type safety.
+-   **UI Components**: Built with [shadcn/ui](https://ui.shadcn.com/), a collection of re-usable components.
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/) for a utility-first CSS approach.
+-   **Routing**: [React Router](https://reactrouter.com/) for client-side navigation.
+-   **State Management**: [React Context](https://reactjs.org/docs/context.html) for global state (like authentication) and [TanStack Query](https://tanstack.com/query) for managing server state, caching, and data fetching.
+
+### Backend (via Supabase)
+
+-   **Database**: [Supabase](https://supabase.com/) provides a PostgreSQL database for data persistence.
+-   **Authentication**: Supabase Auth handles user authentication and management.
+-   **APIs**: Business logic is encapsulated in services (`src/services`) that interact with the Supabase database.
+-   **Edge Functions**: Serverless functions can be used for custom backend logic that needs to run on the server.
+
+## Directory Structure
+
+The project is organized to promote separation of concerns and maintainability.
+
+```
+/
+├── public/              # Static assets
+├── src/
+│   ├── components/      # Reusable React components (UI, layout, features)
+│   ├── config/          # Application configuration (e.g., environment variables)
+│   ├── context/         # React context providers (e.g., Auth, Compliance)
+│   ├── hooks/           # Custom React hooks
+│   ├── i18n/            # Internationalization (i18n) files
+│   ├── integrations/    # Third-party integrations (e.g., Supabase client)
+│   ├── lib/             # Utility functions and libraries
+│   ├── pages/           # Top-level page components for each route
+│   ├── services/        # Business logic, API calls, data transformation
+│   ├── types/           # TypeScript type definitions
+│   └── main.tsx         # Main application entry point
+├── supabase/            # Supabase migrations and configuration
+└── README.md            # This file
+```
+
+## Getting Started
+
+### Prerequisites
+
+-   [Node.js](https://nodejs.org/) and npm
+-   An account with [Lovable](https://lovable.dev) to interact with the AI editor.
+
+### Local Development
+
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository.
 git clone <YOUR_GIT_URL>
 
 # Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies.
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Start the development server.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Configuration
 
-**Use GitHub Codespaces**
+The application's configuration is managed in `src/config/environment.ts`. This file reads from Vite environment variables (`.env` files).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+For detailed production deployment configuration, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-## What technologies are used for this project?
+## Testing
 
-This project is built with:
+This project uses [Vitest](https://vitest.dev/) for unit and component testing, along with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+-   Test files are co-located with the source files they are testing (e.g., `MyComponent.test.tsx`).
+-   To run all tests, use the command: `npm test`
+-   To run tests in watch mode: `npm run test:watch`
+-   To see a UI for test results: `npm run test:ui`
 
-## How can I deploy this project?
+## Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/d23357aa-9dfa-4716-8772-f29155c8dd81) and click on Share -> Publish.
+This project can be deployed through the Lovable platform. Click on **Share -> Publish** in the Lovable editor.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For instructions on deploying to other platforms like Vercel, Netlify, or using Docker, please refer to the [DEPLOYMENT.md](./DEPLOYMENT.md) file.
