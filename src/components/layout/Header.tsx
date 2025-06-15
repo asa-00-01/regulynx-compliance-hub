@@ -89,8 +89,8 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
         </TooltipHelp>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <TooltipHelp content="Access your profile, settings, and account options">
+          <TooltipHelp content="Access your profile, settings, and account options">
+            <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={user?.avatarUrl} alt={user?.name} />
@@ -99,8 +99,8 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
                   </AvatarFallback>
                 </Avatar>
               </Button>
-            </TooltipHelp>
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </TooltipHelp>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
