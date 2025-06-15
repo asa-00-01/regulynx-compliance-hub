@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, Users, Filter, Download, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import KYCDashboardSummary from './KYCDashboardSummary';
 import KYCUserTable from './KYCUserTable';
@@ -18,6 +19,7 @@ import { mockUsers } from './mockKycData';
 
 const EnhancedKYCVerificationPage: React.FC = () => {
   const [activeMainTab, setActiveMainTab] = useState('users');
+  const { t } = useTranslation();
   
   const {
     activeTab,
@@ -57,9 +59,9 @@ const EnhancedKYCVerificationPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">KYC Verification Center</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('kyc.title')}</h1>
         <p className="text-muted-foreground">
-          Enhanced user identity verification and compliance monitoring
+          {t('kyc.subtitle')}
         </p>
       </div>
 
@@ -69,18 +71,18 @@ const EnhancedKYCVerificationPage: React.FC = () => {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            User Management
+            {t('kyc.userManagement')}
           </TabsTrigger>
           <TabsTrigger value="advanced" className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Advanced Filtering
+            {t('kyc.advancedFiltering')}
             {activeFiltersCount > 0 && (
               <Badge variant="secondary" className="ml-1">{activeFiltersCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Analytics
+            {t('kyc.analytics')}
           </TabsTrigger>
         </TabsList>
 
@@ -141,18 +143,18 @@ const EnhancedKYCVerificationPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Filtered Results</span>
+                <span>{t('kyc.advanced.filteredResults')}</span>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={toggleAllUsers}
                   >
-                    {selectedUsers.length === filteredUsers.length ? 'Deselect All' : 'Select All'}
+                    {selectedUsers.length === filteredUsers.length ? t('kyc.advanced.deselectAll') : t('kyc.advanced.selectAll')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={exportData}>
                     <Download className="h-4 w-4 mr-2" />
-                    Export
+                    {t('kyc.advanced.export')}
                   </Button>
                 </div>
               </CardTitle>

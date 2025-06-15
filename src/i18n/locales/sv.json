@@ -1,4 +1,3 @@
-
 {
   "navigation": {
     "dashboard": "Instrumentpanel",
@@ -109,6 +108,31 @@
     "nationality": "Nationalitet",
     "expiryDate": "Utgångsdatum",
     "notAvailable": "Ej tillgänglig"
+  },
+  "kyc": {
+    "title": "KYC-verifieringscenter",
+    "subtitle": "Förbättrad verifiering av användaridentitet och övervakning av regelefterlevnad",
+    "userManagement": "Användarhantering",
+    "advancedFiltering": "Avancerad filtrering",
+    "analytics": "Analyser",
+    "tabs": {
+      "allUsers": "Alla användare",
+      "pepUsers": "PEP-användare",
+      "sanctioned": "Sanktionerade",
+      "highRisk": "Högrisk",
+      "incompleteKyc": "Ofullständig KYC",
+      "flagged": "Flaggade"
+    },
+    "table": {
+      "title": "Användarverifiering",
+      "userCount": "{{count}} användare"
+    },
+    "advanced": {
+      "filteredResults": "Filtrerade resultat",
+      "deselectAll": "Avmarkera alla",
+      "selectAll": "Markera alla",
+      "export": "Exportera"
+    }
   },
   "compliance": {
     "addNote": "Lägg till anteckning",

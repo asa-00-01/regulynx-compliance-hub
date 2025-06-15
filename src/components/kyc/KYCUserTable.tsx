@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UserVerificationTable from '@/components/kyc/UserVerificationTable';
 import { KYCUser, UserFlags } from '@/types/kyc';
 import { UserRiskData } from '@/hooks/useRiskCalculation';
+import { useTranslation } from 'react-i18next';
 
 interface KYCUserTableProps {
   users: (KYCUser & { flags: UserFlags })[];
@@ -24,14 +25,15 @@ const KYCUserTable: React.FC<KYCUserTableProps> = ({
   flaggedUsers,
   onFlagUser
 }) => {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
-          User Verification
+          {t('kyc.table.title')}
           {!isLoading && (
             <span className="text-xs text-muted-foreground ml-2">
-              {users.length} user{users.length === 1 ? '' : 's'}
+              {t('kyc.table.userCount', { count: users.length })}
             </span>
           )}
         </CardTitle>

@@ -1,4 +1,3 @@
-
 {
   "navigation": {
     "dashboard": "Dashboard",
@@ -109,6 +108,32 @@
     "nationality": "Nationality",
     "expiryDate": "Expiry Date",
     "notAvailable": "Not available"
+  },
+  "kyc": {
+    "title": "KYC Verification Center",
+    "subtitle": "Enhanced user identity verification and compliance monitoring",
+    "userManagement": "User Management",
+    "advancedFiltering": "Advanced Filtering",
+    "analytics": "Analytics",
+    "tabs": {
+      "allUsers": "All Users",
+      "pepUsers": "PEP Users",
+      "sanctioned": "Sanctioned",
+      "highRisk": "High Risk",
+      "incompleteKyc": "Incomplete KYC",
+      "flagged": "Flagged"
+    },
+    "table": {
+      "title": "User Verification",
+      "userCount": "{{count}} user",
+      "userCount_plural": "{{count}} users"
+    },
+    "advanced": {
+      "filteredResults": "Filtered Results",
+      "deselectAll": "Deselect All",
+      "selectAll": "Select All",
+      "export": "Export"
+    }
   },
   "compliance": {
     "addNote": "Add Note",
