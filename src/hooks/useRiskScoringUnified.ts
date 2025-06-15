@@ -1,23 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { evaluateTransactionRisk, evaluateUserRisk, getRiskMatchesForEntity } from '@/services/riskScoringService';
+import { evaluateTransactionRisk, evaluateUserRisk, getRiskMatchesForEntity } from '@/services/risk';
 import { AMLTransaction } from '@/types/aml';
 import { UnifiedUserData } from '@/context/compliance/types';
-
-interface RiskMatch {
-  rule_id: string;
-  rule_name: string;
-  risk_score: number;
-  category: string;
-  description: string;
-  match_data?: any;
-}
-
-interface RiskAssessmentResult {
-  total_risk_score: number;
-  matched_rules: RiskMatch[];
-  rule_categories: string[];
-}
+import { RiskAssessmentResult } from '@/types/risk';
 
 // This is the unified hook that should be used for both transactions and users
 export function useRiskScoringUnified(entity: AMLTransaction | UnifiedUserData | null) {
