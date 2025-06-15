@@ -8,15 +8,20 @@ import { format } from 'date-fns';
 
 interface MatchesListProps {
   matches: PatternMatch[];
-  onCreateAlert: (matchId: string) => void;
-  onCreateSAR: (matchId: string) => void;
+  onCreateAlert: (match: PatternMatch) => void;
+  onCreateSAR: (match: PatternMatch) => void;
+  isLoading?: boolean;
 }
 
-const MatchesList: React.FC<MatchesListProps> = ({ matches, onCreateAlert, onCreateSAR }) => {
+const MatchesList: React.FC<MatchesListProps> = ({ matches, onCreateAlert, onCreateSAR, isLoading = false }) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Matched Transactions</h3>
-      {matches.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center p-4 border rounded-md">
+          Loading matches...
+        </div>
+      ) : matches.length === 0 ? (
         <div className="text-center p-4 border rounded-md">
           No matching transactions found
         </div>
@@ -42,10 +47,10 @@ const MatchesList: React.FC<MatchesListProps> = ({ matches, onCreateAlert, onCre
                   <TableCell>{formatCurrency(match.amount, match.currency)}</TableCell>
                   <TableCell>{format(new Date(match.timestamp), 'yyyy-MM-dd HH:mm')}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => onCreateAlert(match.id)}>
+                    <Button variant="outline" size="sm" onClick={() => onCreateAlert(match)}>
                       Create Alert
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => onCreateSAR(match.id)}>
+                    <Button variant="outline" size="sm" onClick={() => onCreateSAR(match)}>
                       Link to SAR
                     </Button>
                   </TableCell>

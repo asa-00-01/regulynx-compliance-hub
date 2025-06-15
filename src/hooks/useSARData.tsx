@@ -1,136 +1,107 @@
 
-import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SARService } from '@/services/sar/SARService';
 import { SAR, Pattern, PatternMatch } from '@/types/sar';
-import { mockSARs, mockPatterns, mockPatternMatches } from '@/components/sar/mockSARData';
 import { useToast } from '@/hooks/use-toast';
 
 export function useSARData() {
-  const [sars, setSARs] = useState<SAR[]>(mockSARs);
-  const [patterns, setPatterns] = useState<Pattern[]>(mockPatterns);
-  const [patternMatches, setPatternMatches] = useState<Record<string, PatternMatch[]>>(mockPatternMatches);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Create a new SAR
-  const createSAR = (sar: Omit<SAR, 'id'>) => {
-    setLoading(true);
-    
-    // Generate mock SAR ID
-    const newId = `SAR-${new Date().getFullYear()}-${(sars.length + 1).toString().padStart(3, '0')}`;
-    
-    setTimeout(() => {
-      const newSAR: SAR = {
-        ...sar,
-        id: newId
-      };
-      
-      setSARs(prevSARs => [newSAR, ...prevSARs]);
-      setLoading(false);
-      
+  const { data: sars = [], isLoading: sarsLoading } = useQuery({
+    queryKey: ['sars'],
+    queryFn: SARService.getSARs,
+  });
+
+  const { data: patterns = [], isLoading: patternsLoading } = useQuery({
+    queryKey: ['patterns'],
+    queryFn: SARService.getPatterns,
+  });
+
+  const createSarMutation = useMutation({
+    mutationFn: SARService.createSAR,
+    onSuccess: (newSar) => {
+      queryClient.invalidateQueries({ queryKey: ['sars'] });
       toast({
-        title: `SAR ${sar.status === 'draft' ? 'Draft Saved' : 'Submitted'}`,
-        description: `SAR ${newId} has been ${sar.status === 'draft' ? 'saved as draft' : 'submitted successfully'}`,
+        title: `SAR ${newSar.status === 'draft' ? 'Draft Saved' : 'Submitted'}`,
+        description: `SAR ${newSar.id} has been ${newSar.status === 'draft' ? 'saved as draft' : 'submitted successfully'}`,
       });
-    }, 800);
-    
-    return newId;
-  };
-
-  // Update an existing SAR
-  const updateSAR = (id: string, updates: Partial<SAR>) => {
-    setLoading(true);
-    
-    setTimeout(() => {
-      setSARs(prevSARs => 
-        prevSARs.map(sar => 
-          sar.id === id ? { ...sar, ...updates } : sar
-        )
-      );
-      
-      setLoading(false);
-      
+    },
+    onError: (error) => {
       toast({
-        title: `SAR ${updates.status === 'draft' ? 'Draft Updated' : 'Updated'}`,
-        description: `SAR ${id} has been updated successfully`,
+        title: 'Error Creating SAR',
+        description: error.message,
+        variant: 'destructive',
       });
-    }, 800);
-  };
+    },
+  });
 
-  // Get pattern matches
-  const getPatternMatches = (patternId: string) => {
-    return patternMatches[patternId] || [];
-  };
+  const updateSarMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<SAR, 'id'>> }) => SARService.updateSAR(id, updates),
+    onSuccess: (updatedSar) => {
+      queryClient.invalidateQueries({ queryKey: ['sars'] });
+      toast({
+        title: `SAR ${updatedSar.status === 'draft' ? 'Draft Updated' : 'Updated'}`,
+        description: `SAR ${updatedSar.id} has been updated successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Updating SAR',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
-  // Create an alert from a pattern match
-  const createAlertFromMatch = (matchId: string) => {
-    // Find the match in pattern matches
-    let foundMatch: PatternMatch | undefined;
-    let foundPattern: Pattern | undefined;
-    
-    for (const [patternId, matches] of Object.entries(patternMatches)) {
-      const match = matches.find(m => m.id === matchId);
-      if (match) {
-        foundMatch = match;
-        foundPattern = patterns.find(p => p.id === patternId);
-        break;
-      }
+  const getPatternMatches = async (patternId: string): Promise<PatternMatch[]> => {
+    if (!patternId) return [];
+    try {
+      return await SARService.getPatternMatches(patternId);
+    } catch (error) {
+      toast({
+        title: 'Error fetching pattern matches',
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
+      return [];
     }
-    
-    if (!foundMatch || !foundPattern) return;
-    
+  };
+
+  const createAlertFromMatch = (match: PatternMatch) => {
+    const pattern = patterns.find(p => p.id === match.patternId);
     toast({
       title: "Alert Created",
-      description: `New alert created for transaction ${foundMatch.transactionId} matching pattern "${foundPattern.name}"`,
+      description: `New alert created for transaction ${match.transactionId} matching pattern "${pattern?.name}"`,
     });
   };
 
-  // Create SAR from pattern match
-  const createSARFromMatch = (matchId: string) => {
-    // Find the match in pattern matches
-    let foundMatch: PatternMatch | undefined;
-    let foundPattern: Pattern | undefined;
-    
-    for (const [patternId, matches] of Object.entries(patternMatches)) {
-      const match = matches.find(m => m.id === matchId);
-      if (match) {
-        foundMatch = match;
-        foundPattern = patterns.find(p => p.id === patternId);
-        break;
-      }
-    }
-    
-    if (!foundMatch || !foundPattern) return null;
-    
-    // Create a new SAR draft
+  const createSARFromMatch = (match: PatternMatch) => {
+    if (!match) return;
+
+    const pattern = patterns.find(p => p.id === match.patternId);
+
     const newSar: Omit<SAR, 'id'> = {
-      userId: foundMatch.userId,
-      userName: foundMatch.userName,
+      userId: match.userId,
+      userName: match.userName,
       dateSubmitted: new Date().toISOString(),
-      dateOfActivity: foundMatch.timestamp,
+      dateOfActivity: match.timestamp,
       status: 'draft',
-      summary: `Suspicious activity based on pattern: ${foundPattern.name}`,
-      transactions: [foundMatch.transactionId],
+      summary: `Suspicious activity based on pattern: ${pattern?.name || 'Unknown'}`,
+      transactions: [match.transactionId],
     };
-    
-    const sarId = createSAR(newSar);
-    
-    toast({
-      title: "SAR Draft Created",
-      description: `New SAR draft created from pattern match "${foundPattern.name}"`,
-    });
-    
-    return sarId;
+
+    createSarMutation.mutate(newSar);
   };
 
   return {
     sars,
     patterns,
-    patternMatches,
-    loading,
-    createSAR,
-    updateSAR,
+    loading: sarsLoading || patternsLoading || createSarMutation.isPending || updateSarMutation.isPending,
+    createSAR: createSarMutation.mutate,
+    updateSAR: updateSarMutation.mutate,
     getPatternMatches,
     createAlertFromMatch,
-    createSARFromMatch
+    createSARFromMatch,
   };
 }

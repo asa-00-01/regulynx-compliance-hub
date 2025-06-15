@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +8,7 @@ import SARForm from '@/components/sar/SARForm';
 import PatternCard from '@/components/sar/PatternCard';
 import MatchesList from '@/components/sar/MatchesList';
 import GoAMLReporting from '@/components/sar/GoAMLReporting';
-import { SAR } from '@/types/sar';
+import { SAR, PatternMatch } from '@/types/sar';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useMediaQuery } from '@/hooks/use-mobile';
@@ -19,16 +20,13 @@ const SARCenter = () => {
   const [selectedSARId, setSelectedSARId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
+  const [patternMatches, setPatternMatches] = useState<PatternMatch[]>([]);
+  const [isMatchesLoading, setIsMatchesLoading] = useState(false);
   
   const isDesktop = useMediaQuery("(min-width: 768px)");
   
-  // Get the currently selected SAR, if any
   const selectedSAR = selectedSARId ? sars.find(sar => sar.id === selectedSARId) : null;
   
-  // Get matches for the selected pattern
-  const patternMatches = selectedPattern ? getPatternMatches(selectedPattern) : [];
-  
-  // Handle SAR actions
   const handleViewSAR = (id: string) => {
     setSelectedSARId(id);
     setIsFormOpen(true);
@@ -41,10 +39,8 @@ const SARCenter = () => {
   
   const handleSARSubmit = (sarData: Omit<SAR, 'id'>, isDraft: boolean) => {
     if (selectedSARId) {
-      // Update existing SAR
-      updateSAR(selectedSARId, sarData);
+      updateSAR({ id: selectedSARId, updates: sarData });
     } else {
-      // Create new SAR
       createSAR(sarData);
     }
     
@@ -56,22 +52,25 @@ const SARCenter = () => {
     setSelectedSARId(null);
   };
   
-  // Handle pattern matches
-  const handleViewMatches = (patternId: string) => {
+  const handleViewMatches = async (patternId: string) => {
     setSelectedPattern(patternId);
+    setIsMatchesLoading(true);
+    const matches = await getPatternMatches(patternId);
+    setPatternMatches(matches);
+    setIsMatchesLoading(false);
   };
   
   const handleCloseMatchesDialog = () => {
     setSelectedPattern(null);
+    setPatternMatches([]);
   };
   
-  const handleCreateAlert = (matchId: string) => {
-    createAlertFromMatch(matchId);
-    setSelectedPattern(null);
+  const handleCreateAlert = (match: PatternMatch) => {
+    createAlertFromMatch(match);
   };
   
-  const handleCreateSAR = (matchId: string) => {
-    createSARFromMatch(matchId);
+  const handleCreateSAR = (match: PatternMatch) => {
+    createSARFromMatch(match);
     setSelectedPattern(null);
     setActiveTab('sar-list');
   };
@@ -171,7 +170,7 @@ const SARCenter = () => {
       </FormWrapper>
 
       {/* Pattern Matches Dialog */}
-      <Dialog open={!!selectedPattern} onOpenChange={() => setSelectedPattern(null)}>
+      <Dialog open={!!selectedPattern} onOpenChange={(isOpen) => !isOpen && handleCloseMatchesDialog()}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>
@@ -185,6 +184,7 @@ const SARCenter = () => {
             matches={patternMatches}
             onCreateAlert={handleCreateAlert}
             onCreateSAR={handleCreateSAR}
+            isLoading={isMatchesLoading}
           />
         </DialogContent>
       </Dialog>

@@ -217,6 +217,84 @@ export type Database = {
         }
         Relationships: []
       }
+      pattern_matches: {
+        Row: {
+          amount: number
+          country: string
+          created_at: string
+          currency: string
+          id: string
+          pattern_id: string
+          timestamp: string
+          transaction_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          amount: number
+          country: string
+          created_at?: string
+          currency: string
+          id?: string
+          pattern_id: string
+          timestamp: string
+          transaction_id: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          amount?: number
+          country?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          pattern_id?: string
+          timestamp?: string
+          transaction_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_matches_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patterns: {
+        Row: {
+          category: Database["public"]["Enums"]["pattern_category"]
+          created_at: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["pattern_category"]
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["pattern_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -330,6 +408,59 @@ export type Database = {
         }
         Relationships: []
       }
+      sars: {
+        Row: {
+          created_at: string
+          date_of_activity: string
+          date_submitted: string
+          documents: string[] | null
+          id: string
+          notes: string[] | null
+          status: Database["public"]["Enums"]["sar_status"]
+          summary: string
+          transactions: string[]
+          updated_at: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_activity: string
+          date_submitted: string
+          documents?: string[] | null
+          id?: string
+          notes?: string[] | null
+          status: Database["public"]["Enums"]["sar_status"]
+          summary: string
+          transactions: string[]
+          updated_at?: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          date_of_activity?: string
+          date_submitted?: string
+          documents?: string[] | null
+          id?: string
+          notes?: string[] | null
+          status?: Database["public"]["Enums"]["sar_status"]
+          summary?: string
+          transactions?: string[]
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -365,6 +496,12 @@ export type Database = {
       case_type: "kyc" | "aml" | "sanctions"
       document_status: "pending" | "verified" | "rejected"
       document_type: "passport" | "id" | "license"
+      pattern_category:
+        | "structuring"
+        | "high_risk_corridor"
+        | "time_pattern"
+        | "other"
+      sar_status: "draft" | "submitted" | "reviewed"
       user_role: "complianceOfficer" | "admin" | "executive" | "support"
       user_status: "verified" | "pending" | "flagged"
     }
@@ -509,6 +646,13 @@ export const Constants = {
       case_type: ["kyc", "aml", "sanctions"],
       document_status: ["pending", "verified", "rejected"],
       document_type: ["passport", "id", "license"],
+      pattern_category: [
+        "structuring",
+        "high_risk_corridor",
+        "time_pattern",
+        "other",
+      ],
+      sar_status: ["draft", "submitted", "reviewed"],
       user_role: ["complianceOfficer", "admin", "executive", "support"],
       user_status: ["verified", "pending", "flagged"],
     },
