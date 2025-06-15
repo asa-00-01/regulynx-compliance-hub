@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import KYCMonitoringDashboard from '@/components/compliance/KYCMonitoringDashboard';
 import RiskScoringEngine from '@/components/compliance/RiskScoringEngine';
-import ComplianceCaseManagement from '@/components/compliance/ComplianceCaseManagement';
 import RedFlagsAlerts from '@/components/compliance/RedFlagsAlerts';
 import UserActivityLogs from '@/components/compliance/UserActivityLogs';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -105,7 +103,6 @@ const Compliance = () => {
                 </Button>
               </Link>
             </div>
-            <ComplianceCaseManagement />
           </TabsContent>
           
           <TabsContent value="alerts" className="space-y-4">

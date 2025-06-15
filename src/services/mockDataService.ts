@@ -6,7 +6,6 @@ import { unifiedMockData } from '@/mocks/centralizedMockData';
 
 import { BaseMockService } from './base/BaseMockService';
 import { NewsService } from './news/NewsService';
-import { ComplianceCasesService } from './compliance/ComplianceCasesService';
 import { KYCService } from './kyc/KYCService';
 import { AMLService } from './aml/AMLService';
 import { UnifiedDataService } from './unified/UnifiedDataService';
@@ -21,15 +20,6 @@ export class MockDataService extends BaseMockService {
 
   static async getRSSFeeds(): Promise<RSSFeed[]> {
     return NewsService.getRSSFeeds();
-  }
-
-  // Compliance Cases
-  static async getComplianceCases(filters?: any): Promise<ComplianceCaseDetails[]> {
-    return ComplianceCasesService.getComplianceCases(filters);
-  }
-
-  static async createComplianceCase(caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails> {
-    return ComplianceCasesService.createComplianceCase(caseData);
   }
 
   // KYC Users
