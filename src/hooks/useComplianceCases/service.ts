@@ -1,4 +1,3 @@
-
 import { ComplianceCaseDetails, CaseAction, CaseFilters } from '@/types/case';
 import { CaseServiceOperations } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,8 @@ import {
   ComplianceCase, 
   CaseAction as SupabaseCaseAction,
   ComplianceCaseInsert,
+  CaseStatus,
+  CaseType,
 } from '@/types/supabase';
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
@@ -36,7 +37,7 @@ const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
   actionDate: a.action_date,
   actionType: a.action_type,
   description: a.description,
-  details: a.details || undefined,
+  details: a.details as Record<string, any> | undefined,
 });
 
 export const complianceCaseService: CaseServiceOperations = {
@@ -44,10 +45,10 @@ export const complianceCaseService: CaseServiceOperations = {
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
-      query = query.in('status', filters.status);
+      query = query.in('status', filters.status as CaseStatus[]);
     }
     if (filters.type && filters.type.length > 0) {
-      query = query.in('type', filters.type);
+      query = query.in('type', filters.type as CaseType[]);
     }
     if (filters.priority && filters.priority.length > 0) {
       query = query.in('priority', filters.priority);
@@ -126,7 +127,7 @@ export const complianceCaseService: CaseServiceOperations = {
         actionDate: a.action_date,
         actionType: a.action_type,
         description: a.description,
-        details: a.details,
+        details: a.details as Record<string, any> | undefined,
       })) 
       : [];
   }

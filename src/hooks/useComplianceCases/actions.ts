@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -41,7 +40,7 @@ export const useCaseActions = (
         actionDate: data.action_date,
         actionType: data.action_type,
         description: data.description,
-        details: data.details,
+        details: data.details as Record<string, any> | undefined,
       };
 
       setCaseActions(prev => {
@@ -114,7 +113,7 @@ export const useCaseActions = (
         actionDate: data.action_date,
         actionType: data.action_type,
         description: data.description,
-        details: data.details,
+        details: data.details as Record<string, any> | undefined,
       };
       
       setCaseActions(prev => {
@@ -191,7 +190,7 @@ export const useCaseActions = (
         actionDate: data.action_date,
         actionType: data.action_type,
         description: data.description,
-        details: data.details,
+        details: data.details as Record<string, any> | undefined,
       };
 
       setCaseActions(prev => {
