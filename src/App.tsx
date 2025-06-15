@@ -28,12 +28,25 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import ToastProvider from '@/components/common/ToastProvider';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Suspense } from 'react';
+import React from 'react';
+import { validateEnvironmentConfig } from '@/config/environment';
 
 function App() {
   const { authLoaded, isAuthenticated, loading } = useAuth();
   const { t } = useTranslation();
 
   console.log('App render - authLoaded:', authLoaded, 'isAuthenticated:', isAuthenticated, 'loading:', loading);
+
+  // Validate environment configuration on app startup
+  React.useEffect(() => {
+    const { isValid, errors } = validateEnvironmentConfig();
+    if (!isValid) {
+      console.error('Environment configuration errors:', errors);
+      errors.forEach(error => console.error(`❌ ${error}`));
+    } else {
+      console.log('✅ Environment configuration is valid');
+    }
+  }, []);
 
   if (!authLoaded || loading) {
     return (
