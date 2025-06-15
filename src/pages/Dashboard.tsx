@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { AlertCircle, Clock, FileText } from 'lucide-react';
@@ -90,14 +89,22 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold text-foreground">Risk Analysis</h2>
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
               <div className="xl:col-span-2">
-                <RiskScoreChart data={riskScoreData} loading={loading} />
+                {loading ? (
+                  <div className="animate-pulse"><div className="h-80 bg-muted rounded-lg border"></div></div>
+                ) : (
+                  <RiskScoreChart data={riskScoreData} loading={loading} />
+                )}
               </div>
               <div className="xl:col-span-1">
-                <ComplianceCasesCard 
-                  complianceCases={complianceCases} 
-                  loading={loading} 
-                  currentUser={user} 
-                />
+                {loading ? (
+                  <div className="animate-pulse"><div className="h-80 bg-muted rounded-lg border"></div></div>
+                ) : (
+                  <ComplianceCasesCard 
+                    complianceCases={complianceCases} 
+                    loading={loading} 
+                    currentUser={user} 
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -107,11 +114,24 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold text-foreground">Recent Activity & Compliance</h2>
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
               <div className="xl:col-span-2">
-                <RecentDocumentsTable documents={recentDocuments} loading={loading} />
+                {loading ? (
+                  <div className="animate-pulse"><div className="h-96 bg-muted rounded-lg border"></div></div>
+                ) : (
+                  <RecentDocumentsTable documents={recentDocuments} loading={loading} />
+                )}
               </div>
               <div className="xl:col-span-1 space-y-6">
-                <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
-                <RiskDistributionChart data={mockRiskDistribution} loading={loading} />
+                {loading ? (
+                  <>
+                    <div className="animate-pulse"><div className="h-48 bg-muted rounded-lg border"></div></div>
+                    <div className="animate-pulse"><div className="h-64 bg-muted rounded-lg border"></div></div>
+                  </>
+                ) : (
+                  <>
+                    <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
+                    <RiskDistributionChart data={mockRiskDistribution} loading={loading} />
+                  </>
+                )}
               </div>
             </div>
           </div>
