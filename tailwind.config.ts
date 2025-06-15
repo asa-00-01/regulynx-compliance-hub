@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -54,14 +53,14 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: '#403E43',
-					foreground: '#F6F6F7',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: '#504e53',
-					'accent-foreground': '#FFFFFF',
-					border: '#504e53',
-					ring: 'hsl(var(--sidebar-ring))'
+					DEFAULT: 'hsl(var(--card))',
+					foreground: 'hsl(var(--card-foreground))',
+					primary: 'hsl(var(--primary))',
+					'primary-foreground': 'hsl(var(--primary-foreground))',
+					accent: 'hsl(var(--accent))',
+					'accent-foreground': 'hsl(var(--accent-foreground))',
+					border: 'hsl(var(--border))',
+					ring: 'hsl(var(--ring))'
 				},
 				regulynx: {
 					blue: '#1EAEDB',
