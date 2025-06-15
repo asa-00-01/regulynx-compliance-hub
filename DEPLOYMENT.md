@@ -90,37 +90,35 @@ When deploying through Lovable:
 
 ### Docker Deployment
 
-```dockerfile
-# Example Dockerfile with environment variables
-FROM node:18-alpine
+This project includes a `Dockerfile` and `nginx.conf` for creating a production-ready Docker image.
 
-WORKDIR /app
+#### Building the Image
 
-COPY package*.json ./
-RUN npm ci --only=production
+To build the Docker image, use the `docker build` command. You can pass environment variables required by the application at build time using `--build-arg`.
 
-COPY . .
-
-# Build with environment variables
-ARG VITE_APP_NAME
-ARG VITE_APP_DOMAIN
-ARG VITE_SUPPORT_EMAIL
-ARG VITE_ENVIRONMENT=production
-
-ENV VITE_APP_NAME=$VITE_APP_NAME
-ENV VITE_APP_DOMAIN=$VITE_APP_DOMAIN
-ENV VITE_SUPPORT_EMAIL=$VITE_SUPPORT_EMAIL
-ENV VITE_ENVIRONMENT=$VITE_ENVIRONMENT
-
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=0 /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+**Example Build Command:**
+```bash
+docker build -t your-app-name . \
+  --build-arg VITE_APP_NAME="Compliance Management System" \
+  --build-arg VITE_APP_DOMAIN="app.example.com" \
+  --build-arg VITE_SUPPORT_EMAIL="support@example.com" \
+  --build-arg VITE_SUPABASE_URL="https://your-supabase-url.supabase.co" \
+  --build-arg VITE_SUPABASE_ANON_KEY="your-supabase-anon-key"
 ```
+
+Refer to the `Dockerfile` and `src/config/environment.ts` for all available build arguments.
+
+#### Running the Container
+
+Once the image is built, you can run it as a container:
+
+```bash
+docker run -p 8080:80 your-app-name
+```
+
+The application will be accessible at `http://localhost:8080`.
+
+The `Dockerfile` uses a multi-stage build process to create a small and secure Nginx image for serving the built React application.
 
 ## Supabase Configuration
 
