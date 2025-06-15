@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { AMLTransaction } from '@/types/aml';
 import { UnifiedUserData } from '@/context/compliance/types';
+import { evaluateCondition } from './ruleEngine';
 
 interface Rule {
   id: string;
@@ -28,58 +29,7 @@ interface RiskAssessmentResult {
   rule_categories: string[];
 }
 
-// Simple JSON Logic implementation for rule evaluation
-function evaluateCondition(condition: any, data: any): boolean {
-  if (!condition || typeof condition !== 'object') {
-    console.warn('Invalid condition:', condition);
-    return false;
-  }
-
-  const operator = Object.keys(condition)[0];
-  const operands = condition[operator];
-
-  console.log(`Evaluating condition: ${operator}`, { operands, data });
-
-  switch (operator) {
-    case '>':
-      return getValue(operands[0], data) > getValue(operands[1], data);
-    case '<':
-      return getValue(operands[0], data) < getValue(operands[1], data);
-    case '>=':
-      return getValue(operands[0], data) >= getValue(operands[1], data);
-    case '<=':
-      return getValue(operands[0], data) <= getValue(operands[1], data);
-    case '==':
-      return getValue(operands[0], data) === getValue(operands[1], data);
-    case '!=':
-      return getValue(operands[0], data) !== getValue(operands[1], data);
-    case 'in':
-      const value = getValue(operands[0], data);
-      const array = getValue(operands[1], data);
-      return Array.isArray(array) && array.includes(value);
-    case 'and':
-      return operands.every((op: any) => evaluateCondition(op, data));
-    case 'or':
-      return operands.some((op: any) => evaluateCondition(op, data));
-    case '%':
-      return (getValue(operands[0], data) % getValue(operands[1], data)) === 0;
-    default:
-      console.warn('Unknown operator:', operator);
-      return false;
-  }
-}
-
-function getValue(operand: any, data: any): any {
-  if (operand && typeof operand === 'object' && operand.var) {
-    const path = operand.var.split('.');
-    let value = data;
-    for (const key of path) {
-      value = value?.[key];
-    }
-    return value;
-  }
-  return operand;
-}
+// The evaluateCondition and getValue functions have been moved to src/services/ruleEngine.ts
 
 // Transform transaction data for rule evaluation
 function prepareTransactionData(transaction: AMLTransaction): any {
