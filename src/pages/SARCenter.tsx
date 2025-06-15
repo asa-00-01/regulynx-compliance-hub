@@ -155,7 +155,7 @@ const SARCenter = () => {
           </TabsContent>
 
           <TabsContent value="goaml-reporting" className="space-y-4">
-            <GoAMLReporting />
+            <GoAMLReporting sars={sars} />
           </TabsContent>
         </Tabs>
       </div>
