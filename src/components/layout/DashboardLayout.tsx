@@ -17,7 +17,7 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
   const { isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { state, toggle: toggleSidebar } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
 
   const sidebarOpen = state === 'expanded';
 
