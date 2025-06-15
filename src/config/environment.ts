@@ -1,3 +1,26 @@
+
+// Helper function to read development overrides from localStorage
+function getLocalStorageOverride<T>(key: string, defaultValue: T): T {
+  // Ensure localStorage is available
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return defaultValue;
+  }
+
+  const storedValue = localStorage.getItem(key);
+
+  if (storedValue !== null) {
+    try {
+      // Values from the developer panel are stored as JSON strings
+      return JSON.parse(storedValue);
+    } catch (error) {
+      console.warn(`Could not parse localStorage value for key "${key}". Using default value.`, error);
+      return defaultValue;
+    }
+  }
+
+  return defaultValue;
+}
+
 export const config = {
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
