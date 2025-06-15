@@ -156,6 +156,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string
           id: string
           name: string
           risk_score: number
@@ -166,6 +167,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email: string
           id: string
           name: string
           risk_score?: number
@@ -176,6 +178,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string
           id?: string
           name?: string
           risk_score?: number
