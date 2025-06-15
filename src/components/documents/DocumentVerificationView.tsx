@@ -7,11 +7,13 @@ import DocumentDetails from './DocumentDetails';
 import ExtractedInformation from './ExtractedInformation';
 import DocumentStatus from './DocumentStatus';
 import VerificationActions from './VerificationActions';
+import { useTranslation } from 'react-i18next';
 
 const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({ 
   document, 
   onVerificationComplete 
 }) => {
+  const { t } = useTranslation();
   // Cast extracted data to the proper type
   const extractedData = document.extracted_data ? 
     (document.extracted_data as unknown as ExtractedData) : {};
@@ -21,10 +23,10 @@ const DocumentVerificationView: React.FC<DocumentVerificationViewProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Document Verification
+          {t('documents.verification')}
         </CardTitle>
         <CardDescription>
-          Review the document and extracted information before verification
+          {t('documents.verificationDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

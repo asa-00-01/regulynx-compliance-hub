@@ -2,12 +2,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, TrendingUp, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PatternTypesExplanation: React.FC = () => {
+    const { t } = useTranslation();
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Pattern Types</CardTitle>
+                <CardTitle>{t('aml.patternTypes')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -16,9 +18,9 @@ const PatternTypesExplanation: React.FC = () => {
                             <TrendingUp className="h-4 w-4 text-purple-600" />
                         </div>
                         <div>
-                            <h4 className="font-medium">Structuring</h4>
+                            <h4 className="font-medium">{t('aml.structuring')}</h4>
                             <p className="text-sm text-muted-foreground">
-                                Multiple small transactions below reporting thresholds
+                                {t('aml.structuringDesc')}
                             </p>
                         </div>
                     </div>
@@ -28,9 +30,9 @@ const PatternTypesExplanation: React.FC = () => {
                             <AlertTriangle className="h-4 w-4 text-red-600" />
                         </div>
                         <div>
-                            <h4 className="font-medium">High-Risk Corridors</h4>
+                            <h4 className="font-medium">{t('aml.highRiskCorridors')}</h4>
                             <p className="text-sm text-muted-foreground">
-                                Transactions to/from high-risk jurisdictions
+                                {t('aml.highRiskCorridorsDesc')}
                             </p>
                         </div>
                     </div>
@@ -40,9 +42,9 @@ const PatternTypesExplanation: React.FC = () => {
                             <Clock className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
-                            <h4 className="font-medium">Time Patterns</h4>
+                            <h4 className="font-medium">{t('aml.timePatterns')}</h4>
                             <p className="text-sm text-muted-foreground">
-                                Unusual timing or frequency patterns
+                                {t('aml.timePatternsDesc')}
                             </p>
                         </div>
                     </div>

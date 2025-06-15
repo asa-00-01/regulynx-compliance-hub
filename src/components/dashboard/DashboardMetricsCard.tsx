@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MetricCardProps {
   title: string;
@@ -22,6 +23,7 @@ const DashboardMetricsCard = ({
   changeDirection = 'standard',
   valueColor
 }: MetricCardProps) => {
+  const { t } = useTranslation();
   // Determine the appropriate color class based on change type and direction
   const getChangeColorClass = () => {
     if (changeType === 'neutral') return "text-muted-foreground";
@@ -54,17 +56,17 @@ const DashboardMetricsCard = ({
             {changeType === 'increase' ? (
               <span className={`flex items-center ${changeColorClass}`}>
                 <ArrowUpRight className="mr-1 h-3 w-3" />
-                {change} since yesterday
+                {change} {t('dashboard.sinceYesterday')}
               </span>
             ) : changeType === 'decrease' ? (
               <span className={`flex items-center ${changeColorClass}`}>
                 <ArrowDownRight className="mr-1 h-3 w-3" />
-                {change} since yesterday
+                {change} {t('dashboard.sinceYesterday')}
               </span>
             ) : (
               <span className="flex items-center text-muted-foreground">
                 <Minus className="mr-1 h-3 w-3" />
-                No change since yesterday
+                {t('dashboard.noChange')}
               </span>
             )}
           </p>

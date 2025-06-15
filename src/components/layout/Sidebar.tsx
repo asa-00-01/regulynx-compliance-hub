@@ -107,7 +107,7 @@ const Sidebar = () => {
       allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
-      title: t('navigation.users', 'User Management'),
+      title: t('navigation.users'),
       href: '/users',
       icon: Users,
       allowedRoles: ['admin'],
@@ -125,7 +125,7 @@ const Sidebar = () => {
       {/* Header */}
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-lg font-bold text-foreground tracking-tight">
-          AML Compliance Tool
+          {t('layout.sidebar.title')}
         </h1>
       </div>
       
@@ -169,7 +169,7 @@ const Sidebar = () => {
       {/* Footer */}
       <div className="px-6 py-4 border-t border-border">
         <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} Company Inc.
+          {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
         </p>
       </div>
     </div>

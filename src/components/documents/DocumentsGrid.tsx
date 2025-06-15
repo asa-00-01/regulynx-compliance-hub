@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Upload } from 'lucide-react';
 import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
 import DocumentsList from '@/components/documents/DocumentsList';
-import { Document, DocumentStatus } from '@/types/supabase';
+import { Document, DocumentStatus as DocumentStatusType } from '@/types/supabase';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface DocumentsGridProps {
   documents: Document[];
   loading: boolean;
-  activeTab: DocumentStatus | 'all';
+  activeTab: DocumentStatusType | 'all';
   onTabChange: (value: string) => void;
   onUploadComplete: () => void;
   onViewDocument: (doc: Document) => void;
@@ -32,6 +33,7 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
 }) => {
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
+  const { t } = useTranslation();
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -40,11 +42,11 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Upload Document
+            {t('documents.upload')}
           </CardTitle>
           <CardDescription>
-            Upload a new document for KYC verification
-            {userId && " for the selected customer"}
+            {t('documents.uploadDesc')}
+            {userId && t('documents.forSelectedCustomer')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,9 +60,9 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
       {/* Document List Card */}
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Document List</CardTitle>
+          <CardTitle>{t('documents.list')}</CardTitle>
           <CardDescription>
-            View and manage uploaded documents
+            {t('documents.listDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>

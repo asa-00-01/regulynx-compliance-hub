@@ -12,9 +12,11 @@ import { SAR, PatternMatch } from '@/types/sar';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useMediaQuery } from '@/hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
 
 const SARCenter = () => {
   const { sars, patterns, loading, createSAR, updateSAR, getPatternMatches, createAlertFromMatch, createSARFromMatch } = useSARData();
+  const { t } = useTranslation();
   
   const [activeTab, setActiveTab] = useState<string>('sar-list');
   const [selectedSARId, setSelectedSARId] = useState<string | null>(null);
@@ -80,11 +82,11 @@ const SARCenter = () => {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedSARId ? 'Edit SAR' : 'Create New SAR'}</DialogTitle>
+            <DialogTitle>{selectedSARId ? t('sarCenter.editSAR') : t('sarCenter.createSAR')}</DialogTitle>
             <DialogDescription>
               {selectedSARId 
-                ? 'Update the suspicious activity report details below' 
-                : 'Fill in the details to create a new suspicious activity report'}
+                ? t('sarCenter.editSARDesc')
+                : t('sarCenter.createSARDesc')}
             </DialogDescription>
           </DialogHeader>
           {children}
@@ -94,11 +96,11 @@ const SARCenter = () => {
       <Drawer open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DrawerContent>
           <DrawerHeader className="text-left">
-            <DrawerTitle>{selectedSARId ? 'Edit SAR' : 'Create New SAR'}</DrawerTitle>
+            <DrawerTitle>{selectedSARId ? t('sarCenter.editSAR') : t('sarCenter.createSAR')}</DrawerTitle>
             <DrawerDescription>
               {selectedSARId 
-                ? 'Update the suspicious activity report details below' 
-                : 'Fill in the details to create a new suspicious activity report'}
+                ? t('sarCenter.editSARDesc')
+                : t('sarCenter.createSARDesc')}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4 overflow-y-auto">{children}</div>
@@ -112,9 +114,9 @@ const SARCenter = () => {
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
       <div className="space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Suspicious Activity Reporting</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('sarCenter.title')}</h1>
           <p className="text-muted-foreground">
-            Monitor, report, and analyze suspicious activities and transaction patterns
+            {t('sarCenter.description')}
           </p>
         </div>
 
@@ -125,9 +127,9 @@ const SARCenter = () => {
           className="space-y-4"
         >
           <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
-            <TabsTrigger value="sar-list">SAR Center</TabsTrigger>
-            <TabsTrigger value="pattern-explorer">Pattern Explorer</TabsTrigger>
-            <TabsTrigger value="goaml-reporting">goAML Reporting</TabsTrigger>
+            <TabsTrigger value="sar-list">{t('navigation.sarCenter')}</TabsTrigger>
+            <TabsTrigger value="pattern-explorer">{t('sarCenter.patternExplorer')}</TabsTrigger>
+            <TabsTrigger value="goaml-reporting">{t('sarCenter.goamlReporting')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sar-list" className="space-y-4">
@@ -140,7 +142,7 @@ const SARCenter = () => {
           </TabsContent>
 
           <TabsContent value="pattern-explorer" className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">Transaction Pattern Analysis</h2>
+            <h2 className="text-2xl font-semibold mb-4">{t('sarCenter.transactionPatternAnalysis')}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {patterns.map(pattern => (
@@ -177,7 +179,7 @@ const SARCenter = () => {
               {selectedPattern && patterns.find(p => p.id === selectedPattern)?.name}
             </DialogTitle>
             <DialogDescription>
-              Review transactions matching this pattern and take appropriate actions
+              {t('sarCenter.matchesDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <MatchesList

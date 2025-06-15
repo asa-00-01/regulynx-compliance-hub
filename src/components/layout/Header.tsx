@@ -7,6 +7,7 @@ import { TooltipHelp } from '@/components/ui/tooltip-custom';
 import NotificationBell from './NotificationBell';
 import HeaderSearch from './HeaderSearch';
 import UserNav from './UserNav';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -14,9 +15,10 @@ interface HeaderProps {
 }
 
 const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
+  const { t } = useTranslation();
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <TooltipHelp content={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}>
+      <TooltipHelp content={sidebarOpen ? t('layout.header.closeMenu') : t('layout.header.openMenu')}>
         <Button 
           variant="ghost" 
           size="icon" 
@@ -24,10 +26,10 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
           onClick={toggleSidebar}
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">{t('layout.header.toggleMenu')}</span>
         </Button>
       </TooltipHelp>
-      <TooltipHelp content={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}>
+      <TooltipHelp content={sidebarOpen ? t('layout.header.collapseSidebar') : t('layout.header.expandSidebar')}>
         <Button
           variant="ghost"
           size="icon"
@@ -35,14 +37,14 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
           onClick={toggleSidebar}
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">{t('layout.header.toggleMenu')}</span>
         </Button>
       </TooltipHelp>
 
       <HeaderSearch />
 
       <div className="flex items-center gap-2">
-        <TooltipHelp content="Change the application language between English and Swedish">
+        <TooltipHelp content={t('layout.header.changeLanguageTooltip')}>
           <LanguageSelector />
         </TooltipHelp>
         

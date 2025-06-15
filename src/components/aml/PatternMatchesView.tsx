@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import MatchesList from '@/components/sar/MatchesList';
 import { AlertTriangle, TrendingUp, Clock, Search } from 'lucide-react';
 import { Pattern, PatternMatch } from '@/types/sar';
+import { useTranslation } from 'react-i18next';
 
 interface PatternMatchesViewProps {
   pattern: Pattern;
@@ -28,6 +29,7 @@ const getPatternTypeIcon = (category: string) => {
 };
 
 const PatternMatchesView: React.FC<PatternMatchesViewProps> = ({ pattern, matches, isLoading, onCreateAlert, onCreateSAR }) => {
+    const { t } = useTranslation();
     return (
         <Card>
             <CardHeader>
@@ -37,7 +39,7 @@ const PatternMatchesView: React.FC<PatternMatchesViewProps> = ({ pattern, matche
                         <CardTitle>{pattern.name}</CardTitle>
                     </div>
                     <Badge variant="outline">
-                        {pattern.matchCount} matches
+                        {pattern.matchCount} {t('aml.matches')}
                     </Badge>
                 </div>
                 <p className="text-muted-foreground">{pattern.description}</p>

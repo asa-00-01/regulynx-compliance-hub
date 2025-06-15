@@ -12,6 +12,7 @@ import PatternAnalysisSummary from './PatternAnalysisSummary';
 import PatternList from './PatternList';
 import PatternTypesExplanation from './PatternTypesExplanation';
 import PatternMatchesView from './PatternMatchesView';
+import { useTranslation } from 'react-i18next';
 
 const PatternAnalysisTab = () => {
   const { patterns, getPatternMatches, createAlertFromMatch, createSARFromMatch } = useSARData();
@@ -19,6 +20,7 @@ const PatternAnalysisTab = () => {
   const [activeTab, setActiveTab] = useState('patterns');
   const [matches, setMatches] = useState<PatternMatch[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const { t } = useTranslation();
 
   const selectedPattern = patterns.find(p => p.id === selectedPatternId);
   
@@ -59,10 +61,10 @@ const PatternAnalysisTab = () => {
       }}>
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
-            <TabsTrigger value="risk-rules">Risk Rules Engine</TabsTrigger>
+            <TabsTrigger value="patterns">{t('aml.patternDetection')}</TabsTrigger>
+            <TabsTrigger value="risk-rules">{t('aml.riskRulesEngine')}</TabsTrigger>
             <TabsTrigger value="matches" disabled={!selectedPatternId}>
-              Pattern Matches
+              {t('aml.patternMatches')}
               {selectedPattern && (
                 <Badge variant="secondary" className="ml-2">
                   {selectedPattern.matchCount}
@@ -73,7 +75,7 @@ const PatternAnalysisTab = () => {
 
           {activeTab === 'matches' && (
             <Button variant="outline" onClick={handleBackToPatterns}>
-              Back to Patterns
+              {t('aml.backToPatterns')}
             </Button>
           )}
         </div>
@@ -88,10 +90,10 @@ const PatternAnalysisTab = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Rule-Based Risk Scoring Engine
+                {t('aml.rulesEngineTitle')}
               </CardTitle>
               <p className="text-muted-foreground">
-                Evaluate transactions and users against 19 pre-defined risk rules
+                {t('aml.rulesEngineDesc')}
               </p>
             </CardHeader>
             <CardContent>

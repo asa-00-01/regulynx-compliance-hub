@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 interface RiskScoreChartProps {
   data: { date: string; score: number }[];
@@ -9,11 +10,12 @@ interface RiskScoreChartProps {
 }
 
 const RiskScoreChart = ({ data, loading }: RiskScoreChartProps) => {
+  const { t } = useTranslation();
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle>Risk Score Trend</CardTitle>
-        <CardDescription>30-day historical view of average risk scores</CardDescription>
+        <CardTitle>{t('dashboard.riskScoreTrend')}</CardTitle>
+        <CardDescription>{t('dashboard.riskScoreTrendDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="h-80">
         {loading ? (

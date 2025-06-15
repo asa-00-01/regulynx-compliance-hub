@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 interface RiskDistributionData {
   name: string;
@@ -15,11 +16,12 @@ interface RiskDistributionChartProps {
 }
 
 const RiskDistributionChart = ({ data, loading = false }: RiskDistributionChartProps) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Risk Score Distribution</CardTitle>
+          <CardTitle className="text-base">{t('dashboard.riskScoreDistribution')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center">
           <div className="h-[250px] w-full bg-muted/20 rounded-lg animate-pulse" />
@@ -31,7 +33,7 @@ const RiskDistributionChart = ({ data, loading = false }: RiskDistributionChartP
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Risk Score Distribution</CardTitle>
+        <CardTitle className="text-base">{t('dashboard.riskScoreDistribution')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[250px] w-full">

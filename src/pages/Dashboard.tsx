@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { AlertCircle, Clock, FileText } from 'lucide-react';
@@ -10,9 +11,11 @@ import ComplianceSummaryCard from '@/components/dashboard/ComplianceSummaryCard'
 import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
 import { mockComplianceMetrics, mockRiskDistribution } from '@/components/aml/mockTransactionData';
 import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { 
     highlightedStats, 
     riskScoreData, 
@@ -36,22 +39,22 @@ const Dashboard = () => {
           <div className="space-y-3">
             <div className="flex flex-col space-y-1">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                Dashboard
+                {t('dashboard.title')}
               </h1>
               <p className="text-lg text-muted-foreground">
-                Welcome back, {user?.name || 'User'}. Here's your compliance overview for today.
+                {t('dashboard.welcome', { name: user?.name || 'User' })}
               </p>
             </div>
             {user && (
               <div className="text-sm text-muted-foreground bg-accent p-3 rounded-md border">
                 <p>
-                  Logged in as: <strong className="text-foreground">{user.email}</strong>
+                  {t('dashboard.loggedInAs')} <strong className="text-foreground">{user.email}</strong>
                 </p>
                 <p>
-                  Current Role: <strong className="text-foreground">{user.role}</strong>. This determines which sidebar links and features are available.
+                  {t('dashboard.currentRole')} <strong className="text-foreground">{user.role}</strong>. {t('dashboard.roleDescription')}
                 </p>
                 <p className="mt-1 text-xs">
-                  To test other roles, log out and use a different demo account (e.g., `admin@regulynx.com`, `compliance@regulynx.com`). Password is `password`.
+                  {t('dashboard.testRoles')}
                 </p>
               </div>
             )}
@@ -59,7 +62,7 @@ const Dashboard = () => {
 
           {/* Metrics Cards Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Key Metrics</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('dashboard.keyMetrics')}</h2>
             {loading ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {Array(4).fill(null).map((_, index) => (
@@ -86,7 +89,7 @@ const Dashboard = () => {
 
           {/* Primary Charts Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Risk Analysis</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('dashboard.riskAnalysis')}</h2>
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
               <div className="xl:col-span-2">
                 {loading ? (
@@ -111,7 +114,7 @@ const Dashboard = () => {
 
           {/* Secondary Information Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Recent Activity & Compliance</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('dashboard.recentActivity')}</h2>
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
               <div className="xl:col-span-2">
                 {loading ? (
