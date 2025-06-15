@@ -1,9 +1,10 @@
 
+```typescript
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const hasInitialized = useRef(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // This ref stores all information about the drag state
   const dragInfo = useRef({
@@ -17,12 +18,12 @@ export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
 
   // Effect to set the initial position of the element
   useEffect(() => {
-    if (ref.current && !hasInitialized.current) {
+    if (ref.current && !hasInitialized) {
       const rect = ref.current.getBoundingClientRect();
       setPosition({ x: rect.left, y: rect.top });
-      hasInitialized.current = true;
+      setHasInitialized(true);
     }
-  }, [ref]);
+  }, [ref, hasInitialized]);
 
   // Mouse move handler
   const onMouseMove = useCallback((e: MouseEvent) => {
@@ -80,9 +81,9 @@ export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp, true);
     }
-  }, [onMouseMove, onMouseUp]);
+  }, [ref, onMouseMove, onMouseUp]);
 
-  const style: React.CSSProperties = hasInitialized.current ? {
+  const style: React.CSSProperties = hasInitialized ? {
     position: 'fixed',
     left: `${position.x}px`,
     top: `${position.y}px`,
@@ -94,5 +95,6 @@ export const useDraggable = (ref: React.RefObject<HTMLElement>) => {
     opacity: 0,
   };
 
-  return { style, onMouseDown };
+  return { style, onMouseDown, hasInitialized };
 };
+```

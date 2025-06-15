@@ -1,4 +1,5 @@
 
+```typescript
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { Activity, AlertTriangle, BarChart3, Eye, Settings } from 'lucide-react'
 import config from '@/config/environment';
 import { analytics, AnalyticsEvent, ErrorReport, PerformanceMetric } from '@/services/analytics';
 import { useDraggable } from '@/hooks/useDraggable';
+import { cn } from '@/lib/utils';
 
 const AnalyticsDashboard: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,7 +17,7 @@ const AnalyticsDashboard: React.FC = () => {
   const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
   const analyticsButtonRef = useRef<HTMLButtonElement>(null);
-  const { style, onMouseDown } = useDraggable(analyticsButtonRef);
+  const { style, onMouseDown, hasInitialized } = useDraggable(analyticsButtonRef);
 
   useEffect(() => {
     const handleEvent = (event: AnalyticsEvent) => {
@@ -52,7 +54,10 @@ const AnalyticsDashboard: React.FC = () => {
       <Button
         ref={analyticsButtonRef}
         onClick={() => setIsVisible(!isVisible)}
-        className="fixed bottom-20 right-4 z-50"
+        className={cn(
+          'fixed z-50',
+          !hasInitialized && 'bottom-20 right-4'
+        )}
         variant="outline"
         size="sm"
         style={style}
@@ -201,3 +206,4 @@ const AnalyticsDashboard: React.FC = () => {
 };
 
 export default AnalyticsDashboard;
+```

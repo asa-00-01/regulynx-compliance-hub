@@ -1,4 +1,5 @@
 
+```typescript
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,11 +19,12 @@ import config from '@/config/environment';
 import { Settings, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDraggable } from '@/hooks/useDraggable';
+import { cn } from '@/lib/utils';
 
 const DeveloperPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const devPanelButtonRef = useRef<HTMLButtonElement>(null);
-  const { style, onMouseDown } = useDraggable(devPanelButtonRef);
+  const { style, onMouseDown, hasInitialized } = useDraggable(devPanelButtonRef);
   
   const [apiConfig, setApiConfig] = useState({ baseUrl: config.api.baseUrl });
   const [appConfig, setAppConfig] = useState({ 
@@ -78,7 +80,10 @@ const DeveloperPanel: React.FC = () => {
           ref={devPanelButtonRef}
           variant="outline"
           size="sm"
-          className="fixed bottom-4 left-4 z-50"
+          className={cn(
+            'fixed z-50',
+            !hasInitialized && 'bottom-4 left-4'
+          )}
           style={style}
           onMouseDown={onMouseDown}
         >
@@ -151,3 +156,4 @@ const DeveloperPanel: React.FC = () => {
 };
 
 export default DeveloperPanel;
+```
