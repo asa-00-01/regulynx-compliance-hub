@@ -43,8 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: session.user.email || '',
             name: profile.name,
             role: profile.role,
-            riskScore: profile.risk_score,
-            status: profile.status,
+            riskScore: (profile as any).risk_score,
+            status: (profile as any).status,
             avatarUrl: profile.avatar_url,
           };
           setUser(userData);
@@ -95,8 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: data.user.email || '',
             name: profile.name,
             role: profile.role,
-            riskScore: profile.risk_score,
-            status: profile.status,
+            riskScore: (profile as any).risk_score,
+            status: (profile as any).status,
             avatarUrl: profile.avatar_url,
           };
           return userData;

@@ -158,7 +158,9 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          risk_score: number
           role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["user_status"]
           updated_at: string
         }
         Insert: {
@@ -166,7 +168,9 @@ export type Database = {
           created_at?: string
           id: string
           name: string
+          risk_score?: number
           role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
         }
         Update: {
@@ -174,7 +178,9 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          risk_score?: number
           role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
         }
         Relationships: []
@@ -272,6 +278,7 @@ export type Database = {
       document_status: "pending" | "verified" | "rejected"
       document_type: "passport" | "id" | "license"
       user_role: "complianceOfficer" | "admin" | "executive" | "support"
+      user_status: "verified" | "pending" | "flagged"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -392,6 +399,7 @@ export const Constants = {
       document_status: ["pending", "verified", "rejected"],
       document_type: ["passport", "id", "license"],
       user_role: ["complianceOfficer", "admin", "executive", "support"],
+      user_status: ["verified", "pending", "flagged"],
     },
   },
 } as const
