@@ -134,7 +134,7 @@ const Sidebar = () => {
         </h1>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className={cn(!isCollapsed && "p-2")}>
         <SidebarMenu>
           {navigationItems.map((item) => {
             if (!user || !item.allowedRoles.includes(user.role)) {
@@ -144,7 +144,7 @@ const Sidebar = () => {
             const isActive = location.pathname.startsWith(item.href);
 
             return (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
                 <SidebarMenuButton
                   asChild
                   isActive={isActive}
