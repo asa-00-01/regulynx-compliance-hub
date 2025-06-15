@@ -3,7 +3,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Database, Settings, Info } from 'lucide-react';
+import { Database, Info } from 'lucide-react';
 import { config } from '@/config/environment';
 import { MockDataService } from '@/services/mockDataService';
 
@@ -14,7 +14,7 @@ const MockModeIndicator: React.FC = () => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm">
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm">
       <Alert className="border-orange-200 bg-orange-50">
         <Database className="h-4 w-4 text-orange-600" />
         <AlertDescription className="text-orange-800">
