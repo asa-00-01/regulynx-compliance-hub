@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Menu, Bell, Search, User as UserIcon, Settings, LogOut } from 'lucide-react';
@@ -29,7 +30,11 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
   };
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    navigate('/profile?tab=profile');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/profile?tab=security');
   };
 
   return (
@@ -108,7 +113,7 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
               <UserIcon className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleProfileClick} className="cursor-pointer">
+            <DropdownMenuItem onSelect={handleSettingsClick} className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>

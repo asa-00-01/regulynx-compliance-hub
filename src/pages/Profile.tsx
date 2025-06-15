@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -14,7 +15,28 @@ import UserPreferences from '@/components/profile/UserPreferences';
 
 const Profile = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getTabFromUrl = useCallback(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['profile', 'security', 'preferences'].includes(tab)) {
+      return tab;
+    }
+    return 'profile';
+  }, [location.search]);
+
+  const [activeTab, setActiveTab] = useState(getTabFromUrl());
+
+  useEffect(() => {
+    setActiveTab(getTabFromUrl());
+  }, [getTabFromUrl]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/profile?tab=${value}`, { replace: true });
+  };
 
   return (
     <DashboardLayout>
@@ -27,7 +49,7 @@ const Profile = () => {
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
