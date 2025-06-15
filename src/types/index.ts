@@ -32,6 +32,8 @@ export interface User {
   riskScore: number;
   status: 'verified' | 'pending' | 'flagged';
   documents?: Document[];
+  role?: UserRole;
+  avatarUrl?: string;
 }
 
 export interface Transaction {
@@ -43,4 +45,25 @@ export interface Transaction {
   timestamp: string;
   status: 'completed' | 'pending' | 'failed';
   risk_score?: number;
+}
+
+export type UserRole = 'admin' | 'analyst' | 'viewer' | 'manager';
+
+export interface ComplianceCase {
+  id: string;
+  userId: string;
+  status: 'open' | 'closed' | 'pending';
+  type: 'kyc' | 'aml' | 'sanctions';
+  createdAt: string;
+  updatedAt: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  assignedTo?: string;
+  description?: string;
+}
+
+export interface DashboardMetrics {
+  totalUsers: number;
+  pendingCases: number;
+  riskScore: number;
+  completedVerifications: number;
 }
