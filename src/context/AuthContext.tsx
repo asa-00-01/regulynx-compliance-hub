@@ -1,19 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-
-// Define the user role type to match your existing types
-export type UserRole = 'complianceOfficer' | 'admin' | 'executive' | 'support';
-
-// Extended user interface that includes profile data
-export interface User {
-  id: string;
-  email: string;
-  role: UserRole;
-  name: string;
-  avatarUrl?: string;
-}
+import { User, UserRole } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +24,8 @@ const MOCK_USER: User = {
   role: 'complianceOfficer',
   name: 'Mock Compliance Officer',
   avatarUrl: undefined,
+  riskScore: 25,
+  status: 'verified',
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
