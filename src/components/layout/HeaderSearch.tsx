@@ -36,8 +36,8 @@ const HeaderSearch = () => {
     }
   }, [searchTerm, loading]);
 
-  const handleSelect = (url: string) => {
-    navigate(url);
+  const handleSelect = (url: string, state?: object) => {
+    navigate(url, { state });
     setPopoverOpen(false);
     setSearchTerm('');
   };
@@ -79,7 +79,7 @@ const HeaderSearch = () => {
               {results.cases.length > 0 && (
                 <CommandGroup heading="Cases">
                   {results.cases.slice(0, 3).map((c: Case) => (
-                    <CommandItem key={c.id} onSelect={() => handleSelect(`/compliance-cases/${c.id}`)}>
+                    <CommandItem key={c.id} onSelect={() => handleSelect('/compliance-cases', { caseId: c.id })}>
                       <span>{c.description.substring(0, 50)}{c.description.length > 50 ? '...' : ''}</span>
                     </CommandItem>
                   ))}
@@ -99,7 +99,7 @@ const HeaderSearch = () => {
               {results.transactions.length > 0 && (
                 <CommandGroup heading="Transactions">
                   {results.transactions.slice(0, 3).map((t: Transaction) => (
-                    <CommandItem key={t.id} onSelect={() => handleSelect('/transactions')}>
+                    <CommandItem key={t.id} onSelect={() => handleSelect('/transactions', { transactionId: t.id })}>
                       <span>{t.id.substring(0,8)}... - {(t as any).party} - {t.amount} {t.currency}</span>
                     </CommandItem>
                   ))}

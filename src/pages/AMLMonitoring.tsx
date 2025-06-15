@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
@@ -9,9 +10,11 @@ import AMLTransactionTableSection from '@/components/aml/AMLTransactionTableSect
 import { useAMLData } from '@/hooks/useAMLData';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const AMLMonitoring = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const location = useLocation();
   
   const {
     filteredTransactions,
@@ -28,6 +31,17 @@ const AMLMonitoring = () => {
     handleCreateCase,
     handleExportTransactions,
   } = useAMLData();
+
+  useEffect(() => {
+    if (location.state?.transactionId && filteredTransactions.length > 0) {
+      const transactionToView = filteredTransactions.find(t => t.id === location.state.transactionId);
+      if (transactionToView) {
+        handleViewDetails(transactionToView);
+        // Clear the location state to prevent modal reopening on refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, filteredTransactions, handleViewDetails]);
 
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
