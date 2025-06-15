@@ -6,6 +6,7 @@ import { FileDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SAR } from '@/types/sar';
 import { useToast } from '@/hooks/use-toast';
+import { GoAMLService } from '@/services/goaml/GoAMLService';
 
 interface GoAMLReportingProps {
   sars: SAR[];
@@ -14,6 +15,18 @@ interface GoAMLReportingProps {
 const GoAMLReporting: React.FC<GoAMLReportingProps> = ({ sars }) => {
   const [selectedSarId, setSelectedSarId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleDownloadXml = (xmlString: string, filename: string) => {
+    const blob = new Blob([xmlString], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleGenerateReport = () => {
     if (!selectedSarId) {
@@ -25,13 +38,39 @@ const GoAMLReporting: React.FC<GoAMLReportingProps> = ({ sars }) => {
       return;
     }
 
-    // This is a mock of the XML generation process.
+    const selectedSar = sars.find(sar => sar.id === selectedSarId);
+
+    if (!selectedSar) {
+      toast({
+        title: 'Error',
+        description: 'Selected SAR not found.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     toast({
       title: 'Generating Report...',
       description: `Generating goAML XML report for SAR ID: ${selectedSarId}`,
     });
-    console.log(`Generating goAML XML report for SAR ID: ${selectedSarId}`);
-    // In a real implementation, this would trigger XML creation and download.
+
+    try {
+      const xmlString = GoAMLService.generateGoAMLXml(selectedSar);
+      handleDownloadXml(xmlString, `${selectedSar.id}_goaml_report.xml`);
+
+      toast({
+        title: 'Report Generated Successfully',
+        description: `The goAML report for ${selectedSar.id} has been downloaded.`,
+      });
+
+    } catch (error) {
+      console.error('Error generating goAML report:', error);
+      toast({
+        title: 'Generation Failed',
+        description: 'An error occurred while generating the report. Check console for details.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const reportableSars = sars.filter(sar => sar.status !== 'draft');
