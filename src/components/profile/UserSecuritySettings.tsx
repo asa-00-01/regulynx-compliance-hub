@@ -1,53 +1,107 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Factor } from '@supabase/supabase-js';
+import TwoFactorAuthDialog from './TwoFactorAuthDialog';
 
 const UserSecuritySettings = () => {
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [factors, setFactors] = useState<Factor[]>([]);
+  
+  const [twoFactorEnrollData, setTwoFactorEnrollData] = useState<{ qrCodeUrl: string, factorId: string } | null>(null);
+
+  useEffect(() => {
+    const check2FA = async () => {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) {
+        toast.error('Could not fetch MFA status.');
+        return;
+      }
+      setFactors(data.totp);
+      setTwoFactorEnabled(data.totp.length > 0 && data.totp.some(f => f.status === 'verified'));
+    };
+    check2FA();
+  }, []);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
     }
-    
     setIsSubmitting(true);
-    
-    // Mock API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
+    const { error } = await supabase.auth.updateUser({ password: passwordData.newPassword });
+    if (error) {
+      toast.error(error.message);
+    } else {
       toast.success('Password updated successfully');
-    }, 1000);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+    }
+    setIsSubmitting(false);
   };
 
-  const handleTwoFactorToggle = () => {
-    setTwoFactorEnabled(prev => !prev);
-    
-    // Mock API call
-    toast.success(`Two-factor authentication ${!twoFactorEnabled ? 'enabled' : 'disabled'}`);
+  const handleTwoFactorToggle = async () => {
+    if (twoFactorEnabled) {
+      // Disable 2FA
+      const totpFactor = factors.find(f => f.status === 'verified');
+      if (totpFactor) {
+        const { error } = await supabase.auth.mfa.unenroll({ factorId: totpFactor.id });
+        if (error) {
+          toast.error(`Failed to disable 2FA: ${error.message}`);
+        } else {
+          toast.success('Two-factor authentication disabled');
+          setTwoFactorEnabled(false);
+        }
+      }
+    } else {
+      // Enable 2FA
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) {
+        toast.error(`Failed to start 2FA setup: ${error.message}`);
+        return;
+      }
+      if(data) {
+        setTwoFactorEnrollData({ qrCodeUrl: data.totp.qr_code, factorId: data.id });
+      }
+    }
+  };
+
+  const verifyTwoFactor = async (factorId: string, code: string): Promise<boolean> => {
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+    if (challengeError) {
+      toast.error(`2FA challenge failed: ${challengeError.message}`);
+      return false;
+    }
+
+    const { error: verifyError } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge!.id, code });
+    if (verifyError) {
+      toast.error(`2FA verification failed: ${verifyError.message}`);
+      return false;
+    }
+    setTwoFactorEnabled(true);
+    return true;
+  };
+  
+  const handleLogoutOtherSessions = async () => {
+    const { error } = await supabase.auth.signOut({ scope: 'others' });
+    if (error) {
+      toast.error(`Failed to log out other sessions: ${error.message}`);
+    } else {
+      toast.success('Successfully logged out of all other sessions.');
+    }
   };
 
   return (
@@ -55,20 +109,10 @@ const UserSecuritySettings = () => {
       <Card>
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
-          <CardDescription>Update your password to maintain account security</CardDescription>
+          <CardDescription>Update your password to maintain account security. You will be logged out of other sessions after updating your password.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input 
-                id="currentPassword" 
-                name="currentPassword"
-                type="password" 
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-              />
-            </div>
+        <form onSubmit={handlePasswordSubmit}>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
@@ -91,16 +135,16 @@ const UserSecuritySettings = () => {
                 />
               </div>
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button 
-            onClick={handlePasswordSubmit}
-            disabled={isSubmitting || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-          >
-            {isSubmitting ? 'Updating...' : 'Update Password'}
-          </Button>
-        </CardFooter>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button 
+              type="submit"
+              disabled={isSubmitting || !passwordData.newPassword || !passwordData.confirmPassword}
+            >
+              {isSubmitting ? 'Updating...' : 'Update Password'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       <Card>
@@ -132,29 +176,30 @@ const UserSecuritySettings = () => {
           <CardDescription>Manage your active login sessions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-md">
               <div>
                 <p className="font-medium">Current Session</p>
-                <p className="text-sm text-muted-foreground">Stockholm, Sweden • Chrome • Last active now</p>
+                <p className="text-sm text-muted-foreground">This is your current active session.</p>
               </div>
               <div className="text-sm font-medium text-green-600">Active</div>
             </div>
-            <div className="flex items-center justify-between p-4 border rounded-md">
-              <div>
-                <p className="font-medium">Mobile App</p>
-                <p className="text-sm text-muted-foreground">Stockholm, Sweden • iOS • Last active 2 days ago</p>
-              </div>
-              <Button variant="outline" size="sm">Revoke</Button>
-            </div>
-          </div>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button variant="outline" className="text-destructive hover:bg-destructive/10">
+          <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={handleLogoutOtherSessions}>
             Log Out All Other Sessions
           </Button>
         </CardFooter>
       </Card>
+      
+      {twoFactorEnrollData && (
+        <TwoFactorAuthDialog 
+          isOpen={!!twoFactorEnrollData}
+          onClose={() => setTwoFactorEnrollData(null)}
+          qrCodeUrl={twoFactorEnrollData.qrCodeUrl}
+          factorId={twoFactorEnrollData.factorId}
+          verify={verifyTwoFactor}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 const UserPreferences = () => {
   const { t, i18n } = useTranslation();
+  const { user, updateUserProfile } = useAuth();
+  
   const [notifications, setNotifications] = useState({
     email: true,
     browser: true,
@@ -20,6 +23,13 @@ const UserPreferences = () => {
   const [theme, setTheme] = useState('system');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (user?.preferences) {
+      setNotifications(user.preferences.notifications);
+      setTheme(user.preferences.theme);
+    }
+  }, [user]);
+
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -28,14 +38,34 @@ const UserPreferences = () => {
     i18n.changeLanguage(value);
   };
 
-  const savePreferences = () => {
+  const savePreferences = async () => {
     setIsSubmitting(true);
-    
-    // Mock API call
-    setTimeout(() => {
+    try {
+      await updateUserProfile({
+        preferences: {
+          notifications,
+          theme,
+        },
+      });
+    } catch (error) {
+      // toast is handled in context/update function
+    } finally {
       setIsSubmitting(false);
-      toast.success(t('profile.preferencesSuccess'));
-    }, 1000);
+    }
+  };
+
+  const exportDataAsJson = () => {
+    if (!user) return;
+    const dataStr = JSON.stringify(user, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'user_profile_data.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    toast.success('User data exported as JSON.');
   };
 
   return (
@@ -156,15 +186,15 @@ const UserPreferences = () => {
         <CardHeader>
           <CardTitle>{t('profile.exportData')}</CardTitle>
           <CardDescription>{t('profile.exportDataDesc')}</CardDescription>
-        </CardHeader>
+        </Header>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
             {t('profile.exportDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline">{t('profile.exportCsv')}</Button>
-            <Button variant="outline">{t('profile.exportJson')}</Button>
-            <Button variant="outline">{t('profile.exportPdf')}</Button>
+            <Button variant="outline" onClick={exportDataAsJson}>{t('profile.exportJson')}</Button>
+            <Button variant="outline" disabled>{t('profile.exportCsv')}</Button>
+            <Button variant="outline" disabled>{t('profile.exportPdf')}</Button>
           </div>
         </CardContent>
       </Card>
@@ -173,3 +203,4 @@ const UserPreferences = () => {
 };
 
 export default UserPreferences;
+
