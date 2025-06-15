@@ -1,7 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
+
+export type { User, UserRole };
 
 interface AuthContextType {
   user: User | null;
@@ -153,3 +156,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
