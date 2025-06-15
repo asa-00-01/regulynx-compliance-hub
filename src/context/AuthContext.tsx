@@ -1,36 +1,160 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
+// Define the user role type to match your existing types
+export type UserRole = 'complianceOfficer' | 'admin' | 'executive' | 'support';
 
+// Extended user interface that includes profile data
 export interface User {
   id: string;
   email: string;
-  name: string;
   role: UserRole;
+  name: string;
   avatarUrl?: string;
-  riskScore: number;
-  status: 'verified' | 'pending' | 'flagged';
 }
 
 interface AuthContextType {
   user: User | null;
-  session: any | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, role: UserRole) => Promise<void>;
   loading: boolean;
   authLoaded: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => void;
+  signup: (email: string, password: string, role: UserRole) => Promise<void>;
   isAuthenticated: boolean;
-  canAccess: (roles: UserRole[]) => boolean;
+  canAccess: (requiredRoles: UserRole[]) => boolean;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+// Mock user for testing
+const MOCK_USER: User = {
+  id: 'mock-user-123',
+  email: 'compliance@regulynx.com',
+  role: 'complianceOfficer',
+  name: 'Mock Compliance Officer',
+  avatarUrl: undefined,
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [authLoaded, setAuthLoaded] = useState(false);
+
+  useEffect(() => {
+    // Simulate authentication initialization with mock user
+    const initializeMockAuth = () => {
+      console.log('Initializing mock authentication...');
+      
+      // Set mock user as authenticated
+      setUser(MOCK_USER);
+      
+      // Create a mock session object
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        expires_at: Date.now() + 3600000,
+        token_type: 'bearer',
+        user: {
+          id: MOCK_USER.id,
+          email: MOCK_USER.email,
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      } as Session;
+      
+      setSession(mockSession);
+      setLoading(false);
+      setAuthLoaded(true);
+      
+      console.log('Mock authentication initialized with user:', MOCK_USER);
+    };
+
+    // Initialize after a short delay to simulate real auth
+    const timer = setTimeout(initializeMockAuth, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const login = async (email: string, password: string): Promise<User> => {
+    console.log('Mock login attempt for:', email);
+    
+    // Simulate login delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Always return the mock user for any login attempt
+    setUser(MOCK_USER);
+    
+    const mockSession = {
+      access_token: 'mock-access-token',
+      refresh_token: 'mock-refresh-token',
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      token_type: 'bearer',
+      user: {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    } as Session;
+    
+    setSession(mockSession);
+    
+    return MOCK_USER;
+  };
+
+  const signup = async (email: string, password: string, role: UserRole): Promise<void> => {
+    console.log('Mock signup attempt for:', email, 'with role:', role);
+    
+    // Simulate signup delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // For mock, just simulate successful signup
+    // In real implementation, this would create a new user
+  };
+
+  const logout = async () => {
+    console.log('Mock logout');
+    setUser(null);
+    setSession(null);
+  };
+
+  const canAccess = (requiredRoles: UserRole[]): boolean => {
+    if (!user) return false;
+    return requiredRoles.includes(user.role);
+  };
+
+  return (
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        authLoaded,
+        login, 
+        logout, 
+        signup,
+        isAuthenticated: !!user && !!session,
+        canAccess,
+        session
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -38,124 +162,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [authLoaded, setAuthLoaded] = useState(false);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user);
-      } else {
-        setLoading(false);
-        setAuthLoaded(true);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      if (session?.user) {
-        await fetchUserProfile(session.user);
-      } else {
-        setUser(null);
-        setLoading(false);
-        setAuthLoaded(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      if (profile) {
-        setUser({
-          id: profile.id,
-          email: supabaseUser.email || '',
-          name: profile.name,
-          role: profile.role as UserRole,
-          avatarUrl: profile.avatar_url,
-          riskScore: 0, // Default value
-          status: 'verified', // Default value
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    } finally {
-      setLoading(false);
-      setAuthLoaded(true);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  };
-
-  const signUp = async (email: string, password: string, name: string, role: UserRole) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          role,
-        },
-      },
-    });
-    if (error) throw error;
-  };
-
-  // Aliases for compatibility
-  const login = signIn;
-  const logout = signOut;
-  const signup = async (email: string, password: string, role: UserRole) => {
-    await signUp(email, password, '', role);
-  };
-
-  const isAuthenticated = !!user;
-
-  const canAccess = (roles: UserRole[]): boolean => {
-    return user ? roles.includes(user.role) : false;
-  };
-
-  const value = {
-    user,
-    session,
-    signIn,
-    signOut,
-    signUp,
-    login,
-    logout,
-    signup,
-    loading,
-    authLoaded,
-    isAuthenticated,
-    canAccess,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

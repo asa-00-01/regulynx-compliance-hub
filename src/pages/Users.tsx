@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { User, UserRole } from '@/context/AuthContext';
+import { User, UserRole } from '@/types';
 import { Search, Plus, Edit, Trash, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -18,8 +18,6 @@ const mockUsers: User[] = [
     role: 'complianceOfficer',
     name: 'Alex Nordström',
     avatarUrl: 'https://i.pravatar.cc/150?img=1',
-    riskScore: 0,
-    status: 'verified',
   },
   {
     id: '2',
@@ -27,8 +25,6 @@ const mockUsers: User[] = [
     role: 'admin',
     name: 'Johan Berg',
     avatarUrl: 'https://i.pravatar.cc/150?img=2',
-    riskScore: 0,
-    status: 'verified',
   },
   {
     id: '3',
@@ -36,8 +32,6 @@ const mockUsers: User[] = [
     role: 'executive',
     name: 'Lena Wikström',
     avatarUrl: 'https://i.pravatar.cc/150?img=3',
-    riskScore: 0,
-    status: 'verified',
   },
   {
     id: '4',
@@ -45,24 +39,18 @@ const mockUsers: User[] = [
     role: 'support',
     name: 'Astrid Lindqvist',
     avatarUrl: 'https://i.pravatar.cc/150?img=4',
-    riskScore: 0,
-    status: 'verified',
   },
   {
     id: '5',
     email: 'compliance2@regulynx.com',
     role: 'complianceOfficer',
     name: 'Erik Karlsson',
-    riskScore: 0,
-    status: 'verified',
   },
   {
     id: '6',
     email: 'support2@regulynx.com',
     role: 'support',
     name: 'Maria Andersson',
-    riskScore: 0,
-    status: 'verified',
   },
 ];
 
@@ -81,8 +69,6 @@ const Users = () => {
     const user: User = {
       id: (users.length + 1).toString(),
       ...newUser,
-      riskScore: 0,
-      status: 'verified',
     };
     
     setUsers([...users, user]);
