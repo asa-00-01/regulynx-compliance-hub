@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,14 +9,31 @@ import PatternCard from '@/components/sar/PatternCard';
 import MatchesList from '@/components/sar/MatchesList';
 import RiskRulesDisplay from '@/components/aml/RiskRulesDisplay';
 import { AlertTriangle, TrendingUp, Clock, Search, Shield } from 'lucide-react';
+import { PatternMatch } from '@/types/sar';
 
 const PatternAnalysisTab = () => {
   const { patterns, getPatternMatches, createAlertFromMatch, createSARFromMatch } = useSARData();
   const [selectedPatternId, setSelectedPatternId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('patterns');
+  const [matches, setMatches] = useState<PatternMatch[]>([]);
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
 
   const selectedPattern = patterns.find(p => p.id === selectedPatternId);
-  const matches = selectedPatternId ? getPatternMatches(selectedPatternId) : [];
+  
+  useEffect(() => {
+    if (selectedPatternId) {
+      const fetchMatches = async () => {
+        setIsLoadingMatches(true);
+        const fetchedMatches = await getPatternMatches(selectedPatternId);
+        setMatches(fetchedMatches);
+        setIsLoadingMatches(false);
+      };
+      fetchMatches();
+    } else {
+      setMatches([]);
+    }
+  }, [selectedPatternId, getPatternMatches]);
+
 
   const handleViewMatches = (patternId: string) => {
     setSelectedPatternId(patternId);
@@ -237,6 +254,7 @@ const PatternAnalysisTab = () => {
                   matches={matches}
                   onCreateAlert={createAlertFromMatch}
                   onCreateSAR={createSARFromMatch}
+                  isLoading={isLoadingMatches}
                 />
               </CardContent>
             </Card>
