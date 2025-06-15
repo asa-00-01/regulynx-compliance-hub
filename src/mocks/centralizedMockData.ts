@@ -3,33 +3,89 @@ import { UnifiedUserData } from '@/context/compliance/types';
 import { AMLTransaction } from '@/types/aml';
 import { Document } from '@/types';
 import { ComplianceCaseDetails } from '@/types/case';
-import { userProfiles } from './generators/userGenerator';
-import { generateTransactionsForUser, generateAllTransactions } from './generators/transactionGenerator';
-import { generateDocumentsForUser, generateAllDocuments } from './generators/documentGenerator';
+
+// Import enhanced generators
+import { enhancedUserProfiles, convertToUnifiedUserData } from './generators/enhancedUserGenerator';
+import { generateRealisticTransactions } from './generators/enhancedTransactionGenerator';
+import { generateEnhancedDocuments } from './generators/enhancedDocumentGenerator';
 import { generateCasesForUser, generateAllCases } from './generators/caseGenerator';
 
-// Generate the complete unified user data using the generators
+// Generate the complete unified user data using enhanced generators
 export const generateUnifiedUserData = (): UnifiedUserData[] => {
-  return userProfiles.map(user => {
-    const transactions = generateTransactionsForUser(user, Math.floor(Math.random() * 6) + 3);
-    const documents = generateDocumentsForUser(user);
-    const complianceCases = generateCasesForUser(user);
+  console.log('🔄 Generating enhanced unified user data...');
+  
+  return enhancedUserProfiles.map(profile => {
+    // Convert to unified format
+    const unifiedUser = convertToUnifiedUserData(profile);
+    
+    // Generate realistic transactions
+    const transactions = generateRealisticTransactions(profile);
+    console.log(`Generated ${transactions.length} transactions for ${profile.fullName}`);
+    
+    // Generate enhanced documents
+    const enhancedDocs = generateEnhancedDocuments(profile);
+    const documents = enhancedDocs.map(doc => ({
+      id: doc.id,
+      userId: doc.userId,
+      type: doc.type,
+      fileName: doc.fileName,
+      uploadDate: doc.uploadDate,
+      status: doc.status,
+      verifiedBy: doc.verifiedBy,
+      verificationDate: doc.verificationDate,
+      extractedData: doc.extractedData
+    }));
+    console.log(`Generated ${documents.length} documents for ${profile.fullName}`);
+    
+    // Generate compliance cases
+    const complianceCases = generateCasesForUser({
+      id: profile.id,
+      fullName: profile.fullName,
+      riskScore: profile.riskScore,
+      isPEP: profile.isPEP,
+      isSanctioned: profile.isSanctioned,
+      kycStatus: profile.kycStatus,
+      nationality: profile.nationality,
+      countryOfResidence: profile.countryOfResidence,
+      dateOfBirth: profile.dateOfBirth
+    });
+    
+    // Enhanced notes based on user profile
+    const notes = [];
+    if (profile.riskScore > 70) {
+      notes.push(`High risk user - Risk score: ${profile.riskScore}`);
+    }
+    if (profile.isPEP) {
+      notes.push('Politically Exposed Person - Enhanced due diligence required');
+    }
+    if (profile.isSanctioned) {
+      notes.push('⚠️ SANCTIONS HIT - Account requires immediate review');
+    }
+    if (profile.transferHabit === 'moreThanTenThousandSEK') {
+      notes.push('High-value transfer pattern detected');
+    }
+    if (profile.receiverCountries.some(country => ['Somalia', 'Somaliland', 'Iraq', 'Syria'].includes(country))) {
+      notes.push('Transfers to high-risk jurisdictions');
+    }
     
     return {
-      ...user,
-      createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      kycFlags: {
-        userId: user.id,
-        is_registered: true,
-        is_email_confirmed: user.kycStatus === 'verified',
-        is_verified_pep: user.isPEP,
-        is_sanction_list: user.isSanctioned,
-        riskScore: user.riskScore
-      },
+      ...unifiedUser,
       documents,
       transactions,
       complianceCases,
-      notes: user.riskScore > 70 ? ['High risk user requiring enhanced monitoring'] : []
+      notes,
+      // Additional enhanced fields
+      metadata: {
+        enhancedProfile: true,
+        transferHabit: profile.transferHabit,
+        frequencyOfTransaction: profile.frequencyOfTransaction,
+        receiverCountries: profile.receiverCountries,
+        sendToMultipleRecipients: profile.sendToMultipleRecipients,
+        recipientRelationship: profile.recipientRelationship,
+        originsOfFunds: profile.originsOfFunds,
+        lastScreenedAt: profile.screenedAt,
+        lastLogin: profile.lastLogin
+      }
     };
   });
 };
@@ -39,12 +95,19 @@ export const unifiedMockData = generateUnifiedUserData();
 
 // Export individual collections for backward compatibility
 export const mockUsersCollection = unifiedMockData;
-export const mockTransactionsCollection = generateAllTransactions();
-export const mockDocumentsCollection = generateAllDocuments();
+export const mockTransactionsCollection = unifiedMockData.flatMap(user => user.transactions);
+export const mockDocumentsCollection = unifiedMockData.flatMap(user => user.documents);
 export const mockComplianceCasesCollection = generateAllCases();
 
 // Legacy exports for backward compatibility
-export const baseCustomers = userProfiles;
-export { generateTransactionsForUser } from './generators/transactionGenerator';
-export { generateDocumentsForUser } from './generators/documentGenerator';
+export const baseCustomers = enhancedUserProfiles;
+export { generateRealisticTransactions as generateTransactionsForUser } from './generators/enhancedTransactionGenerator';
+export { generateEnhancedDocuments as generateDocumentsForUser } from './generators/enhancedDocumentGenerator';
 export { generateCasesForUser as generateComplianceCasesForUser } from './generators/caseGenerator';
+
+console.log('✅ Enhanced mock data initialized:', {
+  users: unifiedMockData.length,
+  totalTransactions: mockTransactionsCollection.length,
+  totalDocuments: mockDocumentsCollection.length,
+  totalCases: mockComplianceCasesCollection.length
+});
