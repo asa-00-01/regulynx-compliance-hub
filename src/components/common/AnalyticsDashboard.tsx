@@ -48,7 +48,7 @@ const AnalyticsDashboard: React.FC = () => {
       {/* Toggle Button */}
       <Button
         onClick={() => setIsVisible(!isVisible)}
-        className="fixed bottom-4 right-4 z-50"
+        className="fixed bottom-20 right-4 z-50"
         variant="outline"
         size="sm"
       >
@@ -58,7 +58,7 @@ const AnalyticsDashboard: React.FC = () => {
 
       {/* Dashboard Panel */}
       {isVisible && (
-        <div className="fixed bottom-16 right-4 w-96 max-h-[32rem] overflow-auto bg-background border rounded-lg shadow-lg z-50 p-4 flex flex-col gap-4">
+        <div className="fixed bottom-32 right-4 w-96 max-h-[32rem] overflow-auto bg-background border rounded-lg shadow-lg z-50 p-4 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Analytics Dashboard</h3>
             <Button
