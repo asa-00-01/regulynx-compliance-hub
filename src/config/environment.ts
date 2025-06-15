@@ -1,11 +1,10 @@
-
 export const config = {
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
   
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://mqsouubnefdyjyaxjcwr.supabase.co',
+    baseUrl: getLocalStorageOverride('dev_api_baseUrl', import.meta.env.VITE_API_BASE_URL || 'https://mqsouubnefdyjyaxjcwr.supabase.co'),
     timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   },
   
@@ -17,22 +16,22 @@ export const config = {
   
   // App Configuration
   app: {
-    name: import.meta.env.VITE_APP_NAME || 'Compliance Management System',
+    name: getLocalStorageOverride('dev_app_name', import.meta.env.VITE_APP_NAME || 'Compliance Management System'),
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
     environment: import.meta.env.VITE_ENVIRONMENT || (import.meta.env.PROD ? 'production' : 'development'),
-    domain: import.meta.env.VITE_APP_DOMAIN || 'localhost:8080',
-    supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'support@example.com',
+    domain: getLocalStorageOverride('dev_app_domain', import.meta.env.VITE_APP_DOMAIN || 'localhost:8080'),
+    supportEmail: getLocalStorageOverride('dev_app_supportEmail', import.meta.env.VITE_SUPPORT_EMAIL || 'support@example.com'),
   },
   
   // Feature Flags
   features: {
-    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
-    enableErrorReporting: import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true',
-    maintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === 'true',
-    enableDebugMode: import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV,
-    enablePerformanceMonitoring: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true',
-    useMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true' || 
-                 (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA !== 'false'),
+    enableAnalytics: getLocalStorageOverride('dev_features_enableAnalytics', import.meta.env.VITE_ENABLE_ANALYTICS === 'true'),
+    enableErrorReporting: getLocalStorageOverride('dev_features_enableErrorReporting', import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true'),
+    maintenanceMode: getLocalStorageOverride('dev_features_maintenanceMode', import.meta.env.VITE_MAINTENANCE_MODE === 'true'),
+    enableDebugMode: getLocalStorageOverride('dev_features_enableDebugMode', import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV),
+    enablePerformanceMonitoring: getLocalStorageOverride('dev_features_enablePerformanceMonitoring', import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true'),
+    useMockData: getLocalStorageOverride('dev_features_useMockData', import.meta.env.VITE_USE_MOCK_DATA === 'true' || 
+                 (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA !== 'false')),
   },
   
   // Performance Configuration

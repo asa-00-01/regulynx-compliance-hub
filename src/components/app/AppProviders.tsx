@@ -7,6 +7,7 @@ import AnalyticsProvider from '@/components/common/AnalyticsProvider';
 import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
 import MockModeIndicator from '@/components/common/MockModeIndicator';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import DeveloperPanel from '@/components/dev/DeveloperPanel';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             <ToastProvider />
             <AnalyticsDashboard />
             <MockModeIndicator />
+            <DeveloperPanel />
           </ComplianceProvider>
         </Suspense>
       </AnalyticsProvider>
