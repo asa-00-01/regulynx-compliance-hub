@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Menu, Bell, Search, User as UserIcon, Settings, LogOut } from 'lucide-react';
+import { Menu, Search, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import LanguageSelector from '@/components/common/LanguageSelector';
 import { TooltipHelp } from '@/components/ui/tooltip-custom';
+import NotificationBell from './NotificationBell';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -80,13 +81,7 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
           <LanguageSelector />
         </TooltipHelp>
         
-        <TooltipHelp content="View notifications about compliance alerts, case updates, and system messages">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-regulynx-red-alert"></span>
-            <span className="sr-only">Notifications</span>
-          </Button>
-        </TooltipHelp>
+        <NotificationBell />
 
         <DropdownMenu>
           <TooltipHelp content="Access your profile, settings, and account options">
