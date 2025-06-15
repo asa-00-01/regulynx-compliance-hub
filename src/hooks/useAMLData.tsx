@@ -5,6 +5,7 @@ import { AMLTransaction } from '@/types/aml';
 import { useAMLFilters } from './useAMLFilters';
 import { useAMLMetrics } from './useAMLMetrics';
 import { useAMLTransactionActions } from './useAMLTransactionActions';
+import { usePagination } from './usePagination';
 
 export const useAMLData = () => {
   const [transactions, setTransactions] = useState<AMLTransaction[]>(mockTransactions);
@@ -22,6 +23,21 @@ export const useAMLData = () => {
 
   // Use the new metrics hook
   const metrics = useAMLMetrics(filteredTransactions);
+
+  // Pagination
+  const {
+    currentData: paginatedTransactions,
+    currentPage,
+    totalPages,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredTransactions, itemsPerPage: 10 });
 
   // Use the new transaction actions hook
   const {
@@ -46,6 +62,7 @@ export const useAMLData = () => {
     // State
     transactions,
     filteredTransactions,
+    paginatedTransactions,
     selectedTransaction,
     isDetailsModalOpen,
     filters,
@@ -64,5 +81,17 @@ export const useAMLData = () => {
     handleCreateSAR,
     handleViewUserProfile,
     handleExportTransactions: wrappedExportHandler,
+
+    // Pagination
+    currentPage,
+    totalPages,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex,
+    totalItems,
   };
 };

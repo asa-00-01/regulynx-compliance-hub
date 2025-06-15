@@ -18,6 +18,7 @@ const AMLMonitoring = () => {
   
   const {
     filteredTransactions,
+    paginatedTransactions,
     selectedTransaction,
     isDetailsModalOpen,
     filters,
@@ -30,6 +31,16 @@ const AMLMonitoring = () => {
     handleFlagTransaction,
     handleCreateCase,
     handleExportTransactions,
+    currentPage,
+    totalPages,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    startIndex,
+    endIndex,
+    totalItems,
   } = useAMLData();
 
   useEffect(() => {
@@ -90,11 +101,21 @@ const AMLMonitoring = () => {
 
             {/* Transactions Table */}
             <AMLTransactionTableSection
-              filteredTransactions={filteredTransactions}
+              filteredTransactions={paginatedTransactions}
               onViewDetails={handleViewDetails}
               onFlagTransaction={handleFlagTransaction}
               onCreateCase={handleCreateCase}
               showUserColumn={!filters.userId}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              goToPage={goToPage}
+              goToNextPage={goToNextPage}
+              goToPrevPage={goToPrevPage}
+              hasNextPage={hasNextPage}
+              hasPrevPage={hasPrevPage}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              totalItems={totalItems}
             />
           </TabsContent>
 
