@@ -70,5 +70,5 @@ export interface DashboardMetrics {
   pendingDocuments?: number;
   pendingKycReviews?: number;
   activeAlerts?: number;
-  riskScoreTrend?: number;
+  riskScoreTrend?: number[];
 }

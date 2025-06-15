@@ -4,15 +4,14 @@ import { DashboardMetrics, Document, ComplianceCase, UserRole } from '@/types';
 
 // Mock data for dashboard metrics
 const getMockDashboardData = (): DashboardMetrics => ({
+  totalUsers: 42,
   pendingDocuments: 18,
   pendingKycReviews: 12,
   activeAlerts: 7,
+  riskScore: 68,
+  pendingCases: 15,
+  completedVerifications: 156,
   riskScoreTrend: [65, 59, 80, 81, 56, 55, 72, 68],
-  complianceCasesByType: {
-    kyc: 8,
-    aml: 5,
-    sanctions: 2,
-  },
 });
 
 // Mock data for recent documents
@@ -61,8 +60,10 @@ const getMockComplianceCases = (): ComplianceCase[] => [
     id: '1',
     userId: '101',
     createdAt: '2025-05-01T08:30:00Z',
+    updatedAt: '2025-05-01T08:30:00Z',
     type: 'kyc',
     status: 'open',
+    priority: 'high',
     riskScore: 75,
     description: 'Inconsistent identity information',
     assignedTo: '1',
@@ -71,8 +72,10 @@ const getMockComplianceCases = (): ComplianceCase[] => [
     id: '2',
     userId: '105',
     createdAt: '2025-05-02T10:15:00Z',
+    updatedAt: '2025-05-02T10:15:00Z',
     type: 'aml',
     status: 'escalated',
+    priority: 'critical',
     riskScore: 92,
     description: 'Multiple high-value transactions from high-risk country',
     assignedTo: '1',
@@ -81,8 +84,10 @@ const getMockComplianceCases = (): ComplianceCase[] => [
     id: '3',
     userId: '107',
     createdAt: '2025-05-02T14:45:00Z',
+    updatedAt: '2025-05-02T14:45:00Z',
     type: 'sanctions',
     status: 'open',
+    priority: 'high',
     riskScore: 85,
     description: 'Potential sanctions list match',
     assignedTo: '1',
