@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
@@ -8,9 +7,10 @@ import { getRoleBadgeClass, formatRoleDisplay } from './userUtils';
 interface UsersTableProps {
   users: User[];
   onDeleteUser: (id: string) => void;
+  onEditUser: (user: User) => void;
 }
 
-const UsersTable: React.FC<UsersTableProps> = ({ users, onDeleteUser }) => {
+const UsersTable: React.FC<UsersTableProps> = ({ users, onDeleteUser, onEditUser }) => {
   return (
     <div className="rounded-md border">
       <div className="grid grid-cols-5 p-3 bg-muted/50 text-xs font-medium">
@@ -54,7 +54,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onDeleteUser }) => {
                 </span>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={() => onEditUser(user)}>
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button

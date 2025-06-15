@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Home,
@@ -106,6 +105,12 @@ const Sidebar = () => {
       href: '/audit-logs',
       icon: History,
       allowedRoles: ['admin', 'complianceOfficer'],
+    },
+    {
+      title: t('navigation.users', 'User Management'),
+      href: '/users',
+      icon: Users,
+      allowedRoles: ['admin'],
     },
     {
       title: t('navigation.profile'),

@@ -21,6 +21,7 @@ import RiskAnalysis from '@/pages/RiskAnalysis';
 import Transactions from '@/pages/Transactions';
 import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
+import Users from '@/pages/Users';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -161,6 +162,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <Transactions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute requiredRoles={['admin']}>
+            <Users />
           </ProtectedRoute>
         }
       />

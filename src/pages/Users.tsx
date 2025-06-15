@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,10 +7,12 @@ import { mockUsers } from '@/components/users/mockUsersData';
 import UserSearch from '@/components/users/UserSearch';
 import UsersTable from '@/components/users/UsersTable';
 import AuditLog from '@/components/users/AuditLog';
+import EditUserDialog from '@/components/users/EditUserDialog';
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const { toast } = useToast();
 
   const handleAddUser = (userData: Omit<User, 'id'>) => {
@@ -37,6 +38,19 @@ const Users = () => {
     toast({
       title: 'User deleted',
       description: `${userToDelete.name} has been removed.`,
+    });
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
+    setEditingUser(null);
+    toast({
+      title: 'User updated',
+      description: `${updatedUser.name}'s details have been updated.`,
     });
   };
 
@@ -76,12 +90,20 @@ const Users = () => {
             <UsersTable 
               users={filteredUsers}
               onDeleteUser={handleUserDelete}
+              onEditUser={handleEditUser}
             />
           </CardContent>
         </Card>
 
         <AuditLog />
       </div>
+
+      <EditUserDialog
+        user={editingUser}
+        isOpen={!!editingUser}
+        onClose={() => setEditingUser(null)}
+        onUpdateUser={handleUpdateUser}
+      />
     </DashboardLayout>
   );
 };
