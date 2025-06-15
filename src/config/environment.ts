@@ -31,6 +31,8 @@ export const config = {
     maintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === 'true',
     enableDebugMode: import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV,
     enablePerformanceMonitoring: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true',
+    useMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true' || 
+                 (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA !== 'false'),
   },
   
   // Performance Configuration
@@ -81,6 +83,11 @@ export const validateEnvironmentConfig = (): { isValid: boolean; errors: string[
     if (config.features.enableDebugMode) {
       console.warn('Debug mode is enabled in production - consider disabling');
     }
+  }
+  
+  // Log mock data usage
+  if (config.features.useMockData) {
+    console.log('🔧 Mock data mode enabled - using JSON mock data instead of API calls');
   }
   
   return {

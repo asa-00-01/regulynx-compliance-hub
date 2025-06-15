@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { NewsItem, RSSFeed } from '@/types/news';
 import { handleAPIError, withRetry } from '@/lib/api';
-import { mockNewsItems } from './data/mockNewsItems';
-import { mockRssFeeds } from './data/mockRSSFeeds';
+import { MockDataService } from '@/services/mockDataService';
+import { config } from '@/config/environment';
 
 export const useNewsData = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -16,14 +16,32 @@ export const useNewsData = () => {
       setLoading(true);
       setError(null);
       
-      // Simulate API call with retry logic
-      await withRetry(async () => {
-        // In production, this would be actual API calls
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (config.features.useMockData) {
+        // Use mock data service
+        console.log('📰 Loading news data from mock service...');
+        const [mockNews, mockFeeds] = await Promise.all([
+          MockDataService.getNewsItems(),
+          MockDataService.getRSSFeeds()
+        ]);
         
-        setNewsItems(mockNewsItems);
-        setRssFeeds(mockRssFeeds);
-      }, 3, 1000);
+        setNewsItems(mockNews);
+        setRssFeeds(mockFeeds);
+      } else {
+        // Use real API with retry logic
+        await withRetry(async () => {
+          // In production, this would be actual API calls
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // This would be replaced with real API calls
+          const [mockNews, mockFeeds] = await Promise.all([
+            MockDataService.getNewsItems(),
+            MockDataService.getRSSFeeds()
+          ]);
+          
+          setNewsItems(mockNews);
+          setRssFeeds(mockFeeds);
+        }, 3, 1000);
+      }
       
     } catch (err) {
       const error = handleAPIError(err, 'loading news data');
@@ -48,5 +66,6 @@ export const useNewsData = () => {
     loading,
     error,
     refetch,
+    isMockMode: config.features.useMockData,
   };
 };

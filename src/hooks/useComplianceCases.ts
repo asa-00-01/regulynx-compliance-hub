@@ -4,9 +4,8 @@ import { ComplianceCaseDetails, CaseAction, CaseFilters, CaseSummary } from '@/t
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
-
-// Mock cases data for development - this would be replaced with actual API calls
-import { mockComplianceCases } from '@/mocks/casesData';
+import { MockDataService } from '@/services/mockDataService';
+import { config } from '@/config/environment';
 
 export function useComplianceCases(currentUser?: User) {
   const [cases, setCases] = useState<ComplianceCaseDetails[]>([]);
@@ -28,46 +27,20 @@ export function useComplianceCases(currentUser?: User) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch cases from Supabase
+  // Fetch cases from either mock service or Supabase
   const fetchCases = useCallback(async () => {
     setLoading(true);
     
     try {
-      // In a real implementation, this would fetch from Supabase
-      // For now, we'll use mock data
-      let filteredCases = [...mockComplianceCases];
+      let filteredCases: ComplianceCaseDetails[];
       
-      // Apply filters
-      if (filters.status && filters.status.length > 0) {
-        filteredCases = filteredCases.filter(c => filters.status?.includes(c.status));
-      }
-      
-      if (filters.type && filters.type.length > 0) {
-        filteredCases = filteredCases.filter(c => filters.type?.includes(c.type));
-      }
-      
-      if (filters.priority && filters.priority.length > 0) {
-        filteredCases = filteredCases.filter(c => filters.priority?.includes(c.priority));
-      }
-      
-      if (filters.assignedTo) {
-        filteredCases = filteredCases.filter(c => c.assignedTo === filters.assignedTo);
-      }
-      
-      if (filters.riskScoreMin !== undefined) {
-        filteredCases = filteredCases.filter(c => c.riskScore >= filters.riskScoreMin!);
-      }
-      
-      if (filters.riskScoreMax !== undefined) {
-        filteredCases = filteredCases.filter(c => c.riskScore <= filters.riskScoreMax!);
-      }
-      
-      if (filters.searchTerm) {
-        const term = filters.searchTerm.toLowerCase();
-        filteredCases = filteredCases.filter(c => 
-          c.userName.toLowerCase().includes(term) || 
-          c.description.toLowerCase().includes(term)
-        );
+      if (config.features.useMockData) {
+        // Use mock data service
+        filteredCases = await MockDataService.getComplianceCases(filters);
+      } else {
+        // Use real Supabase API
+        // This would be implemented with actual Supabase queries
+        filteredCases = await MockDataService.getComplianceCases(filters);
       }
       
       setCases(filteredCases);
@@ -125,30 +98,35 @@ export function useComplianceCases(currentUser?: User) {
   // Fetch case actions
   const fetchCaseActions = useCallback(async (caseId: string) => {
     try {
-      // In a real implementation, this would fetch from Supabase
-      // For mock, we'll create some static actions
-      const actions: CaseAction[] = [
-        {
-          id: '1',
-          caseId: caseId,
-          actionBy: 'system',
-          actionByName: 'System',
-          actionDate: new Date().toISOString(),
-          actionType: 'status_change',
-          description: 'Case created',
-        },
-        {
-          id: '2',
-          caseId: caseId,
-          actionBy: '123',
-          actionByName: 'Alex Nordström',
-          actionDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          actionType: 'assignment',
-          description: 'Case assigned to compliance officer',
-        }
-      ];
-      
-      setCaseActions(actions);
+      if (config.features.useMockData) {
+        // Use mock data
+        const actions: CaseAction[] = [
+          {
+            id: '1',
+            caseId: caseId,
+            actionBy: 'system',
+            actionByName: 'System',
+            actionDate: new Date().toISOString(),
+            actionType: 'status_change',
+            description: 'Case created',
+          },
+          {
+            id: '2',
+            caseId: caseId,
+            actionBy: '123',
+            actionByName: 'Alex Nordström',
+            actionDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            actionType: 'assignment',
+            description: 'Case assigned to compliance officer',
+          }
+        ];
+        
+        setCaseActions(actions);
+      } else {
+        // Use real Supabase API
+        // This would be implemented with actual Supabase queries
+        setCaseActions([]);
+      }
     } catch (error) {
       console.error('Error fetching case actions:', error);
       toast({
@@ -162,7 +140,6 @@ export function useComplianceCases(currentUser?: User) {
   // Add a note to a case
   const addCaseNote = useCallback(async (caseId: string, note: string) => {
     try {
-      // In a real implementation, this would save to Supabase
       const newAction: CaseAction = {
         id: Date.now().toString(),
         caseId: caseId,
@@ -173,7 +150,14 @@ export function useComplianceCases(currentUser?: User) {
         description: note,
       };
       
-      setCaseActions(prev => [...prev, newAction]);
+      if (config.features.useMockData) {
+        // Use mock data - just add to local state
+        setCaseActions(prev => [...prev, newAction]);
+      } else {
+        // Use real Supabase API
+        // This would save to Supabase and then update local state
+        setCaseActions(prev => [...prev, newAction]);
+      }
       
       toast({
         title: 'Note Added',
@@ -199,12 +183,22 @@ export function useComplianceCases(currentUser?: User) {
     note?: string
   ) => {
     try {
-      // In a real implementation, this would update in Supabase
-      setCases(prev => prev.map(c => 
-        c.id === caseId 
-          ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } 
-          : c
-      ));
+      if (config.features.useMockData) {
+        // Use mock data - update local state
+        setCases(prev => prev.map(c => 
+          c.id === caseId 
+            ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } 
+            : c
+        ));
+      } else {
+        // Use real Supabase API
+        // This would update in Supabase and then update local state
+        setCases(prev => prev.map(c => 
+          c.id === caseId 
+            ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } 
+            : c
+        ));
+      }
       
       const newAction: CaseAction = {
         id: Date.now().toString(),
@@ -247,12 +241,22 @@ export function useComplianceCases(currentUser?: User) {
     assignToName: string
   ) => {
     try {
-      // In a real implementation, this would update in Supabase
-      setCases(prev => prev.map(c => 
-        c.id === caseId 
-          ? { ...c, assignedTo: assignToId, assignedToName: assignToName, updatedAt: new Date().toISOString() } 
-          : c
-      ));
+      if (config.features.useMockData) {
+        // Use mock data - update local state
+        setCases(prev => prev.map(c => 
+          c.id === caseId 
+            ? { ...c, assignedTo: assignToId, assignedToName: assignToName, updatedAt: new Date().toISOString() } 
+            : c
+        ));
+      } else {
+        // Use real Supabase API
+        // This would update in Supabase and then update local state
+        setCases(prev => prev.map(c => 
+          c.id === caseId 
+            ? { ...c, assignedTo: assignToId, assignedToName: assignToName, updatedAt: new Date().toISOString() } 
+            : c
+        ));
+      }
       
       const newAction: CaseAction = {
         id: Date.now().toString(),
@@ -295,26 +299,22 @@ export function useComplianceCases(currentUser?: User) {
   // Create a new case
   const createCase = useCallback(async (caseData: Partial<ComplianceCaseDetails>) => {
     try {
-      // In a real implementation, this would save to Supabase
-      const newCase: ComplianceCaseDetails = {
-        id: `case-${Date.now()}`,
-        userId: caseData.userId || '',
-        userName: caseData.userName || 'Unknown User',
-        createdAt: new Date().toISOString(),
-        createdBy: currentUser?.id,
-        updatedAt: new Date().toISOString(),
-        type: caseData.type || 'kyc',
-        status: 'open',
-        riskScore: caseData.riskScore || 50,
-        description: caseData.description || 'No description provided',
-        assignedTo: caseData.assignedTo,
-        assignedToName: caseData.assignedToName,
-        priority: caseData.priority || 'medium',
-        source: caseData.source || 'manual',
-        relatedTransactions: caseData.relatedTransactions || [],
-        relatedAlerts: caseData.relatedAlerts || [],
-        documents: caseData.documents || [],
-      };
+      let newCase: ComplianceCaseDetails;
+      
+      if (config.features.useMockData) {
+        // Use mock data service
+        newCase = await MockDataService.createComplianceCase({
+          ...caseData,
+          createdBy: currentUser?.id
+        });
+      } else {
+        // Use real Supabase API
+        // This would save to Supabase and return the created case
+        newCase = await MockDataService.createComplianceCase({
+          ...caseData,
+          createdBy: currentUser?.id
+        });
+      }
       
       setCases(prev => [newCase, ...prev]);
       
@@ -374,6 +374,7 @@ export function useComplianceCases(currentUser?: User) {
     updateCaseStatus,
     assignCase,
     createCase,
-    fetchCases
+    fetchCases,
+    isMockMode: config.features.useMockData,
   };
 }

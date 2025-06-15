@@ -5,6 +5,7 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import ToastProvider from '@/components/common/ToastProvider';
 import AnalyticsProvider from '@/components/common/AnalyticsProvider';
 import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
+import MockModeIndicator from '@/components/common/MockModeIndicator';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface AppProvidersProps {
@@ -26,6 +27,7 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             {children}
             <ToastProvider />
             <AnalyticsDashboard />
+            <MockModeIndicator />
           </ComplianceProvider>
         </Suspense>
       </AnalyticsProvider>
