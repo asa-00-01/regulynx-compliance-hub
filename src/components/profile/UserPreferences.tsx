@@ -7,10 +7,12 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from 'next-themes';
 
 const UserPreferences = () => {
   const { t, i18n } = useTranslation();
   const { user, updateUserProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
   
   const [notifications, setNotifications] = useState({
     email: true,
@@ -19,15 +21,21 @@ const UserPreferences = () => {
     newCase: true,
     riskAlerts: true,
   });
-  const [theme, setTheme] = useState('system');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user?.preferences) {
-      setNotifications(user.preferences.notifications);
-      setTheme(user.preferences.theme);
+      if (user.preferences.notifications) {
+        setNotifications(user.preferences.notifications);
+      }
+      if (user.preferences.theme) {
+        setTheme(user.preferences.theme);
+      }
+      if (user.preferences.language) {
+        i18n.changeLanguage(user.preferences.language);
+      }
     }
-  }, [user]);
+  }, [user, setTheme, i18n]);
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
@@ -43,7 +51,8 @@ const UserPreferences = () => {
       await updateUserProfile({
         preferences: {
           notifications,
-          theme,
+          theme: theme || 'system',
+          language: i18n.language,
         },
       });
     } catch (error) {
