@@ -36,15 +36,23 @@ const ComplianceCases = () => {
     createCase,
   } = useComplianceCases(user);
   
-  // Check if we need to create a case based on location state
+  // Check for location state actions
   useEffect(() => {
     if (location.state?.createCase && location.state?.userData) {
       setInitialCaseData(location.state.userData);
       setShowNewCaseDialog(true);
       // Clear the location state to prevent modal reopening on refresh
       window.history.replaceState({}, document.title);
+    } else if (location.state?.caseId && cases.length > 0) {
+      const caseToSelect = cases.find(c => c.id === location.state.caseId);
+      if (caseToSelect) {
+        selectCase(caseToSelect);
+        setActiveTab('details');
+        // Clear the location state to prevent re-triggering
+        window.history.replaceState({}, document.title);
+      }
     }
-  }, [location.state]);
+  }, [location.state, cases, selectCase]);
   
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>

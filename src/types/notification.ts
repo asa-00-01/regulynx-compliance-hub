@@ -6,4 +6,8 @@ export interface Notification {
   createdAt: string; // ISO string
   read: boolean;
   type: 'alert' | 'case' | 'system';
+  data?: {
+    caseId?: string;
+    transactionId?: string;
+  };
 }

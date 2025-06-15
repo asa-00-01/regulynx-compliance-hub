@@ -1,4 +1,3 @@
-
 import { Notification } from '@/types/notification';
 
 export const mockNotifications: Notification[] = [
@@ -9,6 +8,9 @@ export const mockNotifications: Notification[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
     read: false,
     type: 'case',
+    data: {
+      caseId: 'CASE-00123',
+    },
   },
   {
     id: '2',
@@ -17,6 +19,9 @@ export const mockNotifications: Notification[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     read: false,
     type: 'alert',
+    data: {
+      transactionId: 'tx-123459',
+    },
   },
   {
     id: '3',

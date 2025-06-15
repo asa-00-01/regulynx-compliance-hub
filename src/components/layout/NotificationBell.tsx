@@ -49,9 +49,14 @@ const NotificationBell = () => {
       markNotificationAsRead(notification.id);
       setUnreadCount(prev => (prev > 0 ? prev - 1 : 0));
     }
-    // Navigate to a relevant page, e.g.
-    if(notification.type === 'case') {
-      navigate('/cases');
+    
+    if (notification.type === 'case' && notification.data?.caseId) {
+      navigate('/compliance-cases', { state: { caseId: notification.data.caseId } });
+    } else if (notification.type === 'alert' && notification.data?.transactionId) {
+      navigate('/transactions', { state: { transactionId: notification.data.transactionId } });
+    } else if (notification.type === 'case') {
+      // Fallback for generic case notifications
+      navigate('/compliance-cases');
     }
   };
 

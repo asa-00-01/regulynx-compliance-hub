@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import TransactionDetails from '@/components/transactions/TransactionDetails';
 import { Transaction } from '@/types/transaction';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCompliance } from '@/context/ComplianceContext';
 
 // Mock transaction data with proper Transaction type
@@ -126,6 +126,7 @@ const Transactions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setSelectedUser } = useCompliance();
+  const location = useLocation();
 
   // Filter and sort transactions
   const filteredAndSortedTransactions = useMemo(() => {
@@ -179,10 +180,20 @@ const Transactions = () => {
     }
   };
 
-  const handleViewDetails = (transaction: Transaction) => {
+  const handleViewDetails = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsDetailsOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.transactionId) {
+      const txToView = transactions.find(t => t.id === location.state.transactionId);
+      if (txToView) {
+        handleViewDetails(txToView);
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, transactions, handleViewDetails]);
 
   const handleFlagTransaction = (transaction: Transaction) => {
     // Update the transaction's flagged state
