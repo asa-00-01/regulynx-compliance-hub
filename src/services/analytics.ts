@@ -1,4 +1,3 @@
-
 import config from '@/config/environment';
 
 export interface AnalyticsEvent {
@@ -21,8 +20,35 @@ export interface PerformanceMetric {
   timestamp: string;
 }
 
+type Listener<T> = (data: T) => void;
+
 class AnalyticsService {
   private isInitialized = false;
+  private eventListeners: Listener<AnalyticsEvent>[] = [];
+  private errorListeners: Listener<ErrorReport>[] = [];
+  private metricListeners: Listener<PerformanceMetric>[] = [];
+
+  public addEventListener(type: 'event', listener: Listener<AnalyticsEvent>): void;
+  public addEventListener(type: 'error', listener: Listener<ErrorReport>): void;
+  public addEventListener(type: 'metric', listener: Listener<PerformanceMetric>): void;
+  public addEventListener(type: 'event' | 'error' | 'metric', listener: Listener<any>): void {
+    switch (type) {
+      case 'event': this.eventListeners.push(listener); break;
+      case 'error': this.errorListeners.push(listener); break;
+      case 'metric': this.metricListeners.push(listener); break;
+    }
+  }
+
+  public removeEventListener(type: 'event', listener: Listener<AnalyticsEvent>): void;
+  public removeEventListener(type: 'error', listener: Listener<ErrorReport>): void;
+  public removeEventListener(type: 'metric', listener: Listener<PerformanceMetric>): void;
+  public removeEventListener(type: 'event' | 'error' | 'metric', listener: Listener<any>): void {
+    switch (type) {
+      case 'event': this.eventListeners = this.eventListeners.filter(l => l !== listener); break;
+      case 'error': this.errorListeners = this.errorListeners.filter(l => l !== listener); break;
+      case 'metric': this.metricListeners = this.metricListeners.filter(l => l !== listener); break;
+    }
+  }
 
   async initialize() {
     if (this.isInitialized) return;
@@ -144,6 +170,7 @@ class AnalyticsService {
 
       if (config.isDevelopment) {
         console.log('Analytics Event:', payload);
+        this.eventListeners.forEach((listener) => listener(payload as AnalyticsEvent));
       } else {
         // In production, send to analytics service
         this.sendToAnalyticsService(payload);
@@ -170,6 +197,7 @@ class AnalyticsService {
 
       if (config.isDevelopment) {
         console.error('Error Report:', errorReport);
+        this.errorListeners.forEach((listener) => listener(errorReport));
       } else {
         // In production, send to error reporting service
         this.sendToErrorReportingService(errorReport);
@@ -185,6 +213,7 @@ class AnalyticsService {
     try {
       if (config.isDevelopment) {
         console.log('Performance Metric:', metric);
+        this.metricListeners.forEach((listener) => listener(metric));
       } else {
         // In production, send to performance monitoring service
         this.sendToPerformanceService(metric);

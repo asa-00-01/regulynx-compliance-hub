@@ -6,12 +6,35 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle, BarChart3, Eye, Settings } from 'lucide-react';
 import config from '@/config/environment';
+import { analytics, AnalyticsEvent, ErrorReport, PerformanceMetric } from '@/services/analytics';
 
 const AnalyticsDashboard: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [analyticsEvents, setAnalyticsEvents] = useState<any[]>([]);
-  const [errorReports, setErrorReports] = useState<any[]>([]);
-  const [performanceMetrics, setPerformanceMetrics] = useState<any[]>([]);
+  const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([]);
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
+
+  useEffect(() => {
+    const handleEvent = (event: AnalyticsEvent) => {
+      setAnalyticsEvents((prev) => [event, ...prev].slice(0, 100)); // Cap at 100 entries
+    };
+    const handleError = (report: ErrorReport) => {
+      setErrorReports((prev) => [report, ...prev].slice(0, 100));
+    };
+    const handleMetric = (metric: PerformanceMetric) => {
+      setPerformanceMetrics((prev) => [metric, ...prev].slice(0, 100));
+    };
+
+    analytics.addEventListener('event', handleEvent);
+    analytics.addEventListener('error', handleError);
+    analytics.addEventListener('metric', handleMetric);
+
+    return () => {
+      analytics.removeEventListener('event', handleEvent);
+      analytics.removeEventListener('error', handleError);
+      analytics.removeEventListener('metric', handleMetric);
+    };
+  }, []);
 
   // Only show in development mode
   if (!config.isDevelopment) {
@@ -35,8 +58,8 @@ const AnalyticsDashboard: React.FC = () => {
 
       {/* Dashboard Panel */}
       {isVisible && (
-        <div className="fixed bottom-16 left-4 w-96 max-h-96 overflow-auto bg-background border rounded-lg shadow-lg z-50 p-4">
-          <div className="flex justify-between items-center mb-4">
+        <div className="fixed bottom-16 left-4 w-96 max-h-[32rem] overflow-auto bg-background border rounded-lg shadow-lg z-50 p-4 flex flex-col gap-4">
+          <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Analytics Dashboard</h3>
             <Button
               onClick={() => setIsVisible(false)}
@@ -118,6 +141,53 @@ const AnalyticsDashboard: React.FC = () => {
               In production, data will be sent to configured services.
             </AlertDescription>
           </Alert>
+
+          {/* Event Logs */}
+          <div className="flex-grow overflow-y-auto space-y-4 text-xs">
+            <h4 className="font-semibold text-sm">Event Log</h4>
+            
+            {analyticsEvents.map((event, i) => (
+              <div key={`evt-${i}`} className="p-2 border rounded bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-3 w-3 text-blue-500" />
+                  <span className="font-semibold">{event.name}</span>
+                  <span className="text-muted-foreground ml-auto">{new Date(event.properties?.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <pre className="text-muted-foreground whitespace-pre-wrap break-all text-[10px] mt-1 p-1 bg-background rounded">
+                  {JSON.stringify(event.properties, null, 2)}
+                </pre>
+              </div>
+            ))}
+
+            {errorReports.map((report, i) => (
+              <div key={`err-${i}`} className="p-2 border rounded bg-red-500/10">
+                 <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-3 w-3 text-red-500" />
+                  <span className="font-semibold text-red-500">Error</span>
+                  <span className="text-muted-foreground ml-auto">{new Date(report.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p className="mt-1">{report.error.message}</p>
+                <pre className="text-muted-foreground whitespace-pre-wrap break-all text-[10px] mt-1 p-1 bg-background rounded">
+                  {JSON.stringify(report.context, null, 2)}
+                </pre>
+              </div>
+            ))}
+            
+            {performanceMetrics.map((metric, i) => (
+              <div key={`perf-${i}`} className="p-2 border rounded bg-green-500/10">
+                 <div className="flex items-center gap-2">
+                  <Activity className="h-3 w-3 text-green-500" />
+                  <span className="font-semibold text-green-500">{metric.name}</span>
+                  <span className="text-muted-foreground ml-auto">{new Date(metric.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p className="mt-1">{metric.value.toFixed(2)} {metric.unit}</p>
+              </div>
+            ))}
+
+            {analyticsEvents.length === 0 && errorReports.length === 0 && performanceMetrics.length === 0 && (
+              <div className="text-center text-muted-foreground p-4">No events recorded yet.</div>
+            )}
+          </div>
         </div>
       )}
     </>
