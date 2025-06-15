@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Menu, Bell, Search, User as UserIcon, Settings } from 'lucide-react';
+import { Menu, Bell, Search, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -105,15 +104,18 @@ const Header = ({ toggleSidebar, sidebarOpen }: HeaderProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
+            <DropdownMenuItem onSelect={handleProfileClick} className="cursor-pointer">
               <UserIcon className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
+            <DropdownMenuItem onSelect={handleProfileClick} className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">Log out</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
