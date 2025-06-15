@@ -52,13 +52,14 @@ export type UserRole = 'admin' | 'analyst' | 'viewer' | 'manager';
 export interface ComplianceCase {
   id: string;
   userId: string;
-  status: 'open' | 'closed' | 'pending';
+  status: 'open' | 'closed' | 'pending' | 'under_review' | 'escalated' | 'pending_info';
   type: 'kyc' | 'aml' | 'sanctions';
   createdAt: string;
   updatedAt: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
   assignedTo?: string;
   description?: string;
+  riskScore?: number;
 }
 
 export interface DashboardMetrics {
@@ -66,4 +67,7 @@ export interface DashboardMetrics {
   pendingCases: number;
   riskScore: number;
   completedVerifications: number;
+  pendingDocuments?: number;
+  pendingKycReviews?: number;
+  activeAlerts?: number;
 }
