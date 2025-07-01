@@ -1,38 +1,50 @@
-
-import React, { Suspense } from 'react';
-import { ComplianceProvider } from '@/context/ComplianceContext';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import ToastProvider from '@/components/common/ToastProvider';
-import AnalyticsProvider from '@/components/common/AnalyticsProvider';
+import React from 'react';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { ToastProvider } from '@/components/ui/toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from 'react-error-boundary';
+import AuthProvider from './AuthProvider';
+import ComplianceProvider from './ComplianceProvider';
+import AnalyticsProvider from './AnalyticsProvider';
 import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
-import MockModeIndicator from '@/components/common/MockModeIndicator';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
 import DeveloperPanel from '@/components/dev/DeveloperPanel';
+import EnvironmentChecker from '@/components/common/EnvironmentChecker';
+import MockModeIndicator from '@/components/common/MockModeIndicator';
+import HelpPanel from '@/components/common/HelpPanel';
+import SecurityProvider from '@/components/security/SecurityProvider';
+import SecurityMonitor from '@/components/security/SecurityMonitor';
+import SecurityAuditLog from '@/components/security/SecurityAuditLog';
 
 interface AppProvidersProps {
   children: React.ReactNode;
 }
 
+const queryClient = new QueryClient();
+
 const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
     <ErrorBoundary>
-      <AnalyticsProvider>
-        <Suspense 
-          fallback={
-            <div className="min-h-screen flex items-center justify-center">
-              <LoadingSpinner size="lg" text="Loading application..." />
-            </div>
-          }
-        >
-          <ComplianceProvider>
-            {children}
-            <ToastProvider />
-            <AnalyticsDashboard />
-            <MockModeIndicator />
-            <DeveloperPanel />
-          </ComplianceProvider>
-        </Suspense>
-      </AnalyticsProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <SecurityProvider>
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
+              <ComplianceProvider>
+                <AnalyticsProvider>
+                  <ToastProvider />
+                  {children}
+                  <AnalyticsDashboard />
+                  <DeveloperPanel />
+                  <EnvironmentChecker />
+                  <MockModeIndicator />
+                  <HelpPanel />
+                  <SecurityMonitor />
+                  <SecurityAuditLog />
+                </AnalyticsProvider>
+              </ComplianceProvider>
+            </QueryClientProvider>
+          </AuthProvider>
+        </SecurityProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };
