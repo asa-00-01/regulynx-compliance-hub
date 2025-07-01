@@ -15,12 +15,21 @@ import HelpPanel from '@/components/common/HelpPanel';
 import SecurityProvider from '@/components/security/SecurityProvider';
 import SecurityMonitor from '@/components/security/SecurityMonitor';
 import SecurityAuditLog from '@/components/security/SecurityAuditLog';
+import PerformanceDashboard from '@/components/common/PerformanceDashboard';
 
 interface AppProvidersProps {
   children: React.ReactNode;
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    },
+  },
+});
 
 const ErrorFallback = ({ error }: { error: Error }) => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -55,6 +64,7 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                   <HelpPanel />
                   <SecurityMonitor />
                   <SecurityAuditLog />
+                  <PerformanceDashboard />
                 </AnalyticsProvider>
               </ComplianceProvider>
             </QueryClientProvider>

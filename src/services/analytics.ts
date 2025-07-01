@@ -1,287 +1,222 @@
 import config from '@/config/environment';
 
-export interface AnalyticsEvent {
-  name: string;
+interface AnalyticsEvent {
+  event: string;
   properties?: Record<string, any>;
-  userId?: string;
+  timestamp?: number;
 }
 
-export interface ErrorReport {
-  error: Error;
-  context?: Record<string, any>;
-  userId?: string;
-  timestamp: string;
-}
-
-export interface PerformanceMetric {
-  name: string;
+interface PerformanceMetric {
+  metric: string;
   value: number;
-  unit: string;
-  timestamp: string;
+  timestamp?: number;
 }
-
-type Listener<T> = (data: T) => void;
 
 class AnalyticsService {
-  private isInitialized = false;
-  private eventListeners: Listener<AnalyticsEvent>[] = [];
-  private errorListeners: Listener<ErrorReport>[] = [];
-  private metricListeners: Listener<PerformanceMetric>[] = [];
+  private initialized = false;
+  private queue: AnalyticsEvent[] = [];
+  private performanceQueue: PerformanceMetric[] = [];
 
-  public addEventListener(type: 'event', listener: Listener<AnalyticsEvent>): void;
-  public addEventListener(type: 'error', listener: Listener<ErrorReport>): void;
-  public addEventListener(type: 'metric', listener: Listener<PerformanceMetric>): void;
-  public addEventListener(type: 'event' | 'error' | 'metric', listener: Listener<any>): void {
-    switch (type) {
-      case 'event': this.eventListeners.push(listener); break;
-      case 'error': this.errorListeners.push(listener); break;
-      case 'metric': this.metricListeners.push(listener); break;
+  initialize() {
+    if (this.initialized) return;
+
+    this.initialized = true;
+    
+    if (config.features.enableAnalytics) {
+      console.log('📊 Analytics service initialized');
+      this.flushQueue();
+    }
+
+    if (config.features.enablePerformanceMonitoring) {
+      console.log('⚡ Performance monitoring enabled');
+      this.initializePerformanceTracking();
     }
   }
 
-  public removeEventListener(type: 'event', listener: Listener<AnalyticsEvent>): void;
-  public removeEventListener(type: 'error', listener: Listener<ErrorReport>): void;
-  public removeEventListener(type: 'metric', listener: Listener<PerformanceMetric>): void;
-  public removeEventListener(type: 'event' | 'error' | 'metric', listener: Listener<any>): void {
-    switch (type) {
-      case 'event': this.eventListeners = this.eventListeners.filter(l => l !== listener); break;
-      case 'error': this.errorListeners = this.errorListeners.filter(l => l !== listener); break;
-      case 'metric': this.metricListeners = this.metricListeners.filter(l => l !== listener); break;
-    }
-  }
-
-  async initialize() {
-    if (this.isInitialized) return;
-
-    try {
-      if (config.features.enableAnalytics) {
-        await this.initializeAnalytics();
-      }
-
-      if (config.features.enableErrorReporting) {
-        await this.initializeErrorReporting();
-      }
-
-      if (config.features.enablePerformanceMonitoring) {
-        await this.initializePerformanceMonitoring();
-      }
-
-      this.isInitialized = true;
-      console.log('Analytics service initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize analytics service:', error);
-    }
-  }
-
-  private async initializeAnalytics() {
-    // In production, this would integrate with services like Google Analytics, Mixpanel, etc.
-    if (config.isDevelopment) {
-      console.log('Analytics initialized (development mode)');
-    }
-  }
-
-  private async initializeErrorReporting() {
-    // In production, this would integrate with services like Sentry, Bugsnag, etc.
-    if (config.isDevelopment) {
-      console.log('Error reporting initialized (development mode)');
-    }
-
-    // Set up global error handlers
-    window.addEventListener('error', this.handleGlobalError.bind(this));
-    window.addEventListener('unhandledrejection', this.handleUnhandledRejection.bind(this));
-  }
-
-  private async initializePerformanceMonitoring() {
-    // Monitor Core Web Vitals and custom metrics
-    if ('PerformanceObserver' in window) {
-      this.observeWebVitals();
-    }
-  }
-
-  private handleGlobalError(event: ErrorEvent) {
-    this.reportError(new Error(event.message), {
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-      stack: event.error?.stack,
-    });
-  }
-
-  private handleUnhandledRejection(event: PromiseRejectionEvent) {
-    this.reportError(new Error(`Unhandled Promise Rejection: ${event.reason}`), {
-      reason: event.reason,
-    });
-  }
-
-  private observeWebVitals() {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.entryType === 'largest-contentful-paint') {
-          this.reportPerformanceMetric({
-            name: 'LCP',
-            value: entry.startTime,
-            unit: 'ms',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        if (entry.entryType === 'first-input') {
-          const fidEntry = entry as PerformanceEventTiming;
-          this.reportPerformanceMetric({
-            name: 'FID',
-            value: fidEntry.processingStart - fidEntry.startTime,
-            unit: 'ms',
-            timestamp: new Date().toISOString(),
-          });
-        }
-
-        if (entry.entryType === 'layout-shift') {
-          const clsEntry = entry as any;
-          if (!clsEntry.hadRecentInput) {
-            this.reportPerformanceMetric({
-              name: 'CLS',
-              value: clsEntry.value,
-              unit: 'score',
-              timestamp: new Date().toISOString(),
-            });
+  private initializePerformanceTracking() {
+    // Track page load performance
+    if (typeof window !== 'undefined') {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+          
+          if (navigation) {
+            this.trackPerformance('page_load_time', navigation.loadEventEnd - navigation.navigationStart);
+            this.trackPerformance('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.navigationStart);
+            this.trackPerformance('time_to_first_byte', navigation.responseStart - navigation.requestStart);
           }
-        }
-      }
-    });
-
-    try {
-      observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
-    } catch (e) {
-      console.warn('Some performance metrics not supported');
+        }, 0);
+      });
     }
   }
 
-  track(event: AnalyticsEvent) {
-    if (!config.features.enableAnalytics) return;
+  track(event: string, properties?: Record<string, any>) {
+    const analyticsEvent: AnalyticsEvent = {
+      event,
+      properties: {
+        ...properties,
+        timestamp: Date.now(),
+        environment: config.app.environment,
+        version: config.app.version,
+      },
+      timestamp: Date.now(),
+    };
 
-    try {
-      const payload = {
-        ...event,
-        timestamp: new Date().toISOString(),
-        sessionId: this.getSessionId(),
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-      };
-
-      if (config.isDevelopment) {
-        console.log('Analytics Event:', payload);
-        this.eventListeners.forEach((listener) => listener(payload as AnalyticsEvent));
+    if (config.features.enableAnalytics) {
+      if (this.initialized) {
+        this.processEvent(analyticsEvent);
       } else {
-        // In production, send to analytics service
-        this.sendToAnalyticsService(payload);
+        this.queue.push(analyticsEvent);
       }
-    } catch (error) {
-      console.error('Failed to track analytics event:', error);
     }
+
+    // Log in development
+    if (config.isDevelopment) {
+      console.log('📊 Analytics Event:', analyticsEvent);
+    }
+  }
+
+  trackPerformance(metric: string, value: number) {
+    const performanceMetric: PerformanceMetric = {
+      metric,
+      value,
+      timestamp: Date.now(),
+    };
+
+    if (config.features.enablePerformanceMonitoring) {
+      if (this.initialized) {
+        this.processPerformanceMetric(performanceMetric);
+      } else {
+        this.performanceQueue.push(performanceMetric);
+      }
+    }
+
+    // Log in development
+    if (config.isDevelopment) {
+      console.log('⚡ Performance Metric:', performanceMetric);
+    }
+  }
+
+  private processEvent(event: AnalyticsEvent) {
+    // In a real implementation, this would send to your analytics service
+    // For now, we'll log and potentially send to a local endpoint
+    
+    if (config.isDevelopment) {
+      console.log('Processing analytics event:', event);
+    }
+
+    // Store in localStorage for development debugging
+    if (config.isDevelopment) {
+      const stored = localStorage.getItem('analytics_events') || '[]';
+      const events = JSON.parse(stored);
+      events.push(event);
+      
+      // Keep only last 100 events
+      if (events.length > 100) {
+        events.splice(0, events.length - 100);
+      }
+      
+      localStorage.setItem('analytics_events', JSON.stringify(events));
+    }
+  }
+
+  private processPerformanceMetric(metric: PerformanceMetric) {
+    // In a real implementation, this would send to your performance monitoring service
+    
+    if (config.isDevelopment) {
+      console.log('Processing performance metric:', metric);
+    }
+
+    // Store in localStorage for development debugging
+    if (config.isDevelopment) {
+      const stored = localStorage.getItem('performance_metrics') || '[]';
+      const metrics = JSON.parse(stored);
+      metrics.push(metric);
+      
+      // Keep only last 50 metrics
+      if (metrics.length > 50) {
+        metrics.splice(0, metrics.length - 50);
+      }
+      
+      localStorage.setItem('performance_metrics', JSON.stringify(metrics));
+    }
+  }
+
+  private flushQueue() {
+    // Process queued events
+    this.queue.forEach(event => this.processEvent(event));
+    this.queue = [];
+
+    // Process queued performance metrics
+    this.performanceQueue.forEach(metric => this.processPerformanceMetric(metric));
+    this.performanceQueue = [];
   }
 
   reportError(error: Error, context?: Record<string, any>) {
-    if (!config.features.enableErrorReporting) return;
+    if (config.features.enableErrorReporting) {
+      this.track('error', {
+        message: error.message,
+        stack: error.stack,
+        context,
+      });
+    }
 
-    try {
-      const errorReport: ErrorReport = {
-        error,
-        context: {
-          ...context,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-        },
-        timestamp: new Date().toISOString(),
-      };
-
-      if (config.isDevelopment) {
-        console.error('Error Report:', errorReport);
-        this.errorListeners.forEach((listener) => listener(errorReport));
-      } else {
-        // In production, send to error reporting service
-        this.sendToErrorReportingService(errorReport);
-      }
-    } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
+    if (config.isDevelopment) {
+      console.error('📊 Error reported to analytics:', error, context);
     }
   }
 
-  reportPerformanceMetric(metric: PerformanceMetric) {
-    if (!config.features.enablePerformanceMonitoring) return;
-
-    try {
-      if (config.isDevelopment) {
-        console.log('Performance Metric:', metric);
-        this.metricListeners.forEach((listener) => listener(metric));
-      } else {
-        // In production, send to performance monitoring service
-        this.sendToPerformanceService(metric);
-      }
-    } catch (error) {
-      console.error('Failed to report performance metric:', error);
-    }
+  // Utility methods for common tracking scenarios
+  trackPageView(page: string, properties?: Record<string, any>) {
+    this.track('page_view', {
+      page,
+      url: window.location.href,
+      referrer: document.referrer,
+      ...properties,
+    });
   }
 
-  private getSessionId(): string {
-    let sessionId = sessionStorage.getItem('analytics_session_id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('analytics_session_id', sessionId);
-    }
-    return sessionId;
+  trackUserAction(action: string, properties?: Record<string, any>) {
+    this.track('user_action', {
+      action,
+      ...properties,
+    });
   }
 
-  private async sendToAnalyticsService(payload: any) {
-    // Implement actual analytics service integration here
-    // Example: Google Analytics, Mixpanel, Amplitude, etc.
-    console.log('Sending to analytics service:', payload);
+  trackComplianceEvent(eventType: string, properties?: Record<string, any>) {
+    this.track('compliance_event', {
+      event_type: eventType,
+      ...properties,
+    });
   }
 
-  private async sendToErrorReportingService(errorReport: ErrorReport) {
-    // Implement actual error reporting service integration here
-    // Example: Sentry, Bugsnag, LogRocket, etc.
-    console.log('Sending to error reporting service:', errorReport);
+  // Development helper to view stored analytics data
+  getStoredEvents(): AnalyticsEvent[] {
+    if (!config.isDevelopment) return [];
+    
+    const stored = localStorage.getItem('analytics_events') || '[]';
+    return JSON.parse(stored);
   }
 
-  private async sendToPerformanceService(metric: PerformanceMetric) {
-    // Implement actual performance monitoring service integration here
-    // Example: New Relic, DataDog, Pingdom, etc.
-    console.log('Sending to performance service:', metric);
+  getStoredMetrics(): PerformanceMetric[] {
+    if (!config.isDevelopment) return [];
+    
+    const stored = localStorage.getItem('performance_metrics') || '[]';
+    return JSON.parse(stored);
   }
 }
 
+// Export singleton instance
 export const analytics = new AnalyticsService();
 
-// Helper functions for common tracking scenarios
-export const trackPageView = (pageName: string, properties?: Record<string, any>) => {
-  analytics.track({
-    name: 'page_view',
-    properties: {
-      page: pageName,
-      ...properties,
-    },
-  });
-};
+// Export individual functions for convenience
+export const trackPageView = (page: string, properties?: Record<string, any>) => 
+  analytics.trackPageView(page, properties);
 
-export const trackUserAction = (action: string, properties?: Record<string, any>) => {
-  analytics.track({
-    name: 'user_action',
-    properties: {
-      action,
-      ...properties,
-    },
-  });
-};
+export const trackUserAction = (action: string, properties?: Record<string, any>) => 
+  analytics.trackUserAction(action, properties);
 
-export const trackComplianceEvent = (eventType: string, properties?: Record<string, any>) => {
-  analytics.track({
-    name: 'compliance_event',
-    properties: {
-      event_type: eventType,
-      ...properties,
-    },
-  });
-};
+export const trackComplianceEvent = (eventType: string, properties?: Record<string, any>) => 
+  analytics.trackComplianceEvent(eventType, properties);
 
 export default analytics;
