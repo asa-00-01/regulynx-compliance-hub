@@ -1,6 +1,7 @@
+
 import React from 'react';
-import { ThemeProvider } from '@/components/ui/theme-provider';
-import { ToastProvider } from '@/components/ui/toast';
+import { ThemeProvider } from '@/components/common/ThemeProvider';
+import { ToastProvider } from '@/components/common/ToastProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthProvider from './AuthProvider';
@@ -21,9 +22,24 @@ interface AppProvidersProps {
 
 const queryClient = new QueryClient();
 
+const ErrorFallback = ({ error }: { error: Error }) => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="text-center p-8 max-w-md">
+      <h2 className="text-2xl font-bold text-destructive mb-4">Something went wrong</h2>
+      <p className="text-muted-foreground mb-4">{error.message}</p>
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+      >
+        Reload page
+      </button>
+    </div>
+  </div>
+);
+
 const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <SecurityProvider>
           <AuthProvider>

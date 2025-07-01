@@ -81,9 +81,6 @@ class SecureAuthManager {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          persistSession: rememberMe,
-        }
       });
 
       if (error) throw error;
@@ -137,7 +134,8 @@ class SecureAuthManager {
         email,
         password,
         options: {
-          data: userData
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
