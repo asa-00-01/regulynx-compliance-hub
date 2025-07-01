@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
-import { ToastProvider } from '@/components/common/ToastProvider';
+import ToastProvider from '@/components/common/ToastProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthProvider from './AuthProvider';

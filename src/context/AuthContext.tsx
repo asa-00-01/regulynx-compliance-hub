@@ -19,7 +19,7 @@ interface AuthContextType {
   updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, session, loading, authLoaded, setUser } = useAuthState();
