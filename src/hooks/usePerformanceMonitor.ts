@@ -25,7 +25,7 @@ export const usePerformanceMonitor = () => {
             metrics.lcp = entry.startTime;
             console.log('🚀 LCP:', entry.startTime);
             if (config.features.enableAnalytics) {
-              analytics.trackPerformance('lcp', entry.startTime);
+              analytics.trackPerformance('lcp', entry.startTime, 'ms');
             }
             break;
             
@@ -34,7 +34,7 @@ export const usePerformanceMonitor = () => {
             metrics.fid = fidEntry.processingStart - fidEntry.startTime;
             console.log('🚀 FID:', metrics.fid);
             if (config.features.enableAnalytics) {
-              analytics.trackPerformance('fid', metrics.fid);
+              analytics.trackPerformance('fid', metrics.fid, 'ms');
             }
             break;
             
@@ -44,7 +44,7 @@ export const usePerformanceMonitor = () => {
               metrics.cls = clsEntry.value;
               console.log('🚀 CLS:', clsEntry.value);
               if (config.features.enableAnalytics) {
-                analytics.trackPerformance('cls', clsEntry.value);
+                analytics.trackPerformance('cls', clsEntry.value, 'score');
               }
             }
             break;
@@ -54,7 +54,7 @@ export const usePerformanceMonitor = () => {
               metrics.fcp = entry.startTime;
               console.log('🚀 FCP:', entry.startTime);
               if (config.features.enableAnalytics) {
-                analytics.trackPerformance('fcp', entry.startTime);
+                analytics.trackPerformance('fcp', entry.startTime, 'ms');
               }
             }
             break;
@@ -64,7 +64,7 @@ export const usePerformanceMonitor = () => {
             metrics.ttfb = navEntry.responseStart - navEntry.requestStart;
             console.log('🚀 TTFB:', metrics.ttfb);
             if (config.features.enableAnalytics) {
-              analytics.trackPerformance('ttfb', metrics.ttfb);
+              analytics.trackPerformance('ttfb', metrics.ttfb, 'ms');
             }
             break;
         }
@@ -96,7 +96,7 @@ export const usePerformanceMonitor = () => {
         });
         
         if (config.features.enableAnalytics) {
-          analytics.trackPerformance('memory_used', memInfo.usedJSHeapSize);
+          analytics.trackPerformance('memory_used', memInfo.usedJSHeapSize, 'bytes');
         }
       }
     };
@@ -133,7 +133,7 @@ export const usePerformanceMonitor = () => {
           console.log(`⚡ ${componentName} render time:`, measure.duration + 'ms');
           
           if (config.features.enableAnalytics) {
-            analytics.trackPerformance(`component_render_${componentName}`, measure.duration);
+            analytics.trackPerformance(`component_render_${componentName}`, measure.duration, 'ms');
           }
         } catch (error) {
           console.warn(`Performance measurement failed for ${componentName}:`, error);
@@ -160,7 +160,7 @@ export const usePerformanceMonitor = () => {
         console.log(`🌐 API ${apiName} duration:`, duration + 'ms');
         
         if (config.features.enableAnalytics) {
-          analytics.trackPerformance(`api_call_${apiName}`, duration);
+          analytics.trackPerformance(`api_call_${apiName}`, duration, 'ms');
         }
         
         // Warn if API call is slow

@@ -1,21 +1,58 @@
+
 import config from '@/config/environment';
 
-interface AnalyticsEvent {
-  event: string;
+export interface AnalyticsEvent {
+  name: string;
   properties?: Record<string, any>;
   timestamp?: number;
 }
 
-interface PerformanceMetric {
-  metric: string;
+export interface PerformanceMetric {
+  name: string;
   value: number;
-  timestamp?: number;
+  unit: string;
+  timestamp: number;
 }
+
+export interface ErrorReport {
+  error: Error;
+  context?: Record<string, any>;
+  timestamp: number;
+}
+
+type EventType = 'event' | 'error' | 'metric';
+type EventHandler = (data: any) => void;
 
 class AnalyticsService {
   private initialized = false;
   private queue: AnalyticsEvent[] = [];
   private performanceQueue: PerformanceMetric[] = [];
+  private eventListeners: Map<EventType, EventHandler[]> = new Map();
+
+  constructor() {
+    this.eventListeners.set('event', []);
+    this.eventListeners.set('error', []);
+    this.eventListeners.set('metric', []);
+  }
+
+  addEventListener(eventType: EventType, handler: EventHandler) {
+    const handlers = this.eventListeners.get(eventType) || [];
+    handlers.push(handler);
+    this.eventListeners.set(eventType, handlers);
+  }
+
+  removeEventListener(eventType: EventType, handler: EventHandler) {
+    const handlers = this.eventListeners.get(eventType) || [];
+    const index = handlers.indexOf(handler);
+    if (index > -1) {
+      handlers.splice(index, 1);
+    }
+  }
+
+  private emit(eventType: EventType, data: any) {
+    const handlers = this.eventListeners.get(eventType) || [];
+    handlers.forEach(handler => handler(data));
+  }
 
   initialize() {
     if (this.initialized) return;
@@ -41,8 +78,9 @@ class AnalyticsService {
           const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
           
           if (navigation) {
-            this.trackPerformance('page_load_time', navigation.loadEventEnd - navigation.navigationStart);
-            this.trackPerformance('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.navigationStart);
+            // Use fetchStart instead of deprecated navigationStart
+            this.trackPerformance('page_load_time', navigation.loadEventEnd - navigation.fetchStart);
+            this.trackPerformance('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.fetchStart);
             this.trackPerformance('time_to_first_byte', navigation.responseStart - navigation.requestStart);
           }
         }, 0);
@@ -52,7 +90,7 @@ class AnalyticsService {
 
   track(event: string, properties?: Record<string, any>) {
     const analyticsEvent: AnalyticsEvent = {
-      event,
+      name: event,
       properties: {
         ...properties,
         timestamp: Date.now(),
@@ -70,16 +108,20 @@ class AnalyticsService {
       }
     }
 
+    // Emit event for dashboard
+    this.emit('event', analyticsEvent);
+
     // Log in development
     if (config.isDevelopment) {
       console.log('📊 Analytics Event:', analyticsEvent);
     }
   }
 
-  trackPerformance(metric: string, value: number) {
+  trackPerformance(metric: string, value: number, unit: string = 'ms') {
     const performanceMetric: PerformanceMetric = {
-      metric,
+      name: metric,
       value,
+      unit,
       timestamp: Date.now(),
     };
 
@@ -90,6 +132,9 @@ class AnalyticsService {
         this.performanceQueue.push(performanceMetric);
       }
     }
+
+    // Emit event for dashboard
+    this.emit('metric', performanceMetric);
 
     // Log in development
     if (config.isDevelopment) {
@@ -153,6 +198,12 @@ class AnalyticsService {
   }
 
   reportError(error: Error, context?: Record<string, any>) {
+    const errorReport: ErrorReport = {
+      error,
+      context,
+      timestamp: Date.now(),
+    };
+
     if (config.features.enableErrorReporting) {
       this.track('error', {
         message: error.message,
@@ -160,6 +211,9 @@ class AnalyticsService {
         context,
       });
     }
+
+    // Emit error for dashboard
+    this.emit('error', errorReport);
 
     if (config.isDevelopment) {
       console.error('📊 Error reported to analytics:', error, context);

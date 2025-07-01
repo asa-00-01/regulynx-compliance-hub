@@ -161,7 +161,7 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Eye className="h-3 w-3 text-blue-500" />
                   <span className="font-semibold">{event.name}</span>
-                  <span className="text-muted-foreground ml-auto">{new Date(event.properties?.timestamp).toLocaleTimeString()}</span>
+                  <span className="text-muted-foreground ml-auto">{new Date(event.properties?.timestamp || event.timestamp || Date.now()).toLocaleTimeString()}</span>
                 </div>
                 <pre className="text-muted-foreground whitespace-pre-wrap break-all text-[10px] mt-1 p-1 bg-background rounded">
                   {JSON.stringify(event.properties, null, 2)}
