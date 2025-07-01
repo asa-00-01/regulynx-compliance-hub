@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { analytics } from '@/services/analytics';
+import { performanceMonitor } from '@/services/performanceMonitor';
 import config from '@/config/environment';
 
 interface AnalyticsProviderProps {
@@ -12,6 +13,9 @@ const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }) => {
     // Initialize analytics service
     analytics.initialize();
 
+    // Initialize performance monitoring
+    performanceMonitor.initialize();
+
     // Log analytics configuration in development
     if (config.isDevelopment) {
       console.log('Analytics Configuration:', {
@@ -21,6 +25,11 @@ const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }) => {
         environment: config.app.environment,
       });
     }
+
+    // Clean up on unmount
+    return () => {
+      performanceMonitor.destroy();
+    };
   }, []);
 
   return <>{children}</>;

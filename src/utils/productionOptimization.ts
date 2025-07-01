@@ -1,350 +1,441 @@
 
 import config from '@/config/environment';
+import { analytics } from '@/services/analytics';
 
-interface OptimizationConfig {
-  enableLazyLoading: boolean;
-  enableCodeSplitting: boolean;
-  enableCaching: boolean;
-  enableCompression: boolean;
-  enablePerformanceMonitoring: boolean;
+export interface OptimizationOpportunity {
+  category: 'performance' | 'security' | 'seo' | 'accessibility' | 'bundle';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  impact: string;
+  recommendation: string;
+  estimatedSavings?: string;
+  implementation: 'easy' | 'medium' | 'hard';
 }
 
-class ProductionOptimizer {
-  private config: OptimizationConfig;
+export interface OptimizationReport {
+  score: number;
+  opportunities: OptimizationOpportunity[];
+  summary: {
+    total: number;
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  metrics: {
+    bundleSize?: number;
+    loadTime?: number;
+    memoryCoverage?: number;
+    securityScore?: number;
+  };
+}
 
-  constructor() {
-    this.config = {
-      enableLazyLoading: true,
-      enableCodeSplitting: true,
-      enableCaching: true,
-      enableCompression: true,
-      enablePerformanceMonitoring: config.features.enablePerformanceMonitoring,
+class ProductionOptimizationAnalyzer {
+  private opportunities: OptimizationOpportunity[] = [];
+
+  async analyze(): Promise<OptimizationReport> {
+    this.opportunities = [];
+    
+    // Analyze performance
+    await this.analyzePerformance();
+    
+    // Analyze bundle
+    this.analyzeBundle();
+    
+    // Analyze security
+    this.analyzeSecurity();
+    
+    // Analyze configuration
+    this.analyzeConfiguration();
+    
+    // Analyze SEO
+    this.analyzeSEO();
+    
+    // Calculate score
+    const score = this.calculateScore();
+    
+    const summary = this.getSummary();
+    
+    const metrics = await this.getMetrics();
+    
+    return {
+      score,
+      opportunities: this.opportunities,
+      summary,
+      metrics
     };
   }
 
-  // Lazy loading implementation
-  enableLazyLoading() {
-    if (!this.config.enableLazyLoading) return;
-
-    // Implement intersection observer for images
-    const images = document.querySelectorAll('img[data-lazy]');
-    
-    if ('IntersectionObserver' in window) {
-      const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement;
-            img.src = img.dataset.lazy || '';
-            img.classList.remove('lazy');
-            observer.unobserve(img);
-          }
-        });
-      });
-
-      images.forEach(img => imageObserver.observe(img));
-    }
-  }
-
-  // Performance monitoring
-  initializePerformanceMonitoring() {
-    if (!this.config.enablePerformanceMonitoring) return;
-
-    // Monitor Core Web Vitals
-    this.observeLCP();
-    this.observeFID();
-    this.observeCLS();
-    this.observeResourceLoading();
-  }
-
-  private observeLCP() {
-    if (!('PerformanceObserver' in window)) return;
-
-    try {
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1];
-        
-        console.log('🚀 LCP:', lastEntry.startTime);
-        
-        // You can send this to your analytics service
-        if (window.analytics && typeof window.analytics.trackPerformance === 'function') {
-          window.analytics.trackPerformance('lcp', lastEntry.startTime, 'ms');
-        }
-      });
-      
-      observer.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (error) {
-      console.warn('LCP monitoring not supported:', error);
-    }
-  }
-
-  private observeFID() {
-    if (!('PerformanceObserver' in window)) return;
-
-    try {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const fidEntry = entry as PerformanceEventTiming;
-          const fid = fidEntry.processingStart - fidEntry.startTime;
-          
-          console.log('🚀 FID:', fid);
-          
-          if (window.analytics && typeof window.analytics.trackPerformance === 'function') {
-            window.analytics.trackPerformance('fid', fid, 'ms');
-          }
-        }
-      });
-      
-      observer.observe({ entryTypes: ['first-input'] });
-    } catch (error) {
-      console.warn('FID monitoring not supported:', error);
-    }
-  }
-
-  private observeCLS() {
-    if (!('PerformanceObserver' in window)) return;
-
-    try {
-      let clsValue = 0;
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const layoutShiftEntry = entry as any;
-          if (!layoutShiftEntry.hadRecentInput) {
-            clsValue += layoutShiftEntry.value;
-          }
-        }
-        
-        console.log('🚀 CLS:', clsValue);
-        
-        if (window.analytics && typeof window.analytics.trackPerformance === 'function') {
-          window.analytics.trackPerformance('cls', clsValue, 'score');
-        }
-      });
-      
-      observer.observe({ entryTypes: ['layout-shift'] });
-    } catch (error) {
-      console.warn('CLS monitoring not supported:', error);
-    }
-  }
-
-  private observeResourceLoading() {
-    if (typeof window !== 'undefined' && 'performance' in window) {
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-          
-          if (navigation) {
-            // Use fetchStart instead of deprecated navigationStart
-            const pageLoadTime = navigation.loadEventEnd - navigation.fetchStart;
-            const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
-            const timeToFirstByte = navigation.responseStart - navigation.requestStart;
-            
-            console.log('📊 Page Load Metrics:', {
-              pageLoadTime,
-              domContentLoaded,
-              timeToFirstByte,
-            });
-
-            if (window.analytics && typeof window.analytics.trackPerformance === 'function') {
-              window.analytics.trackPerformance('page_load_time', pageLoadTime, 'ms');
-              window.analytics.trackPerformance('dom_content_loaded', domContentLoaded, 'ms');
-              window.analytics.trackPerformance('time_to_first_byte', timeToFirstByte, 'ms');
+  private async analyzePerformance() {
+    // Core Web Vitals analysis
+    if (typeof window !== 'undefined') {
+      try {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'largest-contentful-paint' && entry.startTime > 2500) {
+              this.addOpportunity({
+                category: 'performance',
+                severity: 'high',
+                title: 'Large Contentful Paint (LCP) is slow',
+                description: `LCP is ${(entry.startTime / 1000).toFixed(2)}s, which exceeds the recommended 2.5s`,
+                impact: 'Poor user experience and SEO ranking',
+                recommendation: 'Optimize images, preload critical resources, and improve server response times',
+                estimatedSavings: '1-3s load time improvement',
+                implementation: 'medium'
+              });
             }
           }
-        }, 0);
+        });
+
+        observer.observe({ entryTypes: ['largest-contentful-paint'] });
+        
+        // Disconnect after a short time to avoid memory leaks
+        setTimeout(() => observer.disconnect(), 5000);
+      } catch (error) {
+        console.warn('Performance analysis not supported in this browser');
+      }
+    }
+
+    // Memory usage analysis
+    if (typeof window !== 'undefined' && 'memory' in performance) {
+      const memInfo = (performance as any).memory;
+      const memoryUsage = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
+      
+      if (memoryUsage > 80) {
+        this.addOpportunity({
+          category: 'performance',
+          severity: 'high',
+          title: 'High memory usage detected',
+          description: `Memory usage is at ${memoryUsage.toFixed(1)}% of the available heap`,
+          impact: 'Potential app crashes and poor performance',
+          recommendation: 'Implement memory optimization, check for memory leaks, and optimize large objects',
+          estimatedSavings: `${(memoryUsage - 60).toFixed(1)}% memory reduction`,
+          implementation: 'medium'
+        });
+      }
+    }
+
+    // Network performance
+    if (typeof window !== 'undefined' && 'connection' in navigator) {
+      const connection = (navigator as any).connection;
+      if (connection && connection.effectiveType === '2g') {
+        this.addOpportunity({
+          category: 'performance',
+          severity: 'medium',
+          title: 'Slow network connection detected',
+          description: 'User has a slow network connection',
+          impact: 'Poor loading experience for users on slow networks',
+          recommendation: 'Implement progressive loading, optimize images, and reduce bundle size',
+          implementation: 'medium'
+        });
+      }
+    }
+  }
+
+  private analyzeBundle() {
+    // Estimate bundle size based on loaded scripts
+    if (typeof document !== 'undefined') {
+      const scripts = document.querySelectorAll('script[src]');
+      let estimatedSize = scripts.length * 100; // Rough estimate
+
+      if (estimatedSize > 1000) {
+        this.addOpportunity({
+          category: 'bundle',
+          severity: 'high',
+          title: 'Large bundle size detected',
+          description: `Estimated bundle size is ${estimatedSize}KB`,
+          impact: 'Slower initial load times and poor performance on slow networks',
+          recommendation: 'Implement code splitting, tree shaking, and lazy loading',
+          estimatedSavings: `${Math.round(estimatedSize * 0.3)}KB reduction possible`,
+          implementation: 'medium'
+        });
+      }
+
+      // Check for unused CSS
+      const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+      if (stylesheets.length > 5) {
+        this.addOpportunity({
+          category: 'bundle',
+          severity: 'medium',
+          title: 'Multiple CSS files detected',
+          description: `${stylesheets.length} CSS files are being loaded`,
+          impact: 'Additional network requests and potential render blocking',
+          recommendation: 'Combine and minify CSS files, remove unused CSS',
+          implementation: 'easy'
+        });
+      }
+    }
+  }
+
+  private analyzeSecurity() {
+    // Check for HTTPS
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && config.isProduction) {
+      this.addOpportunity({
+        category: 'security',
+        severity: 'critical',
+        title: 'Site not served over HTTPS',
+        description: 'The site is not using HTTPS in production',
+        impact: 'Security vulnerabilities and SEO penalties',
+        recommendation: 'Enable HTTPS/SSL certificate',
+        implementation: 'easy'
+      });
+    }
+
+    // Check security headers
+    if (!config.security.enableCSP) {
+      this.addOpportunity({
+        category: 'security',
+        severity: 'high',
+        title: 'Content Security Policy not enabled',
+        description: 'CSP headers are not configured',
+        impact: 'Vulnerability to XSS attacks',
+        recommendation: 'Enable and configure Content Security Policy',
+        implementation: 'medium'
+      });
+    }
+
+    if (!config.security.enableHSTS) {
+      this.addOpportunity({
+        category: 'security',
+        severity: 'medium',
+        title: 'HSTS not enabled',
+        description: 'HTTP Strict Transport Security is not configured',
+        impact: 'Potential man-in-the-middle attacks',
+        recommendation: 'Enable HSTS headers',
+        implementation: 'easy'
       });
     }
   }
 
-  // Bundle optimization
-  optimizeBundle() {
-    if (!this.config.enableCodeSplitting) return;
-    
-    // Code splitting is typically handled by the build tool (Vite)
-    // But we can provide runtime optimizations
-    this.enableLazyComponentLoading();
+  private analyzeConfiguration() {
+    // Development mode in production
+    if (config.isProduction && config.features.enableDebugMode) {
+      this.addOpportunity({
+        category: 'security',
+        severity: 'critical',
+        title: 'Debug mode enabled in production',
+        description: 'Debug mode is active in production environment',
+        impact: 'Security vulnerabilities and performance degradation',
+        recommendation: 'Disable debug mode for production',
+        implementation: 'easy'
+      });
+    }
+
+    // Mock data in production
+    if (config.isProduction && config.features.useMockData) {
+      this.addOpportunity({
+        category: 'security',
+        severity: 'critical',
+        title: 'Mock data enabled in production',
+        description: 'Mock data mode is active in production',
+        impact: 'Data integrity issues and potential security risks',
+        recommendation: 'Disable mock data mode for production',
+        implementation: 'easy'
+      });
+    }
+
+    // Console logging in production
+    if (config.isProduction && config.logging.enableConsoleLogging) {
+      this.addOpportunity({
+        category: 'performance',
+        severity: 'medium',
+        title: 'Console logging enabled in production',
+        description: 'Console logging is active in production',
+        impact: 'Performance overhead and potential information disclosure',
+        recommendation: 'Disable console logging for production',
+        implementation: 'easy'
+      });
+    }
+
+    // Service Worker not enabled
+    if (!config.performance.enableServiceWorker) {
+      this.addOpportunity({
+        category: 'performance',
+        severity: 'medium',
+        title: 'Service Worker not enabled',
+        description: 'Service Worker is disabled',
+        impact: 'Missed caching opportunities and offline functionality',
+        recommendation: 'Enable Service Worker for better performance',
+        implementation: 'medium'
+      });
+    }
   }
 
-  private enableLazyComponentLoading() {
-    // This would be implemented with React.lazy() at the component level
-    console.log('🎯 Lazy component loading enabled');
-  }
-
-  // Caching strategies
-  initializeCaching() {
-    if (!this.config.enableCaching) return;
-
-    this.setupServiceWorkerCaching();
-    this.setupLocalStorageCaching();
-  }
-
-  private setupServiceWorkerCaching() {
-    if ('serviceWorker' in navigator && config.isProduction) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-          console.log('🔧 Service Worker registered:', registration);
-        })
-        .catch(error => {
-          console.log('🔧 Service Worker registration failed:', error);
+  private analyzeSEO() {
+    if (typeof document !== 'undefined') {
+      // Check for meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription || !metaDescription.getAttribute('content')) {
+        this.addOpportunity({
+          category: 'seo',
+          severity: 'medium',
+          title: 'Missing meta description',
+          description: 'Page is missing meta description',
+          impact: 'Poor search engine visibility',
+          recommendation: 'Add descriptive meta description tags',
+          implementation: 'easy'
         });
+      }
+
+      // Check for title tag
+      if (!document.title || document.title.length < 10) {
+        this.addOpportunity({
+          category: 'seo',
+          severity: 'medium',
+          title: 'Poor page title',
+          description: 'Page title is missing or too short',
+          impact: 'Poor search engine ranking',
+          recommendation: 'Add descriptive page titles',
+          implementation: 'easy'
+        });
+      }
+
+      // Check for alt attributes on images
+      const images = document.querySelectorAll('img');
+      const imagesWithoutAlt = Array.from(images).filter(img => !img.alt);
+      if (imagesWithoutAlt.length > 0) {
+        this.addOpportunity({
+          category: 'accessibility',
+          severity: 'medium',
+          title: 'Images missing alt attributes',
+          description: `${imagesWithoutAlt.length} images are missing alt attributes`,
+          impact: 'Poor accessibility and SEO',
+          recommendation: 'Add descriptive alt attributes to all images',
+          implementation: 'easy'
+        });
+      }
     }
   }
 
-  private setupLocalStorageCaching() {
-    // Implement strategic localStorage caching for API responses
-    const originalFetch = window.fetch;
-    
-    window.fetch = async (...args) => {
-      const [resource, options] = args;
-      const url = typeof resource === 'string' ? resource : resource.url;
-      
-      // Only cache GET requests
-      if (options?.method && options.method !== 'GET') {
-        return originalFetch(...args);
-      }
-      
-      // Check if we have cached data
-      const cacheKey = `cache_${url}`;
-      const cached = localStorage.getItem(cacheKey);
-      
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        const age = Date.now() - timestamp;
-        
-        // Cache for 5 minutes
-        if (age < 5 * 60 * 1000) {
-          return Promise.resolve(new Response(JSON.stringify(data)));
-        }
-      }
-      
-      // Make the request and cache the result
-      try {
-        const response = await originalFetch(...args);
-        
-        if (response.ok && url.includes('/api/')) {
-          const clone = response.clone();
-          const data = await clone.json();
-          
-          localStorage.setItem(cacheKey, JSON.stringify({
-            data,
-            timestamp: Date.now(),
-          }));
-        }
-        
-        return response;
-      } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-      }
+  private addOpportunity(opportunity: OptimizationOpportunity) {
+    this.opportunities.push(opportunity);
+  }
+
+  private calculateScore(): number {
+    const severityWeights = {
+      critical: 25,
+      high: 15,
+      medium: 10,
+      low: 5
     };
+
+    const totalPenalty = this.opportunities.reduce((sum, opp) => {
+      return sum + severityWeights[opp.severity];
+    }, 0);
+
+    return Math.max(0, 100 - totalPenalty);
   }
 
-  // Memory optimization
-  optimizeMemoryUsage() {
-    // Monitor memory usage
-    this.monitorMemoryUsage();
-    
-    // Clean up unused resources
-    this.setupMemoryCleanup();
-  }
+  private getSummary() {
+    const summary = {
+      total: this.opportunities.length,
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0
+    };
 
-  private monitorMemoryUsage() {
-    if ('memory' in performance) {
-      setInterval(() => {
-        const memInfo = (performance as any).memory;
-        const usedPercent = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
-        
-        if (usedPercent > 90) {
-          console.warn('🧠 High memory usage detected:', usedPercent.toFixed(2) + '%');
-          this.triggerMemoryCleanup();
-        }
-        
-        if (config.isDevelopment) {
-          console.log('🧠 Memory Usage:', {
-            used: Math.round(memInfo.usedJSHeapSize / 1048576) + ' MB',
-            total: Math.round(memInfo.totalJSHeapSize / 1048576) + ' MB',
-            limit: Math.round(memInfo.jsHeapSizeLimit / 1048576) + ' MB',
-            percentage: usedPercent.toFixed(2) + '%',
-          });
-        }
-      }, 30000); // Check every 30 seconds
-    }
-  }
-
-  private setupMemoryCleanup() {
-    // Clean up localStorage periodically
-    setInterval(() => {
-      this.cleanupOldCacheEntries();
-    }, 10 * 60 * 1000); // Every 10 minutes
-  }
-
-  private cleanupOldCacheEntries() {
-    const keys = Object.keys(localStorage);
-    const now = Date.now();
-    
-    keys.forEach(key => {
-      if (key.startsWith('cache_')) {
-        try {
-          const cached = JSON.parse(localStorage.getItem(key) || '{}');
-          const age = now - (cached.timestamp || 0);
-          
-          // Remove entries older than 1 hour
-          if (age > 60 * 60 * 1000) {
-            localStorage.removeItem(key);
-          }
-        } catch (error) {
-          // Remove invalid entries
-          localStorage.removeItem(key);
-        }
-      }
+    this.opportunities.forEach(opp => {
+      summary[opp.severity]++;
     });
+
+    return summary;
   }
 
-  private triggerMemoryCleanup() {
-    // Force garbage collection if available
-    if (window.gc) {
-      window.gc();
+  private async getMetrics() {
+    const metrics: OptimizationReport['metrics'] = {};
+
+    // Bundle size estimation
+    if (typeof document !== 'undefined') {
+      const scripts = document.querySelectorAll('script[src]');
+      metrics.bundleSize = scripts.length * 100; // Rough estimate
     }
-    
-    // Clear old cache entries
-    this.cleanupOldCacheEntries();
-    
-    // Clear console logs in production
-    if (config.isProduction) {
-      console.clear();
+
+    // Load time from performance API
+    if (typeof window !== 'undefined' && window.performance) {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      if (navigation) {
+        metrics.loadTime = navigation.loadEventEnd - navigation.fetchStart;
+      }
     }
-  }
 
-  // Initialize all optimizations
-  initialize() {
-    console.log('🚀 Initializing production optimizations...');
-    
-    this.enableLazyLoading();
-    this.initializePerformanceMonitoring();
-    this.optimizeBundle();
-    this.initializeCaching();
-    this.optimizeMemoryUsage();
-    
-    console.log('✅ Production optimizations initialized');
-  }
-}
+    // Memory usage
+    if (typeof window !== 'undefined' && 'memory' in performance) {
+      const memInfo = (performance as any).memory;
+      metrics.memoryCoverage = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
+    }
 
-// Global interface for analytics
-declare global {
-  interface Window {
-    analytics?: {
-      trackPerformance: (metric: string, value: number, unit: string) => void;
-    };
-    gc?: () => void;
+    // Security score based on configuration
+    let securityScore = 100;
+    if (!config.security.enableCSP) securityScore -= 20;
+    if (!config.security.enableHSTS) securityScore -= 10;
+    if (config.isProduction && config.features.enableDebugMode) securityScore -= 30;
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && config.isProduction) securityScore -= 40;
+    
+    metrics.securityScore = Math.max(0, securityScore);
+
+    return metrics;
   }
 }
 
 // Export singleton instance
-export const productionOptimizer = new ProductionOptimizer();
+export const productionOptimizer = new ProductionOptimizationAnalyzer();
 
-// Auto-initialize in production
-if (config.isProduction) {
-  productionOptimizer.initialize();
-}
+// Helper function to run optimization analysis
+export const analyzeProductionReadiness = async (): Promise<OptimizationReport> => {
+  const report = await productionOptimizer.analyze();
+  
+  // Track optimization analysis
+  if (config.features.enableAnalytics) {
+    analytics.track('production_optimization_analysis', {
+      score: report.score,
+      total_opportunities: report.summary.total,
+      critical_issues: report.summary.critical,
+      high_issues: report.summary.high,
+    });
+  }
+  
+  return report;
+};
 
-export default productionOptimizer;
+// Helper function to get quick optimization tips
+export const getQuickOptimizationTips = (): OptimizationOpportunity[] => {
+  const tips: OptimizationOpportunity[] = [];
+
+  // Basic performance tips
+  tips.push({
+    category: 'performance',
+    severity: 'medium',
+    title: 'Enable compression',
+    description: 'Enable gzip/brotli compression for better performance',
+    impact: 'Up to 70% reduction in file sizes',
+    recommendation: 'Configure server-side compression',
+    estimatedSavings: '30-70% bandwidth savings',
+    implementation: 'easy'
+  });
+
+  tips.push({
+    category: 'performance',
+    severity: 'medium',
+    title: 'Implement lazy loading',
+    description: 'Load images and components only when needed',
+    impact: 'Faster initial page load',
+    recommendation: 'Add lazy loading to images and non-critical components',
+    estimatedSavings: '1-3s faster load time',
+    implementation: 'medium'
+  });
+
+  // Security tips
+  tips.push({
+    category: 'security',
+    severity: 'high',
+    title: 'Set up security headers',
+    description: 'Configure proper security headers',
+    impact: 'Protection against common security vulnerabilities',
+    recommendation: 'Set up CSP, HSTS, and other security headers',
+    implementation: 'medium'
+  });
+
+  return tips;
+};
