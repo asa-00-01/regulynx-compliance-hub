@@ -38,7 +38,7 @@ interface PerformanceAnalytics {
 }
 
 export const usePerformanceAnalytics = () => {
-  const [analytics, setAnalytics] = useState<PerformanceAnalytics | null>(null);
+  const [performanceData, setPerformanceData] = useState<PerformanceAnalytics | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const getRating = (metricName: string, value: number): 'good' | 'needs-improvement' | 'poor' => {
@@ -193,23 +193,23 @@ export const usePerformanceAnalytics = () => {
       // Get load times from Navigation Timing
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       const loadTimes = {
-        domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.navigationStart : 0,
-        windowLoad: navigation ? navigation.loadEventEnd - navigation.navigationStart : 0,
-        navigationStart: navigation ? navigation.navigationStart : 0,
+        domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.fetchStart : 0,
+        windowLoad: navigation ? navigation.loadEventEnd - navigation.fetchStart : 0,
+        navigationStart: navigation ? navigation.fetchStart : 0,
       };
 
       // Get user timing data
       const marks = performance.getEntriesByType('mark') as PerformanceMark[];
       const measures = performance.getEntriesByType('measure') as PerformanceMeasure[];
 
-      const performanceData: PerformanceAnalytics = {
+      const analyticsData: PerformanceAnalytics = {
         coreWebVitals,
         loadTimes,
         resourceTiming,
         userTiming: { marks, measures },
       };
 
-      setAnalytics(performanceData);
+      setPerformanceData(analyticsData);
 
       // Report to analytics service
       if (config.features.enableAnalytics) {
@@ -259,7 +259,7 @@ export const usePerformanceAnalytics = () => {
   }, []);
 
   return {
-    analytics,
+    analytics: performanceData,
     isAnalyzing,
     analyzePerformance,
     markUserTiming,
