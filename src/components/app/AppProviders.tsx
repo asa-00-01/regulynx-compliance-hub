@@ -20,6 +20,7 @@ import PerformanceDashboard from '@/components/common/PerformanceDashboard';
 import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
 import NetworkMonitor from '@/components/common/NetworkMonitor';
+import OptimizationCenter from '@/components/common/OptimizationCenter';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -73,6 +74,7 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                     <PerformanceDashboard />
                     <ProductionReadinessChecker />
                     <SystemHealthMonitor />
+                    <OptimizationCenter />
                   </AnalyticsProvider>
                 </ComplianceProvider>
               </QueryClientProvider>
