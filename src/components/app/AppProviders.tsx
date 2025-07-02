@@ -7,6 +7,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import AuthProvider from './AuthProvider';
 import ComplianceProvider from './ComplianceProvider';
 import AnalyticsProvider from './AnalyticsProvider';
+import ErrorTrackingService from '@/components/common/ErrorTrackingService';
 import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
 import DeveloperPanel from '@/components/dev/DeveloperPanel';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
@@ -16,6 +17,9 @@ import SecurityProvider from '@/components/security/SecurityProvider';
 import SecurityMonitor from '@/components/security/SecurityMonitor';
 import SecurityAuditLog from '@/components/security/SecurityAuditLog';
 import PerformanceDashboard from '@/components/common/PerformanceDashboard';
+import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
+import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
+import NetworkMonitor from '@/components/common/NetworkMonitor';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -49,28 +53,33 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <SecurityProvider>
-          <AuthProvider>
-            <QueryClientProvider client={queryClient}>
-              <ComplianceProvider>
-                <AnalyticsProvider>
-                  <ToastProvider />
-                  {children}
-                  <AnalyticsDashboard />
-                  <DeveloperPanel />
-                  <EnvironmentChecker />
-                  <MockModeIndicator />
-                  <HelpPanel />
-                  <SecurityMonitor />
-                  <SecurityAuditLog />
-                  <PerformanceDashboard />
-                </AnalyticsProvider>
-              </ComplianceProvider>
-            </QueryClientProvider>
-          </AuthProvider>
-        </SecurityProvider>
-      </ThemeProvider>
+      <ErrorTrackingService>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <SecurityProvider>
+            <AuthProvider>
+              <QueryClientProvider client={queryClient}>
+                <ComplianceProvider>
+                  <AnalyticsProvider>
+                    <NetworkMonitor />
+                    <ToastProvider />
+                    {children}
+                    <AnalyticsDashboard />
+                    <DeveloperPanel />
+                    <EnvironmentChecker />
+                    <MockModeIndicator />
+                    <HelpPanel />
+                    <SecurityMonitor />
+                    <SecurityAuditLog />
+                    <PerformanceDashboard />
+                    <ProductionReadinessChecker />
+                    <SystemHealthMonitor />
+                  </AnalyticsProvider>
+                </ComplianceProvider>
+              </QueryClientProvider>
+            </AuthProvider>
+          </SecurityProvider>
+        </ThemeProvider>
+      </ErrorTrackingService>
     </ErrorBoundary>
   );
 };
