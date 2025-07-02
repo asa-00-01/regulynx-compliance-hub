@@ -1,21 +1,20 @@
 
 import config from '@/config/environment';
-import { analytics } from '@/services/analytics';
 
 export interface OptimizationOpportunity {
-  category: 'performance' | 'security' | 'seo' | 'accessibility' | 'bundle';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  id: string;
+  category: 'performance' | 'security' | 'bundle' | 'seo' | 'accessibility';
+  severity: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   description: string;
   impact: string;
   recommendation: string;
-  estimatedSavings?: string;
   implementation: 'easy' | 'medium' | 'hard';
+  estimatedSavings?: string;
 }
 
 export interface OptimizationReport {
   score: number;
-  opportunities: OptimizationOpportunity[];
   summary: {
     total: number;
     critical: number;
@@ -23,7 +22,8 @@ export interface OptimizationReport {
     medium: number;
     low: number;
   };
-  metrics: {
+  opportunities: OptimizationOpportunity[];
+  metrics?: {
     bundleSize?: number;
     loadTime?: number;
     memoryCoverage?: number;
@@ -31,411 +31,295 @@ export interface OptimizationReport {
   };
 }
 
-class ProductionOptimizationAnalyzer {
-  private opportunities: OptimizationOpportunity[] = [];
-
-  async analyze(): Promise<OptimizationReport> {
-    this.opportunities = [];
-    
-    // Analyze performance
-    await this.analyzePerformance();
-    
-    // Analyze bundle
-    this.analyzeBundle();
-    
-    // Analyze security
-    this.analyzeSecurity();
-    
-    // Analyze configuration
-    this.analyzeConfiguration();
-    
-    // Analyze SEO
-    this.analyzeSEO();
-    
-    // Calculate score
-    const score = this.calculateScore();
-    
-    const summary = this.getSummary();
-    
-    const metrics = await this.getMetrics();
-    
-    return {
-      score,
-      opportunities: this.opportunities,
-      summary,
-      metrics
-    };
-  }
-
-  private async analyzePerformance() {
-    // Core Web Vitals analysis
-    if (typeof window !== 'undefined') {
-      try {
-        const observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            if (entry.entryType === 'largest-contentful-paint' && entry.startTime > 2500) {
-              this.addOpportunity({
-                category: 'performance',
-                severity: 'high',
-                title: 'Large Contentful Paint (LCP) is slow',
-                description: `LCP is ${(entry.startTime / 1000).toFixed(2)}s, which exceeds the recommended 2.5s`,
-                impact: 'Poor user experience and SEO ranking',
-                recommendation: 'Optimize images, preload critical resources, and improve server response times',
-                estimatedSavings: '1-3s load time improvement',
-                implementation: 'medium'
-              });
-            }
-          }
-        });
-
-        observer.observe({ entryTypes: ['largest-contentful-paint'] });
-        
-        // Disconnect after a short time to avoid memory leaks
-        setTimeout(() => observer.disconnect(), 5000);
-      } catch (error) {
-        console.warn('Performance analysis not supported in this browser');
-      }
-    }
-
-    // Memory usage analysis
-    if (typeof window !== 'undefined' && 'memory' in performance) {
-      const memInfo = (performance as any).memory;
-      const memoryUsage = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
-      
-      if (memoryUsage > 80) {
-        this.addOpportunity({
-          category: 'performance',
-          severity: 'high',
-          title: 'High memory usage detected',
-          description: `Memory usage is at ${memoryUsage.toFixed(1)}% of the available heap`,
-          impact: 'Potential app crashes and poor performance',
-          recommendation: 'Implement memory optimization, check for memory leaks, and optimize large objects',
-          estimatedSavings: `${(memoryUsage - 60).toFixed(1)}% memory reduction`,
-          implementation: 'medium'
-        });
-      }
-    }
-
-    // Network performance
-    if (typeof window !== 'undefined' && 'connection' in navigator) {
-      const connection = (navigator as any).connection;
-      if (connection && connection.effectiveType === '2g') {
-        this.addOpportunity({
-          category: 'performance',
-          severity: 'medium',
-          title: 'Slow network connection detected',
-          description: 'User has a slow network connection',
-          impact: 'Poor loading experience for users on slow networks',
-          recommendation: 'Implement progressive loading, optimize images, and reduce bundle size',
-          implementation: 'medium'
-        });
-      }
-    }
-  }
-
-  private analyzeBundle() {
-    // Estimate bundle size based on loaded scripts
-    if (typeof document !== 'undefined') {
-      const scripts = document.querySelectorAll('script[src]');
-      let estimatedSize = scripts.length * 100; // Rough estimate
-
-      if (estimatedSize > 1000) {
-        this.addOpportunity({
-          category: 'bundle',
-          severity: 'high',
-          title: 'Large bundle size detected',
-          description: `Estimated bundle size is ${estimatedSize}KB`,
-          impact: 'Slower initial load times and poor performance on slow networks',
-          recommendation: 'Implement code splitting, tree shaking, and lazy loading',
-          estimatedSavings: `${Math.round(estimatedSize * 0.3)}KB reduction possible`,
-          implementation: 'medium'
-        });
-      }
-
-      // Check for unused CSS
-      const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-      if (stylesheets.length > 5) {
-        this.addOpportunity({
-          category: 'bundle',
-          severity: 'medium',
-          title: 'Multiple CSS files detected',
-          description: `${stylesheets.length} CSS files are being loaded`,
-          impact: 'Additional network requests and potential render blocking',
-          recommendation: 'Combine and minify CSS files, remove unused CSS',
-          implementation: 'easy'
-        });
-      }
-    }
-  }
-
-  private analyzeSecurity() {
-    // Check for HTTPS
-    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && config.isProduction) {
-      this.addOpportunity({
-        category: 'security',
-        severity: 'critical',
-        title: 'Site not served over HTTPS',
-        description: 'The site is not using HTTPS in production',
-        impact: 'Security vulnerabilities and SEO penalties',
-        recommendation: 'Enable HTTPS/SSL certificate',
-        implementation: 'easy'
-      });
-    }
-
-    // Check security headers
-    if (!config.security.enableCSP) {
-      this.addOpportunity({
-        category: 'security',
-        severity: 'high',
-        title: 'Content Security Policy not enabled',
-        description: 'CSP headers are not configured',
-        impact: 'Vulnerability to XSS attacks',
-        recommendation: 'Enable and configure Content Security Policy',
-        implementation: 'medium'
-      });
-    }
-
-    if (!config.security.enableHSTS) {
-      this.addOpportunity({
-        category: 'security',
-        severity: 'medium',
-        title: 'HSTS not enabled',
-        description: 'HTTP Strict Transport Security is not configured',
-        impact: 'Potential man-in-the-middle attacks',
-        recommendation: 'Enable HSTS headers',
-        implementation: 'easy'
-      });
-    }
-  }
-
-  private analyzeConfiguration() {
-    // Development mode in production
-    if (config.isProduction && config.features.enableDebugMode) {
-      this.addOpportunity({
-        category: 'security',
-        severity: 'critical',
-        title: 'Debug mode enabled in production',
-        description: 'Debug mode is active in production environment',
-        impact: 'Security vulnerabilities and performance degradation',
-        recommendation: 'Disable debug mode for production',
-        implementation: 'easy'
-      });
-    }
-
-    // Mock data in production
-    if (config.isProduction && config.features.useMockData) {
-      this.addOpportunity({
-        category: 'security',
-        severity: 'critical',
-        title: 'Mock data enabled in production',
-        description: 'Mock data mode is active in production',
-        impact: 'Data integrity issues and potential security risks',
-        recommendation: 'Disable mock data mode for production',
-        implementation: 'easy'
-      });
-    }
-
-    // Console logging in production
-    if (config.isProduction && config.logging.enableConsoleLogging) {
-      this.addOpportunity({
-        category: 'performance',
-        severity: 'medium',
-        title: 'Console logging enabled in production',
-        description: 'Console logging is active in production',
-        impact: 'Performance overhead and potential information disclosure',
-        recommendation: 'Disable console logging for production',
-        implementation: 'easy'
-      });
-    }
-
-    // Service Worker not enabled
-    if (!config.performance.enableServiceWorker) {
-      this.addOpportunity({
-        category: 'performance',
-        severity: 'medium',
-        title: 'Service Worker not enabled',
-        description: 'Service Worker is disabled',
-        impact: 'Missed caching opportunities and offline functionality',
-        recommendation: 'Enable Service Worker for better performance',
-        implementation: 'medium'
-      });
-    }
-  }
-
-  private analyzeSEO() {
-    if (typeof document !== 'undefined') {
-      // Check for meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (!metaDescription || !metaDescription.getAttribute('content')) {
-        this.addOpportunity({
-          category: 'seo',
-          severity: 'medium',
-          title: 'Missing meta description',
-          description: 'Page is missing meta description',
-          impact: 'Poor search engine visibility',
-          recommendation: 'Add descriptive meta description tags',
-          implementation: 'easy'
-        });
-      }
-
-      // Check for title tag
-      if (!document.title || document.title.length < 10) {
-        this.addOpportunity({
-          category: 'seo',
-          severity: 'medium',
-          title: 'Poor page title',
-          description: 'Page title is missing or too short',
-          impact: 'Poor search engine ranking',
-          recommendation: 'Add descriptive page titles',
-          implementation: 'easy'
-        });
-      }
-
-      // Check for alt attributes on images
-      const images = document.querySelectorAll('img');
-      const imagesWithoutAlt = Array.from(images).filter(img => !img.alt);
-      if (imagesWithoutAlt.length > 0) {
-        this.addOpportunity({
-          category: 'accessibility',
-          severity: 'medium',
-          title: 'Images missing alt attributes',
-          description: `${imagesWithoutAlt.length} images are missing alt attributes`,
-          impact: 'Poor accessibility and SEO',
-          recommendation: 'Add descriptive alt attributes to all images',
-          implementation: 'easy'
-        });
-      }
-    }
-  }
-
-  private addOpportunity(opportunity: OptimizationOpportunity) {
-    this.opportunities.push(opportunity);
-  }
-
-  private calculateScore(): number {
-    const severityWeights = {
-      critical: 25,
-      high: 15,
-      medium: 10,
-      low: 5
-    };
-
-    const totalPenalty = this.opportunities.reduce((sum, opp) => {
-      return sum + severityWeights[opp.severity];
-    }, 0);
-
-    return Math.max(0, 100 - totalPenalty);
-  }
-
-  private getSummary() {
-    const summary = {
-      total: this.opportunities.length,
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0
-    };
-
-    this.opportunities.forEach(opp => {
-      summary[opp.severity]++;
-    });
-
-    return summary;
-  }
-
-  private async getMetrics() {
-    const metrics: OptimizationReport['metrics'] = {};
-
-    // Bundle size estimation
-    if (typeof document !== 'undefined') {
-      const scripts = document.querySelectorAll('script[src]');
-      metrics.bundleSize = scripts.length * 100; // Rough estimate
-    }
-
-    // Load time from performance API
-    if (typeof window !== 'undefined' && window.performance) {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      if (navigation) {
-        metrics.loadTime = navigation.loadEventEnd - navigation.fetchStart;
-      }
-    }
-
-    // Memory usage
-    if (typeof window !== 'undefined' && 'memory' in performance) {
-      const memInfo = (performance as any).memory;
-      metrics.memoryCoverage = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
-    }
-
-    // Security score based on configuration
-    let securityScore = 100;
-    if (!config.security.enableCSP) securityScore -= 20;
-    if (!config.security.enableHSTS) securityScore -= 10;
-    if (config.isProduction && config.features.enableDebugMode) securityScore -= 30;
-    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && config.isProduction) securityScore -= 40;
-    
-    metrics.securityScore = Math.max(0, securityScore);
-
-    return metrics;
-  }
-}
-
-// Export singleton instance
-export const productionOptimizer = new ProductionOptimizationAnalyzer();
-
-// Helper function to run optimization analysis
 export const analyzeProductionReadiness = async (): Promise<OptimizationReport> => {
-  const report = await productionOptimizer.analyze();
-  
-  // Track optimization analysis
-  if (config.features.enableAnalytics) {
-    analytics.track('production_optimization_analysis', {
-      score: report.score,
-      total_opportunities: report.summary.total,
-      critical_issues: report.summary.critical,
-      high_issues: report.summary.high,
-    });
+  const opportunities: OptimizationOpportunity[] = [];
+
+  // Analyze bundle size
+  const bundleAnalysis = await analyzeBundleSize();
+  if (bundleAnalysis.issues.length > 0) {
+    opportunities.push(...bundleAnalysis.issues);
   }
-  
-  return report;
+
+  // Analyze performance metrics
+  const performanceAnalysis = analyzePerformanceMetrics();
+  if (performanceAnalysis.issues.length > 0) {
+    opportunities.push(...performanceAnalysis.issues);
+  }
+
+  // Analyze security
+  const securityAnalysis = analyzeSecurityConfiguration();
+  if (securityAnalysis.issues.length > 0) {
+    opportunities.push(...securityAnalysis.issues);
+  }
+
+  // Analyze SEO and accessibility
+  const seoAnalysis = analyzeSEOAndAccessibility();
+  if (seoAnalysis.issues.length > 0) {
+    opportunities.push(...seoAnalysis.issues);
+  }
+
+  // Calculate summary
+  const summary = {
+    total: opportunities.length,
+    critical: opportunities.filter(o => o.severity === 'critical').length,
+    high: opportunities.filter(o => o.severity === 'high').length,
+    medium: opportunities.filter(o => o.severity === 'medium').length,
+    low: opportunities.filter(o => o.severity === 'low').length,
+  };
+
+  // Calculate overall score (100 - deductions for issues)
+  let score = 100;
+  opportunities.forEach(opportunity => {
+    switch (opportunity.severity) {
+      case 'critical':
+        score -= 25;
+        break;
+      case 'high':
+        score -= 15;
+        break;
+      case 'medium':
+        score -= 8;
+        break;
+      case 'low':
+        score -= 3;
+        break;
+    }
+  });
+
+  score = Math.max(0, score);
+
+  // Collect metrics
+  const metrics = {
+    bundleSize: bundleAnalysis.totalSize,
+    loadTime: performanceAnalysis.loadTime,
+    memoryCoverage: performanceAnalysis.memoryUsage,
+    securityScore: securityAnalysis.score,
+  };
+
+  return {
+    score,
+    summary,
+    opportunities,
+    metrics,
+  };
 };
 
-// Helper function to get quick optimization tips
-export const getQuickOptimizationTips = (): OptimizationOpportunity[] => {
-  const tips: OptimizationOpportunity[] = [];
+const analyzeBundleSize = async () => {
+  const issues: OptimizationOpportunity[] = [];
+  let totalSize = 0;
 
-  // Basic performance tips
-  tips.push({
-    category: 'performance',
-    severity: 'medium',
-    title: 'Enable compression',
-    description: 'Enable gzip/brotli compression for better performance',
-    impact: 'Up to 70% reduction in file sizes',
-    recommendation: 'Configure server-side compression',
-    estimatedSavings: '30-70% bandwidth savings',
-    implementation: 'easy'
-  });
+  try {
+    // Analyze JavaScript files
+    const scripts = document.querySelectorAll('script[src]');
+    for (const script of scripts) {
+      const src = script.getAttribute('src');
+      if (src && !src.startsWith('http')) {
+        // Estimate size for development
+        const estimatedSize = src.includes('vendor') ? 500 : 100; // KB
+        totalSize += estimatedSize;
+      }
+    }
 
-  tips.push({
-    category: 'performance',
-    severity: 'medium',
-    title: 'Implement lazy loading',
-    description: 'Load images and components only when needed',
-    impact: 'Faster initial page load',
-    recommendation: 'Add lazy loading to images and non-critical components',
-    estimatedSavings: '1-3s faster load time',
-    implementation: 'medium'
-  });
+    // Check for large bundle
+    if (totalSize > 1000) { // > 1MB
+      issues.push({
+        id: 'large-bundle',
+        category: 'bundle',
+        severity: 'high',
+        title: 'Large Bundle Size',
+        description: `Total bundle size is approximately ${totalSize}KB, which may impact loading performance.`,
+        impact: 'Slower initial page load and poor user experience on slower connections',
+        recommendation: 'Implement code splitting, lazy loading, and tree shaking to reduce bundle size',
+        implementation: 'medium',
+        estimatedSavings: `${Math.round(totalSize * 0.3)}KB reduction possible`,
+      });
+    }
 
-  // Security tips
-  tips.push({
-    category: 'security',
-    severity: 'high',
-    title: 'Set up security headers',
-    description: 'Configure proper security headers',
-    impact: 'Protection against common security vulnerabilities',
-    recommendation: 'Set up CSP, HSTS, and other security headers',
-    implementation: 'medium'
-  });
+    // Check for too many script files
+    if (scripts.length > 10) {
+      issues.push({
+        id: 'too-many-scripts',
+        category: 'performance',
+        severity: 'medium',
+        title: 'Too Many Script Files',
+        description: `Found ${scripts.length} script files, which increases HTTP requests.`,
+        impact: 'Increased network overhead and slower page load times',
+        recommendation: 'Bundle scripts together to reduce the number of HTTP requests',
+        implementation: 'easy',
+      });
+    }
+  } catch (error) {
+    console.warn('Bundle analysis failed:', error);
+  }
 
-  return tips;
+  return { issues, totalSize };
+};
+
+const analyzePerformanceMetrics = () => {
+  const issues: OptimizationOpportunity[] = [];
+  let loadTime = 0;
+  let memoryUsage = 0;
+
+  try {
+    // Check navigation timing
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (navigation) {
+      loadTime = navigation.loadEventEnd - navigation.fetchStart;
+      
+      if (loadTime > 3000) { // > 3 seconds
+        issues.push({
+          id: 'slow-load-time',
+          category: 'performance',
+          severity: 'high',
+          title: 'Slow Page Load Time',
+          description: `Page takes ${Math.round(loadTime)}ms to load completely.`,
+          impact: 'Poor user experience and potential SEO penalties',
+          recommendation: 'Optimize critical rendering path, compress assets, and implement caching',
+          implementation: 'medium',
+          estimatedSavings: '1-2 seconds faster load time',
+        });
+      }
+    }
+
+    // Check memory usage
+    if ('memory' in performance) {
+      const memInfo = (performance as any).memory;
+      memoryUsage = (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit) * 100;
+      
+      if (memoryUsage > 70) {
+        issues.push({
+          id: 'high-memory-usage',
+          category: 'performance',
+          severity: 'medium',
+          title: 'High Memory Usage',
+          description: `JavaScript heap is using ${memoryUsage.toFixed(1)}% of available memory.`,
+          impact: 'Potential performance issues and crashes on low-memory devices',
+          recommendation: 'Review and optimize memory-intensive operations, implement proper cleanup',
+          implementation: 'hard',
+        });
+      }
+    }
+  } catch (error) {
+    console.warn('Performance analysis failed:', error);
+  }
+
+  return { issues, loadTime, memoryUsage };
+};
+
+const analyzeSecurityConfiguration = () => {
+  const issues: OptimizationOpportunity[] = [];
+  let score = 100;
+
+  // Check for HTTPS
+  if (location.protocol !== 'https:' && !config.isDevelopment) {
+    issues.push({
+      id: 'no-https',
+      category: 'security',
+      severity: 'critical',
+      title: 'No HTTPS',
+      description: 'Site is not served over HTTPS in production.',
+      impact: 'Data transmission is not encrypted, vulnerable to man-in-the-middle attacks',
+      recommendation: 'Enable HTTPS for all production environments',
+      implementation: 'easy',
+    });
+    score -= 30;
+  }
+
+  // Check for Content Security Policy
+  const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  if (!cspMeta) {
+    issues.push({
+      id: 'no-csp',
+      category: 'security',
+      severity: 'high',
+      title: 'No Content Security Policy',
+      description: 'No Content Security Policy header or meta tag found.',
+      impact: 'Vulnerable to XSS attacks and code injection',
+      recommendation: 'Implement a strict Content Security Policy',
+      implementation: 'medium',
+    });
+    score -= 20;
+  }
+
+  // Check for mixed content
+  const images = document.querySelectorAll('img[src^="http:"]');
+  if (images.length > 0 && location.protocol === 'https:') {
+    issues.push({
+      id: 'mixed-content',
+      category: 'security',
+      severity: 'medium',
+      title: 'Mixed Content Issues',
+      description: `Found ${images.length} resources loaded over HTTP on HTTPS page.`,
+      impact: 'Browser warnings and potential security vulnerabilities',
+      recommendation: 'Update all resource URLs to use HTTPS',
+      implementation: 'easy',
+    });
+    score -= 10;
+  }
+
+  return { issues, score };
+};
+
+const analyzeSEOAndAccessibility = () => {
+  const issues: OptimizationOpportunity[] = [];
+
+  // Check for meta description
+  const metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription || !metaDescription.getAttribute('content')) {
+    issues.push({
+      id: 'no-meta-description',
+      category: 'seo',
+      severity: 'medium',
+      title: 'Missing Meta Description',
+      description: 'Page is missing a meta description tag.',
+      impact: 'Poor search engine optimization and click-through rates',
+      recommendation: 'Add descriptive meta description tags to all pages',
+      implementation: 'easy',
+    });
+  }
+
+  // Check for alt attributes on images
+  const imagesWithoutAlt = document.querySelectorAll('img:not([alt])');
+  if (imagesWithoutAlt.length > 0) {
+    issues.push({
+      id: 'missing-alt-text',
+      category: 'accessibility',
+      severity: 'medium',
+      title: 'Missing Alt Text',
+      description: `Found ${imagesWithoutAlt.length} images without alt attributes.`,
+      impact: 'Poor accessibility for screen readers and SEO',
+      recommendation: 'Add descriptive alt text to all images',
+      implementation: 'easy',
+    });
+  }
+
+  // Check for proper heading hierarchy
+  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const h1Count = document.querySelectorAll('h1').length;
+  
+  if (h1Count === 0) {
+    issues.push({
+      id: 'no-h1',
+      category: 'seo',
+      severity: 'high',
+      title: 'Missing H1 Tag',
+      description: 'Page is missing an H1 heading tag.',
+      impact: 'Poor SEO structure and accessibility',
+      recommendation: 'Add a descriptive H1 tag to each page',
+      implementation: 'easy',
+    });
+  } else if (h1Count > 1) {
+    issues.push({
+      id: 'multiple-h1',
+      category: 'seo',
+      severity: 'medium',
+      title: 'Multiple H1 Tags',
+      description: `Found ${h1Count} H1 tags on the page.`,
+      impact: 'Confusing heading hierarchy for SEO and accessibility',
+      recommendation: 'Use only one H1 tag per page',
+      implementation: 'easy',
+    });
+  }
+
+  return { issues };
 };

@@ -8,7 +8,7 @@ import {
   Package, 
   TrendingUp, 
   Settings,
-  Eye
+  X
 } from 'lucide-react';
 import PerformanceOptimizer from './PerformanceOptimizer';
 import BundleAnalyzer from './BundleAnalyzer';
@@ -28,14 +28,14 @@ const OptimizationCenter: React.FC = () => {
         <Button
           onClick={() => setIsVisible(true)}
           size="lg"
-          className="shadow-lg"
+          className="shadow-lg bg-blue-600 hover:bg-blue-700"
         >
           <Zap className="h-5 w-5 mr-2" />
           Optimization Center
         </Button>
       ) : (
-        <Card className="w-[90vw] max-w-6xl h-[80vh] shadow-xl">
-          <CardHeader className="pb-2">
+        <Card className="w-[90vw] max-w-6xl h-[80vh] shadow-xl bg-white border">
+          <CardHeader className="pb-2 border-b">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl flex items-center gap-2">
                 <Settings className="h-5 w-5" />
@@ -45,14 +45,15 @@ const OptimizationCenter: React.FC = () => {
                 onClick={() => setIsVisible(false)}
                 variant="ghost"
                 size="sm"
+                className="h-8 w-8 p-0"
               >
-                ×
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0 h-full overflow-hidden">
             <Tabs defaultValue="performance" className="h-full flex flex-col">
-              <TabsList className="mx-6 mb-4">
+              <TabsList className="mx-6 mb-4 mt-4">
                 <TabsTrigger value="performance" className="flex items-center gap-2">
                   <Zap className="h-4 w-4" />
                   Performance
