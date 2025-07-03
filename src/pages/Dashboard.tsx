@@ -9,6 +9,7 @@ import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
 import ComplianceCasesCard from '@/components/dashboard/ComplianceCasesCard';
 import ComplianceSummaryCard from '@/components/dashboard/ComplianceSummaryCard';
 import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
+import PerformanceOverviewCard from '@/components/dashboard/PerformanceOverviewCard';
 import { mockComplianceMetrics, mockRiskDistribution } from '@/components/aml/mockTransactionData';
 import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
 import { useTranslation } from 'react-i18next';
@@ -72,7 +73,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
                 {highlightedStats.map((stat, index) => (
                   <DashboardMetricsCard
                     key={index}
@@ -83,6 +84,8 @@ const Dashboard = () => {
                     icon={iconMap[stat.icon as keyof typeof iconMap]}
                   />
                 ))}
+                {/* Add Performance Overview Card */}
+                <PerformanceOverviewCard />
               </div>
             )}
           </div>

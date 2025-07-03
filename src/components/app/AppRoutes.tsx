@@ -22,6 +22,7 @@ import Transactions from '@/pages/Transactions';
 import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Users from '@/pages/Users';
+import Optimization from '@/pages/Optimization';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -58,6 +59,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/optimization"
+        element={
+          <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive', 'support']}>
+            <Optimization />
           </ProtectedRoute>
         }
       />
