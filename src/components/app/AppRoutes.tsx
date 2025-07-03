@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -64,6 +65,14 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path="/developer-tools"
+        element={
+          <ProtectedRoute requiredRoles={['admin']}>
+            <DeveloperTools />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/developer"
         element={
           <ProtectedRoute requiredRoles={['admin']}>
             <DeveloperTools />
