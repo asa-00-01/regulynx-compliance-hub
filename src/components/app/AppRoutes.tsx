@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -23,6 +22,7 @@ import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Users from '@/pages/Users';
 import Optimization from '@/pages/Optimization';
+import DeveloperTools from '@/pages/DeveloperTools';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -59,6 +59,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/developer-tools"
+        element={
+          <ProtectedRoute requiredRoles={['admin']}>
+            <DeveloperTools />
           </ProtectedRoute>
         }
       />

@@ -20,7 +20,11 @@ import { toast } from 'sonner';
 import { useDraggable } from '@/hooks/useDraggable';
 import { cn } from '@/lib/utils';
 
-const DeveloperPanel: React.FC = () => {
+interface DeveloperPanelProps {
+  embedded?: boolean;
+}
+
+const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ embedded = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const devPanelButtonRef = useRef<HTMLButtonElement>(null);
   const { style, onMouseDown, hasInitialized } = useDraggable(devPanelButtonRef);
@@ -32,10 +36,6 @@ const DeveloperPanel: React.FC = () => {
     supportEmail: config.app.supportEmail 
   });
   const [featureFlags, setFeatureFlags] = useState(config.features);
-
-  if (!config.isDevelopment) {
-    return null;
-  }
 
   const handleFeatureFlagChange = (flagName: keyof typeof config.features, value: boolean) => {
     setFeatureFlags((prev) => ({ ...prev, [flagName]: value }));
@@ -72,86 +72,69 @@ const DeveloperPanel: React.FC = () => {
     setTimeout(() => window.location.reload(), 2000);
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          ref={devPanelButtonRef}
-          variant="outline"
-          size="sm"
-          className={cn(
-            'fixed z-50',
-            !hasInitialized && 'bottom-4 left-4'
-          )}
-          style={style}
-          onMouseDown={onMouseDown}
-        >
-          <Settings className="h-4 w-4 mr-2" />
-          Dev Panel
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Developer Panel</DialogTitle>
-          <DialogDescription>
-            Override environment configurations for local development. Changes require a page reload.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Accordion type="multiple" defaultValue={['app-api', 'features']} className="w-full">
-          <AccordionItem value="app-api">
-            <AccordionTrigger>App & API Configuration</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="appName">App Name</Label>
-                <Input id="appName" value={appConfig.name} onChange={(e) => setAppConfig(p => ({...p, name: e.target.value}))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="appDomain">App Domain</Label>
-                <Input id="appDomain" value={appConfig.domain} onChange={(e) => setAppConfig(p => ({...p, domain: e.target.value}))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supportEmail">Support Email</Label>
-                <Input id="supportEmail" value={appConfig.supportEmail} onChange={(e) => setAppConfig(p => ({...p, supportEmail: e.target.value}))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiUrl">API Base URL</Label>
-                <Input id="apiUrl" value={apiConfig.baseUrl} onChange={(e) => setApiConfig({ baseUrl: e.target.value })} />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="features">
-            <AccordionTrigger>Feature Flags</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              {Object.entries(featureFlags).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <Label htmlFor={key} className="text-base">{formatFlagName(key)}</Label>
-                  </div>
-                  <Switch
-                    id={key}
-                    checked={value}
-                    onCheckedChange={(checked) => handleFeatureFlagChange(key as keyof typeof config.features, checked)}
-                  />
+  // If embedded, show the content directly
+  if (embedded) {
+    return (
+      <div className="w-full max-w-2xl">
+        <div className="space-y-6">
+          <Accordion type="multiple" defaultValue={['app-api', 'features']} className="w-full">
+            <AccordionItem value="app-api">
+              <AccordionTrigger>App & API Configuration</AccordionTrigger>
+              <AccordionContent className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="appName">App Name</Label>
+                  <Input id="appName" value={appConfig.name} onChange={(e) => setAppConfig(p => ({...p, name: e.target.value}))} />
                 </div>
-              ))}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                <div className="space-y-2">
+                  <Label htmlFor="appDomain">App Domain</Label>
+                  <Input id="appDomain" value={appConfig.domain} onChange={(e) => setAppConfig(p => ({...p, domain: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="supportEmail">Support Email</Label>
+                  <Input id="supportEmail" value={appConfig.supportEmail} onChange={(e) => setAppConfig(p => ({...p, supportEmail: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="apiUrl">API Base URL</Label>
+                  <Input id="apiUrl" value={apiConfig.baseUrl} onChange={(e) => setApiConfig({ baseUrl: e.target.value })} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="features">
+              <AccordionTrigger>Feature Flags</AccordionTrigger>
+              <AccordionContent className="space-y-4 pt-2">
+                {Object.entries(featureFlags).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label htmlFor={key} className="text-base">{formatFlagName(key)}</Label>
+                    </div>
+                    <Switch
+                      id={key}
+                      checked={value}
+                      onCheckedChange={(checked) => handleFeatureFlagChange(key as keyof typeof config.features, checked)}
+                    />
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button variant="ghost" onClick={handleReset} className="text-destructive hover:text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Reset All Overrides
-          </Button>
-          <Button onClick={handleSave}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Save and Reload
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+          <div className="flex justify-between gap-2">
+            <Button variant="ghost" onClick={handleReset} className="text-destructive hover:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Reset All Overrides
+            </Button>
+            <Button onClick={handleSave}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Save and Reload
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show floating version anymore
+  return null;
 };
 
 export default DeveloperPanel;

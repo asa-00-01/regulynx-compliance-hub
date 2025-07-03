@@ -16,6 +16,7 @@ import {
   Bot,
   Newspaper,
   Zap,
+  Code,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -64,6 +65,12 @@ const Sidebar = () => {
       href: '/optimization',
       icon: Zap,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
+    },
+    {
+      title: 'Developer Tools',
+      href: '/developer-tools',
+      icon: Code,
+      allowedRoles: ['admin'],
     },
     {
       title: t('navigation.compliance'),

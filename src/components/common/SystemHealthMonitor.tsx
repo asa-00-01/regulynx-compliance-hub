@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +39,11 @@ interface SystemHealth {
   } | null;
 }
 
-const SystemHealthMonitor: React.FC = () => {
+interface SystemHealthMonitorProps {
+  embedded?: boolean;
+}
+
+const SystemHealthMonitor: React.FC<SystemHealthMonitorProps> = ({ embedded = false }) => {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -140,9 +143,7 @@ const SystemHealthMonitor: React.FC = () => {
   };
 
   useEffect(() => {
-    if (config.isDevelopment || config.features.enableDebugMode) {
-      checkSystemHealth();
-    }
+    checkSystemHealth();
   }, []);
 
   const getStatusIcon = (status: 'good' | 'warning' | 'critical' | 'online' | 'offline') => {
@@ -175,144 +176,117 @@ const SystemHealthMonitor: React.FC = () => {
     }
   };
 
-  // Only show in development or debug mode
-  if (!config.isDevelopment && !config.features.enableDebugMode) {
-    return null;
+  // If embedded, show the content directly
+  if (embedded) {
+    return (
+      <Card className="w-full shadow-lg">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              System Health Monitor
+            </CardTitle>
+            <Button
+              onClick={checkSystemHealth}
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!health ? (
+            <div className="text-center py-4 text-sm text-muted-foreground">
+              Checking system health...
+            </div>
+          ) : (
+            <>
+              {/* Performance */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-sm">Performance</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(health.performance.status)}
+                  <Badge className={`text-xs ${getStatusColor(health.performance.status)}`}>
+                    {health.performance.score}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Network */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wifi className="h-4 w-4" />
+                  <span className="text-sm">Network</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(health.network.status)}
+                  <Badge className={`text-xs ${getStatusColor(health.network.status)}`}>
+                    {health.network.status}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Memory */}
+              {health.memory && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Cpu className="h-4 w-4" />
+                    <span className="text-sm">Memory</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(health.memory.status)}
+                    <Badge className={`text-xs ${getStatusColor(health.memory.status)}`}>
+                      {health.memory.percentage}%
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              {/* Storage */}
+              {health.storage && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    <span className="text-sm">Storage</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(health.storage.status)}
+                    <Badge className={`text-xs ${getStatusColor(health.storage.status)}`}>
+                      {health.storage.percentage}%
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              {/* Warnings */}
+              {health && (
+                (health.performance.status === 'critical' || 
+                 health.network.status === 'offline' ||
+                 health.memory?.status === 'critical' ||
+                 health.storage?.status === 'critical') && (
+                  <Alert className="mt-3">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Critical issues detected. Check browser console for details.
+                    </AlertDescription>
+                  </Alert>
+                )
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
-  return (
-    <div className="fixed bottom-32 left-4 z-50">
-      {!isVisible ? (
-        <Button
-          onClick={() => setIsVisible(true)}
-          size="sm"
-          variant="outline"
-          className="shadow-lg"
-        >
-          <Activity className="h-4 w-4 mr-2" />
-          System Health
-        </Button>
-      ) : (
-        <Card className="w-80 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                System Health
-              </CardTitle>
-              <div className="flex gap-1">
-                <Button
-                  onClick={checkSystemHealth}
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  disabled={isRefreshing}
-                >
-                  <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </Button>
-                <Button
-                  onClick={() => setIsVisible(false)}
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                >
-                  ×
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {!health ? (
-              <div className="text-center py-4 text-sm text-muted-foreground">
-                Checking system health...
-              </div>
-            ) : (
-              <>
-                {/* Performance */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span className="text-sm">Performance</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(health.performance.status)}
-                    <Badge className={`text-xs ${getStatusColor(health.performance.status)}`}>
-                      {health.performance.score}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Network */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4" />
-                    <span className="text-sm">Network</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(health.network.status)}
-                    <Badge className={`text-xs ${getStatusColor(health.network.status)}`}>
-                      {health.network.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Memory */}
-                {health.memory && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Cpu className="h-4 w-4" />
-                      <span className="text-sm">Memory</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(health.memory.status)}
-                      <Badge className={`text-xs ${getStatusColor(health.memory.status)}`}>
-                        {health.memory.percentage}%
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {/* Storage */}
-                {health.storage && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      <span className="text-sm">Storage</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(health.storage.status)}
-                      <Badge className={`text-xs ${getStatusColor(health.storage.status)}`}>
-                        {health.storage.percentage}%
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {/* Warnings */}
-                {health && (
-                  (health.performance.status === 'critical' || 
-                   health.network.status === 'offline' ||
-                   health.memory?.status === 'critical' ||
-                   health.storage?.status === 'critical') && (
-                    <Alert className="mt-3">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription className="text-xs">
-                        Critical issues detected. Check browser console for details.
-                      </AlertDescription>
-                    </Alert>
-                  )
-                )}
-              </>
-            )}
-            
-            <div className="pt-2 border-t text-xs text-muted-foreground">
-              {config.isDevelopment ? 'Development Mode' : 'Debug Mode Active'}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+  // Don't show floating version anymore
+  return null;
 };
 
 export default SystemHealthMonitor;

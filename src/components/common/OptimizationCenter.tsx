@@ -68,76 +68,8 @@ const OptimizationCenter: React.FC<OptimizationCenterProps> = ({ embedded = fals
     );
   }
 
-  // Original floating behavior for development mode
-  if (!config.isDevelopment && !config.features.enableDebugMode) {
-    return null;
-  }
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {!isVisible ? (
-        <Button
-          onClick={() => setIsVisible(true)}
-          size="lg"
-          className="shadow-lg bg-blue-600 hover:bg-blue-700"
-        >
-          <Zap className="h-5 w-5 mr-2" />
-          Optimization Center
-        </Button>
-      ) : (
-        <Card className="w-[90vw] max-w-6xl h-[80vh] shadow-xl bg-white border">
-          <CardHeader className="pb-2 border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Optimization Center
-              </CardTitle>
-              <Button
-                onClick={() => setIsVisible(false)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 h-full overflow-hidden">
-            <Tabs defaultValue="performance" className="h-full flex flex-col">
-              <TabsList className="mx-6 mb-4 mt-4">
-                <TabsTrigger value="performance" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  Performance
-                </TabsTrigger>
-                <TabsTrigger value="bundle" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Bundle Analysis
-                </TabsTrigger>
-                <TabsTrigger value="production" className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Production Ready
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex-1 overflow-y-auto">
-                <TabsContent value="performance" className="mt-0 h-full">
-                  <PerformanceOptimizer />
-                </TabsContent>
-
-                <TabsContent value="bundle" className="mt-0 h-full">
-                  <BundleAnalyzer />
-                </TabsContent>
-
-                <TabsContent value="production" className="mt-0 h-full">
-                  <ProductionReadinessChecker />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+  // Don't show floating version anymore - redirect users to the Developer Tools page
+  return null;
 };
 
 export default OptimizationCenter;
