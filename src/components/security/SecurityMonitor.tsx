@@ -18,6 +18,24 @@ interface SecurityMonitorProps {
   embedded?: boolean;
 }
 
+// Helper functions moved to the top
+const getStatusIcon = (enabled: boolean) => {
+  return enabled ? (
+    <CheckCircle className="h-3 w-3 text-green-500" />
+  ) : (
+    <AlertTriangle className="h-3 w-3 text-red-500" />
+  );
+};
+
+const getStatusBadge = (enabled: boolean, label: string) => {
+  return (
+    <Badge variant={enabled ? "default" : "destructive"} className="text-xs flex items-center gap-1">
+      {getStatusIcon(enabled)}
+      <span>{label}</span>
+    </Badge>
+  );
+};
+
 const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ embedded = false }) => {
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus>({
     csp: false,
@@ -74,77 +92,8 @@ const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ embedded = false }) =
     );
   }
 
-  // Only show floating version in development or if there are security issues
-  const shouldShow = config.isDevelopment || (config.isProduction && hasIssues);
-  if (!shouldShow) return null;
-
-  const getStatusIcon = (enabled: boolean) => {
-    return enabled ? (
-      <CheckCircle className="h-3 w-3 text-green-500" />
-    ) : (
-      <AlertTriangle className="h-3 w-3 text-red-500" />
-    );
-  };
-
-  const getStatusBadge = (enabled: boolean, label: string) => {
-    return (
-      <Badge variant={enabled ? "default" : "destructive"} className="text-xs">
-        {getStatusIcon(enabled)}
-        <span className="ml-1">{label}</span>
-      </Badge>
-    );
-  };
-
-  return (
-    <div className="fixed bottom-4 left-4 max-w-sm bg-background border rounded-lg shadow-lg p-4 z-50">
-      <div className="flex items-center gap-2 mb-3">
-        <Shield className="h-4 w-4" />
-        <span className="font-medium text-sm">Security Status</span>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
-          {getStatusBadge(securityStatus.csp, 'CSP')}
-          {getStatusBadge(securityStatus.rateLimit, 'Rate Limit')}
-          {getStatusBadge(securityStatus.https, 'HTTPS')}
-          {getStatusBadge(securityStatus.headers, 'Security Headers')}
-        </div>
-
-        {hasIssues && config.isProduction && (
-          <Alert variant="destructive" className="mt-3">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              Security issues detected in production. Please review your configuration.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {config.isDevelopment && (
-          <div className="text-xs text-muted-foreground mt-2">
-            Development mode - Security monitoring active
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Helper function moved outside component to avoid redefinition
-const getStatusIcon = (enabled: boolean) => {
-  return enabled ? (
-    <CheckCircle className="h-3 w-3 text-green-500" />
-  ) : (
-    <AlertTriangle className="h-3 w-3 text-red-500" />
-  );
-};
-
-const getStatusBadge = (enabled: boolean, label: string) => {
-  return (
-    <Badge variant={enabled ? "default" : "destructive"} className="text-xs flex items-center gap-1">
-      {getStatusIcon(enabled)}
-      <span>{label}</span>
-    </Badge>
-  );
+  // Don't show floating version anymore
+  return null;
 };
 
 export default SecurityMonitor;
