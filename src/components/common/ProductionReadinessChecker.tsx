@@ -148,223 +148,221 @@ const ProductionReadinessChecker: React.FC = () => {
   const readinessStatus = report ? getReadinessStatus(report.score) : null;
 
   return (
-    <div className="w-full max-w-full min-w-0 overflow-hidden">
-      <div className="space-y-6 p-6 max-w-full min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-bold truncate">Production Readiness Analysis</h2>
-            <p className="text-muted-foreground text-sm">
-              Comprehensive analysis of your application for production deployment
-            </p>
-            {readinessStatus && (
-              <div className="mt-2">
-                <span className="text-sm text-muted-foreground">Status: </span>
-                <span className={`font-semibold ${readinessStatus.color}`}>
-                  {readinessStatus.status}
-                </span>
-              </div>
-            )}
-          </div>
-          <Button onClick={runAnalysis} disabled={isAnalyzing} className="ml-4 flex-shrink-0">
-            <RefreshCw className={`h-4 w-4 mr-2 ${isAnalyzing ? 'animate-spin' : ''}`} />
-            {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl font-bold">Production Readiness Analysis</h2>
+          <p className="text-muted-foreground text-sm">
+            Comprehensive analysis of your application for production deployment
+          </p>
+          {readinessStatus && (
+            <div className="mt-2">
+              <span className="text-sm text-muted-foreground">Status: </span>
+              <span className={`font-semibold ${readinessStatus.color}`}>
+                {readinessStatus.status}
+              </span>
+            </div>
+          )}
         </div>
+        <Button onClick={runAnalysis} disabled={isAnalyzing} className="flex-shrink-0">
+          <RefreshCw className={`h-4 w-4 mr-2 ${isAnalyzing ? 'animate-spin' : ''}`} />
+          {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
+        </Button>
+      </div>
 
-        {report && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-full min-w-0">
-            <Card className="min-w-0">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Readiness Score</p>
-                    <p className={`text-2xl font-bold ${getScoreColor(report.score)}`}>
-                      {report.score}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {readinessStatus?.status}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <Progress value={report.score} className="w-16 h-2" />
-                  </div>
+      {report && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Readiness Score</p>
+                  <p className={`text-2xl font-bold ${getScoreColor(report.score)}`}>
+                    {report.score}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {readinessStatus?.status}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="min-w-0">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Performance Score</p>
-                    <p className={`text-2xl font-bold ${getScoreColor(performanceScore)}`}>
-                      {Math.round(performanceScore)}
-                    </p>
-                  </div>
-                  <Zap className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                <div className="flex-shrink-0">
+                  <Progress value={report.score} className="w-16 h-2" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="min-w-0">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Critical Issues</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {report.summary.critical}
-                    </p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-red-500 flex-shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="min-w-0">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Total Issues</p>
-                    <p className="text-2xl font-bold">
-                      {report.summary.total}
-                    </p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-orange-500 flex-shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {report?.metrics && (
-          <Card className="w-full max-w-full min-w-0">
-            <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm min-w-max">
-                {report.metrics.bundleSize && (
-                  <div>
-                    <p className="text-muted-foreground">Bundle Size</p>
-                    <p className="font-semibold">{Math.round(report.metrics.bundleSize)}KB</p>
-                  </div>
-                )}
-                {report.metrics.loadTime && (
-                  <div>
-                    <p className="text-muted-foreground">Load Time</p>
-                    <p className="font-semibold">{Math.round(report.metrics.loadTime)}ms</p>
-                  </div>
-                )}
-                {report.metrics.memoryCoverage && (
-                  <div>
-                    <p className="text-muted-foreground">Memory Usage</p>
-                    <p className="font-semibold">{report.metrics.memoryCoverage.toFixed(1)}%</p>
-                  </div>
-                )}
-                {report.metrics.securityScore && (
-                  <div>
-                    <p className="text-muted-foreground">Security Score</p>
-                    <p className="font-semibold">{report.metrics.securityScore}</p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {report && report.opportunities.length > 0 && (
-          <Card className="w-full max-w-full min-w-0">
-            <CardHeader>
-              <CardTitle>Optimization Opportunities ({report.opportunities.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 w-full max-w-full min-w-0">
-              {report.opportunities
-                .sort((a, b) => {
-                  const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-                  return severityOrder[b.severity] - severityOrder[a.severity];
-                })
-                .map((opportunity, index) => (
-                  <Collapsible key={opportunity.id} className="w-full max-w-full min-w-0">
-                    <Alert className={`border ${getSeverityColor(opportunity.severity)} w-full max-w-full min-w-0`}>
-                      <CollapsibleTrigger 
-                        className="w-full max-w-full min-w-0"
-                        onClick={() => toggleOpportunityExpansion(opportunity.id)}
-                      >
-                        <div className="flex items-start gap-3 w-full max-w-full min-w-0 text-left">
-                          <div className="flex items-center gap-2 mt-1 flex-shrink-0">
-                            {getSeverityIcon(opportunity.severity)}
-                            {getCategoryIcon(opportunity.category)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
-                                <h4 className="font-medium truncate">{opportunity.title}</h4>
-                                <div className="flex gap-1 flex-shrink-0">
-                                  <Badge variant={getSeverityBadgeVariant(opportunity.severity)} className="text-xs">
-                                    {opportunity.severity}
-                                  </Badge>
-                                  <Badge variant="outline" className="capitalize text-xs">
-                                    {opportunity.category}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div className="flex-shrink-0">
-                                {expandedOpportunities.has(opportunity.id) ? 
-                                  <ChevronUp className="h-4 w-4" /> : 
-                                  <ChevronDown className="h-4 w-4" />
-                                }
-                              </div>
-                            </div>
-                            <AlertDescription className="text-sm">
-                              {opportunity.description}
-                            </AlertDescription>
-                          </div>
-                        </div>
-                      </CollapsibleTrigger>
-                      
-                      <CollapsibleContent className="mt-3">
-                        <div className="pl-9 space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium text-red-600">Impact: </span>
-                            {opportunity.impact}
-                          </div>
-                          <div>
-                            <span className="font-medium text-green-600">Recommendation: </span>
-                            {opportunity.recommendation}
-                          </div>
-                          {opportunity.estimatedSavings && (
-                            <div>
-                              <span className="font-medium text-blue-600">Potential Savings: </span>
-                              {opportunity.estimatedSavings}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant={
-                              opportunity.implementation === 'easy' ? 'default' :
-                              opportunity.implementation === 'medium' ? 'secondary' : 'destructive'
-                            }>
-                              {opportunity.implementation} to implement
-                            </Badge>
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </Alert>
-                  </Collapsible>
-                ))}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Performance Score</p>
+                  <p className={`text-2xl font-bold ${getScoreColor(performanceScore)}`}>
+                    {Math.round(performanceScore)}
+                  </p>
+                </div>
+                <Zap className="h-8 w-8 text-blue-500 flex-shrink-0" />
+              </div>
             </CardContent>
           </Card>
-        )}
 
-        {report && report.opportunities.length === 0 && (
-          <Alert className="w-full max-w-full min-w-0">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              🎉 Excellent! Your application appears to be production-ready with no optimization opportunities detected.
-              All systems are configured correctly for deployment.
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Critical Issues</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {report.summary.critical}
+                  </p>
+                </div>
+                <XCircle className="h-8 w-8 text-red-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Total Issues</p>
+                  <p className="text-2xl font-bold">
+                    {report.summary.total}
+                  </p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-orange-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {report?.metrics && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance Metrics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              {report.metrics.bundleSize && (
+                <div>
+                  <p className="text-muted-foreground">Bundle Size</p>
+                  <p className="font-semibold">{Math.round(report.metrics.bundleSize)}KB</p>
+                </div>
+              )}
+              {report.metrics.loadTime && (
+                <div>
+                  <p className="text-muted-foreground">Load Time</p>
+                  <p className="font-semibold">{Math.round(report.metrics.loadTime)}ms</p>
+                </div>
+              )}
+              {report.metrics.memoryCoverage && (
+                <div>
+                  <p className="text-muted-foreground">Memory Usage</p>
+                  <p className="font-semibold">{report.metrics.memoryCoverage.toFixed(1)}%</p>
+                </div>
+              )}
+              {report.metrics.securityScore && (
+                <div>
+                  <p className="text-muted-foreground">Security Score</p>
+                  <p className="font-semibold">{report.metrics.securityScore}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {report && report.opportunities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Optimization Opportunities ({report.opportunities.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {report.opportunities
+              .sort((a, b) => {
+                const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+                return severityOrder[b.severity] - severityOrder[a.severity];
+              })
+              .map((opportunity, index) => (
+                <Collapsible key={opportunity.id}>
+                  <Alert className={`border ${getSeverityColor(opportunity.severity)}`}>
+                    <CollapsibleTrigger 
+                      className="w-full"
+                      onClick={() => toggleOpportunityExpansion(opportunity.id)}
+                    >
+                      <div className="flex items-start gap-3 w-full text-left">
+                        <div className="flex items-center gap-2 mt-1 flex-shrink-0">
+                          {getSeverityIcon(opportunity.severity)}
+                          {getCategoryIcon(opportunity.category)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
+                              <h4 className="font-medium">{opportunity.title}</h4>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <Badge variant={getSeverityBadgeVariant(opportunity.severity)} className="text-xs">
+                                  {opportunity.severity}
+                                </Badge>
+                                <Badge variant="outline" className="capitalize text-xs">
+                                  {opportunity.category}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0">
+                              {expandedOpportunities.has(opportunity.id) ? 
+                                <ChevronUp className="h-4 w-4" /> : 
+                                <ChevronDown className="h-4 w-4" />
+                              }
+                            </div>
+                          </div>
+                          <AlertDescription className="text-sm">
+                            {opportunity.description}
+                          </AlertDescription>
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="mt-3">
+                      <div className="pl-9 space-y-2 text-sm">
+                        <div>
+                          <span className="font-medium text-red-600">Impact: </span>
+                          {opportunity.impact}
+                        </div>
+                        <div>
+                          <span className="font-medium text-green-600">Recommendation: </span>
+                          {opportunity.recommendation}
+                        </div>
+                        {opportunity.estimatedSavings && (
+                          <div>
+                            <span className="font-medium text-blue-600">Potential Savings: </span>
+                            {opportunity.estimatedSavings}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant={
+                            opportunity.implementation === 'easy' ? 'default' :
+                            opportunity.implementation === 'medium' ? 'secondary' : 'destructive'
+                          }>
+                            {opportunity.implementation} to implement
+                          </Badge>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Alert>
+                </Collapsible>
+              ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {report && report.opportunities.length === 0 && (
+        <Alert>
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            🎉 Excellent! Your application appears to be production-ready with no optimization opportunities detected.
+            All systems are configured correctly for deployment.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };

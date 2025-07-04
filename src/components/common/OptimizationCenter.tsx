@@ -25,38 +25,34 @@ const OptimizationCenter: React.FC<OptimizationCenterProps> = ({ embedded = fals
   // If embedded, show content without extra card wrapper
   if (embedded) {
     return (
-      <div className="w-full">
-        <Tabs defaultValue="performance" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="performance" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Performance
-            </TabsTrigger>
-            <TabsTrigger value="bundle" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Bundle Analysis
-            </TabsTrigger>
-            <TabsTrigger value="production" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Production Ready
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="performance" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="bundle" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Bundle Analysis
+          </TabsTrigger>
+          <TabsTrigger value="production" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Production Ready
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="overflow-y-auto max-h-[80vh]">
-            <TabsContent value="performance" className="mt-0">
-              <PerformanceOptimizer />
-            </TabsContent>
+        <TabsContent value="performance" className="mt-0">
+          <PerformanceOptimizer />
+        </TabsContent>
 
-            <TabsContent value="bundle" className="mt-0">
-              <BundleAnalyzer />
-            </TabsContent>
+        <TabsContent value="bundle" className="mt-0">
+          <BundleAnalyzer />
+        </TabsContent>
 
-            <TabsContent value="production" className="mt-0">
-              <ProductionReadinessChecker />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
+        <TabsContent value="production" className="mt-0">
+          <ProductionReadinessChecker />
+        </TabsContent>
+      </Tabs>
     );
   }
 
