@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,60 +90,56 @@ const SecurityAuditLog: React.FC<SecurityAuditLogProps> = ({ embedded = false })
     linkElement.click();
   };
 
-  // If embedded, show the content directly
+  // If embedded, show content without card wrapper
   if (embedded) {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center">
-              <Shield className="h-4 w-4 mr-2" />
-              Security Audit Log
-            </CardTitle>
-            <Button
-              onClick={exportLogs}
-              variant="ghost"
-              size="sm"
-            >
-              <Download className="h-3 w-3 mr-1" />
-              Export
-            </Button>
+      <div className="w-full">
+        <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center">
+            <Shield className="h-4 w-4 mr-2" />
+            <span className="text-sm font-medium">Security Audit Log</span>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="h-80 p-4">
-            {events.length === 0 ? (
-              <div className="text-center text-muted-foreground text-sm py-8">
-                No security events recorded
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {events.map((event) => (
-                  <div key={event.id} className="border rounded-lg p-3 text-xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span>{getTypeIcon(event.type)}</span>
-                        <Badge variant={getSeverityColor(event.severity)} className="text-xs">
-                          {event.severity}
-                        </Badge>
-                      </div>
-                      <span className="text-muted-foreground">
-                        {new Date(event.timestamp).toLocaleTimeString()}
-                      </span>
+          <Button
+            onClick={exportLogs}
+            variant="ghost"
+            size="sm"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Export
+          </Button>
+        </div>
+        <ScrollArea className="h-80 p-4">
+          {events.length === 0 ? (
+            <div className="text-center text-muted-foreground text-sm py-8">
+              No security events recorded
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {events.map((event) => (
+                <div key={event.id} className="border rounded-lg p-3 text-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span>{getTypeIcon(event.type)}</span>
+                      <Badge variant={getSeverityColor(event.severity)} className="text-xs">
+                        {event.severity}
+                      </Badge>
                     </div>
-                    <div className="font-medium mb-1">{event.message}</div>
-                    {event.details && (
-                      <pre className="text-muted-foreground bg-muted p-2 rounded text-xs overflow-hidden">
-                        {JSON.stringify(event.details, null, 2)}
-                      </pre>
-                    )}
+                    <span className="text-muted-foreground">
+                      {new Date(event.timestamp).toLocaleTimeString()}
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                  <div className="font-medium mb-1">{event.message}</div>
+                  {event.details && (
+                    <pre className="text-muted-foreground bg-muted p-2 rounded text-xs overflow-hidden">
+                      {JSON.stringify(event.details, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
     );
   }
 

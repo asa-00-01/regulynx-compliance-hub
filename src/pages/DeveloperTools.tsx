@@ -59,7 +59,7 @@ const DeveloperTools: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="system-health" className="space-y-6 w-full">
-                <Card className="w-full max-w-full">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Activity className="h-5 w-5" />
@@ -74,7 +74,7 @@ const DeveloperTools: React.FC = () => {
 
               <TabsContent value="security" className="space-y-6 w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full">
-                  <Card className="w-full">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5" />
@@ -86,7 +86,7 @@ const DeveloperTools: React.FC = () => {
                     </CardContent>
                   </Card>
                   
-                  <Card className="w-full">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Monitor className="h-5 w-5" />
@@ -101,7 +101,7 @@ const DeveloperTools: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="dev-panel" className="space-y-6 w-full">
-                <Card className="w-full max-w-full">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Code className="h-5 w-5" />
