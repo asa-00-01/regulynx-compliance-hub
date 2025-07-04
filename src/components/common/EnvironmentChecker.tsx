@@ -2,6 +2,7 @@
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-react';
 import { validateEnvironmentConfig, config, getConfigurationSummary } from '@/config/environment';
 
@@ -20,13 +21,14 @@ const EnvironmentChecker: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 p-4 bg-muted/30">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Info className="h-4 w-4" />
-        Environment Configuration Status
-      </div>
-      
-      <div className="grid gap-3">
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Info className="h-4 w-4" />
+          Environment Configuration Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {/* Basic Environment Info */}
         <div className="flex items-center gap-2 text-sm">
           <CheckCircle className="h-3 w-3 text-green-500" />
@@ -56,7 +58,7 @@ const EnvironmentChecker: React.FC = () => {
             <Badge variant={configSummary.features.mockData ? "destructive" : "default"}>
               Mock Data: {configSummary.features.mockData ? "On" : "Off"}
             </Badge>
-            <Badge variant={configSummary.features.debugMode ? "warning" : "default"}>
+            <Badge variant={configSummary.features.debugMode ? "secondary" : "default"}>
               Debug: {configSummary.features.debugMode ? "On" : "Off"}
             </Badge>
           </div>
@@ -80,7 +82,7 @@ const EnvironmentChecker: React.FC = () => {
         
         {/* Critical Errors */}
         {errors.length > 0 && (
-          <Alert variant="destructive" className="mt-3">
+          <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
@@ -98,7 +100,7 @@ const EnvironmentChecker: React.FC = () => {
 
         {/* Warnings */}
         {warnings.length > 0 && (
-          <Alert variant="default" className="mt-3 border-orange-200 bg-orange-50">
+          <Alert variant="default" className="border-orange-200 bg-orange-50">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
               <div className="space-y-2">
@@ -116,7 +118,7 @@ const EnvironmentChecker: React.FC = () => {
 
         {/* Production Readiness Summary */}
         {config.isProduction && (
-          <div className="mt-3 p-3 border rounded-lg bg-background">
+          <div className="p-3 border rounded-lg bg-background">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Production Readiness</span>
               <Badge variant={isValid ? "default" : "destructive"}>
@@ -131,8 +133,8 @@ const EnvironmentChecker: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

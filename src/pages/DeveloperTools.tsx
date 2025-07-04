@@ -16,11 +16,12 @@ import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
 import SecurityAuditLog from '@/components/security/SecurityAuditLog';
 import DeveloperPanel from '@/components/dev/DeveloperPanel';
 import SecurityMonitor from '@/components/security/SecurityMonitor';
+import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 
 const DeveloperTools: React.FC = () => {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-full overflow-hidden">
         <div className="border-b pb-4">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Developer Tools
@@ -28,6 +29,11 @@ const DeveloperTools: React.FC = () => {
           <p className="text-muted-foreground mt-2">
             Advanced development and optimization tools for administrators and developers.
           </p>
+        </div>
+        
+        {/* Environment Configuration Status - now properly contained */}
+        <div className="w-full">
+          <EnvironmentChecker />
         </div>
         
         <Tabs defaultValue="optimization" className="w-full">
@@ -50,11 +56,11 @@ const DeveloperTools: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="optimization">
+          <TabsContent value="optimization" className="space-y-4">
             <OptimizationCenter embedded={true} />
           </TabsContent>
 
-          <TabsContent value="system-health">
+          <TabsContent value="system-health" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -68,7 +74,7 @@ const DeveloperTools: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="security">
+          <TabsContent value="security" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -96,7 +102,7 @@ const DeveloperTools: React.FC = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="dev-panel">
+          <TabsContent value="dev-panel" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
