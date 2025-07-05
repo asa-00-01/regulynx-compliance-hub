@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { usePermissions } from '@/hooks/use-permissions';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/common/LanguageSelector';
@@ -36,6 +37,7 @@ import {
 
 const Sidebar = () => {
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
   const location = useLocation();
   const { t } = useTranslation();
   const { state } = useSidebar();
@@ -59,18 +61,6 @@ const Sidebar = () => {
       href: '/news',
       icon: Newspaper,
       allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: 'Performance Optimization',
-      href: '/optimization',
-      icon: Zap,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: 'Developer Tools',
-      href: '/developer-tools',
-      icon: Code,
-      allowedRoles: ['admin'],
     },
     {
       title: t('navigation.compliance'),
@@ -140,6 +130,23 @@ const Sidebar = () => {
     },
   ];
 
+  // Developer/Admin-only items for footer
+  const developerItems = [
+    {
+      title: 'Performance Optimization',
+      href: '/optimization',
+      icon: Zap,
+    },
+    {
+      title: 'Developer Tools',
+      href: '/developer-tools',
+      icon: Code,
+    },
+  ];
+
+  // Check if user is admin (only admins can see developer tools)
+  const isAdmin = user?.role === 'admin';
+
   return (
     <>
       <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
@@ -178,6 +185,37 @@ const Sidebar = () => {
       <SidebarSeparator />
       
       <SidebarFooter className={cn(isCollapsed && "hidden")}>
+        {/* Developer Tools Section - Admin Only */}
+        {isAdmin && (
+          <>
+            <div className="px-2 py-1">
+              <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Developer Tools</p>
+              <SidebarMenu>
+                {developerItems.map((item) => {
+                  const isActive = location.pathname.startsWith(item.href);
+                  
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.title}
+                        size="sm"
+                      >
+                        <NavLink to={item.href}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </div>
+            <SidebarSeparator />
+          </>
+        )}
+        
         <LanguageSelector />
         <p className="text-xs text-sidebar-foreground/70 text-center">
           {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
