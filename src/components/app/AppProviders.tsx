@@ -8,19 +8,12 @@ import AuthProvider from './AuthProvider';
 import ComplianceProvider from './ComplianceProvider';
 import AnalyticsProvider from './AnalyticsProvider';
 import ErrorTrackingService from '@/components/common/ErrorTrackingService';
-import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
-import DeveloperPanel from '@/components/dev/DeveloperPanel';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import MockModeIndicator from '@/components/common/MockModeIndicator';
 import HelpPanel from '@/components/common/HelpPanel';
 import SecurityProvider from '@/components/security/SecurityProvider';
-import SecurityMonitor from '@/components/security/SecurityMonitor';
-import SecurityAuditLog from '@/components/security/SecurityAuditLog';
-import PerformanceDashboard from '@/components/common/PerformanceDashboard';
-import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
-import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
 import NetworkMonitor from '@/components/common/NetworkMonitor';
-import OptimizationCenter from '@/components/common/OptimizationCenter';
+import AdminOnlyDevTools from '@/components/common/AdminOnlyDevTools';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -64,17 +57,11 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                     <NetworkMonitor />
                     <ToastProvider />
                     {children}
-                    <AnalyticsDashboard />
-                    <DeveloperPanel />
                     <EnvironmentChecker />
                     <MockModeIndicator />
                     <HelpPanel />
-                    <SecurityMonitor />
-                    <SecurityAuditLog />
-                    <PerformanceDashboard />
-                    <ProductionReadinessChecker />
-                    <SystemHealthMonitor />
-                    <OptimizationCenter />
+                    {/* All developer tools are now admin-only */}
+                    <AdminOnlyDevTools />
                   </AnalyticsProvider>
                 </ComplianceProvider>
               </QueryClientProvider>

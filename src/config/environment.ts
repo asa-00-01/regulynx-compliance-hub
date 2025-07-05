@@ -13,6 +13,7 @@ export const config = {
     domain: import.meta.env.VITE_APP_DOMAIN || (isProduction ? 'aml-compliance.com' : 'localhost'),
     port: parseInt(import.meta.env.VITE_PORT || '3000'),
     baseUrl: import.meta.env.VITE_BASE_URL || (isProduction ? 'https://aml-compliance.com' : 'http://localhost:3000'),
+    supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'support@aml-compliance.com',
   },
 
   // API Configuration
@@ -44,8 +45,11 @@ export const config = {
     enableCSP: import.meta.env.VITE_ENABLE_CSP === 'true' || isProduction,
     enableHSTS: import.meta.env.VITE_ENABLE_HSTS === 'true' || isProduction,
     enableXSSProtection: import.meta.env.VITE_ENABLE_XSS_PROTECTION === 'true' || isProduction,
+    enableFrameOptions: import.meta.env.VITE_ENABLE_FRAME_OPTIONS === 'true' || isProduction,
     sessionTimeout: parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600000'), // 1 hour
     maxLoginAttempts: parseInt(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS || '5'),
+    rateLimitWindow: parseInt(import.meta.env.VITE_RATE_LIMIT_WINDOW || '900000'), // 15 minutes
+    rateLimitMax: parseInt(import.meta.env.VITE_RATE_LIMIT_MAX || '100'),
     passwordPolicy: {
       minLength: parseInt(import.meta.env.VITE_PASSWORD_MIN_LENGTH || '8'),
       requireUppercase: import.meta.env.VITE_PASSWORD_REQUIRE_UPPERCASE !== 'false',
