@@ -9,6 +9,8 @@ import SystemHealthMonitor from './SystemHealthMonitor';
 import OptimizationCenter from './OptimizationCenter';
 import SecurityMonitor from '../security/SecurityMonitor';
 import SecurityAuditLog from '../security/SecurityAuditLog';
+import EnvironmentChecker from './EnvironmentChecker';
+import HelpPanel from './HelpPanel';
 
 const AdminOnlyDevTools: React.FC = () => {
   const { user } = useAuth();
@@ -28,6 +30,8 @@ const AdminOnlyDevTools: React.FC = () => {
       <OptimizationCenter />
       <SecurityMonitor />
       <SecurityAuditLog />
+      <EnvironmentChecker />
+      <HelpPanel />
     </>
   );
 };

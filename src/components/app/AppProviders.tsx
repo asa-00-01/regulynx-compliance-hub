@@ -8,9 +8,7 @@ import AuthProvider from './AuthProvider';
 import ComplianceProvider from './ComplianceProvider';
 import AnalyticsProvider from './AnalyticsProvider';
 import ErrorTrackingService from '@/components/common/ErrorTrackingService';
-import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import MockModeIndicator from '@/components/common/MockModeIndicator';
-import HelpPanel from '@/components/common/HelpPanel';
 import SecurityProvider from '@/components/security/SecurityProvider';
 import NetworkMonitor from '@/components/common/NetworkMonitor';
 import AdminOnlyDevTools from '@/components/common/AdminOnlyDevTools';
@@ -57,9 +55,7 @@ const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                     <NetworkMonitor />
                     <ToastProvider />
                     {children}
-                    <EnvironmentChecker />
                     <MockModeIndicator />
-                    <HelpPanel />
                     {/* All developer tools are now admin-only */}
                     <AdminOnlyDevTools />
                   </AnalyticsProvider>
