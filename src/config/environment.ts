@@ -1,205 +1,136 @@
 
-// Helper function to read development overrides from localStorage
-function getLocalStorageOverride<T>(key: string, defaultValue: T): T {
-  // Ensure localStorage is available
-  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-    return defaultValue;
-  }
+// Environment Configuration
+const environment = import.meta.env.VITE_ENVIRONMENT || 'development';
+const isDevelopment = environment === 'development';
+const isProduction = environment === 'production';
 
-  const storedValue = localStorage.getItem(key);
-
-  if (storedValue !== null) {
-    try {
-      // Values from the developer panel are stored as JSON strings
-      return JSON.parse(storedValue);
-    } catch (error) {
-      console.warn(`Could not parse localStorage value for key "${key}". Using default value.`, error);
-      return defaultValue;
-    }
-  }
-
-  return defaultValue;
-}
-
+// Base configuration
 export const config = {
-  isDevelopment: import.meta.env.DEV,
-  isProduction: import.meta.env.PROD,
-  
+  app: {
+    name: import.meta.env.VITE_APP_NAME || 'AML Compliance Platform',
+    version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    environment,
+    domain: import.meta.env.VITE_APP_DOMAIN || (isProduction ? 'aml-compliance.com' : 'localhost'),
+    port: parseInt(import.meta.env.VITE_PORT || '3000'),
+    baseUrl: import.meta.env.VITE_BASE_URL || (isProduction ? 'https://aml-compliance.com' : 'http://localhost:3000'),
+  },
+
   // API Configuration
   api: {
-    baseUrl: getLocalStorageOverride('dev_api_baseUrl', import.meta.env.VITE_API_BASE_URL || 'https://mqsouubnefdyjyaxjcwr.supabase.co'),
+    baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
     timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
+    retries: parseInt(import.meta.env.VITE_API_RETRIES || '3'),
   },
-  
+
   // Supabase Configuration
   supabase: {
-    url: import.meta.env.VITE_SUPABASE_URL || 'https://mqsouubnefdyjyaxjcwr.supabase.co',
-    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU'
+    url: import.meta.env.VITE_SUPABASE_URL || '',
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '',
   },
-  
-  // App Configuration
-  app: {
-    name: getLocalStorageOverride('dev_app_name', import.meta.env.VITE_APP_NAME || 'Compliance Management System'),
-    version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-    environment: import.meta.env.VITE_ENVIRONMENT || (import.meta.env.PROD ? 'production' : 'development'),
-    domain: getLocalStorageOverride('dev_app_domain', import.meta.env.VITE_APP_DOMAIN || 'localhost:8080'),
-    supportEmail: getLocalStorageOverride('dev_app_supportEmail', import.meta.env.VITE_SUPPORT_EMAIL || 'support@example.com'),
-    // New production-specific fields
-    companyName: import.meta.env.VITE_COMPANY_NAME || 'Your Company',
-    privacyPolicyUrl: import.meta.env.VITE_PRIVACY_POLICY_URL || '',
-    termsOfServiceUrl: import.meta.env.VITE_TERMS_OF_SERVICE_URL || '',
-  },
-  
-  // Feature Flags
+
+  // Feature Flags - Optimized for production
   features: {
-    enableAnalytics: getLocalStorageOverride('dev_features_enableAnalytics', import.meta.env.VITE_ENABLE_ANALYTICS === 'true'),
-    enableErrorReporting: getLocalStorageOverride('dev_features_enableErrorReporting', import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true'),
-    maintenanceMode: getLocalStorageOverride('dev_features_maintenanceMode', import.meta.env.VITE_MAINTENANCE_MODE === 'true'),
-    enableDebugMode: getLocalStorageOverride('dev_features_enableDebugMode', import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV),
-    enablePerformanceMonitoring: getLocalStorageOverride('dev_features_enablePerformanceMonitoring', import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true'),
-    useMockData: getLocalStorageOverride('dev_features_useMockData', import.meta.env.VITE_USE_MOCK_DATA === 'true' || 
-                 (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA !== 'false')),
+    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true' || isProduction,
+    enableErrorReporting: import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true' || isProduction,
+    enablePerformanceMonitoring: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true' || isProduction,
+    enableDebugMode: import.meta.env.VITE_DEBUG_MODE === 'true' && !isProduction, // Never enabled in production
+    useMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true' && !isProduction, // Never enabled in production
+    enableDevTools: import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true' && !isProduction,
   },
-  
+
+  // Security Configuration - Enhanced for production
+  security: {
+    enableCSP: import.meta.env.VITE_ENABLE_CSP === 'true' || isProduction,
+    enableHSTS: import.meta.env.VITE_ENABLE_HSTS === 'true' || isProduction,
+    enableXSSProtection: import.meta.env.VITE_ENABLE_XSS_PROTECTION === 'true' || isProduction,
+    sessionTimeout: parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600000'), // 1 hour
+    maxLoginAttempts: parseInt(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS || '5'),
+    passwordPolicy: {
+      minLength: parseInt(import.meta.env.VITE_PASSWORD_MIN_LENGTH || '8'),
+      requireUppercase: import.meta.env.VITE_PASSWORD_REQUIRE_UPPERCASE !== 'false',
+      requireNumbers: import.meta.env.VITE_PASSWORD_REQUIRE_NUMBERS !== 'false',
+      requireSymbols: import.meta.env.VITE_PASSWORD_REQUIRE_SYMBOLS !== 'false',
+    },
+  },
+
+  // Logging Configuration - Optimized for production
+  logging: {
+    level: import.meta.env.VITE_LOG_LEVEL || (isProduction ? 'error' : 'debug'),
+    enableConsoleLogging: import.meta.env.VITE_ENABLE_CONSOLE_LOGGING !== 'false' && !isProduction, // Disabled in production
+    enableRemoteLogging: import.meta.env.VITE_ENABLE_REMOTE_LOGGING === 'true' || isProduction,
+  },
+
   // Performance Configuration
   performance: {
-    enableServiceWorker: import.meta.env.VITE_ENABLE_SW === 'true',
-    cacheTimeout: parseInt(import.meta.env.VITE_CACHE_TIMEOUT || '300000'), // 5 minutes
-    requestTimeout: parseInt(import.meta.env.VITE_REQUEST_TIMEOUT || '10000'), // 10 seconds
-    // New performance settings
-    enablePreloading: import.meta.env.VITE_ENABLE_PRELOADING !== 'false',
-    enableCompression: import.meta.env.VITE_ENABLE_COMPRESSION !== 'false',
+    enableCodeSplitting: import.meta.env.VITE_ENABLE_CODE_SPLITTING !== 'false',
+    enableLazyLoading: import.meta.env.VITE_ENABLE_LAZY_LOADING !== 'false',
+    enableServiceWorker: import.meta.env.VITE_ENABLE_SERVICE_WORKER === 'true' && isProduction,
+    cacheStrategy: import.meta.env.VITE_CACHE_STRATEGY || (isProduction ? 'aggressive' : 'minimal'),
   },
-  
-  // Security Configuration
-  security: {
-    enableCSP: import.meta.env.VITE_ENABLE_CSP === 'true',
-    enableHSTS: import.meta.env.VITE_ENABLE_HSTS === 'true',
-    rateLimitWindow: parseInt(import.meta.env.VITE_RATE_LIMIT_WINDOW || '60000'), // 1 minute
-    rateLimitMax: parseInt(import.meta.env.VITE_RATE_LIMIT_MAX || '100'),
-    // New security settings
-    enableXSSProtection: import.meta.env.VITE_ENABLE_XSS_PROTECTION !== 'false',
-    enableFrameOptions: import.meta.env.VITE_ENABLE_FRAME_OPTIONS !== 'false',
-    sessionTimeout: parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600000'), // 1 hour
-  },
-  
-  // Logging Configuration
-  logging: {
-    level: import.meta.env.VITE_LOG_LEVEL || (import.meta.env.PROD ? 'error' : 'debug'),
-    enableConsoleLogging: import.meta.env.VITE_ENABLE_CONSOLE_LOGGING !== 'false',
-    enableRemoteLogging: import.meta.env.VITE_ENABLE_REMOTE_LOGGING === 'true',
-    // New logging settings
-    maxLogSize: parseInt(import.meta.env.VITE_MAX_LOG_SIZE || '1000'),
-    logRetentionDays: parseInt(import.meta.env.VITE_LOG_RETENTION_DAYS || '30'),
-  },
-  
-  // External Services Configuration
-  services: {
-    // Placeholder for external service configurations
-    // These would typically use Supabase secrets in production
-    newsApiEnabled: import.meta.env.VITE_NEWS_API_ENABLED === 'true',
-    newsApiRefreshInterval: parseInt(import.meta.env.VITE_NEWS_REFRESH_INTERVAL || '300000'), // 5 minutes
-    // New service configurations
-    emailServiceEnabled: import.meta.env.VITE_EMAIL_SERVICE_ENABLED === 'true',
-    smsServiceEnabled: import.meta.env.VITE_SMS_SERVICE_ENABLED === 'true',
-    backupServiceEnabled: import.meta.env.VITE_BACKUP_SERVICE_ENABLED === 'true',
-  }
-};
 
-// Enhanced validation function with more comprehensive checks
-export const validateEnvironmentConfig = (): { isValid: boolean; errors: string[]; warnings: string[] } => {
+  // Development flags
+  isDevelopment,
+  isProduction,
+  isTest: environment === 'test',
+} as const;
+
+// Validation function to check configuration
+export const validateEnvironmentConfig = () => {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
-  // Check required configurations for production
-  if (config.isProduction) {
-    // Critical production requirements
-    if (!config.app.domain || config.app.domain === 'localhost:8080') {
-      errors.push('VITE_APP_DOMAIN must be set to your actual domain for production deployment');
-    }
-    
-    if (!config.app.supportEmail || config.app.supportEmail === 'support@example.com') {
-      errors.push('VITE_SUPPORT_EMAIL must be set to your actual support email for production');
-    }
 
-    if (!config.app.companyName || config.app.companyName === 'Your Company') {
-      warnings.push('VITE_COMPANY_NAME should be set to your actual company name');
-    }
-    
-    // Security checks
-    if (!config.security.enableCSP) {
-      warnings.push('Content Security Policy (CSP) should be enabled in production');
-    }
-    
-    if (!config.security.enableHSTS) {
-      warnings.push('HTTP Strict Transport Security (HSTS) should be enabled in production');
-    }
-    
-    // Feature flag warnings
+  // Critical checks for production
+  if (isProduction) {
     if (config.features.enableDebugMode) {
-      warnings.push('Debug mode is enabled in production - consider disabling for security');
+      errors.push('Debug mode must be disabled in production (VITE_DEBUG_MODE=false)');
     }
     
     if (config.features.useMockData) {
-      errors.push('Mock data mode is enabled in production - this MUST be disabled');
+      errors.push('Mock data must be disabled in production (VITE_USE_MOCK_DATA=false)');
     }
     
+    if (config.app.domain === 'localhost') {
+      errors.push('Domain must be set to production domain, not localhost');
+    }
+
     if (config.logging.enableConsoleLogging) {
-      warnings.push('Console logging is enabled in production - consider disabling for performance');
+      warnings.push('Console logging should be disabled in production for better performance');
     }
-    
-    // Performance warnings
-    if (!config.performance.enableServiceWorker) {
-      warnings.push('Service Worker is disabled - enabling can improve performance');
+
+    if (!config.features.enableErrorReporting) {
+      warnings.push('Error reporting should be enabled in production for monitoring');
     }
-  }
-  
-  // Environment-agnostic checks
-  if (config.api.timeout < 5000) {
-    warnings.push('API timeout is very low - consider increasing for better reliability');
-  }
-  
-  if (config.security.rateLimitMax > 1000) {
-    warnings.push('Rate limit maximum is very high - consider lowering for better security');
-  }
-  
-  // Log environment status
-  if (config.features.useMockData) {
-    console.log('🔧 Mock data mode enabled - using JSON mock data instead of API calls');
-  }
-  
-  // Log production readiness
-  if (config.isProduction) {
-    console.log('🚀 Production mode detected');
-    if (errors.length === 0) {
-      console.log('✅ Production configuration validation passed');
-    } else {
-      console.error('❌ Production configuration has critical errors that must be fixed');
+
+    if (!config.security.enableCSP) {
+      warnings.push('Content Security Policy should be enabled for better security');
+    }
+
+    if (!config.security.enableHSTS) {
+      warnings.push('HSTS should be enabled for better security');
     }
   }
-  
+
+  // General validation
+  if (!config.supabase.url || !config.supabase.anonKey) {
+    errors.push('Supabase configuration is incomplete');
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 };
 
-// Helper function to get environment-specific URLs
-export const getEnvironmentUrls = () => ({
-  api: config.api.baseUrl,
-  app: config.isProduction ? `https://${config.app.domain}` : `http://${config.app.domain}`,
-  supabase: config.supabase.url,
-});
-
-// Helper function to get production-ready configuration summary
+// Configuration summary for debugging
 export const getConfigurationSummary = () => ({
   environment: config.app.environment,
   version: config.app.version,
+  domain: config.app.domain,
   features: {
     analytics: config.features.enableAnalytics,
     errorReporting: config.features.enableErrorReporting,
-    performanceMonitoring: config.features.enablePerformanceMonitoring,
     mockData: config.features.useMockData,
     debugMode: config.features.enableDebugMode,
   },
@@ -207,13 +138,7 @@ export const getConfigurationSummary = () => ({
     csp: config.security.enableCSP,
     hsts: config.security.enableHSTS,
     xssProtection: config.security.enableXSSProtection,
-    frameOptions: config.security.enableFrameOptions,
   },
-  performance: {
-    serviceWorker: config.performance.enableServiceWorker,
-    preloading: config.performance.enablePreloading,
-    compression: config.performance.enableCompression,
-  }
 });
 
 export default config;

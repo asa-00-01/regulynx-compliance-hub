@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,11 +17,13 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Star
 } from 'lucide-react';
 import config from '@/config/environment';
 import { analyzeProductionReadiness, OptimizationReport, OptimizationOpportunity } from '@/utils/productionOptimization';
 import { getPerformanceScore, performanceMonitor } from '@/services/performanceMonitor';
+import OptimizationStatus from './OptimizationStatus';
 
 const ProductionReadinessChecker: React.FC = () => {
   const [report, setReport] = useState<OptimizationReport | null>(null);
@@ -170,8 +171,10 @@ const ProductionReadinessChecker: React.FC = () => {
         </Button>
       </div>
 
+      <OptimizationStatus />
+
       {report && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -209,12 +212,12 @@ const ProductionReadinessChecker: React.FC = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground">Critical Issues</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {report.summary.critical}
+                  <p className="text-sm text-muted-foreground">Fixed Issues</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {report.summary.fixed}
                   </p>
                 </div>
-                <XCircle className="h-8 w-8 text-red-500 flex-shrink-0" />
+                <CheckCircle className="h-8 w-8 text-green-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -223,12 +226,26 @@ const ProductionReadinessChecker: React.FC = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground">Total Issues</p>
+                  <p className="text-sm text-muted-foreground">Remaining Issues</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {report.summary.total - report.summary.fixed}
+                  </p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-orange-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Total Analyzed</p>
                   <p className="text-2xl font-bold">
                     {report.summary.total}
                   </p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-orange-500 flex-shrink-0" />
+                <Star className="h-8 w-8 text-blue-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -274,24 +291,37 @@ const ProductionReadinessChecker: React.FC = () => {
       {report && report.opportunities.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Optimization Opportunities ({report.opportunities.length})</CardTitle>
+            <CardTitle>
+              Analysis Results ({report.opportunities.length} items) 
+              {report.summary.fixed > 0 && (
+                <Badge variant="default" className="ml-2 bg-green-100 text-green-800 border-green-200">
+                  {report.summary.fixed} Fixed
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {report.opportunities
               .sort((a, b) => {
+                // Show fixed items first, then sort by severity
+                if (a.isFixed && !b.isFixed) return -1;
+                if (!a.isFixed && b.isFixed) return 1;
                 const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
                 return severityOrder[b.severity] - severityOrder[a.severity];
               })
               .map((opportunity, index) => (
                 <Collapsible key={opportunity.id}>
-                  <Alert className={`border ${getSeverityColor(opportunity.severity)}`}>
+                  <Alert className={`border ${getSeverityColor(opportunity.severity)} ${opportunity.isFixed ? 'bg-green-50 border-green-200' : ''}`}>
                     <CollapsibleTrigger 
                       className="w-full"
                       onClick={() => toggleOpportunityExpansion(opportunity.id)}
                     >
                       <div className="flex items-start gap-3 w-full text-left">
                         <div className="flex items-center gap-2 mt-1 flex-shrink-0">
-                          {getSeverityIcon(opportunity.severity)}
+                          {opportunity.isFixed ? 
+                            <CheckCircle className="h-4 w-4 text-green-500" /> :
+                            getSeverityIcon(opportunity.severity)
+                          }
                           {getCategoryIcon(opportunity.category)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -299,9 +329,15 @@ const ProductionReadinessChecker: React.FC = () => {
                             <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
                               <h4 className="font-medium">{opportunity.title}</h4>
                               <div className="flex gap-1 flex-shrink-0">
-                                <Badge variant={getSeverityBadgeVariant(opportunity.severity)} className="text-xs">
-                                  {opportunity.severity}
-                                </Badge>
+                                {opportunity.isFixed ? (
+                                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
+                                    Fixed
+                                  </Badge>
+                                ) : (
+                                  <Badge variant={getSeverityBadgeVariant(opportunity.severity)} className="text-xs">
+                                    {opportunity.severity}
+                                  </Badge>
+                                )}
                                 <Badge variant="outline" className="capitalize text-xs">
                                   {opportunity.category}
                                 </Badge>
@@ -344,6 +380,11 @@ const ProductionReadinessChecker: React.FC = () => {
                           }>
                             {opportunity.implementation} to implement
                           </Badge>
+                          {opportunity.isFixed && (
+                            <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                              ✓ Applied
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CollapsibleContent>
@@ -354,12 +395,12 @@ const ProductionReadinessChecker: React.FC = () => {
         </Card>
       )}
 
-      {report && report.opportunities.length === 0 && (
+      {report && report.opportunities.filter(o => !o.isFixed).length === 0 && (
         <Alert>
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            🎉 Excellent! Your application appears to be production-ready with no optimization opportunities detected.
-            All systems are configured correctly for deployment.
+            🎉 Excellent! Your application is production-ready with all major optimization opportunities addressed.
+            All systems are properly configured for deployment.
           </AlertDescription>
         </Alert>
       )}
