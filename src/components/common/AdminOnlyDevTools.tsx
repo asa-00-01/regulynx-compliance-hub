@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import AnalyticsDashboard from './AnalyticsDashboard';
 import DeveloperPanel from '../dev/DeveloperPanel';
-import PerformanceDashboard from './PerformanceDashboard';
 import SystemHealthMonitor from './SystemHealthMonitor';
 import OptimizationCenter from './OptimizationCenter';
 import SecurityMonitor from '../security/SecurityMonitor';
@@ -19,9 +17,7 @@ const AdminOnlyDevTools: React.FC = () => {
 
   return (
     <>
-      <AnalyticsDashboard />
       <DeveloperPanel />
-      <PerformanceDashboard />
       <SystemHealthMonitor />
       <OptimizationCenter />
       <SecurityMonitor />

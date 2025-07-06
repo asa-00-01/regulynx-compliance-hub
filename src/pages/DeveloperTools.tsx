@@ -12,7 +12,8 @@ import {
   Monitor,
   CheckCircle,
   Globe,
-  HelpCircle
+  HelpCircle,
+  BarChart3
 } from 'lucide-react';
 import OptimizationCenter from '@/components/common/OptimizationCenter';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
@@ -22,6 +23,8 @@ import SecurityMonitor from '@/components/security/SecurityMonitor';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
 import HelpPanel from '@/components/common/HelpPanel';
+import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
+import PerformanceDashboard from '@/components/common/PerformanceDashboard';
 
 const DeveloperTools: React.FC = () => {
   return (
@@ -55,7 +58,7 @@ const DeveloperTools: React.FC = () => {
         >
           <TabsList 
             id="developer-tools-tabs-list"
-            className="developer-tools-tabs-navigation grid w-full grid-cols-7 mb-6"
+            className="developer-tools-tabs-navigation grid w-full grid-cols-9 mb-6"
           >
             <TabsTrigger 
               id="optimization-tab"
@@ -64,6 +67,22 @@ const DeveloperTools: React.FC = () => {
             >
               <Zap className="h-4 w-4" />
               <span className="hidden sm:inline">Optimization</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="analytics-tab"
+              value="analytics" 
+              className="analytics-tab-trigger flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="performance-tab"
+              value="performance" 
+              className="performance-tab-trigger flex items-center gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Performance</span>
             </TabsTrigger>
             <TabsTrigger 
               id="production-readiness-tab"
@@ -121,6 +140,42 @@ const DeveloperTools: React.FC = () => {
             className="optimization-tab-content space-y-4"
           >
             <OptimizationCenter embedded={true} />
+          </TabsContent>
+
+          <TabsContent 
+            id="analytics-content"
+            value="analytics" 
+            className="analytics-tab-content space-y-4"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Analytics Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsDashboard />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent 
+            id="performance-content"
+            value="performance" 
+            className="performance-tab-content space-y-4"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Performance Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PerformanceDashboard />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent 
