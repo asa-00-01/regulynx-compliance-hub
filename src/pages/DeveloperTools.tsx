@@ -9,7 +9,8 @@ import {
   Shield, 
   Zap, 
   Code,
-  Monitor
+  Monitor,
+  CheckCircle
 } from 'lucide-react';
 import OptimizationCenter from '@/components/common/OptimizationCenter';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
@@ -17,6 +18,7 @@ import SecurityAuditLog from '@/components/security/SecurityAuditLog';
 import DeveloperPanel from '@/components/dev/DeveloperPanel';
 import SecurityMonitor from '@/components/security/SecurityMonitor';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
+import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
 
 const DeveloperTools: React.FC = () => {
   return (
@@ -58,7 +60,7 @@ const DeveloperTools: React.FC = () => {
         >
           <TabsList 
             id="developer-tools-tabs-list"
-            className="developer-tools-tabs-navigation grid w-full grid-cols-4 mb-6"
+            className="developer-tools-tabs-navigation grid w-full grid-cols-5 mb-6"
           >
             <TabsTrigger 
               id="optimization-tab"
@@ -67,6 +69,14 @@ const DeveloperTools: React.FC = () => {
             >
               <Zap className="h-4 w-4" />
               <span className="hidden sm:inline">Optimization</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="production-readiness-tab"
+              value="production-readiness" 
+              className="production-readiness-tab-trigger flex items-center gap-2"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Production</span>
             </TabsTrigger>
             <TabsTrigger 
               id="system-health-tab"
@@ -100,6 +110,14 @@ const DeveloperTools: React.FC = () => {
             className="optimization-tab-content space-y-4"
           >
             <OptimizationCenter embedded={true} />
+          </TabsContent>
+
+          <TabsContent 
+            id="production-readiness-content"
+            value="production-readiness" 
+            className="production-readiness-tab-content space-y-4"
+          >
+            <ProductionReadinessChecker />
           </TabsContent>
 
           <TabsContent 
