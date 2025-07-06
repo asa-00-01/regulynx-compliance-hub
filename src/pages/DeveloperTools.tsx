@@ -11,7 +11,8 @@ import {
   Code,
   Monitor,
   CheckCircle,
-  Globe
+  Globe,
+  HelpCircle
 } from 'lucide-react';
 import OptimizationCenter from '@/components/common/OptimizationCenter';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
@@ -20,6 +21,7 @@ import DeveloperPanel from '@/components/dev/DeveloperPanel';
 import SecurityMonitor from '@/components/security/SecurityMonitor';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
+import HelpPanel from '@/components/common/HelpPanel';
 
 const DeveloperTools: React.FC = () => {
   return (
@@ -53,7 +55,7 @@ const DeveloperTools: React.FC = () => {
         >
           <TabsList 
             id="developer-tools-tabs-list"
-            className="developer-tools-tabs-navigation grid w-full grid-cols-6 mb-6"
+            className="developer-tools-tabs-navigation grid w-full grid-cols-7 mb-6"
           >
             <TabsTrigger 
               id="optimization-tab"
@@ -94,6 +96,14 @@ const DeveloperTools: React.FC = () => {
             >
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="help-tab"
+              value="help" 
+              className="help-tab-trigger flex items-center gap-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Help</span>
             </TabsTrigger>
             <TabsTrigger 
               id="dev-panel-tab"
@@ -216,6 +226,14 @@ const DeveloperTools: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent 
+            id="help-content"
+            value="help" 
+            className="help-tab-content space-y-4"
+          >
+            <HelpPanel />
           </TabsContent>
 
           <TabsContent 
