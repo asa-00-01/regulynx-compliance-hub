@@ -10,7 +10,8 @@ import {
   Zap, 
   Code,
   Monitor,
-  CheckCircle
+  CheckCircle,
+  Globe
 } from 'lucide-react';
 import OptimizationCenter from '@/components/common/OptimizationCenter';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
@@ -45,14 +46,6 @@ const DeveloperTools: React.FC = () => {
           </p>
         </div>
         
-        {/* Environment Configuration Status - now properly contained */}
-        <div 
-          id="environment-status-section"
-          className="environment-status-wrapper w-full"
-        >
-          <EnvironmentChecker />
-        </div>
-        
         <Tabs 
           id="developer-tools-tabs"
           defaultValue="optimization" 
@@ -60,7 +53,7 @@ const DeveloperTools: React.FC = () => {
         >
           <TabsList 
             id="developer-tools-tabs-list"
-            className="developer-tools-tabs-navigation grid w-full grid-cols-5 mb-6"
+            className="developer-tools-tabs-navigation grid w-full grid-cols-6 mb-6"
           >
             <TabsTrigger 
               id="optimization-tab"
@@ -77,6 +70,14 @@ const DeveloperTools: React.FC = () => {
             >
               <CheckCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Production</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="environment-tab"
+              value="environment" 
+              className="environment-tab-trigger flex items-center gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Environment</span>
             </TabsTrigger>
             <TabsTrigger 
               id="system-health-tab"
@@ -118,6 +119,14 @@ const DeveloperTools: React.FC = () => {
             className="production-readiness-tab-content space-y-4"
           >
             <ProductionReadinessChecker />
+          </TabsContent>
+
+          <TabsContent 
+            id="environment-content"
+            value="environment" 
+            className="environment-tab-content space-y-4"
+          >
+            <EnvironmentChecker />
           </TabsContent>
 
           <TabsContent 
