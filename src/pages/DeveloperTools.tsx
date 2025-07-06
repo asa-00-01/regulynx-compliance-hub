@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,8 +22,8 @@ import SecurityMonitor from '@/components/security/SecurityMonitor';
 import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
 import HelpPanel from '@/components/common/HelpPanel';
-import AnalyticsDashboard from '@/components/common/AnalyticsDashboard';
-import PerformanceDashboard from '@/components/common/PerformanceDashboard';
+import AnalyticsContent from '@/components/dev/AnalyticsContent';
+import PerformanceContent from '@/components/dev/PerformanceContent';
 
 const DeveloperTools: React.FC = () => {
   return (
@@ -155,7 +154,7 @@ const DeveloperTools: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <AnalyticsDashboard />
+                <AnalyticsContent />
               </CardContent>
             </Card>
           </TabsContent>
@@ -173,7 +172,7 @@ const DeveloperTools: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <PerformanceDashboard />
+                <PerformanceContent />
               </CardContent>
             </Card>
           </TabsContent>
