@@ -54,6 +54,24 @@ export function useSARData() {
     },
   });
 
+  const deleteSarMutation = useMutation({
+    mutationFn: SARService.deleteSAR,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sars'] });
+      toast({
+        title: 'SAR Deleted',
+        description: 'SAR has been deleted successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Deleting SAR',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const getPatternMatches = async (patternId: string): Promise<PatternMatch[]> => {
     if (!patternId) return [];
     try {
@@ -97,9 +115,10 @@ export function useSARData() {
   return {
     sars,
     patterns,
-    loading: sarsLoading || patternsLoading || createSarMutation.isPending || updateSarMutation.isPending,
+    loading: sarsLoading || patternsLoading || createSarMutation.isPending || updateSarMutation.isPending || deleteSarMutation.isPending,
     createSAR: createSarMutation.mutate,
     updateSAR: updateSarMutation.mutate,
+    deleteSAR: deleteSarMutation.mutate,
     getPatternMatches,
     createAlertFromMatch,
     createSARFromMatch,

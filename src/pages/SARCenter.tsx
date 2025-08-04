@@ -18,7 +18,7 @@ const SARCenter = () => {
   const { t } = useTranslation();
   
   const {
-    sarReports,
+    sars,
     loading,
     createSAR,
     updateSAR,
@@ -32,6 +32,11 @@ const SARCenter = () => {
     } catch (error) {
       console.error('Error creating SAR:', error);
     }
+  };
+
+  const handleViewSAR = (id: string) => {
+    // Handle SAR viewing logic
+    console.log('Viewing SAR:', id);
   };
 
   return (
@@ -57,7 +62,7 @@ const SARCenter = () => {
               <FileWarning className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{sarReports.length}</div>
+              <div className="text-2xl font-bold">{sars.length}</div>
               <p className="text-xs text-muted-foreground">
                 +12% from last month
               </p>
@@ -71,7 +76,7 @@ const SARCenter = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sarReports.filter(sar => sar.status === 'draft').length}
+                {sars.filter(sar => sar.status === 'draft').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting submission
@@ -86,7 +91,7 @@ const SARCenter = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sarReports.filter(sar => sar.status === 'filed').length}
+                {sars.filter(sar => sar.status === 'submitted').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Successfully submitted
@@ -130,16 +135,16 @@ const SARCenter = () => {
               </Card>
             ) : (
               <SARList 
-                reports={sarReports}
+                sars={sars}
+                onViewSAR={handleViewSAR}
+                onCreateNewSAR={() => setShowNewSARForm(true)}
                 loading={loading}
-                onUpdate={updateSAR}
-                onDelete={deleteSAR}
               />
             )}
           </TabsContent>
 
           <TabsContent value="goaml" className="space-y-4">
-            <GoAMLReporting />
+            <GoAMLReporting sars={sars} />
           </TabsContent>
         </Tabs>
       </div>
