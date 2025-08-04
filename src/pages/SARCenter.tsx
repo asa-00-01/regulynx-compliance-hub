@@ -2,194 +2,147 @@
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSARData } from '@/hooks/useSARData';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileWarning, Plus, Search, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import SARList from '@/components/sar/SARList';
 import SARForm from '@/components/sar/SARForm';
-import PatternCard from '@/components/sar/PatternCard';
-import MatchesList from '@/components/sar/MatchesList';
 import GoAMLReporting from '@/components/sar/GoAMLReporting';
-import { SAR, PatternMatch } from '@/types/sar';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useSARData } from '@/hooks/useSARData';
 import { useTranslation } from 'react-i18next';
 
 const SARCenter = () => {
-  const { sars, patterns, loading, createSAR, updateSAR, getPatternMatches, createAlertFromMatch, createSARFromMatch } = useSARData();
+  const [activeTab, setActiveTab] = useState('reports');
+  const [showNewSARForm, setShowNewSARForm] = useState(false);
   const { t } = useTranslation();
   
-  const [activeTab, setActiveTab] = useState<string>('sar-list');
-  const [selectedSARId, setSelectedSARId] = useState<string | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
-  const [patternMatches, setPatternMatches] = useState<PatternMatch[]>([]);
-  const [isMatchesLoading, setIsMatchesLoading] = useState(false);
-  
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-  
-  const selectedSAR = selectedSARId ? sars.find(sar => sar.id === selectedSARId) : null;
-  
-  const handleViewSAR = (id: string) => {
-    setSelectedSARId(id);
-    setIsFormOpen(true);
-  };
-  
-  const handleCreateNewSAR = () => {
-    setSelectedSARId(null);
-    setIsFormOpen(true);
-  };
-  
-  const handleSARSubmit = (sarData: Omit<SAR, 'id'>, isDraft: boolean) => {
-    if (selectedSARId) {
-      updateSAR({ id: selectedSARId, updates: sarData });
-    } else {
-      createSAR(sarData);
-    }
-    
-    setIsFormOpen(false);
-  };
-  
-  const handleCancelForm = () => {
-    setIsFormOpen(false);
-    setSelectedSARId(null);
-  };
-  
-  const handleViewMatches = async (patternId: string) => {
-    setSelectedPattern(patternId);
-    setIsMatchesLoading(true);
-    const matches = await getPatternMatches(patternId);
-    setPatternMatches(matches);
-    setIsMatchesLoading(false);
-  };
-  
-  const handleCloseMatchesDialog = () => {
-    setSelectedPattern(null);
-    setPatternMatches([]);
-  };
-  
-  const handleCreateAlert = (match: PatternMatch) => {
-    createAlertFromMatch(match);
-  };
-  
-  const handleCreateSAR = (match: PatternMatch) => {
-    createSARFromMatch(match);
-    setSelectedPattern(null);
-    setActiveTab('sar-list');
-  };
+  const {
+    sarReports,
+    loading,
+    createSAR,
+    updateSAR,
+    deleteSAR
+  } = useSARData();
 
-  const FormWrapper = ({ children }: { children: React.ReactNode }) => {
-    return isDesktop ? (
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedSARId ? t('sarCenter.editSAR') : t('sarCenter.createSAR')}</DialogTitle>
-            <DialogDescription>
-              {selectedSARId 
-                ? t('sarCenter.editSARDesc')
-                : t('sarCenter.createSARDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          {children}
-        </DialogContent>
-      </Dialog>
-    ) : (
-      <Drawer open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DrawerContent>
-          <DrawerHeader className="text-left">
-            <DrawerTitle>{selectedSARId ? t('sarCenter.editSAR') : t('sarCenter.createSAR')}</DrawerTitle>
-            <DrawerDescription>
-              {selectedSARId 
-                ? t('sarCenter.editSARDesc')
-                : t('sarCenter.createSARDesc')}
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4 pb-4 overflow-y-auto">{children}</div>
-          <DrawerFooter className="pt-2 px-0"></DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    );
+  const handleCreateSAR = async (sarData: any) => {
+    try {
+      await createSAR(sarData);
+      setShowNewSARForm(false);
+    } catch (error) {
+      console.error('Error creating SAR:', error);
+    }
   };
 
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
       <div className="space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t('sarCenter.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('sarCenter.description')}
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t('navigation.sarCenter')}</h1>
+            <p className="text-muted-foreground">
+              Suspicious Activity Report management and regulatory compliance center.
+            </p>
+          </div>
+          <Button onClick={() => setShowNewSARForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New SAR Report
+          </Button>
         </div>
 
-        <Tabs
-          defaultValue="sar-list"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
-            <TabsTrigger value="sar-list">{t('navigation.sarCenter')}</TabsTrigger>
-            <TabsTrigger value="pattern-explorer">{t('sarCenter.patternExplorer')}</TabsTrigger>
-            <TabsTrigger value="goaml-reporting">{t('sarCenter.goamlReporting')}</TabsTrigger>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total SARs</CardTitle>
+              <FileWarning className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{sarReports.length}</div>
+              <p className="text-xs text-muted-foreground">
+                +12% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+              <FileWarning className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {sarReports.filter(sar => sar.status === 'draft').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting submission
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Filed This Month</CardTitle>
+              <FileWarning className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {sarReports.filter(sar => sar.status === 'filed').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Successfully submitted
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="reports">SAR Reports</TabsTrigger>
+            <TabsTrigger value="goaml">GoAML Reporting</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sar-list" className="space-y-4">
-            <SARList
-              sars={sars}
-              onViewSAR={handleViewSAR}
-              onCreateNewSAR={handleCreateNewSAR}
-              loading={loading}
-            />
-          </TabsContent>
-
-          <TabsContent value="pattern-explorer" className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">{t('sarCenter.transactionPatternAnalysis')}</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {patterns.map(pattern => (
-                <PatternCard
-                  key={pattern.id}
-                  pattern={pattern}
-                  onViewMatches={handleViewMatches}
+          <TabsContent value="reports" className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search SAR reports..."
+                  className="pl-8"
                 />
-              ))}
+              </div>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
             </div>
+
+            {showNewSARForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>New SAR Report</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SARForm 
+                    onSubmit={handleCreateSAR}
+                    onCancel={() => setShowNewSARForm(false)}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <SARList 
+                reports={sarReports}
+                loading={loading}
+                onUpdate={updateSAR}
+                onDelete={deleteSAR}
+              />
+            )}
           </TabsContent>
 
-          <TabsContent value="goaml-reporting" className="space-y-4">
-            <GoAMLReporting sars={sars} />
+          <TabsContent value="goaml" className="space-y-4">
+            <GoAMLReporting />
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* SAR Form in Dialog/Drawer */}
-      <FormWrapper>
-        <SARForm
-          initialData={selectedSAR}
-          onSubmit={handleSARSubmit}
-          onCancel={handleCancelForm}
-          isSubmitting={loading}
-        />
-      </FormWrapper>
-
-      {/* Pattern Matches Dialog */}
-      <Dialog open={!!selectedPattern} onOpenChange={(isOpen) => !isOpen && handleCloseMatchesDialog()}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPattern && patterns.find(p => p.id === selectedPattern)?.name}
-            </DialogTitle>
-            <DialogDescription>
-              {t('sarCenter.matchesDialogDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <MatchesList
-            matches={patternMatches}
-            onCreateAlert={handleCreateAlert}
-            onCreateSAR={handleCreateSAR}
-            isLoading={isMatchesLoading}
-          />
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 };

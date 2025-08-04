@@ -12,11 +12,22 @@ import ComplianceCases from '@/pages/ComplianceCases';
 import CaseDetails from '@/pages/CaseDetails';
 import Documents from '@/pages/Documents';
 import Users from '@/pages/Users';
-import Rules from '@/pages/Rules';
 import Settings from '@/pages/Settings';
 import Audits from '@/pages/Audits';
 import Pricing from '@/pages/Pricing';
 import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
+import Transactions from '@/pages/Transactions';
+import RiskAnalysis from '@/pages/RiskAnalysis';
+import SARCenter from '@/pages/SARCenter';
+import AuditLogs from '@/pages/AuditLogs';
+import Compliance from '@/pages/Compliance';
+import AMLMonitoring from '@/pages/AMLMonitoring';
+import KYCVerification from '@/pages/KYCVerification';
+import UserCase from '@/pages/UserCase';
+import AIAgent from '@/pages/AIAgent';
+import News from '@/pages/News';
+import Optimization from '@/pages/Optimization';
+import DeveloperTools from '@/pages/DeveloperTools';
 
 const AppRoutes = () => {
   return (
@@ -52,8 +63,32 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
 
-      <Route path="/cases" element={
+      <Route path="/ai-agent" element={
         <ProtectedRoute>
+          <DashboardLayout>
+            <AIAgent />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/news" element={
+        <ProtectedRoute>
+          <DashboardLayout>
+            <News />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/compliance" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+          <DashboardLayout>
+            <Compliance />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/compliance-cases" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
           <DashboardLayout>
             <ComplianceCases />
           </DashboardLayout>
@@ -68,6 +103,22 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
 
+      <Route path="/kyc-verification" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
+          <DashboardLayout>
+            <KYCVerification />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/transactions" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+          <DashboardLayout>
+            <Transactions />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
       <Route path="/documents" element={
         <ProtectedRoute>
           <DashboardLayout>
@@ -76,18 +127,58 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
 
-      <Route path="/users" element={
-        <ProtectedRoute requiredRoles={['admin']}>
+      <Route path="/aml-monitoring" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
           <DashboardLayout>
-            <Users />
+            <AMLMonitoring />
           </DashboardLayout>
         </ProtectedRoute>
       } />
 
-      <Route path="/rules" element={
+      <Route path="/risk-analysis" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+          <DashboardLayout>
+            <RiskAnalysis />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/sar-center" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
+          <DashboardLayout>
+            <SARCenter />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/audit-logs" element={
+        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+          <DashboardLayout>
+            <AuditLogs />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/user-case" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
+          <DashboardLayout>
+            <UserCase />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/user-case/:userId" element={
+        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
+          <DashboardLayout>
+            <UserCase />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/users" element={
         <ProtectedRoute requiredRoles={['admin']}>
           <DashboardLayout>
-            <Rules />
+            <Users />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -104,6 +195,22 @@ const AppRoutes = () => {
         <ProtectedRoute requiredRoles={['admin']}>
           <DashboardLayout>
             <Audits />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/optimization" element={
+        <ProtectedRoute requiredRoles={['admin']}>
+          <DashboardLayout>
+            <Optimization />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/developer-tools" element={
+        <ProtectedRoute requiredRoles={['admin']}>
+          <DashboardLayout>
+            <DeveloperTools />
           </DashboardLayout>
         </ProtectedRoute>
       } />

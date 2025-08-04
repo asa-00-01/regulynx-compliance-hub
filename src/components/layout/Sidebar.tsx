@@ -96,7 +96,7 @@ const Sidebar = () => {
       title: t('navigation.amlMonitoring'),
       href: '/aml-monitoring',
       icon: LineChart,
-      allowedRoles: ['admin', 'complianceOfficer'],
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
       title: t('navigation.riskAnalysis'),
@@ -162,7 +162,8 @@ const Sidebar = () => {
               return null;
             }
 
-            const isActive = location.pathname.startsWith(item.href);
+            const isActive = location.pathname === item.href || 
+              (item.href === '/dashboard' && location.pathname === '/');
 
             return (
               <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>

@@ -19,17 +19,21 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
 
   const sidebarOpen = state === 'expanded';
 
-  // Redirect to login if not authenticated
+  // Redirect to auth if not authenticated
   React.useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/auth');
     } else if (requiredRoles.length > 0 && !canAccess(requiredRoles)) {
       navigate('/unauthorized');
     }
   }, [isAuthenticated, navigate, canAccess, requiredRoles]);
 
   if (!isAuthenticated) {
-    return null; // Don't render anything while redirecting
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
   }
 
   return (
