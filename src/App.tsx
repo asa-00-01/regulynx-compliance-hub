@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 import './App.css';
-import AppProviders from '@/components/app/AppProviders';
+import { AppProviders } from '@/components/app/AppProviders';
 import AppRoutes from '@/components/app/AppRoutes';
 import AppInitializer from '@/components/app/AppInitializer';
 import LoadingScreen from '@/components/app/LoadingScreen';

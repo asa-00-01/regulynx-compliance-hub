@@ -60,17 +60,7 @@ const Profile = () => {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your personal information and profile settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserProfileForm />
-            </CardContent>
-          </Card>
+          <UserProfileForm user={user} />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">

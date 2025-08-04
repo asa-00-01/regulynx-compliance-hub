@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { ComplianceProvider } from '@/context/compliance/ComplianceProvider';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
-import { ToastProvider } from '@/components/common/ToastProvider';
+import ToastProvider from '@/components/common/ToastProvider';
 import '@/i18n/config';
 
 const queryClient = new QueryClient({

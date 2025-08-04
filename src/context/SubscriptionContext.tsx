@@ -59,7 +59,23 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
           .order('price_monthly', { ascending: true });
 
         if (error) throw error;
-        setPlans(data || []);
+        
+        // Transform the data to match our SubscriptionPlan interface
+        const transformedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
+          id: plan.id,
+          plan_id: plan.plan_id,
+          name: plan.name,
+          description: plan.description,
+          price_monthly: plan.price_monthly,
+          price_yearly: plan.price_yearly,
+          features: Array.isArray(plan.features) ? plan.features as string[] : [],
+          max_users: plan.max_users,
+          max_transactions: plan.max_transactions,
+          max_cases: plan.max_cases,
+          is_active: plan.is_active,
+        }));
+
+        setPlans(transformedPlans);
       } catch (error) {
         console.error('Error loading plans:', error);
         toast.error('Failed to load subscription plans');
