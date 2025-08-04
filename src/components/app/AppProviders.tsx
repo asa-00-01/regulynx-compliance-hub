@@ -1,6 +1,5 @@
 
 import React, { ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
@@ -24,19 +23,17 @@ interface AppProvidersProps {
 
 export const AppProviders = ({ children }: AppProvidersProps) => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <ComplianceProvider>
-                <ToastProvider />
-                {children}
-              </ComplianceProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <ComplianceProvider>
+              <ToastProvider />
+              {children}
+            </ComplianceProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
