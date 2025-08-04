@@ -102,4 +102,9 @@ export const SARService = {
     if (error) throw error;
     return mapSarToApp(data);
   },
+
+  async deleteSAR(id: string): Promise<void> {
+    const { error } = await supabase.from('sars').delete().eq('id', id);
+    if (error) throw error;
+  },
 };

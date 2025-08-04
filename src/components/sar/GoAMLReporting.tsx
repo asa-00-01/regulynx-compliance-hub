@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ interface GoAMLReportingProps {
   sars: SAR[];
 }
 
-const GoAMLReporting: React.FC<GoAMLReportingProps> = ({ sars }) => {
+const GoAMLReporting: React.FC<GoAMLReportingProps> = ({ sars = [] }) => {
   const [selectedSarId, setSelectedSarId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -73,7 +72,7 @@ const GoAMLReporting: React.FC<GoAMLReportingProps> = ({ sars }) => {
     }
   };
 
-  const reportableSars = sars.filter(sar => sar.status !== 'draft');
+  const reportableSars = (sars || []).filter(sar => sar.status !== 'draft');
 
   return (
     <Card>
