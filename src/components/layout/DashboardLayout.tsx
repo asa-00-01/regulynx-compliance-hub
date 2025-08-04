@@ -37,26 +37,26 @@ const DashboardLayoutContent = ({ children, requiredRoles = [] }: DashboardLayou
   }
 
   return (
-    <>
-      <ShadcnSidebar collapsible="icon">
+    <div className="flex h-screen w-full overflow-hidden">
+      <ShadcnSidebar collapsible="icon" className="border-r">
         <LayoutSidebar />
       </ShadcnSidebar>
-      <div className="flex flex-col flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="h-full p-6">{children}</div>
+          <div className="container mx-auto p-6 max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
-    </>
+    </div>
   );
 };
 
 const DashboardLayout = (props: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
-      <div className="flex w-full h-screen bg-background overflow-hidden">
-        <DashboardLayoutContent {...props} />
-      </div>
+      <DashboardLayoutContent {...props} />
     </SidebarProvider>
   );
 };

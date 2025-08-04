@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -57,7 +58,7 @@ const AMLMonitoring = () => {
 
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="flex flex-col space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{t('navigation.amlMonitoring')}</h1>
           <p className="text-muted-foreground">
@@ -73,7 +74,7 @@ const AMLMonitoring = () => {
           totalAmount={metrics.totalAmount}
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 w-full">
           <TabsList>
             <TabsTrigger value="overview">{t('amlMonitoring.tabOverview')}</TabsTrigger>
             <TabsTrigger value="patterns">{t('aml.patternDetection')}</TabsTrigger>
@@ -81,12 +82,12 @@ const AMLMonitoring = () => {
 
           <TabsContent value="overview" className="space-y-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder={t('amlMonitoring.searchPlaceholder')}
-                className="pl-8 w-full sm:w-[300px]"
+                className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
