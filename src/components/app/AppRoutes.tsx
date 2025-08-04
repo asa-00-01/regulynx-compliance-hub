@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AuthPage from '@/pages/AuthPage';
@@ -28,6 +29,14 @@ const AppRoutes = () => {
       
       {/* Protected routes */}
       <Route path="/" element={
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Dashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardLayout>
             <Dashboard />
