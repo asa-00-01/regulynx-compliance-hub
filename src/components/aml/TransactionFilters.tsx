@@ -1,210 +1,220 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { HIGH_RISK_COUNTRIES } from '@/types/aml';
-import { Filter, Search, UserSearch } from 'lucide-react';
-import { useCompliance } from '@/context/ComplianceContext';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Filter } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface TransactionFiltersProps {
   filters: {
-    dateRange: string;
-    minAmount?: number;
-    maxAmount?: number;
-    country?: string;
+    dateRange: { from: Date | null; to: Date | null };
+    amountRange: { min: number | null; max: number | null };
+    currency: string;
+    method: string;
     riskLevel: string;
-    onlyFlagged: boolean;
-    userId?: string;
+    country: string;
+    searchTerm: string;
   };
   onFilterChange: (filters: any) => void;
-  allowUserFilter?: boolean;
 }
 
-const TransactionFilters: React.FC<TransactionFiltersProps> = ({ 
-  filters, 
+const TransactionFilters: React.FC<TransactionFiltersProps> = ({
+  filters,
   onFilterChange,
-  allowUserFilter = true
 }) => {
-  const { state } = useCompliance();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const updateFilter = (key: string, value: any) => {
+    onFilterChange({
+      ...filters,
+      [key]: value,
+    });
+  };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex flex-col space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div className="flex items-center">
-              <h3 className="text-lg font-medium">Transaction Filters</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-2" 
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                <Filter className="h-4 w-4 mr-1" />
-                {isExpanded ? 'Less Filters' : 'More Filters'}
-              </Button>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Select
-                value={filters.dateRange}
-                onValueChange={(value) => onFilterChange({ dateRange: value })}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Date Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7days">Last 7 Days</SelectItem>
-                  <SelectItem value="30days">Last 30 Days</SelectItem>
-                  <SelectItem value="90days">Last 90 Days</SelectItem>
-                  <SelectItem value="1year">Last 1 Year</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select
-                value={filters.riskLevel}
-                onValueChange={(value) => onFilterChange({ riskLevel: value })}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Risk Level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Risk Levels</SelectItem>
-                  <SelectItem value="high">High Risk</SelectItem>
-                  <SelectItem value="medium">Medium Risk</SelectItem>
-                  <SelectItem value="low">Low Risk</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="onlyFlagged" 
-                  checked={filters.onlyFlagged}
-                  onCheckedChange={(checked) => 
-                    onFilterChange({ onlyFlagged: checked === true })
-                  }
-                />
-                <label
-                  htmlFor="onlyFlagged"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Flagged Only
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          {isExpanded && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="minAmount">Minimum Amount</Label>
-                <Input
-                  id="minAmount"
-                  type="number"
-                  placeholder="Min Amount"
-                  value={filters.minAmount || ''}
-                  onChange={(e) => 
-                    onFilterChange({ 
-                      minAmount: e.target.value ? parseInt(e.target.value) : undefined 
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="maxAmount">Maximum Amount</Label>
-                <Input
-                  id="maxAmount"
-                  type="number"
-                  placeholder="Max Amount"
-                  value={filters.maxAmount || ''}
-                  onChange={(e) => 
-                    onFilterChange({ 
-                      maxAmount: e.target.value ? parseInt(e.target.value) : undefined 
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Select
-                  value={filters.country}
-                  onValueChange={(value) => onFilterChange({ country: value })}
-                >
-                  <SelectTrigger id="country">
-                    <SelectValue placeholder="Any Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Any Country</SelectItem>
-                    {HIGH_RISK_COUNTRIES.map((country) => (
-                      <SelectItem key={country.countryCode} value={country.countryCode}>
-                        {country.countryName} ({country.countryCode})
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="US">United States (US)</SelectItem>
-                    <SelectItem value="GB">United Kingdom (GB)</SelectItem>
-                    <SelectItem value="DE">Germany (DE)</SelectItem>
-                    <SelectItem value="FR">France (FR)</SelectItem>
-                    <SelectItem value="ES">Spain (ES)</SelectItem>
-                    <SelectItem value="JP">Japan (JP)</SelectItem>
-                    <SelectItem value="CN">China (CN)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+    <div className="space-y-4 p-4 bg-background border rounded-lg">
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="h-4 w-4" />
+        <h3 className="font-medium">Transaction Filters</h3>
+      </div>
 
-              {allowUserFilter && (
-                <div className="space-y-2">
-                  <Label htmlFor="userId">Filter by User</Label>
-                  <Select
-                    value={filters.userId || ""}
-                    onValueChange={(value) => onFilterChange({ userId: value || undefined })}
-                  >
-                    <SelectTrigger id="userId">
-                      <SelectValue placeholder="All Users" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Users</SelectItem>
-                      {state.users.map(user => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {isExpanded && (
-            <div className="pt-4 flex justify-end">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  onFilterChange({
-                    dateRange: '30days',
-                    minAmount: undefined,
-                    maxAmount: undefined,
-                    country: undefined,
-                    riskLevel: 'all',
-                    onlyFlagged: false,
-                    userId: filters.userId // Keep user filter if it's set
-                  });
-                }}
-              >
-                Reset Filters
-              </Button>
-            </div>
-          )}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Search */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Search</label>
+          <Input
+            placeholder="Search transactions..."
+            value={filters.searchTerm || ''}
+            onChange={(e) => updateFilter('searchTerm', e.target.value)}
+          />
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Currency Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Currency</label>
+          <Select
+            value={filters.currency || 'all'}
+            onValueChange={(value) => updateFilter('currency', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All currencies" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Currencies</SelectItem>
+              <SelectItem value="SEK">SEK</SelectItem>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+              <SelectItem value="GBP">GBP</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Method Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Method</label>
+          <Select
+            value={filters.method || 'all'}
+            onValueChange={(value) => updateFilter('method', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All methods" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Methods</SelectItem>
+              <SelectItem value="card">Card</SelectItem>
+              <SelectItem value="bank">Bank Transfer</SelectItem>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="mobile">Mobile</SelectItem>
+              <SelectItem value="crypto">Crypto</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Risk Level Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Risk Level</label>
+          <Select
+            value={filters.riskLevel || 'all'}
+            onValueChange={(value) => updateFilter('riskLevel', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All risk levels" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Risk Levels</SelectItem>
+              <SelectItem value="low">Low (0-30)</SelectItem>
+              <SelectItem value="medium">Medium (31-70)</SelectItem>
+              <SelectItem value="high">High (71-100)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Country Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Country</label>
+          <Select
+            value={filters.country || 'all'}
+            onValueChange={(value) => updateFilter('country', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All countries" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Countries</SelectItem>
+              <SelectItem value="US">United States</SelectItem>
+              <SelectItem value="SE">Sweden</SelectItem>
+              <SelectItem value="GB">United Kingdom</SelectItem>
+              <SelectItem value="DE">Germany</SelectItem>
+              <SelectItem value="FR">France</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Date Range</label>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filters.dateRange?.from ? format(filters.dateRange.from, 'PPP') : 'From date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={filters.dateRange?.from || undefined}
+                onSelect={(date) => updateFilter('dateRange', { ...filters.dateRange, from: date })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filters.dateRange?.to ? format(filters.dateRange.to, 'PPP') : 'To date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={filters.dateRange?.to || undefined}
+                onSelect={(date) => updateFilter('dateRange', { ...filters.dateRange, to: date })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {/* Amount Range */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Amount Range</label>
+        <div className="flex gap-2">
+          <Input
+            type="number"
+            placeholder="Min amount"
+            value={filters.amountRange?.min || ''}
+            onChange={(e) => updateFilter('amountRange', {
+              ...filters.amountRange,
+              min: e.target.value ? Number(e.target.value) : null
+            })}
+          />
+          <Input
+            type="number"
+            placeholder="Max amount"
+            value={filters.amountRange?.max || ''}
+            onChange={(e) => updateFilter('amountRange', {
+              ...filters.amountRange,
+              max: e.target.value ? Number(e.target.value) : null
+            })}
+          />
+        </div>
+      </div>
+
+      {/* Clear Filters Button */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={() => onFilterChange({
+            dateRange: { from: null, to: null },
+            amountRange: { min: null, max: null },
+            currency: '',
+            method: '',
+            riskLevel: '',
+            country: '',
+            searchTerm: '',
+          })}
+        >
+          Clear Filters
+        </Button>
+      </div>
+    </div>
   );
 };
 
