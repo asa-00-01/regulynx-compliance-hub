@@ -6,6 +6,7 @@ import Dashboard from '@/pages/Dashboard';
 import Profile from '@/pages/Profile';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
+import DashboardShell from '@/components/layout/DashboardShell';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import ComplianceCases from '@/pages/ComplianceCases';
@@ -38,182 +39,121 @@ const AppRoutes = () => {
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/subscription-success" element={<SubscriptionSuccess />} />
       
-      {/* Protected routes */}
+      {/* Protected routes with persistent dashboard shell */}
       <Route path="/" element={
         <ProtectedRoute>
-          <DashboardLayout>
-            <Dashboard />
-          </DashboardLayout>
+          <DashboardShell />
         </ProtectedRoute>
-      } />
-      
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Dashboard />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Profile />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
+      }>
+        {/* Default dashboard route */}
+        <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        
+        {/* Profile route - accessible to all authenticated users */}
+        <Route path="profile" element={<Profile />} />
 
-      <Route path="/ai-agent" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <AIAgent />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        {/* AI Agent - accessible to all authenticated users */}
+        <Route path="ai-agent" element={<AIAgent />} />
 
-      <Route path="/news" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <News />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        {/* News - accessible to all authenticated users */}
+        <Route path="news" element={<News />} />
 
-      <Route path="/compliance" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-          <DashboardLayout>
+        {/* Compliance routes */}
+        <Route path="compliance" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <Compliance />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/compliance-cases" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-          <DashboardLayout>
+        <Route path="compliance-cases" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <ComplianceCases />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/cases/:caseId" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <CaseDetails />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        <Route path="cases/:caseId" element={<CaseDetails />} />
 
-      <Route path="/kyc-verification" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
-          <DashboardLayout>
+        <Route path="kyc-verification" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
             <KYCVerification />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/transactions" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-          <DashboardLayout>
+        <Route path="transactions" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <Transactions />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/documents" element={
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Documents />
-          </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        <Route path="documents" element={<Documents />} />
 
-      <Route path="/aml-monitoring" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-          <DashboardLayout>
+        <Route path="aml-monitoring" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <AMLMonitoring />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/risk-analysis" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-          <DashboardLayout>
+        <Route path="risk-analysis" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
             <RiskAnalysis />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/sar-center" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
-          <DashboardLayout>
+        <Route path="sar-center" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
             <SARCenter />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/audit-logs" element={
-        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-          <DashboardLayout>
+        <Route path="audit-logs" element={
+          <DashboardLayout requiredRoles={['admin', 'complianceOfficer']}>
             <AuditLogs />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/user-case" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
-          <DashboardLayout>
+        <Route path="user-case" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
             <UserCase />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/user-case/:userId" element={
-        <ProtectedRoute requiredRoles={['complianceOfficer', 'admin']}>
-          <DashboardLayout>
+        <Route path="user-case/:userId" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
             <UserCase />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/users" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardLayout>
+        {/* Admin-only routes */}
+        <Route path="users" element={
+          <DashboardLayout requiredRoles={['admin']}>
             <Users />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/settings" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardLayout>
+        <Route path="settings" element={
+          <DashboardLayout requiredRoles={['admin']}>
             <Settings />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/audits" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardLayout>
+        <Route path="audits" element={
+          <DashboardLayout requiredRoles={['admin']}>
             <Audits />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/optimization" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardLayout>
+        <Route path="optimization" element={
+          <DashboardLayout requiredRoles={['admin']}>
             <Optimization />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
 
-      <Route path="/developer-tools" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardLayout>
+        <Route path="developer-tools" element={
+          <DashboardLayout requiredRoles={['admin']}>
             <DeveloperTools />
           </DashboardLayout>
-        </ProtectedRoute>
-      } />
+        } />
+      </Route>
       
       <Route path="*" element={<NotFound />} />
     </Routes>
