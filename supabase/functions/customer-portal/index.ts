@@ -51,9 +51,44 @@ serve(async (req) => {
     logStep("Found Stripe customer", { customerId });
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
+    
+    // Create portal session with configuration to avoid the configuration error
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/`,
+      configuration: {
+        business_profile: {
+          headline: "Manage your subscription"
+        },
+        features: {
+          customer_update: {
+            enabled: true,
+            allowed_updates: ["email", "address", "phone", "tax_id"]
+          },
+          invoice_history: {
+            enabled: true
+          },
+          payment_method_update: {
+            enabled: true
+          },
+          subscription_cancel: {
+            enabled: true,
+            mode: "at_period_end",
+            cancellation_reason: {
+              enabled: true,
+              options: ["too_expensive", "missing_features", "switched_service", "unused", "other"]
+            }
+          },
+          subscription_pause: {
+            enabled: false
+          },
+          subscription_update: {
+            enabled: true,
+            default_allowed_updates: ["price", "quantity", "promotion_code"],
+            products: []
+          }
+        }
+      }
     });
     logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 
