@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentStatus, Document } from '@/types/supabase';
 import { Check, X, Eye, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createAuditLog, supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 
 interface DocumentActionButtonsProps {
   documentId?: string;
@@ -27,7 +26,7 @@ const DocumentActionButtons = ({
   size = 'default'
 }: DocumentActionButtonsProps) => {
   const { toast } = useToast();
-  const { canApproveDocuments } = usePermissions();
+  const { canApproveDocuments } = useFeatureAccess();
   
   // Get the document ID and status from either the document object or the passed props
   const id = document?.id || documentId || '';

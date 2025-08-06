@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,7 +8,7 @@ import DocumentsPagination from './DocumentsPagination';
 import { CheckCircle, Clock, XCircle, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useCompliance } from '@/context/ComplianceContext';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 import { usePagination } from '@/hooks/usePagination';
 
 interface DocumentsListProps {
@@ -34,7 +33,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
   onDocumentSelect
 }) => {
   const { state } = useCompliance();
-  const { canApproveDocuments } = usePermissions();
+  const { canApproveDocuments } = useFeatureAccess();
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
   const filteredDocuments = activeTab === 'all'

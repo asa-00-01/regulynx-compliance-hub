@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, DocumentStatus } from '@/types/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 
 export const useDocumentsData = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -13,7 +13,7 @@ export const useDocumentsData = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
   const { user, session } = useAuth();
-  const { canApproveDocuments } = usePermissions();
+  const { canApproveDocuments } = useFeatureAccess();
 
   const fetchDocuments = async () => {
     if (!user || !session) {
