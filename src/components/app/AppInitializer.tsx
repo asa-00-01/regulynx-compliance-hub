@@ -2,7 +2,11 @@
 import React from 'react';
 import { validateEnvironmentConfig } from '@/config/environment';
 
-const AppInitializer: React.FC = () => {
+interface AppInitializerProps {
+  children?: React.ReactNode;
+}
+
+const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
   React.useEffect(() => {
     const { isValid, errors } = validateEnvironmentConfig();
     if (!isValid) {
@@ -13,7 +17,7 @@ const AppInitializer: React.FC = () => {
     }
   }, []);
 
-  return null;
+  return <>{children}</>;
 };
 
 export default AppInitializer;
