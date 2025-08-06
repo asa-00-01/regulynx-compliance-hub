@@ -1,91 +1,37 @@
-
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-
-interface SubscriptionPlan {
-  id: string;
-  plan_id: string;
-  name: string;
-  description?: string;
-  price_monthly: number;
-  price_yearly: number;
-  features: string[];
-  max_users?: number;
-  max_transactions?: number;
-  max_cases?: number;
-  is_active: boolean;
-}
+import { useAuditLogging } from '@/hooks/useAuditLogging';
 
 interface SubscriptionState {
   subscribed: boolean;
-  subscription_tier?: string;
-  subscription_end?: string;
+  subscription_tier: string | null;
+  subscription_end: string | null;
   loading: boolean;
 }
 
 interface SubscriptionContextType {
   subscriptionState: SubscriptionState;
-  plans: SubscriptionPlan[];
   checkSubscription: () => Promise<void>;
   createCheckout: (planId: string, billingType?: 'monthly' | 'yearly') => Promise<void>;
   openCustomerPortal: () => Promise<void>;
-  trackUsage: (metricType: string) => Promise<void>;
   refreshing: boolean;
-  plansLoading: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const { user, session, isAuthenticated } = useAuth();
+  const { logPayment, logError, logDataAccess } = useAuditLogging();
+  
   const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>({
     subscribed: false,
+    subscription_tier: null,
+    subscription_end: null,
     loading: true,
   });
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [plansLoading, setPlansLoading] = useState(true);
-
-  // Load subscription plans
-  useEffect(() => {
-    const loadPlans = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('subscription_plans')
-          .select('*')
-          .eq('is_active', true)
-          .order('price_monthly', { ascending: true });
-
-        if (error) throw error;
-        
-        // Transform the data to match our SubscriptionPlan interface
-        const transformedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
-          id: plan.id,
-          plan_id: plan.plan_id,
-          name: plan.name,
-          description: plan.description,
-          price_monthly: plan.price_monthly,
-          price_yearly: plan.price_yearly,
-          features: Array.isArray(plan.features) ? plan.features as string[] : [],
-          max_users: plan.max_users,
-          max_transactions: plan.max_transactions,
-          max_cases: plan.max_cases,
-          is_active: plan.is_active,
-        }));
-
-        setPlans(transformedPlans);
-      } catch (error) {
-        console.error('Error loading plans:', error);
-        toast.error('Failed to load subscription plans');
-      } finally {
-        setPlansLoading(false);
-      }
-    };
-
-    loadPlans();
-  }, []);
 
   const checkSubscription = async () => {
     if (!isAuthenticated || !session) {
@@ -94,6 +40,9 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      console.log('🔍 Checking subscription status...');
+      await logDataAccess('subscription_check', 'subscription', user?.id);
+      
       setRefreshing(true);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
@@ -101,17 +50,31 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Subscription check failed:', error);
+        await logError(new Error(error.message || 'Subscription check failed'), 'subscription_check', {
+          user_id: user?.id
+        });
+        throw error;
+      }
+
+      console.log('✅ Subscription check successful:', data);
+      await logDataAccess('subscription_check_success', 'subscription', user?.id, {
+        subscribed: data.subscribed,
+        tier: data.subscription_tier
+      });
 
       setSubscriptionState({
         subscribed: data.subscribed || false,
-        subscription_tier: data.subscription_tier,
-        subscription_end: data.subscription_end,
+        subscription_tier: data.subscription_tier || null,
+        subscription_end: data.subscription_end || null,
         loading: false,
       });
-    } catch (error) {
-      console.error('Error checking subscription:', error);
+    } catch (error: any) {
+      console.error('🚨 Error checking subscription:', error);
+      await logError(error, 'subscription_check', { user_id: user?.id });
       setSubscriptionState({ subscribed: false, loading: false });
+      toast.error('Failed to check subscription status');
     } finally {
       setRefreshing(false);
     }
@@ -127,12 +90,23 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
     if (!isAuthenticated || !user || !session?.access_token) {
       console.error('❌ Authentication check failed:', { isAuthenticated, user: !!user, session: !!session });
+      await logPayment('checkout_authentication_failed', {
+        plan_id: planId,
+        billing_type: billingType,
+        reason: 'not_authenticated'
+      }, false);
       toast.error('Please login to subscribe');
       return;
     }
 
     try {
       console.log('✅ Authentication successful, creating checkout...');
+      await logPayment('checkout_attempt', {
+        plan_id: planId,
+        billing_type: billingType,
+        user_id: user.id
+      });
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { planId, billingType },
         headers: {
@@ -142,75 +116,94 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Checkout error:', error);
+        await logPayment('checkout_failed', {
+          plan_id: planId,
+          billing_type: billingType,
+          user_id: user.id,
+          error: error.message
+        }, false);
         throw error;
       }
 
       console.log('✅ Checkout session created successfully');
+      await logPayment('checkout_session_created', {
+        plan_id: planId,
+        billing_type: billingType,
+        user_id: user.id,
+        checkout_url: data.url
+      });
+
       // Open Stripe checkout in a new tab
       window.open(data.url, '_blank');
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Failed to create checkout session');
+    } catch (error: any) {
+      console.error('🚨 Checkout creation failed:', error);
+      await logError(error, 'checkout_creation', {
+        plan_id: planId,
+        billing_type: billingType,
+        user_id: user?.id
+      });
+      toast.error(`Failed to create checkout session: ${error.message}`);
     }
   };
 
   const openCustomerPortal = async () => {
     if (!isAuthenticated || !user || !session?.access_token) {
+      await logPayment('portal_access_denied', {
+        reason: 'not_authenticated'
+      }, false);
       toast.error('Please login to manage your subscription');
       return;
     }
 
     try {
+      await logPayment('customer_portal_attempt', {
+        user_id: user.id
+      });
+
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        await logPayment('customer_portal_failed', {
+          user_id: user.id,
+          error: error.message
+        }, false);
+        throw error;
+      }
+
+      await logPayment('customer_portal_opened', {
+        user_id: user.id,
+        portal_url: data.url
+      });
 
       // Open customer portal in a new tab
       window.open(data.url, '_blank');
-    } catch (error) {
-      console.error('Error opening customer portal:', error);
-      toast.error('Failed to open customer portal');
+    } catch (error: any) {
+      console.error('🚨 Customer portal error:', error);
+      await logError(error, 'customer_portal', { user_id: user?.id });
+      toast.error(`Failed to open customer portal: ${error.message}`);
     }
   };
 
-  const trackUsage = async (metricType: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase.rpc('track_usage', {
-        metric_type: metricType
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error tracking usage:', error);
-    }
-  };
-
-  // Check subscription on user change
   useEffect(() => {
-    if (isAuthenticated && user && session) {
+    if (isAuthenticated && session) {
       checkSubscription();
     } else {
-      setSubscriptionState({ subscribed: false, loading: false });
+      setSubscriptionState({ subscribed: false, loading: false, subscription_tier: null, subscription_end: null });
     }
-  }, [isAuthenticated, user, session]);
+  }, [isAuthenticated, session]);
 
   return (
     <SubscriptionContext.Provider
       value={{
         subscriptionState,
-        plans,
         checkSubscription,
         createCheckout,
         openCustomerPortal,
-        trackUsage,
         refreshing,
-        plansLoading,
       }}
     >
       {children}
