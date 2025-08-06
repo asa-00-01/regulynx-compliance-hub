@@ -114,3 +114,29 @@ class PerformanceMonitor {
 }
 
 export const performanceMonitor = new PerformanceMonitor();
+
+// Add the missing getPerformanceScore function
+export const getPerformanceScore = (): number => {
+  const metrics = performanceMonitor.getMetrics();
+  let score = 100;
+  
+  // Deduct points based on performance metrics
+  if (metrics.largestContentfulPaint && metrics.largestContentfulPaint > 2500) {
+    score -= 20;
+  }
+  if (metrics.firstInputDelay && metrics.firstInputDelay > 100) {
+    score -= 15;
+  }
+  if (metrics.cumulativeLayoutShift && metrics.cumulativeLayoutShift > 0.1) {
+    score -= 15;
+  }
+  if (metrics.loadTime && metrics.loadTime > 3000) {
+    score -= 20;
+  }
+  if (metrics.domContentLoaded && metrics.domContentLoaded > 1500) {
+    score -= 10;
+  }
+  
+  // Ensure score is between 0 and 100
+  return Math.max(0, Math.min(100, score));
+};
