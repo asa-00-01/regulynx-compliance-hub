@@ -7,10 +7,12 @@ import UserSecuritySettings from '@/components/profile/UserSecuritySettings';
 import UserPreferences from '@/components/profile/UserPreferences';
 import SubscriptionManagement from '@/components/profile/SubscriptionManagement';
 import SubscriptionTester from '@/components/subscription/SubscriptionTester';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import NotificationPreferencesCard from '@/components/notifications/NotificationPreferences';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Settings, CreditCard, TestTube } from 'lucide-react';
+import { User, Shield, Settings, CreditCard, TestTube, Bell } from 'lucide-react';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -41,7 +43,7 @@ const Profile = () => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile" className="flex items-center space-x-2">
             <User className="h-4 w-4" />
             <span>Profile</span>
@@ -53,6 +55,10 @@ const Profile = () => {
           <TabsTrigger value="subscription" className="flex items-center space-x-2">
             <CreditCard className="h-4 w-4" />
             <span>Subscription</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center space-x-2">
+            <Bell className="h-4 w-4" />
+            <span>Notifications</span>
           </TabsTrigger>
           <TabsTrigger value="test" className="flex items-center space-x-2">
             <TestTube className="h-4 w-4" />
@@ -74,6 +80,11 @@ const Profile = () => {
 
         <TabsContent value="subscription" className="space-y-6">
           <SubscriptionManagement />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <NotificationCenter />
+          <NotificationPreferencesCard />
         </TabsContent>
 
         <TabsContent value="test" className="space-y-6">
