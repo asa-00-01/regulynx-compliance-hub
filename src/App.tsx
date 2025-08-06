@@ -8,7 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import AppRoutes from "@/components/app/AppRoutes";
 import AuthProvider from "@/components/app/AuthProvider";
-import SubscriptionProvider from "@/components/app/SubscriptionProvider";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import AnalyticsProvider from "@/components/app/AnalyticsProvider";
 import ComplianceProvider from "@/components/app/ComplianceProvider";
 import LoadingScreen from "@/components/app/LoadingScreen";

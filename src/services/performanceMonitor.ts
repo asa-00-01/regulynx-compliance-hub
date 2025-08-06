@@ -1,201 +1,151 @@
-
-import { auditLogger } from './auditLogger';
-import config from '@/config/environment';
-
-interface PerformanceEntry {
-  name: string;
-  startTime: number;
-  duration: number;
-  entryType: string;
+interface PerformanceMetrics {
+  loadTime: number;
+  renderTime: number;
+  memoryUsage: number;
+  bundleSize: number;
+  score: number;
 }
 
-interface PerformanceMetrics {
-  pageLoad: number;
-  firstContentfulPaint: number;
-  largestContentfulPaint: number;
-  cumulativeLayoutShift: number;
-  firstInputDelay: number;
+interface MemoryInfo {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+declare global {
+  interface Performance {
+    memory?: MemoryInfo;
+  }
 }
 
 class PerformanceMonitor {
-  private metrics: Map<string, number> = new Map();
+  private metrics: PerformanceMetrics[] = [];
   private observers: PerformanceObserver[] = [];
+  private isMonitoring = false;
 
-  initialize() {
-    if (!config.features.enablePerformanceMonitoring) {
-      console.log('📊 Performance monitoring is disabled');
-      return;
-    }
-
-    console.log('📊 Performance monitoring initialized');
-    
-    this.observeNavigationTiming();
-    this.observePaintTiming();
-    this.observeLayoutShift();
-    this.observeLongTasks();
-    this.observeResourceTiming();
-    
-    // Log page load performance after a delay
-    setTimeout(() => {
-      this.logPageLoadMetrics();
-    }, 3000);
+  constructor() {
+    this.initializeObservers();
   }
 
-  private observeNavigationTiming() {
-    if ('navigation' in performance.getEntriesByType('navigation')[0]) {
-      const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      
-      this.metrics.set('domContentLoaded', nav.domContentLoadedEventEnd - nav.domContentLoadedEventStart);
-      this.metrics.set('loadComplete', nav.loadEventEnd - nav.loadEventStart);
-      this.metrics.set('ttfb', nav.responseStart - nav.fetchStart);
-    }
-  }
+  private initializeObservers() {
+    if (typeof window === 'undefined') return;
 
-  private observePaintTiming() {
     try {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          this.metrics.set(entry.name, entry.startTime);
-          
-          auditLogger.logSystemEvent('performance_metric', {
-            metric_name: entry.name,
-            value: entry.startTime,
-            unit: 'ms'
-          });
-        }
-      });
-      
-      observer.observe({ entryTypes: ['paint'] });
-      this.observers.push(observer);
-    } catch (error) {
-      console.warn('Paint timing not supported');
-    }
-  }
-
-  private observeLayoutShift() {
-    try {
-      let clsValue = 0;
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+      // Navigation timing observer
+      const navObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        entries.forEach((entry) => {
+          if (entry.entryType === 'navigation') {
+            this.recordMetric({
+              loadTime: entry.loadEventEnd - entry.loadEventStart,
+              renderTime: entry.loadEventEnd - entry.fetchStart,
+              memoryUsage: this.getMemoryUsage(),
+              bundleSize: this.estimateBundleSize(),
+              score: 0
+            });
           }
-        }
-        
-        this.metrics.set('cumulativeLayoutShift', clsValue);
-        
-        if (clsValue > 0.1) {
-          auditLogger.logSystemEvent('high_layout_shift', {
-            cls_value: clsValue,
-            threshold_exceeded: true
-          }, 'medium');
-        }
-      });
-      
-      observer.observe({ entryTypes: ['layout-shift'] });
-      this.observers.push(observer);
-    } catch (error) {
-      console.warn('Layout shift monitoring not supported');
-    }
-  }
-
-  private observeLongTasks() {
-    try {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          auditLogger.logSystemEvent('long_task_detected', {
-            duration: entry.duration,
-            start_time: entry.startTime
-          }, entry.duration > 100 ? 'medium' : 'low');
-        }
-      });
-      
-      observer.observe({ entryTypes: ['longtask'] });
-      this.observers.push(observer);
-    } catch (error) {
-      console.warn('Long task monitoring not supported');
-    }
-  }
-
-  private observeResourceTiming() {
-    try {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const resource = entry as PerformanceResourceTiming;
-          
-          if (resource.duration > 1000) {
-            auditLogger.logSystemEvent('slow_resource_load', {
-              resource_name: resource.name,
-              duration: resource.duration,
-              size: resource.transferSize,
-              type: resource.initiatorType
-            }, 'low');
-          }
-        }
-      });
-      
-      observer.observe({ entryTypes: ['resource'] });
-      this.observers.push(observer);
-    } catch (error) {
-      console.warn('Resource timing monitoring not supported');
-    }
-  }
-
-  private async logPageLoadMetrics() {
-    const metrics = this.getMetrics();
-    
-    await auditLogger.logSystemEvent('page_load_metrics', {
-      url: window.location.href,
-      metrics,
-      user_agent: navigator.userAgent,
-      connection: (navigator as any).connection?.effectiveType || 'unknown',
-      memory: (performance as any).memory ? {
-        used: (performance as any).memory.usedJSHeapSize,
-        total: (performance as any).memory.totalJSHeapSize,
-        limit: (performance as any).memory.jsHeapSizeLimit
-      } : null
-    });
-
-    console.log('📊 Page load metrics:', metrics);
-  }
-
-  measureUserTiming(name: string, startMark?: string, endMark?: string) {
-    try {
-      if (startMark && endMark) {
-        performance.measure(name, startMark, endMark);
-      } else {
-        performance.measure(name);
-      }
-      
-      const measurement = performance.getEntriesByName(name, 'measure')[0];
-      if (measurement) {
-        auditLogger.logSystemEvent('user_timing_measure', {
-          measure_name: name,
-          duration: measurement.duration,
-          start_mark: startMark,
-          end_mark: endMark
         });
-      }
+      });
+      
+      navObserver.observe({ entryTypes: ['navigation'] });
+      this.observers.push(navObserver);
     } catch (error) {
-      console.warn('User timing measurement failed:', error);
+      console.warn('Performance monitoring not supported:', error);
     }
   }
 
-  getMetrics(): PerformanceMetrics | Record<string, number> {
-    const metricsObj: Record<string, number> = {};
-    this.metrics.forEach((value, key) => {
-      metricsObj[key] = value;
-    });
-    return metricsObj;
+  private recordMetric(metric: Omit<PerformanceMetrics, 'score'>) {
+    const score = this.calculateScore(metric);
+    const fullMetric = { ...metric, score };
+    
+    this.metrics.push(fullMetric);
+    
+    // Keep only last 50 metrics
+    if (this.metrics.length > 50) {
+      this.metrics = this.metrics.slice(-50);
+    }
   }
 
-  destroy() {
+  private calculateScore(metric: Omit<PerformanceMetrics, 'score'>): number {
+    let score = 100;
+    
+    // Penalize slow load times
+    if (metric.loadTime > 3000) score -= 30;
+    else if (metric.loadTime > 1000) score -= 15;
+    
+    // Penalize high memory usage
+    if (metric.memoryUsage > 80) score -= 20;
+    else if (metric.memoryUsage > 50) score -= 10;
+    
+    // Penalize large bundle size
+    if (metric.bundleSize > 1000) score -= 20;
+    else if (metric.bundleSize > 500) score -= 10;
+    
+    return Math.max(0, score);
+  }
+
+  private getMemoryUsage(): number {
+    if (typeof window === 'undefined') return 0;
+    
+    try {
+      if (performance.memory) {
+        return (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100;
+      }
+    } catch (error) {
+      console.warn('Memory usage monitoring not available:', error);
+    }
+    
+    return 0;
+  }
+
+  private estimateBundleSize(): number {
+    if (typeof window === 'undefined') return 0;
+    
+    try {
+      const resources = performance.getEntriesByType('resource');
+      const jsResources = resources.filter(r => r.name.includes('.js'));
+      return jsResources.reduce((total, resource) => {
+        return total + (resource.transferSize || 0);
+      }, 0) / 1024; // Convert to KB
+    } catch (error) {
+      console.warn('Bundle size estimation failed:', error);
+      return 0;
+    }
+  }
+
+  public getPerformanceScore(): number {
+    if (this.metrics.length === 0) return 85; // Default score
+    
+    const recentMetrics = this.metrics.slice(-10);
+    const avgScore = recentMetrics.reduce((sum, metric) => sum + metric.score, 0) / recentMetrics.length;
+    
+    return Math.round(avgScore);
+  }
+
+  public getLatestMetrics(): PerformanceMetrics | null {
+    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null;
+  }
+
+  public getAllMetrics(): PerformanceMetrics[] {
+    return [...this.metrics];
+  }
+
+  public startMonitoring() {
+    this.isMonitoring = true;
+  }
+
+  public stopMonitoring() {
+    this.isMonitoring = false;
     this.observers.forEach(observer => observer.disconnect());
     this.observers = [];
-    this.metrics.clear();
-    console.log('📊 Performance monitoring destroyed');
+  }
+
+  public clearMetrics() {
+    this.metrics = [];
   }
 }
 
 export const performanceMonitor = new PerformanceMonitor();
+export const getPerformanceScore = () => performanceMonitor.getPerformanceScore();
+
 export default performanceMonitor;

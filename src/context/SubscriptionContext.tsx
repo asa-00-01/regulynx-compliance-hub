@@ -11,12 +11,27 @@ interface SubscriptionState {
   loading: boolean;
 }
 
+interface PricingPlan {
+  id: string;
+  plan_id: string;
+  name: string;
+  description: string;
+  price_monthly: number;
+  price_yearly: number;
+  features: string[];
+  max_users: number;
+  max_transactions: number;
+  max_cases: number;
+}
+
 interface SubscriptionContextType {
   subscriptionState: SubscriptionState;
   checkSubscription: () => Promise<void>;
   createCheckout: (planId: string, billingType?: 'monthly' | 'yearly') => Promise<void>;
   openCustomerPortal: () => Promise<void>;
   refreshing: boolean;
+  plans: PricingPlan[];
+  plansLoading: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
@@ -32,10 +47,61 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     loading: true,
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+
+  // Mock plans data for now
+  useEffect(() => {
+    const mockPlans: PricingPlan[] = [
+      {
+        id: '1',
+        plan_id: 'starter',
+        name: 'Starter',
+        description: 'Perfect for small businesses',
+        price_monthly: 2900,
+        price_yearly: 29000,
+        features: ['Basic compliance monitoring', 'Email support', 'Monthly reports'],
+        max_users: 5,
+        max_transactions: 1000,
+        max_cases: 10
+      },
+      {
+        id: '2',
+        plan_id: 'professional',
+        name: 'Professional',
+        description: 'Ideal for growing companies',
+        price_monthly: 9900,
+        price_yearly: 99000,
+        features: ['Advanced compliance tools', 'Priority support', 'Weekly reports', 'API access'],
+        max_users: 25,
+        max_transactions: 10000,
+        max_cases: 100
+      },
+      {
+        id: '3',
+        plan_id: 'enterprise',
+        name: 'Enterprise',
+        description: 'For large organizations',
+        price_monthly: 29900,
+        price_yearly: 299000,
+        features: ['Full compliance suite', 'Dedicated support', 'Daily reports', 'Custom integrations'],
+        max_users: -1,
+        max_transactions: -1,
+        max_cases: -1
+      }
+    ];
+    setPlans(mockPlans);
+    setPlansLoading(false);
+  }, []);
 
   const checkSubscription = async () => {
     if (!isAuthenticated || !session) {
-      setSubscriptionState({ subscribed: false, loading: false });
+      setSubscriptionState({ 
+        subscribed: false, 
+        subscription_tier: null, 
+        subscription_end: null, 
+        loading: false 
+      });
       return;
     }
 
@@ -73,7 +139,12 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error('🚨 Error checking subscription:', error);
       await logError(error, 'subscription_check', { user_id: user?.id });
-      setSubscriptionState({ subscribed: false, loading: false });
+      setSubscriptionState({ 
+        subscribed: false, 
+        subscription_tier: null, 
+        subscription_end: null, 
+        loading: false 
+      });
       toast.error('Failed to check subscription status');
     } finally {
       setRefreshing(false);
@@ -204,6 +275,8 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         createCheckout,
         openCustomerPortal,
         refreshing,
+        plans,
+        plansLoading,
       }}
     >
       {children}
