@@ -39,7 +39,7 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
-  const { user, session } = useAuth();
+  const { user, session, isAuthenticated } = useAuth();
   const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>({
     subscribed: false,
     loading: true,
@@ -88,7 +88,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const checkSubscription = async () => {
-    if (!session?.access_token) {
+    if (!isAuthenticated || !session) {
       setSubscriptionState({ subscribed: false, loading: false });
       return;
     }
@@ -118,12 +118,21 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const createCheckout = async (planId: string, billingType: 'monthly' | 'yearly' = 'monthly') => {
-    if (!session?.access_token) {
+    console.log('🔍 Debug - createCheckout called', { 
+      isAuthenticated, 
+      hasUser: !!user, 
+      hasSession: !!session,
+      sessionAccessToken: !!session?.access_token 
+    });
+
+    if (!isAuthenticated || !user || !session?.access_token) {
+      console.error('❌ Authentication check failed:', { isAuthenticated, user: !!user, session: !!session });
       toast.error('Please login to subscribe');
       return;
     }
 
     try {
+      console.log('✅ Authentication successful, creating checkout...');
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { planId, billingType },
         headers: {
@@ -131,8 +140,12 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Checkout error:', error);
+        throw error;
+      }
 
+      console.log('✅ Checkout session created successfully');
       // Open Stripe checkout in a new tab
       window.open(data.url, '_blank');
     } catch (error) {
@@ -142,7 +155,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const openCustomerPortal = async () => {
-    if (!session?.access_token) {
+    if (!isAuthenticated || !user || !session?.access_token) {
       toast.error('Please login to manage your subscription');
       return;
     }
@@ -180,12 +193,12 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
   // Check subscription on user change
   useEffect(() => {
-    if (user && session) {
+    if (isAuthenticated && user && session) {
       checkSubscription();
     } else {
       setSubscriptionState({ subscribed: false, loading: false });
     }
-  }, [user, session]);
+  }, [isAuthenticated, user, session]);
 
   return (
     <SubscriptionContext.Provider
