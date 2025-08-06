@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -8,14 +7,14 @@ import KYCMonitoringDashboard from '@/components/compliance/KYCMonitoringDashboa
 import RiskScoringEngine from '@/components/compliance/RiskScoringEngine';
 import RedFlagsAlerts from '@/components/compliance/RedFlagsAlerts';
 import UserActivityLogs from '@/components/compliance/UserActivityLogs';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 import { UserCheck, CircleDollarSign, FileSearch, Shield, FileText, AlertTriangle, Users } from 'lucide-react';
 import UserOverviewSection from '@/components/compliance/UserOverviewSection';
 import { useTranslation } from 'react-i18next';
 
 const Compliance = () => {
   const [activeTab, setActiveTab] = useState('kyc-monitoring');
-  const { canManageCases } = usePermissions();
+  const { canManageCases } = useFeatureAccess();
   const { t } = useTranslation();
   
   return (

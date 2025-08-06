@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Document } from '@/types';
 import { CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 
 interface RecentDocumentsTableProps {
   documents: Document[];
@@ -14,7 +13,7 @@ interface RecentDocumentsTableProps {
 
 const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps) => {
   const navigate = useNavigate();
-  const { canApproveDocuments } = usePermissions();
+  const { canApproveDocuments } = useFeatureAccess();
   
   const getStatusIcon = (status: string) => {
     switch (status) {
