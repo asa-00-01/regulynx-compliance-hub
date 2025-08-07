@@ -86,6 +86,12 @@ export const authRateLimiter = new RateLimiter({
   maxRequests: 5    // 5 login attempts per 5 minutes
 });
 
+// Global rate limiter for general use
+export const globalRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 100 // 100 requests per minute
+});
+
 // Utility functions for common rate limiting scenarios
 export const rateLimitAuth = (identifier: string): boolean => {
   return authRateLimiter.isAllowed(identifier, 'auth');
@@ -93,5 +99,6 @@ export const rateLimitAuth = (identifier: string): boolean => {
 
 export default {
   authRateLimiter,
+  globalRateLimiter,
   rateLimitAuth
 };

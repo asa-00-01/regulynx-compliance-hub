@@ -1,174 +1,113 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bell, X, Check, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, Trash2, AlertCircle, Info, CheckCircle, XCircle } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
+import { useNotificationManager } from '@/hooks/notifications/useNotificationManager';
 
-export interface Notification {
+interface Notification {
   id: string;
-  title: string;
+  type: 'success' | 'info' | 'warning' | 'error';
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
   timestamp: Date;
-  actionUrl?: string;
+  read: boolean;
 }
 
-const NotificationCenter = () => {
+const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, markAsRead, clearAllNotifications } = useNotificationManager();
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Mock notifications - in real app, this would fetch from API
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        title: 'Document Verification Required',
-        message: 'New document uploaded requires your approval',
-        type: 'warning',
-        read: false,
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        actionUrl: '/documents'
-      },
-      {
-        id: '2',
-        title: 'Compliance Case Updated',
-        message: 'Case #12345 has been updated with new information',
-        type: 'info',
-        read: false,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        actionUrl: '/compliance'
-      },
-      {
-        id: '3',
-        title: 'System Maintenance',
-        message: 'Scheduled maintenance completed successfully',
-        type: 'success',
-        read: true,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      }
-    ];
-    setNotifications(mockNotifications);
-    setLoading(false);
+    // Simulate adding a notification every 10 seconds (for testing)
+    // const intervalId = setInterval(() => {
+    //   addNotification({
+    //     id: Math.random().toString(),
+    //     type: 'info',
+    //     message: `New notification ${Math.random()}`,
+    //     timestamp: new Date(),
+    //     read: false,
+    //   });
+    // }, 10000);
+
+    // return () => clearInterval(intervalId);
   }, []);
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const getIcon = (type: string) => {
     switch (type) {
       case 'success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'error':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
+      case 'info':
         return <Info className="h-4 w-4 text-blue-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'error':
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Info className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  if (loading) {
-    return <div className="animate-pulse">Loading notifications...</div>;
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                {unreadCount}
-              </Badge>
-            )}
-          </div>
-          {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllAsRead}>
-              <Check className="h-4 w-4 mr-1" />
-              Mark All Read
-            </Button>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {notifications.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No notifications</p>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-3 rounded-lg border ${
-                  notification.read ? 'bg-gray-50' : 'bg-white border-blue-200'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1">
-                    {getNotificationIcon(notification.type)}
-                    <div className="flex-1">
-                      <h4 className={`font-medium text-sm ${
-                        notification.read ? 'text-gray-600' : 'text-gray-900'
-                      }`}>
-                        {notification.title}
-                      </h4>
-                      <p className={`text-sm mt-1 ${
-                        notification.read ? 'text-gray-500' : 'text-gray-700'
-                      }`}>
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {notification.timestamp.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 ml-2">
-                    {!notification.read && (
+    <div className="relative">
+      <Button variant="ghost" onClick={toggleOpen}>
+        <Bell className="h-5 w-5" />
+        {notifications.filter(n => !n.read).length > 0 && (
+          <Badge className="absolute top-0 right-0 rounded-full h-4 w-4 p-0 flex items-center justify-center text-xs">
+            {notifications.filter(n => !n.read).length}
+          </Badge>
+        )}
+      </Button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg z-50 border">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-lg">Notifications</CardTitle>
+              <Button variant="ghost" size="sm" onClick={clearAllNotifications}>
+                Clear All
+              </Button>
+            </CardHeader>
+            <CardContent className="pl-2 pr-2">
+              {notifications.length === 0 ? (
+                <CardDescription>No notifications</CardDescription>
+              ) : (
+                <div className="space-y-2">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100"
+                    >
+                      <div className="flex items-center space-x-2">
+                        {getIcon(notification.type)}
+                        <div>
+                          <p className="text-sm">{notification.message}</p>
+                          <p className="text-xs text-gray-500">
+                            {notification.timestamp.toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => markAsRead(notification.id)}
-                        className="h-6 w-6 p-0"
                       >
-                        <Check className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteNotification(notification.id)}
-                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
 

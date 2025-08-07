@@ -8,7 +8,7 @@ import { DocumentType } from '@/types/supabase';
 import useDocumentOCR from '@/hooks/useDocumentOCR';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import CustomerSelector from './CustomerSelector';
 import { useFeatureAccess } from '@/hooks/use-permissions';

@@ -1,178 +1,92 @@
 import React from 'react';
-import {
-  Home,
-  Shield,
-  FileText,
-  CircleDollarSign,
-  LineChart,
-  PieChart,
-  FileWarning,
-  UserCheck,
-  FileSearch,
-  BarChart3,
-  History,
-  Bot,
-  Newspaper,
-  User,
-} from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
-import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import LanguageSelector from '@/components/common/LanguageSelector';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  useSidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-} from '@/components/ui/sidebar';
+  LayoutDashboard,
+  Users,
+  FileText,
+  Shield,
+  TrendingUp,
+  Settings,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  DollarSign,
+  BarChart3,
+  Bell,
+  Mail,
+  Newspaper,
+} from 'lucide-react';
+import { useAuth } from '@/context/auth/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const CustomerSidebar = () => {
+interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
+  className?: string;
+}
+
+const CustomerSidebar: React.FC<SidebarProps> = React.memo(({ className, ...props }) => {
   const { user } = useAuth();
-  const { permissions } = useRoleBasedPermissions();
   const location = useLocation();
-  const { t } = useTranslation();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+  const navigate = useNavigate();
 
-  const customerNavigationItems = [
-    {
-      title: t('navigation.dashboard'),
-      href: '/dashboard',
-      icon: Home,
-      show: true,
-    },
-    {
-      title: t('navigation.aiAgent'),
-      href: '/ai-agent',
-      icon: Bot,
-      show: true,
-    },
-    {
-      title: t('navigation.news'),
-      href: '/news',
-      icon: Newspaper,
-      show: true,
-    },
-    {
-      title: t('navigation.compliance'),
-      href: '/compliance',
-      icon: Shield,
-      show: permissions.canViewCompliance,
-    },
-    {
-      title: t('navigation.complianceCases'),
-      href: '/compliance-cases',
-      icon: FileText,
-      show: permissions.canManageCases,
-    },
-    {
-      title: t('navigation.kycVerification'),
-      href: '/kyc-verification',
-      icon: UserCheck,
-      show: permissions.canManageKYC,
-    },
-    {
-      title: t('navigation.transactions'),
-      href: '/transactions',
-      icon: CircleDollarSign,
-      show: permissions.canViewTransactions,
-    },
-    {
-      title: t('navigation.documents'),
-      href: '/documents',
-      icon: FileSearch,
-      show: permissions.canManageDocuments,
-    },
-    {
-      title: t('navigation.amlMonitoring'),
-      href: '/aml-monitoring',
-      icon: LineChart,
-      show: permissions.canViewCompliance,
-    },
-    {
-      title: t('navigation.riskAnalysis'),
-      href: '/risk-analysis',
-      icon: PieChart,
-      show: permissions.canViewCompliance,
-    },
-    {
-      title: t('navigation.sarCenter'),
-      href: '/sar-center',
-      icon: FileWarning,
-      show: permissions.canManageCases,
-    },
-    {
-      title: 'Usage Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-      show: permissions.canViewAnalytics,
-    },
-    {
-      title: t('navigation.auditLogs'),
-      href: '/audit-logs',
-      icon: History,
-      show: permissions.canViewReports,
-    },
-    {
-      title: t('navigation.profile'),
-      href: '/profile',
-      icon: User,
-      show: true,
-    },
-  ];
+  const isLinkActive = (href: string) => {
+    return location.pathname === href;
+  };
 
-  if (!user) return null;
+  const SidebarLink = React.forwardRef<
+    HTMLAnchorElement,
+    React.PropsWithChildren<{
+      href: string;
+      icon: React.ReactNode;
+      label: string;
+    }>
+  >(({ href, icon, label, children, ...props }, ref) => {
+    const isActive = isLinkActive(href);
+    return (
+      <Button
+        variant="ghost"
+        as="a"
+        href={href}
+        className={cn(
+          'justify-start px-4',
+          isActive ? 'bg-secondary text-foreground hover:bg-secondary/80' : 'hover:bg-accent hover:text-accent-foreground'
+        )}
+        ref={ref}
+        {...props}
+      >
+        {icon}
+        <span>{label}</span>
+      </Button>
+    );
+  });
+  SidebarLink.displayName = 'SidebarLink';
 
   return (
-    <>
-      <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
-        <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">
-          {isCollapsed ? "AML" : t('layout.sidebar.title')}
-        </h1>
-      </SidebarHeader>
-      
-      <SidebarContent className={cn(!isCollapsed && "p-2")}>
-        <SidebarMenu>
-          {customerNavigationItems.map((item) => {
-            if (!item.show) return null;
-
-            const isActive = location.pathname === item.href || 
-              (item.href === '/dashboard' && location.pathname === '/');
-
-            return (
-              <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  tooltip={item.title}
-                >
-                  <NavLink to={item.href}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarContent>
-      
-      <SidebarSeparator />
-      
-      <SidebarFooter className={cn(isCollapsed && "hidden")}>
-        <LanguageSelector />
-        <p className="text-xs text-sidebar-foreground/70 text-center">
-          {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
-        </p>
-      </SidebarFooter>
-    </>
+    <div className={cn('flex flex-col space-y-4 w-64 border-r bg-secondary h-full', className)} {...props}>
+      <div className="px-4 py-6">
+        <Button variant="ghost" className="gap-2 h-auto p-0 font-normal text-lg">
+          <Shield className="h-6 w-6" />
+          <span>{user?.companyName || 'ComplianceOS'}</span>
+        </Button>
+      </div>
+      <ScrollArea className="flex-1 space-y-2 px-3">
+        <SidebarLink href="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
+        <SidebarLink href="/compliance" icon={<AlertTriangle className="h-4 w-4" />} label="Compliance" />
+        <SidebarLink href="/cases" icon={<FileText className="h-4 w-4" />} label="Cases" />
+        <SidebarLink href="/customers" icon={<Users className="h-4 w-4" />} label="Customers" />
+        <SidebarLink href="/documents" icon={<FileText className="h-4 w-4" />} label="Documents" />
+        <SidebarLink href="/transactions" icon={<DollarSign className="h-4 w-4" />} label="Transactions" />
+        <SidebarLink href="/reports" icon={<BarChart3 className="h-4 w-4" />} label="Reports" />
+        <SidebarLink href="/notifications" icon={<Bell className="h-4 w-4" />} label="Notifications" />
+        <SidebarLink href="/analytics" icon={<TrendingUp className="h-4 w-4" />} label="Analytics" />
+        <SidebarLink href="/profile?tab=profile" icon={<Settings className="h-4 w-4" />} label="Settings" />
+      </ScrollArea>
+    </div>
   );
-};
+});
+
+CustomerSidebar.displayName = 'CustomerSidebar';
 
 export default CustomerSidebar;

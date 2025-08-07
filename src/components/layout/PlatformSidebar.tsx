@@ -1,229 +1,113 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  LayoutDashboard,
+  Settings,
   Users,
   Database,
-  Zap,
-  Code,
-  Settings,
-  BarChart3,
-  Server,
   Shield,
-  CreditCard,
-  Monitor,
-  Activity,
+  BarChart3,
+  Code,
+  Zap,
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
-import { cn } from '@/lib/utils';
-import LanguageSelector from '@/components/common/LanguageSelector';
-import {
-  useSidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-} from '@/components/ui/sidebar';
+import { useAuth } from '@/context/auth/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const PlatformSidebar = () => {
-  const { user } = useAuth();
-  const { permissions } = useRoleBasedPermissions();
-  const location = useLocation();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+interface PlatformSidebarProps extends React.HTMLAttributes<HTMLElement> {
+  className?: string;
+}
 
-  const platformManagementItems = [
-    {
-      title: 'Platform Dashboard',
-      href: '/platform/dashboard',
-      icon: Monitor,
-      show: permissions.canManagePlatform,
-    },
-    {
-      title: 'User Management',
-      href: '/platform/users',
-      icon: Users,
-      show: permissions.canManageUsers,
-    },
-    {
-      title: 'Integration Management',
-      href: '/integration',
-      icon: Database,
-      show: permissions.canManageIntegrations,
-    },
-    {
-      title: 'Subscription Management',
-      href: '/platform/subscriptions',
-      icon: CreditCard,
-      show: permissions.canManageSubscriptions,
-    },
-    {
-      title: 'System Analytics',
-      href: '/platform/analytics',
-      icon: BarChart3,
-      show: permissions.canManagePlatform,
-    },
-    {
-      title: 'System Logs',
-      href: '/platform/logs',
-      icon: Activity,
-      show: permissions.canViewSystemLogs,
-    },
-  ];
+const PlatformSidebar = React.forwardRef<HTMLElement, PlatformSidebarProps>(
+  ({ className, ...props }, ref) => {
+    const { isPlatformUser } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const developerItems = [
-    {
-      title: 'Developer Tools',
-      href: '/developer-tools',
-      icon: Code,
-      show: permissions.canViewDeveloperTools,
-    },
-    {
-      title: 'Performance Optimization',
-      href: '/optimization',
-      icon: Zap,
-      show: permissions.canViewDeveloperTools,
-    },
-    {
-      title: 'API Documentation',
-      href: '/platform/api-docs',
-      icon: Server,
-      show: permissions.canViewDeveloperTools,
-    },
-  ];
+    const platformRoutes = [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        href: '/dashboard',
+      },
+      {
+        icon: Users,
+        label: 'User Management',
+        href: '/users',
+      },
+      {
+        icon: Database,
+        label: 'Data Management',
+        href: '/data',
+      },
+      {
+        icon: Shield,
+        label: 'Security',
+        href: '/security',
+      },
+      {
+        icon: BarChart3,
+        label: 'Analytics',
+        href: '/analytics',
+      },
+      {
+        icon: Code,
+        label: 'Developer Tools',
+        href: '/developer',
+      },
+      {
+        icon: Zap,
+        label: 'Integrations',
+        href: '/integrations',
+      },
+      {
+        icon: Settings,
+        label: 'Settings',
+        href: '/settings',
+      },
+    ];
 
-  const systemItems = [
-    {
-      title: 'Platform Settings',
-      href: '/platform/settings',
-      icon: Settings,
-      show: permissions.canManagePlatform,
-    },
-    {
-      title: 'Security Center',
-      href: '/platform/security',
-      icon: Shield,
-      show: permissions.canManagePlatform,
-    },
-  ];
+    if (!isPlatformUser) {
+      return null;
+    }
 
-  if (!user) return null;
+    return (
+      <div
+        className={cn(
+          'flex h-full w-[280px] flex-col border-r bg-secondary',
+          className
+        )}
+        ref={ref}
+        {...props}
+      >
+        <div className="px-6 py-4">
+          <Button variant="ghost" className="font-bold">
+            Platform Admin
+          </Button>
+        </div>
+        <ScrollArea className="flex-1 space-y-2 px-3">
+          {platformRoutes.map((route) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                'w-full justify-start gap-2',
+                location.pathname === route.href
+                  ? 'bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+              )}
+              key={route.href}
+              onClick={() => navigate(route.href)}
+            >
+              <route.icon className="h-4 w-4" />
+              <span>{route.label}</span>
+            </Button>
+          ))}
+        </ScrollArea>
+      </div>
+    );
+  }
+);
+PlatformSidebar.displayName = 'PlatformSidebar';
 
-  return (
-    <>
-      <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
-        <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">
-          {isCollapsed ? "Platform" : "Platform Management"}
-        </h1>
-      </SidebarHeader>
-      
-      <SidebarContent className={cn(!isCollapsed && "p-2")}>
-        {/* Platform Management */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {platformManagementItems.map((item) => {
-                if (!item.show) return null;
-
-                const isActive = location.pathname === item.href;
-
-                return (
-                  <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                    >
-                      <NavLink to={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Developer Tools */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Developer Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {developerItems.map((item) => {
-                if (!item.show) return null;
-
-                const isActive = location.pathname === item.href;
-
-                return (
-                  <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                      size="sm"
-                    >
-                      <NavLink to={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* System Settings */}
-        <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => {
-                if (!item.show) return null;
-
-                const isActive = location.pathname === item.href;
-
-                return (
-                  <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                      size="sm"
-                    >
-                      <NavLink to={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      
-      <SidebarSeparator />
-      
-      <SidebarFooter className={cn(isCollapsed && "hidden")}>
-        <LanguageSelector />
-        <p className="text-xs text-sidebar-foreground/70 text-center">
-          Platform Admin Panel
-        </p>
-      </SidebarFooter>
-    </>
-  );
-};
-
-export default PlatformSidebar;
+export { PlatformSidebar };

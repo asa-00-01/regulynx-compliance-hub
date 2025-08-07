@@ -1,7 +1,7 @@
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { AlertCircle, Clock, FileText } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardMetricsCard from '@/components/dashboard/DashboardMetricsCard';
 import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
