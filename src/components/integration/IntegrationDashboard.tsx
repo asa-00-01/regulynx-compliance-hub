@@ -151,6 +151,8 @@ const IntegrationDashboard = () => {
         <TabsContent value="keys" className="space-y-4">
           <APIKeyManagement
             apiKeys={apiKeys}
+            selectedClientId={selectedClientId}
+            onClientSelect={setSelectedClientId}
             integrationConfigs={integrationConfigs}
             onCreateAPIKey={createAPIKey}
           />
