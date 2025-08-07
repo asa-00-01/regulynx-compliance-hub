@@ -8,11 +8,11 @@ import UserProfileForm from '@/components/profile/UserProfileForm';
 import UserSecuritySettings from '@/components/profile/UserSecuritySettings';
 import UserPreferences from '@/components/profile/UserPreferences';
 import SubscriptionManagement from '@/components/profile/SubscriptionManagement';
-import { useAuthState } from '@/hooks/useAuthState';
+import { useAuth } from '@/context/auth/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function Profile() {
-  const { user, loading } = useAuthState();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
 
   if (loading) {

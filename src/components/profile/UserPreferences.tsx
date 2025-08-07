@@ -7,12 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { useTheme } from 'next-themes';
+import { StandardUser } from '@/types/user';
 
-const UserPreferences = () => {
+interface UserPreferencesProps {
+  user: StandardUser | null;
+}
+
+const UserPreferences = ({ user }: UserPreferencesProps) => {
   const { t, i18n } = useTranslation();
-  const { user, updateUserProfile } = useAuth();
+  const { updateUserProfile } = useAuth();
   const { theme, setTheme } = useTheme();
   
   const [notifications, setNotifications] = useState({
