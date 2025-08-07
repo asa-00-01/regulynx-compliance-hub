@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SAR, Pattern, PatternMatch } from '@/types/sar';
+import { SAR as SARType, Pattern, PatternMatch } from '@/types/sar';
 import { Database } from '@/integrations/supabase/types';
 
 type SarInsert = Database['public']['Tables']['sars']['Insert'];
@@ -10,7 +10,7 @@ type SarRow = Database['public']['Tables']['sars']['Row'];
 type PatternRow = Database['public']['Tables']['patterns']['Row'];
 type PatternMatchRow = Database['public']['Tables']['pattern_matches']['Row'];
 
-const mapSarToApp = (sar: SarRow): SAR => ({
+const mapSarToApp = (sar: SarRow): SARType => ({
   id: sar.id,
   userId: sar.user_id,
   userName: sar.user_name,
@@ -23,12 +23,12 @@ const mapSarToApp = (sar: SarRow): SAR => ({
   notes: sar.notes || undefined,
 });
 
-const mapPatternToApp = (pattern: PatternRow & { pattern_matches: { count: number }[] }): Pattern => ({
-    id: pattern.id,
-    name: pattern.name,
-    description: pattern.description,
-    category: pattern.category,
-    matchCount: pattern.pattern_matches[0]?.count || 0,
+const mapPatternToApp = (pattern: PatternRow & { pattern_matches?: { count: number }[] }): Pattern => ({
+  id: pattern.id,
+  name: pattern.name,
+  description: pattern.description,
+  category: pattern.category,
+  matchCount: pattern.pattern_matches?.[0]?.count || 0,
 });
 
 const mapPatternMatchToApp = (match: PatternMatchRow): PatternMatch => ({
@@ -44,20 +44,22 @@ const mapPatternMatchToApp = (match: PatternMatchRow): PatternMatch => ({
 });
 
 export const SARService = {
-  async getSARs(): Promise<SAR[]> {
+  async getSARs(): Promise<SARType[]> {
     const { data, error } = await supabase.from('sars').select('*').order('date_submitted', { ascending: false });
     if (error) throw error;
-    return data.map(mapSarToApp);
+    return data?.map(mapSarToApp) || [];
   },
 
   async getPatterns(): Promise<Pattern[]> {
     const { data, error } = await supabase
       .from('patterns')
-      .select('*, pattern_matches(count)');
+      .select(`
+        *,
+        pattern_matches!inner(count(*))
+      `);
       
     if (error) throw error;
-    // @ts-ignore
-    return data.map(mapPatternToApp);
+    return data?.map(mapPatternToApp) || [];
   },
 
   async getPatternMatches(patternId: string): Promise<PatternMatch[]> {
@@ -66,10 +68,10 @@ export const SARService = {
       .select('*')
       .eq('pattern_id', patternId);
     if (error) throw error;
-    return data.map(mapPatternMatchToApp);
+    return data?.map(mapPatternMatchToApp) || [];
   },
 
-  async createSAR(sarData: Omit<SAR, 'id'>): Promise<SAR> {
+  async createSAR(sarData: Omit<SARType, 'id'>): Promise<SARType> {
     const sarToInsert: SarInsert = {
       user_id: sarData.userId,
       user_name: sarData.userName,
@@ -86,17 +88,17 @@ export const SARService = {
     return mapSarToApp(data);
   },
 
-  async updateSAR(id: string, updates: Partial<Omit<SAR, 'id'>>): Promise<SAR> {
+  async updateSAR(id: string, updates: Partial<Omit<SARType, 'id'>>): Promise<SARType> {
     const sarToUpdate: SarUpdate = {};
-    if (updates.userId) sarToUpdate.user_id = updates.userId;
-    if (updates.userName) sarToUpdate.user_name = updates.userName;
-    if (updates.dateSubmitted) sarToUpdate.date_submitted = updates.dateSubmitted;
-    if (updates.dateOfActivity) sarToUpdate.date_of_activity = updates.dateOfActivity;
-    if (updates.status) sarToUpdate.status = updates.status;
-    if (updates.summary) sarToUpdate.summary = updates.summary;
-    if (updates.transactions) sarToUpdate.transactions = updates.transactions;
-    if (updates.documents) sarToUpdate.documents = updates.documents;
-    if (updates.notes) sarToUpdate.notes = updates.notes;
+    if (updates.userId !== undefined) sarToUpdate.user_id = updates.userId;
+    if (updates.userName !== undefined) sarToUpdate.user_name = updates.userName;
+    if (updates.dateSubmitted !== undefined) sarToUpdate.date_submitted = updates.dateSubmitted;
+    if (updates.dateOfActivity !== undefined) sarToUpdate.date_of_activity = updates.dateOfActivity;
+    if (updates.status !== undefined) sarToUpdate.status = updates.status;
+    if (updates.summary !== undefined) sarToUpdate.summary = updates.summary;
+    if (updates.transactions !== undefined) sarToUpdate.transactions = updates.transactions;
+    if (updates.documents !== undefined) sarToUpdate.documents = updates.documents;
+    if (updates.notes !== undefined) sarToUpdate.notes = updates.notes;
     
     const { data, error } = await supabase.from('sars').update(sarToUpdate).eq('id', id).select().single();
     if (error) throw error;

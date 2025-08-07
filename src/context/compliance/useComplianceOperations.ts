@@ -1,71 +1,114 @@
-
 import { useCallback } from 'react';
 import { ComplianceState, ComplianceAction, UnifiedUserData } from './types';
-import { Document } from '@/types';
+import { Document } from '@/types/document';
 import { AMLTransaction } from '@/types/aml';
 import { ComplianceCaseDetails } from '@/types/case';
 
-export const useComplianceOperations = (
-  state: ComplianceState,
-  dispatch: React.Dispatch<ComplianceAction>
-) => {
-  const selectedUser = state.selectedUserId 
-    ? state.users.find(user => user.id === state.selectedUserId) || null
-    : null;
-    
-  const setSelectedUser = useCallback((userId: string | null) => {
-    dispatch({ type: 'SET_SELECTED_USER', payload: userId });
-  }, [dispatch]);
-  
-  const getUserById = useCallback((userId: string): UnifiedUserData | null => {
-    return state.users.find(user => user.id === userId) || null;
-  }, [state.users]);
-  
-  const getRelatedDocuments = useCallback((userId: string): Document[] => {
+export const useComplianceOperations = (state: ComplianceState, dispatch: React.Dispatch<ComplianceAction>) => {
+  const { 
+    users, 
+    transactions, 
+    cases, 
+    riskRules, 
+    filteredUsers, 
+    userRiskScores 
+  } = state;
+
+  // User operations
+  const getUserById = useCallback((userId: string): UnifiedUserData | undefined => {
+    return users.find(user => user.id === userId);
+  }, [users]);
+
+  const getUserDocuments = useCallback((userId: string): Document[] => {
     const user = getUserById(userId);
     if (!user) return [];
     
-    // Convert user documents to the expected Document type with proper type assertions
-    return user.documents.map((doc): Document => {
-      // Ensure type and status are properly validated and cast
-      const documentType = (doc.type === 'passport' || doc.type === 'id' || doc.type === 'license') 
-        ? doc.type as 'passport' | 'id' | 'license'
-        : 'id' as const; // fallback to 'id' if invalid
-        
-      const documentStatus = (doc.status === 'pending' || doc.status === 'verified' || doc.status === 'rejected' || doc.status === 'information_requested')
-        ? doc.status as 'pending' | 'verified' | 'rejected' | 'information_requested'
-        : 'pending' as const; // fallback to 'pending' if invalid
-      
-      return {
-        id: doc.id,
-        user_id: doc.user_id,
-        type: documentType,
-        file_name: doc.file_name,
-        upload_date: doc.upload_date,
-        status: documentStatus,
-        verified_by: doc.verified_by || undefined,
-        verification_date: doc.verification_date || undefined,
-        extracted_data: doc.extracted_data
-      } as Document;
-    });
-  }, [getUserById]);
-  
-  const getRelatedTransactions = useCallback((userId: string): AMLTransaction[] => {
-    const user = getUserById(userId);
-    return user ? user.transactions : [];
-  }, [getUserById]);
-  
-  const getRelatedCases = useCallback((userId: string): ComplianceCaseDetails[] => {
-    const user = getUserById(userId);
-    return user ? user.complianceCases : [];
+    // Convert user documents to the expected Document type
+    return user.documents.map((doc): Document => ({
+      id: doc.id,
+      user_id: doc.user_id,
+      type: doc.type,
+      file_name: doc.file_name,
+      file_path: doc.file_path || '',
+      status: doc.status,
+      upload_date: doc.upload_date,
+      verified_by: doc.verified_by || undefined,
+      verification_date: doc.verification_date || undefined,
+      extracted_data: doc.extracted_data,
+      created_at: doc.created_at || doc.upload_date,
+      updated_at: doc.updated_at || doc.upload_date
+    }));
   }, [getUserById]);
 
+  const getUserTransactions = useCallback((userId: string): AMLTransaction[] => {
+    return transactions.filter(transaction => transaction.userId === userId);
+  }, [transactions]);
+
+  const getUserCases = useCallback((userId: string): ComplianceCaseDetails[] => {
+    return cases.filter(caseItem => caseItem.userId === userId);
+  }, [cases]);
+
+  const updateUserStatus = useCallback((userId: string, status: 'active' | 'pending' | 'suspended' | 'banned') => {
+    dispatch({
+      type: 'UPDATE_USER_STATUS',
+      payload: { userId, status }
+    });
+  }, [dispatch]);
+
+  const updateUserRiskScore = useCallback((userId: string, riskScore: number) => {
+    dispatch({
+      type: 'UPDATE_USER_RISK_SCORE',
+      payload: { userId, riskScore }
+    });
+  }, [dispatch]);
+
+  const createComplianceCase = useCallback((caseData: Omit<ComplianceCaseDetails, 'id' | 'createdAt' | 'updatedAt'>) => {
+    dispatch({
+      type: 'CREATE_COMPLIANCE_CASE',
+      payload: caseData
+    });
+  }, [dispatch]);
+
+  const updateComplianceCase = useCallback((caseId: string, updates: Partial<ComplianceCaseDetails>) => {
+    dispatch({
+      type: 'UPDATE_COMPLIANCE_CASE',
+      payload: { caseId, updates }
+    });
+  }, [dispatch]);
+
+  const filterUsers = useCallback((filters: any) => {
+    dispatch({
+      type: 'FILTER_USERS',
+      payload: filters
+    });
+  }, [dispatch]);
+
+  const calculateUserRiskScore = useCallback((userId: string): number => {
+    return userRiskScores[userId] || 0;
+  }, [userRiskScores]);
+
   return {
-    selectedUser,
-    setSelectedUser,
+    // User operations
     getUserById,
-    getRelatedDocuments,
-    getRelatedTransactions,
-    getRelatedCases
+    getUserDocuments,
+    getUserTransactions,
+    getUserCases,
+    updateUserStatus,
+    updateUserRiskScore,
+    calculateUserRiskScore,
+    
+    // Case operations
+    createComplianceCase,
+    updateComplianceCase,
+    
+    // Filter operations
+    filterUsers,
+    
+    // State accessors
+    users: filteredUsers,
+    allUsers: users,
+    transactions,
+    cases,
+    riskRules
   };
 };

@@ -43,7 +43,7 @@ export async function getRiskMatchesForEntity(entityId: string, entityType: 'tra
       .from('risk_matches')
       .select(`
         *,
-        rules (
+        rules!inner (
           rule_name,
           description,
           risk_score,
@@ -63,14 +63,14 @@ export async function getRiskMatchesForEntity(entityId: string, entityType: 'tra
 }
 
 export async function storeRiskMatch(entityId: string, entityType: 'transaction' | 'user', ruleId: string, matchData: any) {
-    const { error } = await supabase.from('risk_matches').insert({
-        entity_id: entityId,
-        entity_type: entityType,
-        rule_id: ruleId,
-        match_data: matchData,
-    });
+  const { error } = await supabase.from('risk_matches').insert({
+    entity_id: entityId,
+    entity_type: entityType,
+    rule_id: ruleId,
+    match_data: matchData,
+  });
 
-    if (error) {
-        console.error('Error storing risk match:', error);
-    }
+  if (error) {
+    console.error('Error storing risk match:', error);
+  }
 }
