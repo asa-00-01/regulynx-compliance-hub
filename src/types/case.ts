@@ -1,4 +1,3 @@
-
 import { User } from "./index";
 
 export type CasePriority = 'low' | 'medium' | 'high' | 'critical';
@@ -22,9 +21,6 @@ export interface ComplianceCaseDetails {
   relatedTransactions?: string[];
   relatedAlerts?: string[];
   documents?: string[];
-  caseNumber?: string;
-  notes?: any[];
-  timeline?: any[];
 }
 
 export interface CaseAction {

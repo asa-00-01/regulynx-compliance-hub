@@ -1,4 +1,3 @@
-
 import { ComplianceCaseDetails, CaseAction, CaseFilters } from '@/types/case';
 import { CaseServiceOperations } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,45 +7,7 @@ import {
   ComplianceCaseInsert,
   CaseStatus,
   CaseType,
-  ActionType,
 } from '@/types/supabase';
-
-// Map Supabase types to our types
-const mapCaseType = (supabaseType: CaseType): ComplianceCaseDetails['type'] => {
-  switch (supabaseType) {
-    case 'kyc': return 'kyc';
-    case 'aml': return 'aml';
-    case 'sanctions': return 'sanctions';
-    case 'transaction':
-    case 'document':
-    case 'pep':
-    default: return 'kyc'; // Default fallback
-  }
-};
-
-const mapCaseStatus = (supabaseStatus: CaseStatus): ComplianceCaseDetails['status'] => {
-  switch (supabaseStatus) {
-    case 'open': return 'open';
-    case 'investigating': return 'under_review';
-    case 'escalated': return 'escalated';
-    case 'resolved': return 'closed';
-    case 'closed': return 'closed';
-    default: return 'open';
-  }
-};
-
-const mapActionType = (supabaseType: ActionType): CaseAction['actionType'] => {
-  switch (supabaseType) {
-    case 'created': return 'note';
-    case 'updated': return 'status_change';
-    case 'assigned': return 'assignment';
-    case 'escalated': return 'escalation';
-    case 'resolved': return 'resolution';
-    case 'closed': return 'resolution';
-    case 'note_added': return 'note';
-    default: return 'note';
-  }
-};
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
   id: c.id,
@@ -55,14 +16,14 @@ const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails =>
   createdAt: c.created_at,
   createdBy: c.created_by || undefined,
   updatedAt: c.updated_at,
-  type: mapCaseType(c.type),
-  status: mapCaseStatus(c.status),
+  type: c.type,
+  status: c.status,
   riskScore: c.risk_score,
   description: c.description,
   assignedTo: c.assigned_to || undefined,
   assignedToName: c.assigned_to_name || undefined,
   priority: c.priority,
-  source: c.source as any, // Cast to our source type
+  source: c.source!,
   relatedTransactions: c.related_transactions || [],
   relatedAlerts: c.related_alerts || [],
   documents: c.documents || [],
@@ -74,7 +35,7 @@ const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
   actionBy: a.action_by || '',
   actionByName: a.action_by_name || 'System',
   actionDate: a.action_date,
-  actionType: mapActionType(a.action_type),
+  actionType: a.action_type,
   description: a.description,
   details: a.details as Record<string, any> | undefined,
 });
@@ -84,13 +45,7 @@ export const complianceCaseService: CaseServiceOperations = {
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
-      // Map our status to Supabase status
-      const mappedStatuses = filters.status.map(status => {
-        if (status === 'under_review') return 'investigating';
-        if (status === 'pending_info') return 'open';
-        return status;
-      });
-      query = query.in('status', mappedStatuses as CaseStatus[]);
+      query = query.in('status', filters.status as CaseStatus[]);
     }
     if (filters.type && filters.type.length > 0) {
       query = query.in('type', filters.type as CaseType[]);
@@ -126,13 +81,13 @@ export const complianceCaseService: CaseServiceOperations = {
       user_id: caseData.userId,
       user_name: caseData.userName,
       created_by: caseData.createdBy,
-      type: caseData.type as CaseType,
+      type: caseData.type!,
       risk_score: caseData.riskScore!,
       description: caseData.description!,
       assigned_to: caseData.assignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: 'manual' as any, // Map our source to Supabase source
+      source: caseData.source,
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,
@@ -164,6 +119,16 @@ export const complianceCaseService: CaseServiceOperations = {
       throw error;
     }
     
-    return data ? data.map(mapToCaseAction) : [];
+    return data ? data.map(a => ({
+        id: a.id,
+        caseId: a.case_id,
+        actionBy: a.action_by || '',
+        actionByName: a.action_by_name || 'System',
+        actionDate: a.action_date,
+        actionType: a.action_type,
+        description: a.description,
+        details: a.details as Record<string, any> | undefined,
+      })) 
+      : [];
   }
 };

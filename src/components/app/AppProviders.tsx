@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/context/auth/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { ComplianceProvider } from '@/context/compliance/ComplianceProvider';
 import { ThemeProvider } from '@/components/common/ThemeProvider';

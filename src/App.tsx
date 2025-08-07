@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import AppRoutes from "@/components/app/AppRoutes";
-import { AuthProvider } from "@/context/auth/AuthContext";
+import AuthProvider from "@/components/app/AuthProvider";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import AnalyticsProvider from "@/components/app/AnalyticsProvider";
 import ComplianceProvider from "@/components/app/ComplianceProvider";

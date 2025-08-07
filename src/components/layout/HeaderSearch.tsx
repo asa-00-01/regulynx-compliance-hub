@@ -1,103 +1,114 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, User } from 'lucide-react';
-import { UnifiedUserData } from '@/context/compliance/types';
-import { Document } from '@/types/supabase';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { TooltipHelp } from '@/components/ui/tooltip-custom';
+import { User } from '@/types';
+import { ComplianceCaseDetails as Case } from '@/types/case';
+import { Document } from '@/types';
+import { Transaction } from '@/types/transaction';
 
-interface SearchResult {
-  users: UnifiedUserData[];
-  documents: Document[];
-}
-
-interface HeaderSearchProps {
-  users: UnifiedUserData[];
-  documents: Document[];
-  onSelectUser: (user: UnifiedUserData) => void;
-}
-
-const HeaderSearch: React.FC<HeaderSearchProps> = ({ users, documents, onSelectUser }) => {
+const HeaderSearch = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult>({ users: [], documents: [] });
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const { results, loading } = useGlobalSearch(debouncedSearchTerm);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
-    if (searchTerm) {
-      const filteredUsers = users.filter(user =>
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
 
-      const filteredDocuments = documents.filter(doc =>
-        doc.file_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
-      setSearchResults({ users: filteredUsers, documents: filteredDocuments });
+  useEffect(() => {
+    if (searchTerm.trim() !== '') {
+        setPopoverOpen(true);
     } else {
-      setSearchResults({ users: [], documents: [] });
+        setPopoverOpen(false);
     }
-  }, [searchTerm, users, documents]);
+  }, [searchTerm, loading]);
 
-  const handleUserClick = (user: UnifiedUserData) => {
-    onSelectUser(user);
+  const handleSelect = (url: string, state?: object) => {
+    navigate(url, { state });
+    setPopoverOpen(false);
     setSearchTerm('');
-    setSearchResults({ users: [], documents: [] });
   };
 
   return (
-    <div className="relative w-full md:w-64">
-      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-        <Search className="w-5 h-5 text-gray-400" />
-      </div>
-      <input
-        type="search"
-        ref={searchInputRef}
-        placeholder="Search users or documents"
-        className="block w-full pl-10 pr-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      {searchTerm && (
-        <div className="absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white z-10">
-          <div className="max-h-60 overflow-y-auto">
-            {searchResults.users.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center space-x-2 p-2 hover:bg-gray-50 cursor-pointer"
-                onClick={() => handleUserClick(user)}
-              >
-                <User className="w-4 h-4 text-blue-500" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.fullName}
-                  </p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
-                </div>
-              </div>
-            ))}
-
-          {searchResults.documents.map((doc) => (
-            <div 
-              key={doc.id} 
-              className="flex items-center space-x-2 p-2 hover:bg-gray-50 cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-blue-500" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {doc.file_name}
-                </p>
-                <p className="text-xs text-gray-500">Document</p>
-              </div>
-            </div>
-          ))}
-
-            {searchResults.users.length === 0 && searchResults.documents.length === 0 && (
-              <div className="p-2 text-sm text-gray-700">
-                No results found.
-              </div>
-            )}
+    <div className="flex-1">
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <PopoverTrigger asChild>
+          <div className="relative max-w-md w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <TooltipHelp content="Search across users, cases, documents, and transactions. Use keywords to quickly find what you're looking for.">
+              <input
+                type="search"
+                placeholder="Search users, cases, documents..."
+                className="pl-8 h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => { if (searchTerm) setPopoverOpen(true) }}
+              />
+            </TooltipHelp>
           </div>
-        </div>
-      )}
+        </PopoverTrigger>
+        <PopoverContent className="w-[500px] p-0" align="start">
+          <Command>
+            <CommandList>
+              {loading && <CommandItem disabled>Searching...</CommandItem>}
+              {!loading && debouncedSearchTerm && results.users.length === 0 && results.cases.length === 0 && results.documents.length === 0 && results.transactions.length === 0 && <CommandEmpty>No results found.</CommandEmpty>}
+              
+              {results.users.length > 0 && (
+                <CommandGroup heading="Users">
+                  {results.users.slice(0, 3).map((u: User) => (
+                    <CommandItem key={u.id} onSelect={() => handleSelect(`/user-case/${u.id}`)}>
+                      <span>{u.name} ({u.email})</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {results.cases.length > 0 && (
+                <CommandGroup heading="Cases">
+                  {results.cases.slice(0, 3).map((c: Case) => (
+                    <CommandItem key={c.id} onSelect={() => handleSelect('/compliance-cases', { caseId: c.id })}>
+                      <span>{c.description.substring(0, 50)}{c.description.length > 50 ? '...' : ''}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              
+              {results.documents.length > 0 && (
+                <CommandGroup heading="Documents">
+                  {results.documents.slice(0, 3).map((doc: Document) => (
+                    <CommandItem key={doc.id} onSelect={() => handleSelect('/documents')}>
+                      <span>{doc.fileName}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              
+              {results.transactions.length > 0 && (
+                <CommandGroup heading="Transactions">
+                  {results.transactions.slice(0, 3).map((t: Transaction) => (
+                    <CommandItem key={t.id} onSelect={() => handleSelect('/transactions', { transactionId: t.id })}>
+                      <span>{t.id.substring(0,8)}... - {(t as any).party} - {t.amount} {t.currency}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

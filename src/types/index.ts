@@ -1,13 +1,73 @@
 
-// Re-export standardized types from the main type files
-export type { StandardUser, StandardUser as User, UserRole, UserStatus, UserPreferences } from './user';
-export type { ExtendedUser } from './auth';
+export interface Document {
+  id: string;
+  userId: string;
+  type: 'passport' | 'id' | 'license';
+  fileName: string;
+  uploadDate: string;
+  status: 'pending' | 'verified' | 'rejected' | 'information_requested';
+  verifiedBy?: string;
+  verificationDate?: string;
+  extractedData?: {
+    name?: string;
+    dob?: string;
+    idNumber?: string;
+    nationality?: string;
+    expiryDate?: string;
+    address?: string;
+    issueDate?: string;
+    sourceType?: string;
+    amount?: string;
+    verificationRequired?: string;
+    accountHolder?: string;
+    averageBalance?: string;
+    transactionHistory?: string;
+  };
+}
 
-// Legacy type aliases for backward compatibility
-export type { UserRole as LegacyUserRole } from './user';
+export type UserRole = 'complianceOfficer' | 'admin' | 'executive' | 'support';
 
-// Export document types
-export type { Document } from './document';
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  riskScore: number;
+  status: 'verified' | 'pending' | 'flagged';
+  documents?: Document[];
+  avatarUrl?: string;
+}
 
-// Export compliance types
-export type { ComplianceCase, DashboardMetrics } from './compliance';
+export interface Transaction {
+  id: string;
+  from: string;
+  to: string;
+  amount: number;
+  currency: string;
+  timestamp: string;
+  status: 'completed' | 'pending' | 'failed';
+  risk_score?: number;
+}
+
+export interface DashboardMetrics {
+  pendingDocuments: number;
+  pendingKycReviews: number;
+  activeAlerts: number;
+  riskScoreTrend: number[];
+  complianceCasesByType: {
+    kyc: number;
+    aml: number;
+    sanctions: number;
+  };
+}
+
+export interface ComplianceCase {
+  id: string;
+  userId: string;
+  createdAt: string;
+  type: 'kyc' | 'aml' | 'sanctions';
+  status: 'open' | 'closed' | 'escalated';
+  riskScore: number;
+  description: string;
+  assignedTo: string;
+}

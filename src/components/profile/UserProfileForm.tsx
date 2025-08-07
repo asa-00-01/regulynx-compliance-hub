@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/context/auth/AuthContext';
-import { StandardUser } from '@/types/user';
+import { useAuth } from '@/context/AuthContext';
+import { ExtendedUser } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,11 +25,11 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-export interface UserProfileFormProps {
-  user: StandardUser | null;
+interface UserProfileFormProps {
+  user: ExtendedUser | null;
 }
 
-export default function UserProfileForm({ user }: UserProfileFormProps) {
+const UserProfileForm = ({ user }: UserProfileFormProps) => {
   const { t } = useTranslation();
   const { updateUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -158,4 +158,6 @@ export default function UserProfileForm({ user }: UserProfileFormProps) {
       </form>
     </Card>
   );
-}
+};
+
+export default UserProfileForm;

@@ -1,100 +1,102 @@
 
-import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import UserProfileForm from '@/components/profile/UserProfileForm';
 import UserSecuritySettings from '@/components/profile/UserSecuritySettings';
 import UserPreferences from '@/components/profile/UserPreferences';
 import SubscriptionManagement from '@/components/profile/SubscriptionManagement';
-import { useAuth } from '@/context/auth/AuthContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import SubscriptionTester from '@/components/subscription/SubscriptionTester';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import NotificationPreferencesCard from '@/components/notifications/NotificationPreferences';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { User, Shield, Settings, CreditCard, TestTube, Bell } from 'lucide-react';
 
-export default function Profile() {
-  const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-32 bg-gray-200 rounded mb-4"></div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!user) {
-    return (
-      <DashboardLayout>
-        <div className="p-6">
-          <p>Please log in to view your profile.</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const getStatusVariant = (status: string) => {
-    if (status === 'active') return 'default';
-    if (status === 'pending') return 'warning';
-    if (status === 'suspended') return 'destructive';
-    if (status === 'banned') return 'destructive';
-    return 'secondary';
-  };
+const Profile = () => {
+  const { user } = useAuth();
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="mb-8">
         <div className="flex items-center space-x-4">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={user.avatarUrl} alt={user.name} />
-            <AvatarFallback>
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={user?.avatarUrl} alt={user?.name || user?.email} />
+            <AvatarFallback className="text-lg">
+              {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold">{user.name}</h1>
-            <p className="text-muted-foreground">{user.email}</p>
-            <div className="flex items-center space-x-2 mt-2">
-              <Badge variant={getStatusVariant(user.status)}>{user.status}</Badge>
-              <Badge variant="outline">{user.role}</Badge>
+            <h1 className="text-3xl font-bold text-gray-900">{user?.name || 'User Profile'}</h1>
+            <p className="text-gray-600">{user?.email}</p>
+            <div className="flex items-center space-x-2 mt-1">
+              <Badge variant="secondary">{user?.role}</Badge>
+              {user?.status && (
+                <Badge variant={user.status === 'verified' ? 'default' : 'secondary'}>
+                  {user.status}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="profile" className="space-y-4">
-            <UserProfileForm user={user} />
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-4">
-            <UserSecuritySettings />
-          </TabsContent>
-
-          <TabsContent value="preferences" className="space-y-4">
-            <UserPreferences user={user} />
-          </TabsContent>
-
-          <TabsContent value="subscription" className="space-y-4">
-            <SubscriptionManagement />
-          </TabsContent>
-        </Tabs>
       </div>
-    </DashboardLayout>
+
+      <Tabs defaultValue="profile" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="profile" className="flex items-center space-x-2">
+            <User className="h-4 w-4" />
+            <span>Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center space-x-2">
+            <Shield className="h-4 w-4" />
+            <span>Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="subscription" className="flex items-center space-x-2">
+            <CreditCard className="h-4 w-4" />
+            <span>Subscription</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center space-x-2">
+            <Bell className="h-4 w-4" />
+            <span>Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="test" className="flex items-center space-x-2">
+            <TestTube className="h-4 w-4" />
+            <span>Test</span>
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center space-x-2">
+            <Settings className="h-4 w-4" />
+            <span>Preferences</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-6">
+          <UserProfileForm user={user} />
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <UserSecuritySettings />
+        </TabsContent>
+
+        <TabsContent value="subscription" className="space-y-6">
+          <SubscriptionManagement />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <NotificationCenter />
+          <NotificationPreferencesCard />
+        </TabsContent>
+
+        <TabsContent value="test" className="space-y-6">
+          <SubscriptionTester />
+        </TabsContent>
+
+        <TabsContent value="preferences" className="space-y-6">
+          <UserPreferences />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-}
+};
+
+export default Profile;

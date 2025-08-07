@@ -1,108 +1,117 @@
 
-import { generateTransactions } from './generators/enhancedTransactionGenerator';
-import { generateUsers } from './generators/enhancedUserGenerator';
-import { generateDocuments } from './generators/enhancedDocumentGenerator';
-import { generateAllCases } from './generators/caseGenerator';
-import { generateNews } from './generators/newsGenerator';
-import { AMLTransaction } from '@/types/aml';
-import { ComplianceCase } from '@/types/compliance';
 import { UnifiedUserData } from '@/context/compliance/types';
-import { Document } from '@/types/supabase';
-import { NewsItem } from '@/types/news';
+import { AMLTransaction } from '@/types/aml';
+import { Document } from '@/types';
+import { ComplianceCaseDetails } from '@/types/case';
 
-// Constants for data generation
-const TRANSACTION_COUNT = 1000;
-const USER_COUNT = 200;
-const DOCUMENT_COUNT = 150;
-const CASE_COUNT = 80;
-const NEWS_COUNT = 25;
+// Import enhanced generators
+import { enhancedUserProfiles, convertToUnifiedUserData } from './generators/enhancedUserGenerator';
+import { generateRealisticTransactions } from './generators/enhancedTransactionGenerator';
+import { generateEnhancedDocuments } from './generators/enhancedDocumentGenerator';
+import { generateCasesForUser, generateAllCases } from './generators/caseGenerator';
 
-// Generate enhanced transactions with proper AMLTransaction interface
-const generatedTransactions = generateTransactions(TRANSACTION_COUNT);
-export const mockTransactions: AMLTransaction[] = generatedTransactions.map(transaction => ({
-  id: transaction.id,
-  senderUserId: transaction.senderUserId,
-  senderName: transaction.senderName,
-  senderAmount: transaction.senderAmount,
-  senderCurrency: transaction.senderCurrency,
-  senderCountry: transaction.senderCountryCode,
-  senderCountryCode: transaction.senderCountryCode,
-  receiverUserId: transaction.receiverUserId,
-  receiverName: transaction.receiverName,
-  receiverAmount: transaction.receiverAmount,
-  receiverCurrency: transaction.receiverCurrency,
-  receiverCountry: transaction.receiverCountryCode,
-  receiverCountryCode: transaction.receiverCountryCode,
-  amount: transaction.senderAmount,
-  currency: transaction.senderCurrency,
-  timestamp: transaction.timestamp,
-  type: 'transfer',
-  status: transaction.status,
-  riskScore: transaction.riskScore,
-  flags: transaction.isSuspect ? ['High Risk'] : [],
-  reasonForSending: transaction.reasonForSending || 'Personal transfer',
-  method: transaction.method || 'bank',
-  isSuspect: transaction.isSuspect || false
-}));
-
-// Generate mock users
-export const mockUsers: UnifiedUserData[] = generateUsers(USER_COUNT);
-
-// Generate mock documents  
-export const mockDocuments: Document[] = generateDocuments(DOCUMENT_COUNT);
-
-// Generate mock cases with correct status values and required properties
-const generatedCases = generateAllCases();
-export const mockCases: ComplianceCase[] = generatedCases.map(caseData => ({
-  ...caseData,
-  // Ensure status is one of the allowed values, convert pending_info to under_review
-  status: caseData.status === 'pending_info' ? 'under_review' : caseData.status as 'open' | 'under_review' | 'escalated' | 'closed',
-  // Add missing properties required by ComplianceCase
-  title: `${caseData.type.toUpperCase()} Case - ${caseData.userName}`,
-  assignedTo: caseData.assignedTo || 'admin_001',
-}));
-
-// Generate mock news
-export const mockNews: NewsItem[] = generateNews(NEWS_COUNT);
-
-// Export with consistent naming for backward compatibility
-export const mockTransactionsCollection = mockTransactions;
-export const unifiedMockData = mockUsers;
-export const mockDocumentsCollection = mockDocuments;
-export const mockComplianceCasesCollection = mockCases;
-
-// Export statistics for dashboard use
-export const mockStats = {
-  transactions: {
-    total: mockTransactions.length,
-    highRisk: mockTransactions.filter(t => t.riskScore > 70).length,
-    flagged: mockTransactions.filter(t => t.flags.length > 0).length,
-  },
-  users: {
-    total: mockUsers.length,
-    verified: mockUsers.filter(u => u.kycStatus === 'verified').length,
-    pending: mockUsers.filter(u => u.kycStatus === 'pending').length,
-    flagged: mockUsers.filter(u => u.kycStatus === 'rejected').length,
-  },
-  documents: {
-    total: mockDocuments.length,
-    verified: mockDocuments.filter(d => d.status === 'verified').length,
-    pending: mockDocuments.filter(d => d.status === 'pending').length,
-    rejected: mockDocuments.filter(d => d.status === 'rejected').length,
-  },
-  cases: {
-    total: mockCases.length,
-    open: mockCases.filter(c => c.status === 'open').length,
-    underReview: mockCases.filter(c => c.status === 'under_review').length,
-    escalated: mockCases.filter(c => c.status === 'escalated').length,
-    closed: mockCases.filter(c => c.status === 'closed').length,
-  },
+// Generate the complete unified user data using enhanced generators
+export const generateUnifiedUserData = (): UnifiedUserData[] => {
+  console.log('🔄 Generating enhanced unified user data...');
+  
+  return enhancedUserProfiles.map(profile => {
+    // Convert to unified format
+    const unifiedUser = convertToUnifiedUserData(profile);
+    
+    // Generate realistic transactions
+    const transactions = generateRealisticTransactions(profile);
+    console.log(`Generated ${transactions.length} transactions for ${profile.fullName}`);
+    
+    // Generate enhanced documents
+    const enhancedDocs = generateEnhancedDocuments(profile);
+    const documents = enhancedDocs.map(doc => ({
+      id: doc.id,
+      userId: doc.userId,
+      type: doc.type,
+      fileName: doc.fileName,
+      uploadDate: doc.uploadDate,
+      status: doc.status,
+      verifiedBy: doc.verifiedBy,
+      verificationDate: doc.verificationDate,
+      extractedData: doc.extractedData
+    }));
+    console.log(`Generated ${documents.length} documents for ${profile.fullName}`);
+    
+    // Generate compliance cases
+    const complianceCases = generateCasesForUser({
+      id: profile.id,
+      fullName: profile.fullName,
+      email: profile.email,
+      dateOfBirth: profile.dateOfBirth,
+      nationality: profile.nationality,
+      identityNumber: profile.personalIdentityNumber,
+      phoneNumber: profile.phoneNumber,
+      address: profile.address,
+      countryOfResidence: profile.countryOfResidence,
+      riskScore: profile.riskScore,
+      isPEP: profile.isPEP,
+      isSanctioned: profile.isSanctioned,
+      kycStatus: profile.kycStatus
+    });
+    
+    // Enhanced notes based on user profile
+    const notes = [];
+    if (profile.riskScore > 70) {
+      notes.push(`High risk user - Risk score: ${profile.riskScore}`);
+    }
+    if (profile.isPEP) {
+      notes.push('Politically Exposed Person - Enhanced due diligence required');
+    }
+    if (profile.isSanctioned) {
+      notes.push('⚠️ SANCTIONS HIT - Account requires immediate review');
+    }
+    if (profile.transferHabit === 'moreThanTenThousandSEK') {
+      notes.push('High-value transfer pattern detected');
+    }
+    if (profile.receiverCountries.some(country => ['Somalia', 'Somaliland', 'Iraq', 'Syria'].includes(country))) {
+      notes.push('Transfers to high-risk jurisdictions');
+    }
+    
+    return {
+      ...unifiedUser,
+      documents,
+      transactions,
+      complianceCases,
+      notes,
+      // Additional enhanced fields
+      metadata: {
+        enhancedProfile: true,
+        transferHabit: profile.transferHabit,
+        frequencyOfTransaction: profile.frequencyOfTransaction,
+        receiverCountries: profile.receiverCountries,
+        sendToMultipleRecipients: profile.sendToMultipleRecipients,
+        recipientRelationship: profile.recipientRelationship,
+        originsOfFunds: profile.originsOfFunds,
+        lastScreenedAt: profile.screenedAt,
+        lastLogin: profile.lastLogin
+      }
+    };
+  });
 };
 
-console.log('Mock data initialized:', {
-  transactions: mockTransactions.length,
-  users: mockUsers.length,
-  documents: mockDocuments.length,
-  cases: mockCases.length,
-  news: mockNews.length,
+// Export the generated data
+export const unifiedMockData = generateUnifiedUserData();
+
+// Export individual collections for backward compatibility
+export const mockUsersCollection = unifiedMockData;
+export const mockTransactionsCollection = unifiedMockData.flatMap(user => user.transactions);
+export const mockDocumentsCollection = unifiedMockData.flatMap(user => user.documents);
+export const mockComplianceCasesCollection = generateAllCases();
+
+// Legacy exports for backward compatibility
+export const baseCustomers = enhancedUserProfiles;
+export { generateRealisticTransactions as generateTransactionsForUser } from './generators/enhancedTransactionGenerator';
+export { generateEnhancedDocuments as generateDocumentsForUser } from './generators/enhancedDocumentGenerator';
+export { generateCasesForUser as generateComplianceCasesForUser } from './generators/caseGenerator';
+
+console.log('✅ Enhanced mock data initialized:', {
+  users: unifiedMockData.length,
+  totalTransactions: mockTransactionsCollection.length,
+  totalDocuments: mockDocumentsCollection.length,
+  totalCases: mockComplianceCasesCollection.length
 });

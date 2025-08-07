@@ -1,4 +1,6 @@
 
+import config from '@/config/environment';
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -80,25 +82,62 @@ class RateLimiter {
   }
 }
 
+// Global rate limiter instance
+export const globalRateLimiter = new RateLimiter({
+  windowMs: config.security.rateLimitWindow,
+  maxRequests: config.security.rateLimitMax
+});
+
+// API-specific rate limiter
+export const apiRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 60   // 60 requests per minute
+});
+
 // Authentication rate limiter
 export const authRateLimiter = new RateLimiter({
   windowMs: 300000, // 5 minutes
   maxRequests: 5    // 5 login attempts per 5 minutes
 });
 
-// Global rate limiter for general use
-export const globalRateLimiter = new RateLimiter({
-  windowMs: 60000, // 1 minute
-  maxRequests: 100 // 100 requests per minute
-});
+// Rate limiting middleware function
+export const withRateLimit = <T extends any[], R>(
+  fn: (...args: T) => R,
+  rateLimiter: RateLimiter,
+  identifier: string,
+  action?: string
+) => {
+  return (...args: T): R => {
+    if (!rateLimiter.isAllowed(identifier, action)) {
+      const resetTime = rateLimiter.getResetTime(identifier, action);
+      const waitTime = Math.ceil((resetTime - Date.now()) / 1000);
+      
+      throw new Error(`Rate limit exceeded. Try again in ${waitTime} seconds.`);
+    }
+    
+    return fn(...args);
+  };
+};
 
 // Utility functions for common rate limiting scenarios
+export const rateLimitByUser = (userId: string, action?: string): boolean => {
+  return globalRateLimiter.isAllowed(userId, action);
+};
+
+export const rateLimitByIP = (ipAddress: string, action?: string): boolean => {
+  return globalRateLimiter.isAllowed(ipAddress, action);
+};
+
 export const rateLimitAuth = (identifier: string): boolean => {
   return authRateLimiter.isAllowed(identifier, 'auth');
 };
 
 export default {
-  authRateLimiter,
   globalRateLimiter,
+  apiRateLimiter,
+  authRateLimiter,
+  withRateLimit,
+  rateLimitByUser,
+  rateLimitByIP,
   rateLimitAuth
 };

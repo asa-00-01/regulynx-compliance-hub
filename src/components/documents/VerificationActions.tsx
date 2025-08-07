@@ -7,7 +7,7 @@ import { Check, X } from 'lucide-react';
 import { ExtractedData } from './types/documentTypes';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { createAuditLog } from '@/integrations/supabase/client';
 
 interface VerificationActionsProps {

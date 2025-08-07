@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Check, Zap, Crown, Building } from 'lucide-react';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { useAuth } from '@/context/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const Pricing = () => {

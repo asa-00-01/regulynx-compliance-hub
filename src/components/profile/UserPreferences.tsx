@@ -7,17 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useAuth } from '@/context/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
-import { StandardUser } from '@/types/user';
 
-interface UserPreferencesProps {
-  user: StandardUser | null;
-}
-
-const UserPreferences = ({ user }: UserPreferencesProps) => {
+const UserPreferences = () => {
   const { t, i18n } = useTranslation();
-  const { updateUserProfile } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const { theme, setTheme } = useTheme();
   
   const [notifications, setNotifications] = useState({
@@ -30,15 +25,15 @@ const UserPreferences = ({ user }: UserPreferencesProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user?.user_metadata) {
-      if (user.user_metadata.preferences?.notifications) {
-        setNotifications(user.user_metadata.preferences.notifications);
+    if (user?.preferences) {
+      if (user.preferences.notifications) {
+        setNotifications(user.preferences.notifications);
       }
-      if (user.user_metadata.preferences?.theme) {
-        setTheme(user.user_metadata.preferences.theme);
+      if (user.preferences.theme) {
+        setTheme(user.preferences.theme);
       }
-      if (user.user_metadata.preferences?.language) {
-        i18n.changeLanguage(user.user_metadata.preferences.language);
+      if (user.preferences.language) {
+        i18n.changeLanguage(user.preferences.language);
       }
     }
   }, [user, setTheme, i18n]);

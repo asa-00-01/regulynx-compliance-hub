@@ -1,5 +1,6 @@
-import { Document } from '@/types/supabase';
-import { EnhancedUserProfile, enhancedUserProfiles } from './enhancedUserGenerator';
+
+import { Document } from '@/types';
+import { EnhancedUserProfile } from './enhancedUserGenerator';
 
 // Generate UUID v4
 const generateUUID = (): string => {
@@ -110,16 +111,15 @@ const generateMainIdentityDocument = (user: EnhancedUserProfile): EnhancedDocume
   
   return {
     id: generateUUID(),
-    user_id: user.id,
+    userId: user.id,
     type: isPassport ? 'passport' : 'id',
-    file_name: `${isPassport ? 'passport' : 'national_id'}_${user.firstName}_${user.lastName}.pdf`,
-    file_path: `/documents/${user.id}/${isPassport ? 'passport' : 'national_id'}_${user.firstName}_${user.lastName}.pdf`,
-    upload_date: uploadDate,
+    fileName: `${isPassport ? 'passport' : 'national_id'}_${user.firstName}_${user.lastName}.pdf`,
+    uploadDate,
     status: documentStatus,
-    verified_by: documentStatus === 'verified' ? generateUUID() : null,
-    verification_date: documentStatus === 'verified' ? 
-      new Date(new Date(uploadDate).getTime() + 25 * 60 * 1000).toISOString() : null,
-    extracted_data: {
+    verifiedBy: documentStatus === 'verified' ? generateUUID() : undefined,
+    verificationDate: documentStatus === 'verified' ? 
+      new Date(new Date(uploadDate).getTime() + 25 * 60 * 1000).toISOString() : undefined,
+    extractedData: {
       name: user.fullName,
       dob: user.dateOfBirth,
       idNumber: user.personalIdentityNumber,
@@ -127,8 +127,6 @@ const generateMainIdentityDocument = (user: EnhancedUserProfile): EnhancedDocume
       expiryDate: new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       issueDate: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     },
-    created_at: uploadDate,
-    updated_at: uploadDate,
     verificationSteps,
     ocrConfidence: Math.round(ocrConfidence * 100) / 100,
     biometricMatch: user.riskScore < 50 ? Math.random() * 0.1 + 0.9 : Math.random() * 0.3 + 0.7,
@@ -149,22 +147,19 @@ const generateAddressDocument = (user: EnhancedUserProfile): EnhancedDocument =>
   
   return {
     id: generateUUID(),
-    user_id: user.id,
-    type: 'license',
-    file_name: `address_proof_${user.firstName}_${user.lastName}.pdf`,
-    file_path: `/documents/${user.id}/address_proof_${user.firstName}_${user.lastName}.pdf`,
-    upload_date: uploadDate,
+    userId: user.id,
+    type: 'license', // Using license type for address proof
+    fileName: `address_proof_${user.firstName}_${user.lastName}.pdf`,
+    uploadDate,
     status: documentStatus,
-    verified_by: documentStatus === 'verified' ? generateUUID() : null,
-    verification_date: documentStatus === 'verified' ? 
-      new Date(new Date(uploadDate).getTime() + 2 * 60 * 60 * 1000).toISOString() : null,
-    extracted_data: {
+    verifiedBy: documentStatus === 'verified' ? generateUUID() : undefined,
+    verificationDate: documentStatus === 'verified' ? 
+      new Date(new Date(uploadDate).getTime() + 2 * 60 * 60 * 1000).toISOString() : undefined,
+    extractedData: {
       name: user.fullName,
       address: user.address,
       issueDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     },
-    created_at: uploadDate,
-    updated_at: uploadDate,
     verificationSteps: [
       {
         step: 1,
@@ -195,21 +190,16 @@ const generateSourceOfFundsDocument = (user: EnhancedUserProfile): EnhancedDocum
   
   return {
     id: generateUUID(),
-    user_id: user.id,
-    type: 'passport',
-    file_name: `source_of_funds_${user.firstName}_${user.lastName}.pdf`,
-    file_path: `/documents/${user.id}/source_of_funds_${user.firstName}_${user.lastName}.pdf`,
-    upload_date: uploadDate,
+    userId: user.id,
+    type: 'passport', // Using passport type for financial documents
+    fileName: `source_of_funds_${user.firstName}_${user.lastName}.pdf`,
+    uploadDate,
     status: 'pending',
-    verified_by: null,
-    verification_date: null,
-    extracted_data: {
+    extractedData: {
       sourceType: user.originsOfFunds.join(', '),
       amount: `${Math.floor(Math.random() * 100000) + 50000} SEK/month`,
       verificationRequired: 'Enhanced due diligence required'
     },
-    created_at: uploadDate,
-    updated_at: uploadDate,
     verificationSteps: [
       {
         step: 1,
@@ -239,21 +229,16 @@ const generateFinancialDocument = (user: EnhancedUserProfile): EnhancedDocument 
   
   return {
     id: generateUUID(),
-    user_id: user.id,
+    userId: user.id,
     type: 'id',
-    file_name: `bank_statement_${user.firstName}_${user.lastName}.pdf`,
-    file_path: `/documents/${user.id}/bank_statement_${user.firstName}_${user.lastName}.pdf`,
-    upload_date: uploadDate,
+    fileName: `bank_statement_${user.firstName}_${user.lastName}.pdf`,
+    uploadDate,
     status: 'pending',
-    verified_by: null,
-    verification_date: null,
-    extracted_data: {
+    extractedData: {
       accountHolder: user.fullName,
       averageBalance: `${Math.floor(Math.random() * 500000) + 100000} SEK`,
       transactionHistory: 'Last 3 months included'
     },
-    created_at: uploadDate,
-    updated_at: uploadDate,
     verificationSteps: [
       {
         step: 1,
@@ -270,32 +255,4 @@ const generateFinancialDocument = (user: EnhancedUserProfile): EnhancedDocument 
       pepScreening: true
     }
   };
-};
-
-// Generate documents for centralized data - now using proper ES module import
-export const generateDocuments = (count: number): Document[] => {
-  const documents: Document[] = [];
-  
-  // Generate documents for each user
-  enhancedUserProfiles.forEach((user: EnhancedUserProfile) => {
-    const userDocuments = generateEnhancedDocuments(user);
-    // Convert enhanced documents to regular documents
-    const regularDocuments = userDocuments.map((doc: EnhancedDocument) => ({
-      id: doc.id,
-      user_id: doc.user_id,
-      type: doc.type,
-      file_name: doc.file_name,
-      file_path: doc.file_path,
-      upload_date: doc.upload_date,
-      status: doc.status,
-      verified_by: doc.verified_by,
-      verification_date: doc.verification_date,
-      extracted_data: doc.extracted_data,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
-    documents.push(...regularDocuments);
-  });
-  
-  return documents.slice(0, count);
 };

@@ -1,113 +1,127 @@
 
-import { Document } from '@/types/supabase';
-import { UnifiedUserData } from '@/context/compliance/types';
-import { unifiedMockData, mockDocumentsCollection } from '@/mocks/centralizedMockData';
+import { unifiedMockData, mockTransactionsCollection, mockDocumentsCollection, mockComplianceCasesCollection } from '../centralizedMockData';
 
-export const validateDocumentData = (documents: Document[]): boolean => {
-  if (!Array.isArray(documents)) {
-    console.error('Documents data is not an array');
-    return false;
-  }
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  summary: {
+    totalUsers: number;
+    totalTransactions: number;
+    totalDocuments: number;
+    totalCases: number;
+    riskDistribution: Record<string, number>;
+    kycStatusDistribution: Record<string, number>;
+  };
+}
 
-  const requiredFields = ['id', 'user_id', 'file_name', 'type', 'status', 'created_at', 'file_path', 'updated_at'];
+export const validateMockData = (): ValidationResult => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
   
-  for (const doc of documents) {
-    for (const field of requiredFields) {
-      if (!(field in doc)) {
-        console.error(`Document missing required field: ${field}`, doc);
-        return false;
-      }
-    }
-    
-    // Validate document type
-    if (!['passport', 'id', 'license'].includes(doc.type)) {
-      console.error(`Invalid document type: ${doc.type}`, doc);
-      return false;
-    }
-    
-    // Validate status
-    if (!['pending', 'verified', 'rejected', 'information_requested'].includes(doc.status)) {
-      console.error(`Invalid document status: ${doc.status}`, doc);
-      return false;
-    }
-    
-    // Validate user_id format (should be UUID-like)
-    if (typeof doc.user_id !== 'string' || doc.user_id.length === 0) {
-      console.error(`Invalid user_id format: ${doc.user_id}`, doc);
-      return false;
-    }
+  // Validate user data consistency
+  const userIds = new Set(unifiedMockData.map(u => u.id));
+  const transactionUserIds = new Set(mockTransactionsCollection.map(t => t.senderUserId));
+  const documentUserIds = new Set(mockDocumentsCollection.map(d => d.userId));
+  const caseUserIds = new Set(mockComplianceCasesCollection.map(c => c.userId));
+  
+  // Check for orphaned transactions
+  const orphanedTransactions = mockTransactionsCollection.filter(t => !userIds.has(t.senderUserId));
+  if (orphanedTransactions.length > 0) {
+    errors.push(`Found ${orphanedTransactions.length} transactions with non-existent user IDs`);
   }
   
-  console.log(`✓ Validated ${documents.length} documents`);
-  return true;
+  // Check for orphaned documents
+  const orphanedDocuments = mockDocumentsCollection.filter(d => !userIds.has(d.userId));
+  if (orphanedDocuments.length > 0) {
+    errors.push(`Found ${orphanedDocuments.length} documents with non-existent user IDs`);
+  }
+  
+  // Check for orphaned cases
+  const orphanedCases = mockComplianceCasesCollection.filter(c => !userIds.has(c.userId));
+  if (orphanedCases.length > 0) {
+    errors.push(`Found ${orphanedCases.length} cases with non-existent user IDs`);
+  }
+  
+  // Check for users without transactions
+  const usersWithoutTransactions = unifiedMockData.filter(u => !transactionUserIds.has(u.id));
+  if (usersWithoutTransactions.length > 0) {
+    warnings.push(`Found ${usersWithoutTransactions.length} users without any transactions`);
+  }
+  
+  // Risk score distribution
+  const riskDistribution = {
+    low: unifiedMockData.filter(u => u.riskScore <= 30).length,
+    medium: unifiedMockData.filter(u => u.riskScore > 30 && u.riskScore <= 70).length,
+    high: unifiedMockData.filter(u => u.riskScore > 70).length
+  };
+  
+  // KYC status distribution
+  const kycStatusDistribution = {
+    verified: unifiedMockData.filter(u => u.kycStatus === 'verified').length,
+    pending: unifiedMockData.filter(u => u.kycStatus === 'pending').length,
+    rejected: unifiedMockData.filter(u => u.kycStatus === 'rejected').length,
+    information_requested: unifiedMockData.filter(u => u.kycStatus === 'information_requested').length
+  };
+  
+  // Validate data quality
+  unifiedMockData.forEach((user, index) => {
+    if (!user.email.includes('@')) {
+      errors.push(`User ${user.id} has invalid email format: ${user.email}`);
+    }
+    
+    if (user.riskScore < 0 || user.riskScore > 100) {
+      errors.push(`User ${user.id} has invalid risk score: ${user.riskScore}`);
+    }
+    
+    if (user.isSanctioned && user.kycStatus === 'verified') {
+      warnings.push(`User ${user.id} is sanctioned but has verified KYC status`);
+    }
+    
+    if (user.isPEP && user.riskScore < 50) {
+      warnings.push(`User ${user.id} is PEP but has low risk score: ${user.riskScore}`);
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    summary: {
+      totalUsers: unifiedMockData.length,
+      totalTransactions: mockTransactionsCollection.length,
+      totalDocuments: mockDocumentsCollection.length,
+      totalCases: mockComplianceCasesCollection.length,
+      riskDistribution,
+      kycStatusDistribution
+    }
+  };
 };
 
-export const validateUserData = (users: UnifiedUserData[]): boolean => {
-  if (!Array.isArray(users)) {
-    console.error('Users data is not an array');
-    return false;
-  }
-
-  const requiredFields = ['id', 'fullName', 'email', 'kycStatus'];
+// Export a function to log validation results
+export const logValidationResults = (): void => {
+  const results = validateMockData();
   
-  for (const user of users) {
-    for (const field of requiredFields) {
-      if (!(field in user)) {
-        console.error(`User missing required field: ${field}`, user);
-        return false;
-      }
-    }
-    
-    // Validate KYC status
-    if (!['verified', 'pending', 'rejected', 'information_requested'].includes(user.kycStatus)) {
-      console.error(`Invalid KYC status: ${user.kycStatus}`, user);
-      return false;
-    }
-    
-    // Validate documents array
-    if (user.documents && !validateDocumentData(user.documents)) {
-      return false;
-    }
+  console.group('🔍 Mock Data Validation Results');
+  console.log('📊 Summary:', results.summary);
+  
+  if (results.errors.length > 0) {
+    console.group('❌ Errors:');
+    results.errors.forEach(error => console.error(error));
+    console.groupEnd();
   }
   
-  console.log(`✓ Validated ${users.length} users`);
-  return true;
-};
-
-export const validateMockData = (data: { users: UnifiedUserData[], documents: Document[] }) => {
-  console.log('Validating mock data structure...');
+  if (results.warnings.length > 0) {
+    console.group('⚠️ Warnings:');
+    results.warnings.forEach(warning => console.warn(warning));
+    console.groupEnd();
+  }
   
-  const userValidation = validateUserData(data.users);
-  const documentValidation = validateDocumentData(data.documents);
-  
-  if (userValidation && documentValidation) {
-    console.log('✓ All mock data validation passed');
-    return true;
+  if (results.isValid) {
+    console.log('✅ All data validation checks passed!');
   } else {
-    console.error('✗ Mock data validation failed');
-    return false;
+    console.log('❌ Data validation failed. Please review errors above.');
   }
-};
-
-// Add the missing logValidationResults function
-export const logValidationResults = () => {
-  console.log('🔍 Running mock data validation...');
   
-  try {
-    const validationResult = validateMockData({
-      users: unifiedMockData,
-      documents: mockDocumentsCollection
-    });
-    
-    if (validationResult) {
-      console.log('✅ Mock data validation completed successfully');
-    } else {
-      console.error('❌ Mock data validation failed');
-    }
-    
-    return validationResult;
-  } catch (error) {
-    console.error('Error during validation:', error);
-    return false;
-  }
+  console.groupEnd();
 };

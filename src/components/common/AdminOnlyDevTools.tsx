@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/context/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import DeveloperPanel from '../dev/DeveloperPanel';
 import SystemHealthMonitor from './SystemHealthMonitor';
 import OptimizationCenter from './OptimizationCenter';

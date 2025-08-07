@@ -1,5 +1,5 @@
 
-export type SARStatus = 'draft' | 'submitted' | 'reviewed' | 'filed';
+export type SARStatus = 'draft' | 'submitted' | 'reviewed';
 
 export interface SAR {
   id: string;
@@ -31,5 +31,5 @@ export interface Pattern {
   name: string;
   description: string;
   matchCount: number;
-  category: 'structuring' | 'high_risk_corridor' | 'time_pattern' | 'velocity' | 'geography' | 'amount' | 'other';
+  category: 'structuring' | 'high_risk_corridor' | 'time_pattern' | 'other';
 }

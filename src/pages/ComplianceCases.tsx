@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useComplianceCases } from '@/hooks/useComplianceCases';
-import { useAuth } from '@/context/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import CasesList from '@/components/cases/CasesList';
 import CaseDetailView from '@/components/cases/CaseDetailView';
 import CasesFilters from '@/components/cases/CasesFilters';

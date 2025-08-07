@@ -11,7 +11,6 @@ import SARForm from '@/components/sar/SARForm';
 import GoAMLReporting from '@/components/sar/GoAMLReporting';
 import { useSARData } from '@/hooks/useSARData';
 import { useTranslation } from 'react-i18next';
-import { SAR } from '@/types/sar';
 
 const SARCenter = () => {
   const [activeTab, setActiveTab] = useState('reports');
@@ -19,15 +18,12 @@ const SARCenter = () => {
   const { t } = useTranslation();
   
   const {
-    sars,
+    sars = [], // Add fallback to empty array
     loading,
     createSAR,
     updateSAR,
     deleteSAR
   } = useSARData();
-
-  // Ensure sars is always an array
-  const sarsList: SAR[] = Array.isArray(sars) ? sars : [];
 
   const handleCreateSAR = async (sarData: any) => {
     try {
@@ -66,7 +62,7 @@ const SARCenter = () => {
               <FileWarning className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{sarsList.length}</div>
+              <div className="text-2xl font-bold">{sars?.length || 0}</div>
               <p className="text-xs text-muted-foreground">
                 +12% from last month
               </p>
@@ -80,7 +76,7 @@ const SARCenter = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sarsList.filter(sar => sar.status === 'draft').length}
+                {sars?.filter(sar => sar.status === 'draft').length || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting submission
@@ -95,7 +91,7 @@ const SARCenter = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {sarsList.filter(sar => sar.status === 'submitted').length}
+                {sars?.filter(sar => sar.status === 'submitted').length || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Successfully submitted
@@ -139,7 +135,7 @@ const SARCenter = () => {
               </Card>
             ) : (
               <SARList 
-                sars={sarsList}
+                sars={sars}
                 onViewSAR={handleViewSAR}
                 onCreateNewSAR={() => setShowNewSARForm(true)}
                 loading={loading}
@@ -148,7 +144,7 @@ const SARCenter = () => {
           </TabsContent>
 
           <TabsContent value="goaml" className="space-y-4">
-            <GoAMLReporting sars={sarsList} />
+            <GoAMLReporting sars={sars || []} />
           </TabsContent>
         </Tabs>
       </div>

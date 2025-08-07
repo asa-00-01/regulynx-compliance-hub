@@ -1,4 +1,3 @@
-
 import { NewsItem, RSSFeed } from '@/types/news';
 import { ComplianceCaseDetails } from '@/types/case';
 import { KYCUser, KYCVerification } from '@/types/kyc';
@@ -10,6 +9,8 @@ import { NewsService } from './news/NewsService';
 import { KYCService } from './kyc/KYCService';
 import { AMLService } from './aml/AMLService';
 import { UnifiedDataService } from './unified/UnifiedDataService';
+
+import { logValidationResults } from '@/mocks/validators/dataValidator';
 
 export class MockDataService extends BaseMockService {
   // News and RSS Feeds
@@ -48,7 +49,8 @@ export class MockDataService extends BaseMockService {
   // Initialize and validate mock data
   static validateData(): void {
     if (this.shouldUseMockData()) {
-      console.log('🔍 Mock data service initialized successfully');
+      console.log('🔍 Validating mock data consistency...');
+      logValidationResults();
     }
   }
 }

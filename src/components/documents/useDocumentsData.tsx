@@ -1,89 +1,68 @@
 
 import { useState, useEffect } from 'react';
-import { Document } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentFilters } from './types/documentTypes';
-import { useAuth } from '@/context/auth/AuthContext';
+import { Document, DocumentStatus } from '@/types/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { useFeatureAccess } from '@/hooks/use-permissions';
 
-interface UseDocumentsDataProps {
-  initialFilters?: DocumentFilters;
-}
-
-const initialFilters: DocumentFilters = {
-  searchTerm: '',
-  documentType: '',
-  status: '',
-  dateRange: { from: null, to: null },
-  customerId: ''
-};
-
-export const useDocumentsData = (props?: UseDocumentsDataProps) => {
-  const { user } = useAuth();
+export const useDocumentsData = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<DocumentFilters>(props?.initialFilters || initialFilters);
-  const [totalCount, setTotalCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<DocumentStatus | 'all'>('all');
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
+  const { user, session } = useAuth();
+  const { canApproveDocuments } = useFeatureAccess();
 
   const fetchDocuments = async () => {
+    if (!user || !session) {
+      console.log('No authenticated user or session found');
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+    
     try {
-      let query = supabase
-        .from('documents')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
-
-      if (user && user.role !== 'admin') {
-        query = query.eq('user_id', user.id);
-      }
-
-      if (filters.searchTerm) {
-        query = query.ilike('file_name', `%${filters.searchTerm}%`);
-      }
-
-      if (filters.documentType) {
-        query = query.eq('type', filters.documentType);
-      }
-
-      if (filters.status) {
-        query = query.eq('status', filters.status);
-      }
+      console.log('Fetching documents for user:', user.id);
+      console.log('User can approve documents:', canApproveDocuments());
       
-      if (filters.customerId) {
-        query = query.eq('user_id', filters.customerId);
-      }
-
-      if (filters.dateRange?.from) {
-        query = query.gte('created_at', filters.dateRange.from.toISOString());
-      }
-
-      if (filters.dateRange?.to) {
-        query = query.lte('created_at', filters.dateRange.to.toISOString());
-      }
-
-      const { data, error, count } = await query;
+      // With RLS policies in place, the query will automatically filter documents
+      // based on the user's permissions:
+      // - Regular users will only see their own documents
+      // - Compliance officers and admins will see all documents
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('upload_date', { ascending: false });
 
       if (error) {
         console.error('Error fetching documents:', error);
-      } else {
-        setDocuments(data || []);
-        setTotalCount(count || 0);
+        throw error;
       }
+
+      console.log(`Fetched ${data?.length || 0} documents`);
+      setDocuments(data || []);
     } catch (error) {
-      console.error('Unexpected error fetching documents:', error);
+      console.error('Error fetching documents:', error);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, [filters, user]);
+    if (user && session) {
+      fetchDocuments();
+    } else {
+      setDocuments([]);
+      setLoading(false);
+    }
+  }, [user, session]);
 
-  // Calculate stats
+  // Calculate stats based on the fetched documents
   const stats = {
     total: documents.length,
     pending: documents.filter(doc => doc.status === 'pending').length,
@@ -94,9 +73,6 @@ export const useDocumentsData = (props?: UseDocumentsDataProps) => {
   return {
     documents,
     loading,
-    filters,
-    setFilters,
-    totalCount,
     activeTab,
     setActiveTab,
     stats,

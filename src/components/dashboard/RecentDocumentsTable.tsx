@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Document } from '@/types/supabase';
+import { Document } from '@/types';
 import { CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFeatureAccess } from '@/hooks/use-permissions';
@@ -38,7 +37,7 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
 
   // Sort documents to show most recent first and limit to 5
   const recentDocs = [...documents]
-    .sort((a, b) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime())
+    .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
     .slice(0, 5);
   
   return (
@@ -76,7 +75,7 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                 <div key={doc.id} className="grid grid-cols-1 md:grid-cols-5 p-3 items-center gap-2">
                   <div className="font-medium truncate pr-2 min-w-0">
                     <span className="md:hidden text-xs text-muted-foreground">Document: </span>
-                    {doc.file_name}
+                    {doc.fileName}
                   </div>
                   <div className="truncate min-w-0">
                     <span className="md:hidden text-xs text-muted-foreground">Type: </span>
@@ -84,7 +83,7 @@ const RecentDocumentsTable = ({ documents, loading }: RecentDocumentsTableProps)
                   </div>
                   <div className="truncate min-w-0">
                     <span className="md:hidden text-xs text-muted-foreground">Uploaded: </span>
-                    {new Date(doc.upload_date).toLocaleDateString('en-US', {
+                    {new Date(doc.uploadDate).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
