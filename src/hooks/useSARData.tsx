@@ -22,10 +22,12 @@ export function useSARData() {
     mutationFn: SARService.createSAR,
     onSuccess: (newSar) => {
       queryClient.invalidateQueries({ queryKey: ['sars'] });
-      toast({
-        title: `SAR ${newSar.status === 'draft' ? 'Draft Saved' : 'Submitted'}`,
-        description: `SAR ${newSar.id} has been ${newSar.status === 'draft' ? 'saved as draft' : 'submitted successfully'}`,
-      });
+      if (newSar) {
+        toast({
+          title: `SAR ${newSar.status === 'draft' ? 'Draft Saved' : 'Submitted'}`,
+          description: `SAR ${newSar.id} has been ${newSar.status === 'draft' ? 'saved as draft' : 'submitted successfully'}`,
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -40,10 +42,12 @@ export function useSARData() {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<SAR, 'id'>> }) => SARService.updateSAR(id, updates),
     onSuccess: (updatedSar) => {
       queryClient.invalidateQueries({ queryKey: ['sars'] });
-      toast({
-        title: `SAR ${updatedSar.status === 'draft' ? 'Draft Updated' : 'Updated'}`,
-        description: `SAR ${updatedSar.id} has been updated successfully`,
-      });
+      if (updatedSar) {
+        toast({
+          title: `SAR ${updatedSar.status === 'draft' ? 'Draft Updated' : 'Updated'}`,
+          description: `SAR ${updatedSar.id} has been updated successfully`,
+        });
+      }
     },
     onError: (error) => {
       toast({

@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { SAR, Pattern } from '@/types/sar';
+import { SAR, Pattern, PatternMatch } from '@/types/sar';
 
 interface PatternRow {
   id: string;
@@ -35,6 +36,10 @@ export const SARService = {
       case 'geography': return 'high_risk_corridor';
       default: return dbCategory;
     }
+  },
+
+  async getSARs(): Promise<SAR[]> {
+    return this.getAllSARs();
   },
 
   async getAllSARs(): Promise<SAR[]> {
@@ -85,11 +90,40 @@ export const SARService = {
         id: pattern.id,
         name: pattern.name,
         description: pattern.description,
-        matchCount: pattern.pattern_matches?.[0]?.count || 0,
+        matchCount: Array.isArray(pattern.pattern_matches) ? pattern.pattern_matches.length : 0,
         category: SARService.mapDbCategoryToPattern(pattern.category)
       })) || [];
     } catch (error) {
       console.error('Error in getPatterns:', error);
+      return [];
+    }
+  },
+
+  async getPatternMatches(patternId: string): Promise<PatternMatch[]> {
+    try {
+      const { data, error } = await supabase
+        .from('pattern_matches')
+        .select('*')
+        .eq('pattern_id', patternId);
+
+      if (error) {
+        console.error('Error fetching pattern matches:', error);
+        return [];
+      }
+
+      return data?.map(match => ({
+        id: match.id,
+        patternId: match.pattern_id,
+        userId: match.user_id,
+        userName: match.user_name,
+        transactionId: match.transaction_id,
+        country: match.country,
+        amount: Number(match.amount),
+        currency: match.currency,
+        timestamp: match.timestamp,
+      })) || [];
+    } catch (error) {
+      console.error('Error in getPatternMatches:', error);
       return [];
     }
   },
@@ -101,6 +135,7 @@ export const SARService = {
         .insert({
           user_id: sarData.userId,
           user_name: sarData.userName,
+          date_submitted: sarData.dateSubmitted || new Date().toISOString(),
           date_of_activity: sarData.dateOfActivity,
           status: SARService.mapSARStatusToDb(sarData.status || 'draft'),
           summary: sarData.summary,
@@ -131,7 +166,7 @@ export const SARService = {
     }
   },
 
-  async updateSAR(id: string, updates: Partial<SAR>): Promise<boolean> {
+  async updateSAR(id: string, updates: Partial<SAR>): Promise<SAR | null> {
     try {
       const updateData: any = {};
       
@@ -143,15 +178,44 @@ export const SARService = {
       if (updates.documents !== undefined) updateData.documents = updates.documents;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('sars')
         .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        userId: data.user_id || '',
+        userName: data.user_name || '',
+        dateSubmitted: data.date_submitted || data.created_at,
+        dateOfActivity: data.date_of_activity || data.created_at,
+        status: SARService.mapDbStatusToSAR(data.status),
+        summary: data.summary || '',
+        transactions: data.transactions || [],
+        documents: data.documents || [],
+        notes: data.notes || []
+      };
+    } catch (error) {
+      console.error('Error updating SAR:', error);
+      return null;
+    }
+  },
+
+  async deleteSAR(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('sars')
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating SAR:', error);
+      console.error('Error deleting SAR:', error);
       return false;
     }
   }

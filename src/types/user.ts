@@ -2,7 +2,7 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Document } from '@/types/supabase';
 
-export type UserStatus = 'verified' | 'pending' | 'flagged';
+export type UserStatus = 'pending' | 'active' | 'suspended' | 'banned';
 export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
 
 export interface UserPreferences {
