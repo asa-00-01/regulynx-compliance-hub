@@ -29,7 +29,7 @@ export interface UserProfileFormProps {
   user: StandardUser | null;
 }
 
-const UserProfileForm = ({ user }: UserProfileFormProps) => {
+export default function UserProfileForm({ user }: UserProfileFormProps) {
   const { t } = useTranslation();
   const { updateUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -158,6 +158,4 @@ const UserProfileForm = ({ user }: UserProfileFormProps) => {
       </form>
     </Card>
   );
-};
-
-export default UserProfileForm;
+}
