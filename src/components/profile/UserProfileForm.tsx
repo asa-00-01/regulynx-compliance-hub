@@ -29,7 +29,7 @@ interface UserProfileFormProps {
   user: StandardUser | null;
 }
 
-const UserProfileForm = ({ user }: UserProfileFormProps) => {
+const UserProfileForm: React.FC<UserProfileFormProps> = ({ user }) => {
   const { t } = useTranslation();
   const { updateUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
