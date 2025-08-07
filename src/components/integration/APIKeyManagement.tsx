@@ -27,7 +27,10 @@ const APIKeyManagement = ({ apiKeys, selectedClientId, onClientSelect, integrati
           </CardTitle>
           <div className="flex items-center gap-2">
             <div className="w-64">
-              <Select value={selectedClientId || ''} onValueChange={(value) => onClientSelect(value || null)}>
+              <Select 
+                value={selectedClientId || 'none'} 
+                onValueChange={(value) => onClientSelect(value === 'none' ? null : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>

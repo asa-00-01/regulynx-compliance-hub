@@ -2,10 +2,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataIngestionLog, IntegrationConfig } from '@/types/integration';
-import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Database, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DataIngestionMonitorProps {
@@ -19,45 +18,47 @@ const DataIngestionMonitor = ({ logs, selectedClientId, onClientSelect, integrat
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
       case 'processing':
         return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'partial':
-        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      completed: 'bg-green-100 text-green-800 border-green-200',
-      failed: 'bg-red-100 text-red-800 border-red-200',
-      processing: 'bg-blue-100 text-blue-800 border-blue-200',
-      partial: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    };
-    return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
-
-  const getSuccessRate = (log: DataIngestionLog) => {
-    if (log.recordCount === 0) return 0;
-    return Math.round((log.successCount / log.recordCount) * 100);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
   };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Data Ingestion Monitor</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Data Ingestion Monitor
+          </CardTitle>
           <div className="w-64">
-            <Select value={selectedClientId || ''} onValueChange={(value) => onClientSelect(value || null)}>
+            <Select 
+              value={selectedClientId || 'all'} 
+              onValueChange={(value) => onClientSelect(value === 'all' ? null : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All clients</SelectItem>
+                <SelectItem value="all">All Clients</SelectItem>
                 {integrationConfigs.map((config) => (
                   <SelectItem key={config.id} value={config.clientId}>
                     {config.clientName}
@@ -76,55 +77,31 @@ const DataIngestionMonitor = ({ logs, selectedClientId, onClientSelect, integrat
         ) : (
           <div className="space-y-4">
             {logs.map((log) => (
-              <div
-                key={log.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
+              <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   {getStatusIcon(log.status)}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium">{log.clientId}</h4>
-                      <Badge className={getStatusBadge(log.status)}>
-                        {log.status}
-                      </Badge>
-                      <Badge variant="outline">
-                        {log.ingestionType}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>
-                        {log.recordCount} records ({log.successCount} success, {log.errorCount} errors)
-                      </span>
-                      {log.processingTimeMs && (
-                        <span>{log.processingTimeMs}ms</span>
-                      )}
-                      <span>
-                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                    {log.recordCount > 0 && (
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Success Rate</span>
-                          <span>{getSuccessRate(log)}%</span>
-                        </div>
-                        <Progress value={getSuccessRate(log)} className="h-2" />
-                      </div>
-                    )}
-                    {log.errorDetails && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
-                        <details>
-                          <summary className="cursor-pointer text-red-700 font-medium">
-                            Error Details
-                          </summary>
-                          <pre className="mt-1 text-xs overflow-auto">
-                            {JSON.stringify(log.errorDetails, null, 2)}
-                          </pre>
-                        </details>
-                      </div>
-                    )}
+                  <div>
+                    <h4 className="font-medium">{log.ingestionType} ingestion</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Client: {log.clientId} • {log.recordCount} records
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                    </span>
                   </div>
+                </div>
+                <div className="text-right">
+                  <Badge className={getStatusColor(log.status)}>
+                    {log.status}
+                  </Badge>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Success: {log.successCount} / Error: {log.errorCount}
+                  </div>
+                  {log.processingTimeMs && (
+                    <div className="text-xs text-muted-foreground">
+                      {log.processingTimeMs}ms
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

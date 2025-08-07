@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalCustomerMapping, ExternalTransactionMapping, IntegrationConfig } from '@/types/integration';
-import { Users, ExternalLink } from 'lucide-react';
+import { Users, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface CustomerMappingViewProps {
@@ -15,19 +15,28 @@ interface CustomerMappingViewProps {
   integrationConfigs: IntegrationConfig[];
 }
 
-const CustomerMappingView = ({ customerMappings, transactionMappings, selectedClientId, onClientSelect, integrationConfigs }: CustomerMappingViewProps) => {
-  const getSyncStatusBadge = (status: string) => {
-    const variants = {
-      synced: 'bg-green-100 text-green-800 border-green-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      error: 'bg-red-100 text-red-800 border-red-200',
-    };
-    return variants[status as keyof typeof variants] || variants.pending;
+const CustomerMappingView = ({ 
+  customerMappings, 
+  transactionMappings, 
+  selectedClientId, 
+  onClientSelect, 
+  integrationConfigs 
+}: CustomerMappingViewProps) => {
+  const getSyncStatusColor = (status: string) => {
+    switch (status) {
+      case 'synced':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'error':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Customer Mappings */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -36,7 +45,10 @@ const CustomerMappingView = ({ customerMappings, transactionMappings, selectedCl
               Customer Mappings
             </CardTitle>
             <div className="w-64">
-              <Select value={selectedClientId || ''} onValueChange={(value) => onClientSelect(value || null)}>
+              <Select 
+                value={selectedClientId || 'none'} 
+                onValueChange={(value) => onClientSelect(value === 'none' ? null : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>
@@ -65,23 +77,26 @@ const CustomerMappingView = ({ customerMappings, transactionMappings, selectedCl
               {customerMappings.map((mapping) => (
                 <div key={mapping.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <h4 className="font-medium">
-                        External ID: {mapping.externalCustomerId}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Internal ID: {mapping.internalUserId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {mapping.lastSyncedAt && `Last synced ${formatDistanceToNow(new Date(mapping.lastSyncedAt), { addSuffix: true })}`}
-                      </p>
+                    <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                      {mapping.externalCustomerId}
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-mono bg-blue-100 px-2 py-1 rounded">
+                      {mapping.internalUserId}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getSyncStatusBadge(mapping.syncStatus)}>
+                  <div className="text-right">
+                    <Badge className={getSyncStatusColor(mapping.syncStatus)}>
                       {mapping.syncStatus}
                     </Badge>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Created {formatDistanceToNow(new Date(mapping.createdAt), { addSuffix: true })}
+                    </div>
+                    {mapping.lastSyncedAt && (
+                      <div className="text-xs text-muted-foreground">
+                        Last synced {formatDistanceToNow(new Date(mapping.lastSyncedAt), { addSuffix: true })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -90,41 +105,57 @@ const CustomerMappingView = ({ customerMappings, transactionMappings, selectedCl
         </CardContent>
       </Card>
 
-      {/* Transaction Mappings */}
-      {selectedClientId && transactionMappings.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction Mappings</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Mappings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!selectedClientId ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Select a client to view transaction mappings.
+            </div>
+          ) : transactionMappings.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No transaction mappings found for this client.
+            </div>
+          ) : (
             <div className="space-y-4">
               {transactionMappings.map((mapping) => (
                 <div key={mapping.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <h4 className="font-medium">
-                        Transaction ID: {mapping.externalTransactionId}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Customer ID: {mapping.externalCustomerId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(mapping.createdAt), { addSuffix: true })}
-                      </p>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">Transaction ID:</span>
+                      <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                        {mapping.externalTransactionId}
+                      </code>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-sm text-muted-foreground">Customer:</span>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {mapping.externalCustomerId}
+                      </code>
                     </div>
                   </div>
-                  {mapping.complianceStatus && (
-                    <Badge variant="outline">
-                      {mapping.complianceStatus}
-                    </Badge>
-                  )}
+                  <div className="text-right">
+                    {mapping.complianceStatus && (
+                      <Badge className={
+                        mapping.complianceStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                        mapping.complianceStatus === 'flagged' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }>
+                        {mapping.complianceStatus}
+                      </Badge>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(mapping.createdAt), { addSuffix: true })}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
