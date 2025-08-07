@@ -30,6 +30,7 @@ import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
 import DeveloperTools from '@/pages/DeveloperTools';
 import Integration from '@/pages/Integration';
+import Analytics from '@/pages/Analytics';
 
 const AppRoutes = () => {
   return (
@@ -158,6 +159,12 @@ const AppRoutes = () => {
         <Route path="developer-tools" element={
           <DashboardLayout requiredRoles={['admin']}>
             <DeveloperTools />
+          </DashboardLayout>
+        } />
+
+        <Route path="analytics" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+            <Analytics />
           </DashboardLayout>
         } />
       </Route>

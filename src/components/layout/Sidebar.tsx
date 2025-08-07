@@ -18,6 +18,7 @@ import {
   Zap,
   Code,
   Database,
+  BarChart3,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -116,6 +117,12 @@ const Sidebar = () => {
       href: '/integration',
       icon: Database,
       allowedRoles: ['admin', 'complianceOfficer'],
+    },
+    {
+      title: 'Usage Analytics',
+      href: '/analytics',
+      icon: BarChart3,
+      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
     },
     {
       title: t('navigation.auditLogs'),
