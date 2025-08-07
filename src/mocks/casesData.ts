@@ -6,21 +6,21 @@ import { mockComplianceCasesCollection } from '@/mocks/centralizedMockData';
 export const mockComplianceCases: ComplianceCaseDetails[] = mockComplianceCasesCollection.map(caseData => ({
   id: caseData.id,
   userId: caseData.userId,
-  userName: caseData.userName,
+  userName: `User ${caseData.userId.substring(0, 8)}`, // Generate a userName since it doesn't exist
   createdAt: caseData.createdAt,
-  createdBy: caseData.createdBy,
+  createdBy: caseData.createdBy || 'system', // Default createdBy
   updatedAt: caseData.updatedAt,
   type: caseData.type,
   status: caseData.status,
   riskScore: caseData.riskScore,
   description: caseData.description,
   assignedTo: caseData.assignedTo,
-  assignedToName: caseData.assignedToName,
+  assignedToName: `Admin ${caseData.assignedTo}`, // Generate assignedToName
   priority: caseData.priority,
   source: 'system', // Add default source as it's required by ComplianceCaseDetails
-  relatedTransactions: caseData.relatedTransactions,
-  relatedAlerts: caseData.relatedAlerts,
-  documents: caseData.documents,
+  relatedTransactions: [], // Add empty arrays for missing properties
+  relatedAlerts: [],
+  documents: [],
 }));
 
 export const complianceOfficers = [

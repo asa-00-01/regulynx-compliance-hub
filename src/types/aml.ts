@@ -11,14 +11,20 @@ export interface AMLTransaction {
   senderCurrency: TransactionCurrency;
   receiverAmount?: number;
   receiverCurrency?: TransactionCurrency;
+  senderCountry?: string;
   senderCountryCode: string;
+  receiverCountry?: string;
   receiverCountryCode: string;
+  amount?: number;
+  currency?: TransactionCurrency;
   timestamp: string;
+  type?: string;
   status: 'completed' | 'pending' | 'failed' | 'flagged';
   reasonForSending: string;
   method: TransactionMethod;
   isSuspect: boolean;
   riskScore: number; // 0-100
+  flags: string[]; // Add missing flags property
   notes?: string[];
 }
 

@@ -1,5 +1,5 @@
 
-import { Document } from '@/types';
+import { Document } from '@/types/supabase';
 
 const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -15,21 +15,25 @@ export const generateMockDocument = (userId: string): Document => {
   
   const type = documentTypes[Math.floor(Math.random() * documentTypes.length)];
   const status = statuses[Math.floor(Math.random() * statuses.length)];
+  const uploadDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
   
   return {
     id: generateUUID(),
-    userId,
+    user_id: userId,
     type,
-    fileName: `${type}_document_${Date.now()}.pdf`,
-    uploadDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    file_name: `${type}_document_${Date.now()}.pdf`,
+    file_path: `documents/${userId}/${type}_document_${Date.now()}.pdf`,
+    upload_date: uploadDate,
     status,
-    verifiedBy: status === 'verified' ? generateUUID() : undefined,
-    verificationDate: status === 'verified' ? new Date().toISOString() : undefined,
-    extractedData: {
+    verified_by: status === 'verified' ? generateUUID() : null,
+    verification_date: status === 'verified' ? new Date().toISOString() : null,
+    extracted_data: {
       name: 'Mock Name',
       dob: '1990-01-01',
       idNumber: 'MOCK123456',
-    }
+    },
+    created_at: uploadDate,
+    updated_at: uploadDate
   };
 };
 
