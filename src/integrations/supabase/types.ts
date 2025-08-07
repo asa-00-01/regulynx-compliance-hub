@@ -515,6 +515,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -792,6 +813,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["customer_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["customer_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["customer_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       webhook_notifications: {
         Row: {
           client_id: string
@@ -836,9 +878,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_customer_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["customer_role"][]
+      }
+      get_user_platform_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["platform_role"][]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
+      }
+      has_customer_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["customer_role"]
+        }
+        Returns: boolean
+      }
+      has_platform_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["platform_role"]
+        }
+        Returns: boolean
+      }
+      is_platform_owner: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       track_usage: {
         Args: { metric_type: string }
@@ -868,6 +936,7 @@ export type Database = {
         | "pending_info"
         | "closed"
       case_type: "kyc" | "aml" | "sanctions"
+      customer_role: "compliance_officer" | "executive" | "analyst" | "support"
       document_status: "pending" | "verified" | "rejected"
       document_type: "passport" | "id" | "license"
       pattern_category:
@@ -875,6 +944,7 @@ export type Database = {
         | "high_risk_corridor"
         | "time_pattern"
         | "other"
+      platform_role: "platform_admin" | "developer" | "system_admin"
       sar_status: "draft" | "submitted" | "reviewed"
       user_role: "complianceOfficer" | "admin" | "executive" | "support"
       user_status: "verified" | "pending" | "flagged"
@@ -1030,6 +1100,7 @@ export const Constants = {
         "closed",
       ],
       case_type: ["kyc", "aml", "sanctions"],
+      customer_role: ["compliance_officer", "executive", "analyst", "support"],
       document_status: ["pending", "verified", "rejected"],
       document_type: ["passport", "id", "license"],
       pattern_category: [
@@ -1038,6 +1109,7 @@ export const Constants = {
         "time_pattern",
         "other",
       ],
+      platform_role: ["platform_admin", "developer", "system_admin"],
       sar_status: ["draft", "submitted", "reviewed"],
       user_role: ["complianceOfficer", "admin", "executive", "support"],
       user_status: ["verified", "pending", "flagged"],
