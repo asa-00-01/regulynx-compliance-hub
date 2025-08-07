@@ -50,4 +50,5 @@ export interface User {
   documents?: Document[];
   status: UserStatus;
   role: UserRole;
+  name?: string; // For backward compatibility
 }

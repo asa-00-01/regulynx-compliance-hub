@@ -1,5 +1,5 @@
 
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, useMemo } from 'react';
 import { ComplianceContext } from './ComplianceContext';
 import { complianceReducer } from './reducer';
 import { initializeMockData } from './mockDataInitializer';
@@ -17,6 +17,11 @@ const initialState: ComplianceState = {
     kycStatus: [],
     country: undefined,
   },
+  transactions: [],
+  cases: [],
+  riskRules: [],
+  filteredUsers: [],
+  userRiskScores: {},
 };
 
 export const ComplianceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,14 +46,30 @@ export const ComplianceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   
   const operations = useComplianceOperations(state, dispatch);
 
+  // Get selected user
+  const selectedUser = useMemo(() => {
+    return state.selectedUserId ? operations.getUserById(state.selectedUserId) : null;
+  }, [state.selectedUserId, operations]);
+
+  // Set selected user function
+  const setSelectedUser = (userId: string | null) => {
+    dispatch({ type: 'SET_SELECTED_USER', payload: userId });
+  };
+
+  const contextValue = {
+    state,
+    dispatch,
+    selectedUser,
+    setSelectedUser,
+    getUserById: operations.getUserById,
+    getRelatedDocuments: operations.getUserDocuments,
+    getRelatedTransactions: operations.getUserTransactions,
+    getRelatedCases: operations.getUserCases,
+    ...operations
+  };
+
   return (
-    <ComplianceContext.Provider 
-      value={{ 
-        state, 
-        dispatch, 
-        ...operations
-      }}
-    >
+    <ComplianceContext.Provider value={contextValue}>
       {children}
     </ComplianceContext.Provider>
   );

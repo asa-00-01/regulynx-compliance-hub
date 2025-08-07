@@ -40,11 +40,24 @@ export interface GlobalFilters {
   country?: string;
 }
 
+export interface RiskRule {
+  id: string;
+  name: string;
+  description: string;
+  riskFactor: number;
+  isActive: boolean;
+}
+
 export interface ComplianceState {
   users: UnifiedUserData[];
   selectedUserId: string | null;
   selectedCase: ComplianceCaseDetails | null;
   globalFilters: GlobalFilters;
+  transactions: AMLTransaction[];
+  cases: ComplianceCaseDetails[];
+  riskRules: RiskRule[];
+  filteredUsers: UnifiedUserData[];
+  userRiskScores: Record<string, number>;
 }
 
 export type ComplianceAction =
@@ -52,4 +65,12 @@ export type ComplianceAction =
   | { type: 'UPDATE_USER_DATA'; payload: UnifiedUserData }
   | { type: 'SET_SELECTED_USER'; payload: string | null }
   | { type: 'SET_SELECTED_CASE'; payload: ComplianceCaseDetails | null }
-  | { type: 'SET_GLOBAL_FILTERS'; payload: GlobalFilters };
+  | { type: 'SET_GLOBAL_FILTERS'; payload: GlobalFilters }
+  | { type: 'UPDATE_USER_STATUS'; payload: { userId: string; status: 'verified' | 'pending' | 'flagged' } }
+  | { type: 'UPDATE_USER_RISK_SCORE'; payload: { userId: string; riskScore: number } }
+  | { type: 'CREATE_COMPLIANCE_CASE'; payload: ComplianceCaseDetails }
+  | { type: 'UPDATE_COMPLIANCE_CASE'; payload: { caseId: string; updates: Partial<ComplianceCaseDetails> } }
+  | { type: 'FILTER_USERS'; payload: any }
+  | { type: 'SET_TRANSACTIONS'; payload: AMLTransaction[] }
+  | { type: 'SET_CASES'; payload: ComplianceCaseDetails[] }
+  | { type: 'SET_RISK_RULES'; payload: RiskRule[] };

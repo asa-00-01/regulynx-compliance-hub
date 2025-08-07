@@ -1,9 +1,24 @@
+
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CaseActionInsert } from '@/types/supabase';
+import { CaseActionInsert, ActionType } from '@/types/supabase';
+
+// Map Supabase ActionType to our CaseAction actionType
+const mapActionType = (supabaseType: ActionType): CaseAction['actionType'] => {
+  switch (supabaseType) {
+    case 'created': return 'note';
+    case 'updated': return 'status_change';
+    case 'assigned': return 'assignment';
+    case 'escalated': return 'escalation';
+    case 'resolved': return 'resolution';
+    case 'closed': return 'resolution';
+    case 'note_added': return 'note';
+    default: return 'note';
+  }
+};
 
 export const useCaseActions = (
   currentUser?: User,
@@ -19,8 +34,8 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.name,
-        action_type: 'note',
+        action_by_name: currentUser?.fullName,
+        action_type: 'note_added' as ActionType,
         description: note,
       };
 
@@ -38,7 +53,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: mapActionType(data.action_type),
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };
@@ -72,9 +87,17 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
+      // Map our case status to Supabase status
+      let supabaseStatus = newStatus;
+      if (newStatus === 'under_review') {
+        supabaseStatus = 'investigating' as any;
+      } else if (newStatus === 'pending_info') {
+        supabaseStatus = 'open' as any;
+      }
+
       const { error: updateError } = await supabase
         .from('compliance_cases')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .update({ status: supabaseStatus as any, updated_at: new Date().toISOString() })
         .eq('id', caseId);
       
       if (updateError) throw updateError;
@@ -91,8 +114,8 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.name || 'Unknown User',
-        action_type: 'status_change',
+        action_by_name: currentUser?.fullName || 'Unknown User',
+        action_type: 'updated' as ActionType,
         description: `Case status changed to ${newStatus.replace(/_/g, ' ')}`,
         details: note ? { note } : undefined
       };
@@ -111,7 +134,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: mapActionType(data.action_type),
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };
@@ -169,8 +192,8 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.name || 'Unknown User',
-        action_type: 'assignment',
+        action_by_name: currentUser?.fullName || 'Unknown User',
+        action_type: 'assigned' as ActionType,
         description: `Case assigned to ${assignToName}`
       };
       
@@ -188,7 +211,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: mapActionType(data.action_type),
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };
