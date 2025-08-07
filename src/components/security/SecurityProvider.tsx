@@ -16,7 +16,7 @@ const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
     }
 
     // Initialize secure authentication monitoring
-    // secureAuth is already initialized globally
+    secureAuth.initialize();
 
     // Cleanup on unmount
     return () => {

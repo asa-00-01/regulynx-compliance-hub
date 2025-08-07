@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TooltipHelp } from '@/components/ui/tooltip-custom';
 
 const UserNav = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    signOut();
   };
 
   const handleProfileClick = () => {

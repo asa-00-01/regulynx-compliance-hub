@@ -150,7 +150,6 @@ export const useAuth = (): AuthHook => {
       }
       
       console.log('Session refreshed successfully');
-      return data;
     } catch (error: any) {
       console.error('Refresh session exception:', error);
       throw error;

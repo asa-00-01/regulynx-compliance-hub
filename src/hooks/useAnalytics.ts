@@ -2,7 +2,7 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { analytics, trackPageView, trackUserAction, trackComplianceEvent } from '@/services/analytics';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 
 export const useAnalytics = () => {
   const location = useLocation();

@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { auditLogger } from '@/services/auditLogger';
 
 export const useAuditLogging = () => {
