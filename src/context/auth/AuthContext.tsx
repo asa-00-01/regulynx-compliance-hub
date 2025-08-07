@@ -1,11 +1,22 @@
 
 import React, { createContext, useContext } from 'react';
-import { StandardUser } from '@/types/user';
-import { useAuthState } from '@/hooks/auth/useAuthState';
+import { useAuth as useAuthHook, AuthHook } from '@/hooks/auth/useAuth';
 import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
-import { AuthService } from '@/services/auth/authService';
-import { UserProfileService } from '@/services/auth/userProfileService';
-import { AuthContextType } from './types';
+
+// Extend the AuthHook with role-based permissions
+interface AuthContextType extends AuthHook {
+  customerRoles: any[];
+  platformRoles: any[];
+  isPlatformUser: boolean;
+  isCustomerUser: boolean;
+  
+  // Legacy compatibility aliases
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  canAccess: (roles: string[]) => boolean;
+  authLoaded: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,67 +29,34 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const authState = useAuthState();
+  const authHook = useAuthHook();
   const {
     customerRoles,
     platformRoles,
     isPlatformUser,
     isCustomerUser,
-    refreshRoles,
     loading: rolesLoading,
   } = useRoleBasedPermissions();
 
-  const signIn = async (email: string, password: string) => {
-    console.log('AuthContext signIn called with:', email);
-    const result = await AuthService.signIn(email, password);
-    console.log('AuthService signIn result:', result);
-    return result;
-  };
-
-  const signUp = async (email: string, password: string, userData?: any) => {
-    console.log('AuthContext signUp called with:', email);
-    const result = await AuthService.signUp(email, password, userData);
-    console.log('AuthService signUp result:', result);
-    return result;
-  };
-
-  const signOut = async () => {
-    console.log('AuthContext signOut called');
-    await AuthService.signOut();
-  };
-
-  const refreshAuth = async () => {
-    await AuthService.refreshSession();
-    await refreshRoles();
-  };
-
-  const updateUserProfile = async (updates: any) => {
-    if (!authState.user) throw new Error('No user logged in');
-    await UserProfileService.updateUserProfile(authState.user.id, updates);
-  };
-
-  // Legacy compatibility
+  // Legacy compatibility function
   const canAccess = (roles: string[]) => {
-    if (!authState.user) return false;
-    return roles.includes(authState.user.role || 'user');
+    if (!authHook.user) return false;
+    return roles.includes(authHook.user.role || 'user');
   };
 
   const value: AuthContextType = {
-    ...authState,
+    ...authHook,
     customerRoles,
     platformRoles,
-    loading: authState.loading || rolesLoading,
     isPlatformUser,
     isCustomerUser,
-    signIn,
-    signUp,
-    signOut,
-    refreshAuth,
-    updateUserProfile,
+    loading: authHook.loading || rolesLoading,
+    authLoaded: !authHook.loading,
+    
     // Legacy aliases
-    login: signIn,
-    logout: signOut,
-    signup: signUp,
+    login: authHook.signIn,
+    logout: authHook.signOut,
+    signup: authHook.signUp,
     canAccess,
   };
 

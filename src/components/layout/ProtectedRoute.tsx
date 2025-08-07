@@ -1,8 +1,9 @@
 
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,7 +18,10 @@ const ProtectedRoute = ({ children, requiresAuth = true }: ProtectedRouteProps) 
   if (loading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
       </div>
     );
   }

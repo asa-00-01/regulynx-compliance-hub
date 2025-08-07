@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,8 @@ const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [showReset, setShowReset] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { user, signIn, signUp, loading: authLoading, isAuthenticated } = useAuth();
@@ -34,30 +33,27 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      if (showReset) {
-        // Handle password reset - would need to implement this in the context
-        toast.info('Password reset functionality not implemented yet');
-        setShowReset(false);
-        return;
-      }
-      
       if (isSignUp) {
         if (password !== confirmPassword) {
           toast.error('Passwords do not match');
           return;
         }
         
+        if (password.length < 8) {
+          toast.error('Password must be at least 8 characters long');
+          return;
+        }
+        
         console.log('Attempting sign up for:', email);
-        const result = await signUp(email, password, { email, name: email.split('@')[0] });
+        const result = await signUp(email, password, { 
+          name: name || email.split('@')[0],
+          email 
+        });
         
         if (!result.error) {
-          toast.success('Account created successfully! Please check your email to verify your account.');
           // Switch to sign in mode after successful signup
           setIsSignUp(false);
           resetForm();
-        } else {
-          console.error('Sign up error:', result.error);
-          toast.error(result.error.message || 'Sign up failed');
         }
       } else {
         console.log('Attempting sign in for:', email);
@@ -65,11 +61,7 @@ const AuthPage: React.FC = () => {
         
         if (!result.error) {
           console.log('Sign in successful, should redirect automatically');
-          toast.success('Successfully signed in');
           // The redirect will happen automatically via the useAuth hook
-        } else {
-          console.error('Sign in error:', result.error);
-          toast.error(result.error.message || 'Sign in failed');
         }
       }
     } catch (error: any) {
@@ -84,9 +76,8 @@ const AuthPage: React.FC = () => {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setResetEmail('');
+    setName('');
     setRememberMe(false);
-    setShowReset(false);
   };
 
   // Show loading if auth is still being determined
@@ -109,101 +100,85 @@ const AuthPage: React.FC = () => {
             <Shield className="h-8 w-8 text-primary" />
           </div>
           <CardTitle>
-            {showReset ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
           <CardDescription>
-            {showReset 
-              ? 'Enter your email to receive a password reset link'
-              : isSignUp 
-                ? 'Create a new account to get started'
-                : 'Sign in to your account'
+            {isSignUp 
+              ? 'Create a new account to get started'
+              : 'Sign in to your account'
             }
           </CardDescription>
         </CardHeader>
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {showReset ? (
+            {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="resetEmail">Email</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="resetEmail"
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  disabled={isLoading}
                 />
               </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    minLength={8}
-                    disabled={isLoading}
-                  />
-                </div>
-                
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your password"
-                      required
-                      minLength={8}
-                      disabled={isLoading}
-                    />
-                  </div>
-                )}
-                
-                {!isSignUp && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="rememberMe"
-                        checked={rememberMe}
-                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                        disabled={isLoading}
-                      />
-                      <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
-                    </div>
-                    
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="p-0 h-auto text-sm"
-                      onClick={() => setShowReset(true)}
-                      disabled={isLoading}
-                    >
-                      Forgot password?
-                    </Button>
-                  </div>
-                )}
-              </>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                minLength={8}
+                disabled={isLoading}
+              />
+            </div>
+            
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  required
+                  minLength={8}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+            
+            {!isSignUp && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  disabled={isLoading}
+                />
+                <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+              </div>
             )}
             
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -212,8 +187,6 @@ const AuthPage: React.FC = () => {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Please wait...
                 </>
-              ) : showReset ? (
-                'Send Reset Link'
               ) : isSignUp ? (
                 'Create Account'
               ) : (
@@ -222,41 +195,21 @@ const AuthPage: React.FC = () => {
             </Button>
           </form>
           
-          {!showReset && (
-            <>
-              <Separator className="my-4" />
-              
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => {
-                    setIsSignUp(!isSignUp);
-                    resetForm();
-                  }}
-                  disabled={isLoading}
-                >
-                  {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-                </Button>
-              </div>
-            </>
-          )}
+          <Separator className="my-4" />
           
-          {showReset && (
-            <div className="text-center mt-4">
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => {
-                  setShowReset(false);
-                  resetForm();
-                }}
-                disabled={isLoading}
-              >
-                Back to sign in
-              </Button>
-            </div>
-          )}
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                resetForm();
+              }}
+              disabled={isLoading}
+            >
+              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

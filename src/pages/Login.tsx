@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,26 +17,25 @@ const Login = () => {
   const [error, setError] = useState('');
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    setLoading(false);
-
-    if (!error) {
-      toast({
-        title: t('login.successTitle'),
-        description: t('login.successDescription'),
-      });
-      navigate('/dashboard');
-    } else {
-      setError(error.message || t('login.error'));
+      if (!error) {
+        toast.success('Successfully signed in');
+        navigate('/dashboard');
+      } else {
+        setError(error.message || 'Sign in failed');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Sign in failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,15 +45,15 @@ const Login = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Regulynx</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {t('login.subtitle')}
+            Sign in to your account
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">{t('login.title')}</CardTitle>
+            <CardTitle className="text-xl">Sign In</CardTitle>
             <CardDescription>
-              {t('login.description')}
+              Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -66,7 +65,7 @@ const Login = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">{t('login.emailLabel')}</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -74,19 +73,12 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="compliance@regulynx.com"
                   required
+                  disabled={loading}
                 />
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">{t('login.passwordLabel')}</Label>
-                  <a
-                    href="#"
-                    className="text-xs text-primary hover:underline"
-                  >
-                    {t('login.forgotPassword')}
-                  </a>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -94,6 +86,7 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -102,13 +95,20 @@ const Login = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? t('login.signingInButton') : t('login.signInButton')}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center text-sm">
             <p className="text-center text-sm text-muted-foreground">
-              {t('login.demoAccounts')}
+              Demo accounts available for testing
             </p>
           </CardFooter>
         </Card>
