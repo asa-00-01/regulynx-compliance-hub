@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { StandardUser } from '@/types/user';
@@ -24,11 +25,11 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-interface UserProfileFormProps {
+export interface UserProfileFormProps {
   user: StandardUser | null;
 }
 
-const UserProfileForm: React.FC<UserProfileFormProps> = ({ user }) => {
+const UserProfileForm = ({ user }: UserProfileFormProps) => {
   const { t } = useTranslation();
   const { updateUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
