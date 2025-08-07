@@ -177,6 +177,53 @@ export type Database = {
           },
         ]
       }
+      data_ingestion_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          error_count: number
+          error_details: Json | null
+          id: string
+          ingestion_type: string
+          processing_time_ms: number | null
+          record_count: number
+          status: string
+          success_count: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          error_count?: number
+          error_details?: Json | null
+          id?: string
+          ingestion_type: string
+          processing_time_ms?: number | null
+          record_count?: number
+          status: string
+          success_count?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          error_count?: number
+          error_details?: Json | null
+          id?: string
+          ingestion_type?: string
+          processing_time_ms?: number | null
+          record_count?: number
+          status?: string
+          success_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_ingestion_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_configs"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -219,6 +266,174 @@ export type Database = {
           user_id?: string
           verification_date?: string | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      external_customer_mappings: {
+        Row: {
+          client_id: string
+          created_at: string
+          customer_data: Json
+          external_customer_id: string
+          id: string
+          internal_user_id: string
+          last_synced_at: string | null
+          sync_status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          customer_data: Json
+          external_customer_id: string
+          id?: string
+          internal_user_id: string
+          last_synced_at?: string | null
+          sync_status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          customer_data?: Json
+          external_customer_id?: string
+          id?: string
+          internal_user_id?: string
+          last_synced_at?: string | null
+          sync_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_customer_mappings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_configs"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      external_transaction_mappings: {
+        Row: {
+          client_id: string
+          compliance_status: string | null
+          created_at: string
+          external_customer_id: string
+          external_transaction_id: string
+          id: string
+          risk_assessment: Json | null
+          transaction_data: Json
+        }
+        Insert: {
+          client_id: string
+          compliance_status?: string | null
+          created_at?: string
+          external_customer_id: string
+          external_transaction_id: string
+          id?: string
+          risk_assessment?: Json | null
+          transaction_data: Json
+        }
+        Update: {
+          client_id?: string
+          compliance_status?: string | null
+          created_at?: string
+          external_customer_id?: string
+          external_transaction_id?: string
+          id?: string
+          risk_assessment?: Json | null
+          transaction_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_transaction_mappings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_configs"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      integration_api_keys: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_name: string
+          last_used_at: string | null
+          permissions: Json
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_name: string
+          last_used_at?: string | null
+          permissions?: Json
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_name?: string
+          last_used_at?: string | null
+          permissions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_api_keys_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_configs"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      integration_configs: {
+        Row: {
+          api_key_hash: string | null
+          batch_frequency: string | null
+          client_id: string
+          client_name: string
+          created_at: string
+          data_mapping: Json
+          id: string
+          integration_type: string
+          status: string
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key_hash?: string | null
+          batch_frequency?: string | null
+          client_id: string
+          client_name: string
+          created_at?: string
+          data_mapping?: Json
+          id?: string
+          integration_type: string
+          status?: string
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key_hash?: string | null
+          batch_frequency?: string | null
+          client_id?: string
+          client_name?: string
+          created_at?: string
+          data_mapping?: Json
+          id?: string
+          integration_type?: string
+          status?: string
+          updated_at?: string
+          webhook_url?: string | null
         }
         Relationships: []
       }
