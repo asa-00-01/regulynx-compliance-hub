@@ -25,21 +25,27 @@ export const useComplianceOperations = (
     const user = getUserById(userId);
     if (!user) return [];
     
-    // Properly cast documents to match the Supabase Document type
-    return user.documents.map((doc): Document => ({
-      id: doc.id,
-      user_id: doc.user_id,
-      type: doc.type as Document['type'],
-      file_name: doc.file_name,
-      file_path: doc.file_path,
-      upload_date: doc.upload_date,
-      status: doc.status as Document['status'],
-      verified_by: doc.verified_by,
-      verification_date: doc.verification_date,
-      extracted_data: doc.extracted_data,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
+    // Properly cast documents to match the Supabase Document type with explicit type assertions
+    return user.documents.map((doc): Document => {
+      // Ensure type and status are properly cast to the expected union types
+      const documentType = doc.type as 'passport' | 'id' | 'license';
+      const documentStatus = doc.status as 'pending' | 'verified' | 'rejected' | 'information_requested';
+      
+      return {
+        id: doc.id,
+        user_id: doc.user_id,
+        type: documentType,
+        file_name: doc.file_name,
+        file_path: doc.file_path,
+        upload_date: doc.upload_date,
+        status: documentStatus,
+        verified_by: doc.verified_by,
+        verification_date: doc.verification_date,
+        extracted_data: doc.extracted_data,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      };
+    });
   }, [getUserById]);
   
   const getRelatedTransactions = useCallback((userId: string): AMLTransaction[] => {
