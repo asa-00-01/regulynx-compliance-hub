@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Navigate } from 'react-router-dom';
 import { Loader2, Shield } from 'lucide-react';
+import { useAuth } from '@/context/auth/AuthContext';
+import { toast } from 'sonner';
 
 const AuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -18,29 +19,64 @@ const AuthPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { signIn, signUp, resetPassword, isLoading, isAuthenticated } = useSecureAuth();
+  const { user, signIn, signUp, loading: authLoading, isAuthenticated } = useAuth();
 
-  if (isAuthenticated) {
+  // Redirect if already authenticated
+  if (isAuthenticated && user) {
+    console.log('User is authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (showReset) {
-      await resetPassword(resetEmail);
-      setShowReset(false);
-      return;
-    }
-    
-    if (isSignUp) {
-      if (password !== confirmPassword) {
-        throw new Error('Passwords do not match');
+    try {
+      if (showReset) {
+        // Handle password reset - would need to implement this in the context
+        toast.info('Password reset functionality not implemented yet');
+        setShowReset(false);
+        return;
       }
-      await signUp(email, password);
-    } else {
-      await signIn(email, password, rememberMe);
+      
+      if (isSignUp) {
+        if (password !== confirmPassword) {
+          toast.error('Passwords do not match');
+          return;
+        }
+        
+        console.log('Attempting sign up for:', email);
+        const result = await signUp(email, password, { email, name: email.split('@')[0] });
+        
+        if (!result.error) {
+          toast.success('Account created successfully! Please check your email to verify your account.');
+          // Switch to sign in mode after successful signup
+          setIsSignUp(false);
+          resetForm();
+        } else {
+          console.error('Sign up error:', result.error);
+          toast.error(result.error.message || 'Sign up failed');
+        }
+      } else {
+        console.log('Attempting sign in for:', email);
+        const result = await signIn(email, password);
+        
+        if (!result.error) {
+          console.log('Sign in successful, should redirect automatically');
+          toast.success('Successfully signed in');
+          // The redirect will happen automatically via the useAuth hook
+        } else {
+          console.error('Sign in error:', result.error);
+          toast.error(result.error.message || 'Sign in failed');
+        }
+      }
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      toast.error(error.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -52,6 +88,18 @@ const AuthPage: React.FC = () => {
     setRememberMe(false);
     setShowReset(false);
   };
+
+  // Show loading if auth is still being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -98,6 +146,7 @@ const AuthPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -111,6 +160,7 @@ const AuthPage: React.FC = () => {
                     placeholder="Enter your password"
                     required
                     minLength={8}
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -125,6 +175,7 @@ const AuthPage: React.FC = () => {
                       placeholder="Confirm your password"
                       required
                       minLength={8}
+                      disabled={isLoading}
                     />
                   </div>
                 )}
@@ -136,6 +187,7 @@ const AuthPage: React.FC = () => {
                         id="rememberMe"
                         checked={rememberMe}
                         onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                        disabled={isLoading}
                       />
                       <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
                     </div>
@@ -145,6 +197,7 @@ const AuthPage: React.FC = () => {
                       variant="link"
                       className="p-0 h-auto text-sm"
                       onClick={() => setShowReset(true)}
+                      disabled={isLoading}
                     >
                       Forgot password?
                     </Button>
@@ -181,6 +234,7 @@ const AuthPage: React.FC = () => {
                     setIsSignUp(!isSignUp);
                     resetForm();
                   }}
+                  disabled={isLoading}
                 >
                   {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
                 </Button>
@@ -197,6 +251,7 @@ const AuthPage: React.FC = () => {
                   setShowReset(false);
                   resetForm();
                 }}
+                disabled={isLoading}
               >
                 Back to sign in
               </Button>

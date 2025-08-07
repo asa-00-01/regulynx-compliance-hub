@@ -29,14 +29,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useRoleBasedPermissions();
 
   const signIn = async (email: string, password: string) => {
-    return AuthService.signIn(email, password);
+    console.log('AuthContext signIn called with:', email);
+    const result = await AuthService.signIn(email, password);
+    console.log('AuthService signIn result:', result);
+    return result;
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
-    return AuthService.signUp(email, password, userData);
+    console.log('AuthContext signUp called with:', email);
+    const result = await AuthService.signUp(email, password, userData);
+    console.log('AuthService signUp result:', result);
+    return result;
   };
 
   const signOut = async () => {
+    console.log('AuthContext signOut called');
     await AuthService.signOut();
   };
 
@@ -74,6 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup: signUp,
     canAccess,
   };
+
+  console.log('AuthContext value:', {
+    user: value.user?.email,
+    isAuthenticated: value.isAuthenticated,
+    loading: value.loading
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
