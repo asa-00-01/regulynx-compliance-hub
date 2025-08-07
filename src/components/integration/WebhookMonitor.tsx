@@ -23,7 +23,8 @@ const WebhookMonitor = () => {
         .limit(50);
 
       if (error) throw error;
-      setWebhooks(data || []);
+      // Type assertion since we know the database constraint ensures valid status values
+      setWebhooks((data || []) as WebhookNotification[]);
     } catch (error) {
       console.error('Error loading webhooks:', error);
       toast({
