@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { ComplianceState, ComplianceAction, UnifiedUserData } from './types';
 import { Document } from '@/types/document';
@@ -34,21 +35,21 @@ export const useComplianceOperations = (state: ComplianceState, dispatch: React.
       upload_date: doc.upload_date,
       verified_by: doc.verified_by || undefined,
       verification_date: doc.verification_date || undefined,
-      extracted_data: doc.extracted_data,
+      extracted_data: doc.extracted_data || {},
       created_at: doc.created_at || doc.upload_date,
       updated_at: doc.updated_at || doc.upload_date
     }));
   }, [getUserById]);
 
   const getUserTransactions = useCallback((userId: string): AMLTransaction[] => {
-    return transactions.filter(transaction => transaction.userId === userId);
+    return transactions.filter(transaction => transaction.senderUserId === userId);
   }, [transactions]);
 
   const getUserCases = useCallback((userId: string): ComplianceCaseDetails[] => {
     return cases.filter(caseItem => caseItem.userId === userId);
   }, [cases]);
 
-  const updateUserStatus = useCallback((userId: string, status: 'active' | 'pending' | 'suspended' | 'banned') => {
+  const updateUserStatus = useCallback((userId: string, status: 'verified' | 'pending' | 'flagged') => {
     dispatch({
       type: 'UPDATE_USER_STATUS',
       payload: { userId, status }
@@ -63,9 +64,16 @@ export const useComplianceOperations = (state: ComplianceState, dispatch: React.
   }, [dispatch]);
 
   const createComplianceCase = useCallback((caseData: Omit<ComplianceCaseDetails, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newCase: ComplianceCaseDetails = {
+      ...caseData,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
     dispatch({
       type: 'CREATE_COMPLIANCE_CASE',
-      payload: caseData
+      payload: newCase
     });
   }, [dispatch]);
 

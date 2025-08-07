@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ComplianceState, ComplianceAction, UnifiedUserData } from './types';
-import { Document } from '@/types/supabase';
+import { Document } from '@/types/document';
 import { AMLTransaction } from '@/types/aml';
 import { ComplianceCaseDetails } from '@/types/case';
 

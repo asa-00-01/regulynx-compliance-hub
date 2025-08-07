@@ -34,7 +34,7 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.fullName,
+        action_by_name: currentUser?.fullName || currentUser?.name || 'Unknown User',
         action_type: 'note_added' as ActionType,
         description: note,
       };
@@ -114,7 +114,7 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.fullName || 'Unknown User',
+        action_by_name: currentUser?.fullName || currentUser?.name || 'Unknown User',
         action_type: 'updated' as ActionType,
         description: `Case status changed to ${newStatus.replace(/_/g, ' ')}`,
         details: note ? { note } : undefined
@@ -192,7 +192,7 @@ export const useCaseActions = (
       const newActionData: CaseActionInsert = {
         case_id: caseId,
         action_by: currentUser?.id,
-        action_by_name: currentUser?.fullName || 'Unknown User',
+        action_by_name: currentUser?.fullName || currentUser?.name || 'Unknown User',
         action_type: 'assigned' as ActionType,
         description: `Case assigned to ${assignToName}`
       };

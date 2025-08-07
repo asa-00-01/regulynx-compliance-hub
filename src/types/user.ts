@@ -19,6 +19,7 @@ export interface UserPreferences {
 
 export interface StandardUser extends SupabaseUser {
   name: string;
+  fullName?: string; // Add optional fullName property
   avatarUrl: string;
   status: UserStatus;
   riskScore: number;
