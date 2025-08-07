@@ -2,7 +2,7 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export type UserStatus = 'verified' | 'pending' | 'flagged';
-export type UserRole = 'admin' | 'user' | 'moderator';
+export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
 
 export interface UserPreferences {
   notifications: {

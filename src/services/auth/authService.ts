@@ -1,38 +1,61 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-export interface AuthResult {
-  error: any;
-}
+import { toast } from 'sonner';
 
 export class AuthService {
-  static async signIn(email: string, password: string): Promise<AuthResult> {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
-  }
-
-  static async signUp(email: string, password: string, userData?: any): Promise<AuthResult> {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: userData || {}
+  static async signIn(email: string, password: string) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
+      if (error) {
+        return { error };
       }
-    });
-    return { error };
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('SignIn error:', error);
+      return { error };
+    }
   }
 
-  static async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+  static async signUp(email: string, password: string, userData?: any) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
+        }
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('SignUp error:', error);
+      return { error };
+    }
   }
 
-  static async refreshSession(): Promise<void> {
-    await supabase.auth.refreshSession();
+  static async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message);
+      console.error('SignOut error:', error);
+    }
+  }
+
+  static async refreshSession() {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Refresh session error:', error);
+      throw error;
+    }
+    return data;
   }
 }
