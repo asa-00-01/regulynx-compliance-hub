@@ -44,14 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return roles.includes(authHook.user.role || 'user');
   };
 
+  // The loading should be false if auth hook loading is false, regardless of roles loading
+  // This prevents infinite loading when roles can't be determined
+  const isLoading = authHook.loading;
+
   const value: AuthContextType = {
     ...authHook,
     customerRoles,
     platformRoles,
     isPlatformUser,
     isCustomerUser,
-    loading: authHook.loading || rolesLoading,
-    authLoaded: !authHook.loading,
+    loading: isLoading,
+    authLoaded: !isLoading,
     
     // Legacy aliases
     login: authHook.signIn,
@@ -61,9 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   console.log('AuthContext value:', {
-    user: value.user?.email,
+    user: value.user?.email || 'null',
     isAuthenticated: value.isAuthenticated,
-    loading: value.loading
+    loading: value.loading,
+    authLoaded: value.authLoaded
   });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -9,45 +9,76 @@ export class UserProfileService {
     if (!user) return null;
 
     try {
+      console.log('Enriching user profile for:', user.email);
+      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('Profile lookup error:', error);
+        
+        // If profile doesn't exist (PGRST116), create a basic profile
+        if (error.code === 'PGRST116') {
+          console.log('No profile found, creating basic profile');
+          
+          const basicProfile = {
+            id: user.id,
+            name: user.email?.split('@')[0] || 'User',
+            role: 'user',
+            risk_score: 0,
+            status: 'active',
+            avatar_url: null
+          };
+
+          try {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert(basicProfile);
+            
+            if (insertError) {
+              console.error('Failed to create profile:', insertError);
+              throw insertError;
+            }
+            
+            return this.createStandardUser(user, basicProfile);
+          } catch (insertError) {
+            console.error('Profile creation failed, using fallback');
+            throw insertError;
+          }
+        }
+        
         throw error;
       }
 
-      if (profile) {
-        const userMetadata = user.user_metadata;
-        const standardUser: StandardUser = {
-          ...user,
-          name: profile.name,
-          role: profile.role,
-          riskScore: profile.risk_score,
-          status: profile.status,
-          avatarUrl: profile.avatar_url,
-          email: user.email || '',
-          title: userMetadata.title,
-          department: userMetadata.department,
-          phone: userMetadata.phone,
-          location: userMetadata.location,
-          preferences: userMetadata.preferences,
-        };
-        return standardUser;
-      } else {
-        console.error("CRITICAL: User is authenticated but no profile found in 'profiles' table.");
-        toast.error("Your user profile is missing or corrupted. Please contact support.");
-        await supabase.auth.signOut();
-        return null;
-      }
+      console.log('Profile found:', profile);
+      return this.createStandardUser(user, profile);
+      
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      toast.error("An error occurred while fetching your profile.");
-      await supabase.auth.signOut();
-      return null;
+      console.error("Error in enrichUserWithProfile:", error);
+      throw error; // Let the caller handle this
     }
+  }
+
+  private static createStandardUser(user: User, profile: any): StandardUser {
+    const userMetadata = user.user_metadata || {};
+    
+    return {
+      ...user,
+      name: profile.name || user.email?.split('@')[0] || 'User',
+      role: profile.role || 'user',
+      riskScore: profile.risk_score || 0,
+      status: profile.status || 'active',
+      avatarUrl: profile.avatar_url,
+      email: user.email || '',
+      title: userMetadata.title || null,
+      department: userMetadata.department || null,
+      phone: userMetadata.phone || null,
+      location: userMetadata.location || null,
+      preferences: userMetadata.preferences || null,
+    };
   }
 
   static async updateUserProfile(userId: string, updates: any): Promise<void> {

@@ -11,11 +11,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiresAuth = true }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const { loading: permissionsLoading } = useRoleBasedPermissions();
 
-  // Show loading while auth is being determined
-  if (loading || permissionsLoading) {
+  // Show loading only while auth is being determined
+  if (loading) {
+    console.log('ProtectedRoute: Auth loading, showing spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -27,10 +28,13 @@ const ProtectedRoute = ({ children, requiresAuth = true }: ProtectedRouteProps) 
   }
 
   // If not authenticated and auth is required, redirect to auth page
-  if (requiresAuth && !user) {
+  if (requiresAuth && !isAuthenticated) {
+    console.log('ProtectedRoute: Not authenticated, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
+  // If authenticated, proceed to render children
+  console.log('ProtectedRoute: Rendering children for authenticated user');
   return <>{children}</>;
 };
 

@@ -29,39 +29,84 @@ export const useAuth = (): AuthHook => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        setSession(session);
-        
-        if (session?.user) {
-          const enrichedUser = await UserProfileService.enrichUserWithProfile(session.user);
-          setUser(enrichedUser);
-        } else {
-          setUser(null);
-        }
-        
-        setLoading(false);
-      }
-    );
+    let isMounted = true;
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+    const handleAuthChange = async (event: string, session: Session | null) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      if (!isMounted) return;
+      
       setSession(session);
       
       if (session?.user) {
-        const enrichedUser = await UserProfileService.enrichUserWithProfile(session.user);
-        setUser(enrichedUser);
+        try {
+          const enrichedUser = await UserProfileService.enrichUserWithProfile(session.user);
+          if (isMounted) {
+            setUser(enrichedUser);
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('Error enriching user profile:', error);
+          if (isMounted) {
+            // Create a fallback user if profile enrichment fails
+            const fallbackUser: StandardUser = {
+              ...session.user,
+              name: session.user.email?.split('@')[0] || 'User',
+              role: 'user',
+              riskScore: 0,
+              status: 'active',
+              avatarUrl: null,
+              email: session.user.email || '',
+              title: null,
+              department: null,
+              phone: null,
+              location: null,
+              preferences: null,
+            };
+            setUser(fallbackUser);
+            setLoading(false);
+          }
+        }
       } else {
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
       }
-      
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) {
+            setLoading(false);
+          }
+          return;
+        }
+
+        console.log('Initial session check:', session?.user?.email);
+        await handleAuthChange('INITIAL_SESSION', session);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
