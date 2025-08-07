@@ -1,5 +1,6 @@
+
 import { AMLTransaction } from '@/types/aml';
-import { EnhancedUserProfile } from './enhancedUserGenerator';
+import { EnhancedUserProfile, enhancedUserProfiles } from './enhancedUserGenerator';
 
 // Generate UUID v4
 const generateUUID = (): string => {
@@ -103,7 +104,8 @@ export const generateRealisticTransactions = (user: EnhancedUserProfile): AMLTra
       method: Math.random() > 0.3 ? 'bank' : 'mobile',
       reasonForSending: getReasonForSending(relationship, amount),
       isSuspect: transactionRiskScore > 70,
-      riskScore: Math.min(100, transactionRiskScore)
+      riskScore: Math.min(100, transactionRiskScore),
+      notes: transactionRiskScore > 70 ? ['High-risk transaction flagged for review'] : []
     };
 
     transactions.push(transaction);
@@ -148,10 +150,8 @@ const getReasonForSending = (relationship: string, amount: number): string => {
   }
 };
 
-// NEW: Add the missing generateTransactions function for centralized data
+// Generate transactions for centralized data - now using proper ES module import
 export const generateTransactions = (count: number): AMLTransaction[] => {
-  // Import the enhanced user profiles
-  const { enhancedUserProfiles } = require('./enhancedUserGenerator');
   const transactions: AMLTransaction[] = [];
   
   // Generate transactions for each user
