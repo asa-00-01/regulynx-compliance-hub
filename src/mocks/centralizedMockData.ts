@@ -27,6 +27,7 @@ export const mockTransactions: AMLTransaction[] = generatedTransactions.map(tran
   senderCurrency: transaction.senderCurrency,
   senderCountry: transaction.senderCountryCode,
   senderCountryCode: transaction.senderCountryCode,
+  receiverUserId: transaction.receiverUserId,
   receiverName: transaction.receiverName,
   receiverAmount: transaction.receiverAmount,
   receiverCurrency: transaction.receiverCurrency,
@@ -39,6 +40,9 @@ export const mockTransactions: AMLTransaction[] = generatedTransactions.map(tran
   status: transaction.status,
   riskScore: transaction.riskScore,
   flags: transaction.isSuspect ? ['High Risk'] : [],
+  reasonForSending: transaction.reasonForSending || 'Personal transfer',
+  method: transaction.method || 'bank',
+  isSuspect: transaction.isSuspect || false
 }));
 
 // Generate mock users
@@ -47,12 +51,15 @@ export const mockUsers: UnifiedUserData[] = generateUsers(USER_COUNT);
 // Generate mock documents  
 export const mockDocuments: Document[] = generateDocuments(DOCUMENT_COUNT);
 
-// Generate mock cases with correct status values
+// Generate mock cases with correct status values and required properties
 const generatedCases = generateAllCases();
 export const mockCases: ComplianceCase[] = generatedCases.map(caseData => ({
   ...caseData,
   // Ensure status is one of the allowed values, convert pending_info to under_review
   status: caseData.status === 'pending_info' ? 'under_review' : caseData.status as 'open' | 'under_review' | 'escalated' | 'closed',
+  // Add missing properties required by ComplianceCase
+  title: `${caseData.type.toUpperCase()} Case - ${caseData.userName}`,
+  assignedTo: caseData.assignedTo || 'admin_001',
 }));
 
 // Generate mock news

@@ -1,3 +1,4 @@
+
 import { Document, DocumentStatus, DocumentType } from '@/types/supabase';
 import { mockDocumentsCollection } from '@/mocks/centralizedMockData';
 
@@ -41,8 +42,8 @@ export const generateMockDocument = (
     type,
     upload_date: uploadDate,
     status,
-    verified_by: status !== 'pending' ? 'mock-verifier-id' : undefined,
-    verification_date: status !== 'pending' ? randomPastDate() : undefined,
+    verified_by: status !== 'pending' ? 'mock-verifier-id' : null,
+    verification_date: status !== 'pending' ? randomPastDate() : null,
     extracted_data: extractedData,
     created_at: uploadDate,
     updated_at: uploadDate
@@ -55,17 +56,17 @@ export const generateMockDocuments = (count = 5): Document[] => {
   if (mockDocumentsCollection.length > 0) {
     return mockDocumentsCollection.slice(0, count).map(doc => ({
       id: doc.id,
-      user_id: doc.userId,
-      file_name: doc.fileName,
-      file_path: `documents/${doc.userId}/${doc.id}.pdf`,
+      user_id: doc.user_id,
+      file_name: doc.file_name,
+      file_path: `documents/${doc.user_id}/${doc.id}.pdf`,
       type: doc.type as DocumentType,
-      upload_date: doc.uploadDate,
+      upload_date: doc.upload_date,
       status: doc.status as DocumentStatus,
-      verified_by: doc.verifiedBy,
-      verification_date: doc.verificationDate,
-      extracted_data: doc.extractedData,
-      created_at: doc.uploadDate,
-      updated_at: doc.uploadDate
+      verified_by: doc.verified_by,
+      verification_date: doc.verification_date,
+      extracted_data: doc.extracted_data,
+      created_at: doc.upload_date,
+      updated_at: doc.upload_date
     }));
   }
 
@@ -88,17 +89,17 @@ export const ensureMockDocuments = (documents: Document[]): Document[] => {
   if (documents.length === 0) {
     return mockDocumentsCollection.map(doc => ({
       id: doc.id,
-      user_id: doc.userId,
-      file_name: doc.fileName,
-      file_path: `documents/${doc.userId}/${doc.id}.pdf`,
+      user_id: doc.user_id,
+      file_name: doc.file_name,
+      file_path: `documents/${doc.user_id}/${doc.id}.pdf`,
       type: doc.type as DocumentType,
-      upload_date: doc.uploadDate,
+      upload_date: doc.upload_date,
       status: doc.status as DocumentStatus,
-      verified_by: doc.verifiedBy,
-      verification_date: doc.verificationDate,
-      extracted_data: doc.extractedData,
-      created_at: doc.uploadDate,
-      updated_at: doc.uploadDate
+      verified_by: doc.verified_by,
+      verification_date: doc.verification_date,
+      extracted_data: doc.extracted_data,
+      created_at: doc.upload_date,
+      updated_at: doc.upload_date
     }));
   }
   return documents;
