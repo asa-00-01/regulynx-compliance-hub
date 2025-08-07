@@ -3,51 +3,58 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { IntegrationAPIKey } from '@/types/integration';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { IntegrationAPIKey, IntegrationConfig } from '@/types/integration';
 import { Key, Plus, Copy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface APIKeyManagementProps {
   apiKeys: IntegrationAPIKey[];
   selectedClientId: string | null;
+  onClientSelect: (clientId: string | null) => void;
+  integrationConfigs: IntegrationConfig[];
   onCreateAPIKey: (apiKey: Omit<IntegrationAPIKey, 'id' | 'createdAt'>) => Promise<IntegrationAPIKey>;
 }
 
-const APIKeyManagement = ({ apiKeys, selectedClientId, onCreateAPIKey }: APIKeyManagementProps) => {
-  if (!selectedClientId) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            API Key Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            Select a client to manage API keys.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+const APIKeyManagement = ({ apiKeys, selectedClientId, onClientSelect, integrationConfigs, onCreateAPIKey }: APIKeyManagementProps) => {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
-            API Keys for {selectedClientId}
+            API Key Management
           </CardTitle>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Generate Key
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="w-64">
+              <Select value={selectedClientId || ''} onValueChange={(value) => onClientSelect(value || null)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {integrationConfigs.map((config) => (
+                    <SelectItem key={config.id} value={config.clientId}>
+                      {config.clientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedClientId && (
+              <Button size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Generate Key
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {apiKeys.length === 0 ? (
+        {!selectedClientId ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Select a client to manage API keys.
+          </div>
+        ) : apiKeys.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No API keys found for this client.
           </div>

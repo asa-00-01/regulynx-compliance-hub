@@ -17,6 +17,7 @@ import {
   Newspaper,
   Zap,
   Code,
+  Database,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -111,6 +112,12 @@ const Sidebar = () => {
       allowedRoles: ['admin', 'complianceOfficer'],
     },
     {
+      title: 'Integration Management',
+      href: '/integration',
+      icon: Database,
+      allowedRoles: ['admin', 'complianceOfficer'],
+    },
+    {
       title: t('navigation.auditLogs'),
       href: '/audit-logs',
       icon: History,
@@ -144,7 +151,6 @@ const Sidebar = () => {
     },
   ];
 
-  // Check if user is admin (only admins can see developer tools)
   const isAdmin = user?.role === 'admin';
 
   return (

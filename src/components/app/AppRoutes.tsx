@@ -29,6 +29,7 @@ import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
 import DeveloperTools from '@/pages/DeveloperTools';
+import Integration from '@/pages/Integration';
 
 const AppRoutes = () => {
   return (
@@ -108,6 +109,12 @@ const AppRoutes = () => {
         <Route path="audit-logs" element={
           <DashboardLayout requiredRoles={['admin', 'complianceOfficer']}>
             <AuditLogs />
+          </DashboardLayout>
+        } />
+
+        <Route path="integration" element={
+          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
+            <Integration />
           </DashboardLayout>
         } />
 

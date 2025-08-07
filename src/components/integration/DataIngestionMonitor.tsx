@@ -3,15 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { DataIngestionLog } from '@/types/integration';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DataIngestionLog, IntegrationConfig } from '@/types/integration';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DataIngestionMonitorProps {
   logs: DataIngestionLog[];
+  selectedClientId: string | null;
+  onClientSelect: (clientId: string | null) => void;
+  integrationConfigs: IntegrationConfig[];
 }
 
-const DataIngestionMonitor = ({ logs }: DataIngestionMonitorProps) => {
+const DataIngestionMonitor = ({ logs, selectedClientId, onClientSelect, integrationConfigs }: DataIngestionMonitorProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -42,82 +46,90 @@ const DataIngestionMonitor = ({ logs }: DataIngestionMonitorProps) => {
     return Math.round((log.successCount / log.recordCount) * 100);
   };
 
-  if (logs.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Ingestion Monitor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No data ingestion logs found.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Data Ingestion Monitor</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Data Ingestion Monitor</CardTitle>
+          <div className="w-64">
+            <Select value={selectedClientId || ''} onValueChange={(value) => onClientSelect(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All clients</SelectItem>
+                {integrationConfigs.map((config) => (
+                  <SelectItem key={config.id} value={config.clientId}>
+                    {config.clientName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {logs.map((log) => (
-            <div
-              key={log.id}
-              className="flex items-center justify-between p-4 border rounded-lg"
-            >
-              <div className="flex items-center space-x-4">
-                {getStatusIcon(log.status)}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="font-medium">{log.clientId}</h4>
-                    <Badge className={getStatusBadge(log.status)}>
-                      {log.status}
-                    </Badge>
-                    <Badge variant="outline">
-                      {log.ingestionType}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <span>
-                      {log.recordCount} records ({log.successCount} success, {log.errorCount} errors)
-                    </span>
-                    {log.processingTimeMs && (
-                      <span>{log.processingTimeMs}ms</span>
-                    )}
-                    <span>
-                      {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-                    </span>
-                  </div>
-                  {log.recordCount > 0 && (
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span>Success Rate</span>
-                        <span>{getSuccessRate(log)}%</span>
+        {logs.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No data ingestion logs found.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
+                <div className="flex items-center space-x-4">
+                  {getStatusIcon(log.status)}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-medium">{log.clientId}</h4>
+                      <Badge className={getStatusBadge(log.status)}>
+                        {log.status}
+                      </Badge>
+                      <Badge variant="outline">
+                        {log.ingestionType}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <span>
+                        {log.recordCount} records ({log.successCount} success, {log.errorCount} errors)
+                      </span>
+                      {log.processingTimeMs && (
+                        <span>{log.processingTimeMs}ms</span>
+                      )}
+                      <span>
+                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                    {log.recordCount > 0 && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span>Success Rate</span>
+                          <span>{getSuccessRate(log)}%</span>
+                        </div>
+                        <Progress value={getSuccessRate(log)} className="h-2" />
                       </div>
-                      <Progress value={getSuccessRate(log)} className="h-2" />
-                    </div>
-                  )}
-                  {log.errorDetails && (
-                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
-                      <details>
-                        <summary className="cursor-pointer text-red-700 font-medium">
-                          Error Details
-                        </summary>
-                        <pre className="mt-1 text-xs overflow-auto">
-                          {JSON.stringify(log.errorDetails, null, 2)}
-                        </pre>
-                      </details>
-                    </div>
-                  )}
+                    )}
+                    {log.errorDetails && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
+                        <details>
+                          <summary className="cursor-pointer text-red-700 font-medium">
+                            Error Details
+                          </summary>
+                          <pre className="mt-1 text-xs overflow-auto">
+                            {JSON.stringify(log.errorDetails, null, 2)}
+                          </pre>
+                        </details>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
