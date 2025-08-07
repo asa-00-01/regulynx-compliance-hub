@@ -1,273 +1,112 @@
 
 import { useState, useEffect } from 'react';
-import { DashboardMetrics, Document, ComplianceCase, UserRole } from '@/types';
+import { DashboardMetrics, ComplianceCase } from '@/types/compliance';
+import { Document } from '@/types/supabase';
 
-// Mock data for dashboard metrics
-const getMockDashboardData = (): DashboardMetrics => ({
-  pendingDocuments: 18,
-  pendingKycReviews: 12,
-  activeAlerts: 7,
-  riskScoreTrend: [65, 59, 80, 81, 56, 55, 72, 68],
-  complianceCasesByType: {
-    kyc: 8,
-    aml: 5,
-    sanctions: 2,
-  },
-});
+export const useDashboardData = () => {
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    totalCases: 0,
+    openCases: 0,
+    pendingReview: 0,
+    averageRiskScore: 0,
+    riskScoreTrend: 5.2,
+  });
 
-// Mock data for recent documents
-const getMockRecentDocuments = (): Document[] => [
-  {
-    id: '1',
-    userId: '101',
-    type: 'passport',
-    fileName: 'passport_john_doe.pdf',
-    uploadDate: '2025-05-01T10:30:00Z',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    userId: '102',
-    type: 'id',
-    fileName: 'national_id_anna.jpg',
-    uploadDate: '2025-05-02T09:15:00Z',
-    status: 'verified',
-    verifiedBy: '1',
-    verificationDate: '2025-05-02T14:20:00Z',
-  },
-  {
-    id: '3',
-    userId: '103',
-    type: 'license',
-    fileName: 'drivers_license_mikhail.png',
-    uploadDate: '2025-05-03T11:45:00Z',
-    status: 'rejected',
-    verifiedBy: '1',
-    verificationDate: '2025-05-03T16:30:00Z',
-  },
-  {
-    id: '4',
-    userId: '104',
-    type: 'passport',
-    fileName: 'passport_sarah.pdf',
-    uploadDate: '2025-05-03T13:10:00Z',
-    status: 'pending',
-  },
-];
-
-// Mock data for compliance cases
-const getMockComplianceCases = (): ComplianceCase[] => [
-  {
-    id: '1',
-    userId: '101',
-    createdAt: '2025-05-01T08:30:00Z',
-    type: 'kyc',
-    status: 'open',
-    riskScore: 75,
-    description: 'Inconsistent identity information',
-    assignedTo: '1',
-  },
-  {
-    id: '2',
-    userId: '105',
-    createdAt: '2025-05-02T10:15:00Z',
-    type: 'aml',
-    status: 'escalated',
-    riskScore: 92,
-    description: 'Multiple high-value transactions from high-risk country',
-    assignedTo: '1',
-  },
-  {
-    id: '3',
-    userId: '107',
-    createdAt: '2025-05-02T14:45:00Z',
-    type: 'sanctions',
-    status: 'open',
-    riskScore: 85,
-    description: 'Potential sanctions list match',
-    assignedTo: '1',
-  },
-];
-
-// Mock data for risk score chart
-const getRiskScoreData = () => {
-  const data = [];
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toISOString().split('T')[0],
-      score: Math.floor(Math.random() * 20) + 60,
-    });
-  }
-  return data;
-};
-
-// Get role-specific stats to highlight
-const getHighlightedStats = (userRole?: UserRole, metrics?: DashboardMetrics) => {
-  if (!metrics) return [];
-
-  switch (userRole) {
-    case 'complianceOfficer':
-      return [
-        {
-          title: 'Pending Reviews',
-          value: metrics.pendingKycReviews,
-          change: '+2',
-          changeType: 'increase',
-          icon: 'Clock',
-        },
-        {
-          title: 'High Risk Cases',
-          value: 5,
-          change: '-1',
-          changeType: 'decrease',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'Pending Documents',
-          value: metrics.pendingDocuments,
-          change: '+3',
-          changeType: 'increase',
-          icon: 'FileText',
-        },
-        {
-          title: 'Active Alerts',
-          value: metrics.activeAlerts,
-          change: '+1',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-      ];
-    case 'admin':
-      return [
-        {
-          title: 'Active Users',
-          value: 42,
-          change: '+3',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'System Alerts',
-          value: 2,
-          change: '-1',
-          changeType: 'decrease',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'Pending Documents',
-          value: metrics.pendingDocuments,
-          change: '+3',
-          changeType: 'increase',
-          icon: 'FileText',
-        },
-        {
-          title: 'Active Roles',
-          value: 4,
-          change: '0',
-          changeType: 'neutral',
-          icon: 'AlertCircle',
-        },
-      ];
-    case 'executive':
-      return [
-        {
-          title: 'Average Risk Score',
-          value: 68,
-          change: '-3',
-          changeType: 'decrease',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'Open Cases',
-          value: 15,
-          change: '+2',
-          changeType: 'increase',
-          icon: 'Clock',
-        },
-        {
-          title: 'Escalated Issues',
-          value: 3,
-          change: '+1',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'Compliance Rate',
-          value: '94%',
-          change: '+2%',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-      ];
-    case 'support':
-      return [
-        {
-          title: 'Customer Tickets',
-          value: 8,
-          change: '+1',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-        {
-          title: 'Pending Documents',
-          value: metrics.pendingDocuments,
-          change: '+3',
-          changeType: 'increase',
-          icon: 'FileText',
-        },
-        {
-          title: 'Average Response Time',
-          value: '1.2h',
-          change: '-0.3h',
-          changeType: 'decrease',
-          icon: 'Clock',
-        },
-        {
-          title: 'Active Alerts',
-          value: metrics.activeAlerts,
-          change: '+1',
-          changeType: 'increase',
-          icon: 'AlertCircle',
-        },
-      ];
-    default:
-      return [];
-  }
-};
-
-export const useDashboardData = (userRole?: UserRole) => {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [recentCases, setRecentCases] = useState<ComplianceCase[]>([]);
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
-  const [complianceCases, setComplianceCases] = useState<ComplianceCase[]>([]);
-  const [riskScoreData, setRiskScoreData] = useState<{date: string; score: number}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [highlightedStats, setHighlightedStats] = useState<any[]>([]);
 
   useEffect(() => {
-    // Simulate API calls to fetch dashboard data
-    const timer = setTimeout(() => {
-      const dashboardData = getMockDashboardData();
-      setMetrics(dashboardData);
-      setRecentDocuments(getMockRecentDocuments());
-      setComplianceCases(getMockComplianceCases());
-      setRiskScoreData(getRiskScoreData());
-      setHighlightedStats(getHighlightedStats(userRole, dashboardData));
-      setLoading(false);
-    }, 800);
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      
+      try {
+        // Mock data for demonstration
+        const mockMetrics: DashboardMetrics = {
+          totalCases: 247,
+          openCases: 38,
+          pendingReview: 12,
+          averageRiskScore: 67.3,
+          riskScoreTrend: 5.2,
+        };
 
-    return () => clearTimeout(timer);
-  }, [userRole]);
+        const mockCases: ComplianceCase[] = [
+          {
+            id: '1',
+            userId: 'user-123',
+            type: 'kyc',
+            status: 'open',
+            priority: 'high',
+            title: 'KYC Verification Required',
+            description: 'New customer requires KYC verification',
+            assignedTo: 'Johan Berg',
+            createdAt: '2024-01-15T10:30:00Z',
+            updatedAt: '2024-01-15T10:30:00Z',
+            riskScore: 85,
+          },
+          {
+            id: '2',
+            userId: 'user-456',
+            type: 'aml',
+            status: 'escalated',
+            priority: 'critical',
+            title: 'Suspicious Transaction Pattern',
+            description: 'Large transaction pattern detected',
+            assignedTo: 'Maria Andersson',
+            createdAt: '2024-01-14T16:45:00Z',
+            updatedAt: '2024-01-14T18:20:00Z',
+            riskScore: 92,
+          },
+          {
+            id: '3',
+            userId: 'user-789',
+            type: 'sanctions',
+            status: 'open',
+            priority: 'medium',
+            title: 'Sanctions Check Required',
+            description: 'Customer sanctions screening needed',
+            assignedTo: 'Erik Karlsson',
+            createdAt: '2024-01-14T09:15:00Z',
+            updatedAt: '2024-01-14T09:15:00Z',
+            riskScore: 43,
+          },
+        ];
+
+        const mockDocuments: Document[] = [
+          {
+            id: '1',
+            customer_id: 'customer-123',
+            filename: 'passport.pdf',
+            document_type: 'passport',
+            file_path: '/documents/passport.pdf',
+            upload_date: '2024-01-15T10:00:00Z',
+            status: 'pending',
+            file_size: 1024000,
+            mime_type: 'application/pdf',
+            extracted_data: null,
+            verification_notes: null,
+            verified_at: null,
+            verified_by: null,
+          },
+        ];
+
+        setMetrics(mockMetrics);
+        setRecentCases(mockCases);
+        setRecentDocuments(mockDocuments);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return {
     metrics,
+    recentCases,
     recentDocuments,
-    complianceCases,
-    riskScoreData,
-    highlightedStats,
-    loading
+    loading,
   };
 };
-
-export default useDashboardData;

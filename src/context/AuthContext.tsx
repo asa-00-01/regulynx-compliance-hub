@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { StandardUser } from '@/types/user';
@@ -111,3 +112,6 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+// Export useAuth for backward compatibility
+export const useAuth = useAuthContext;

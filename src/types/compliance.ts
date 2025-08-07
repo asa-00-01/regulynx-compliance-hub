@@ -1,34 +1,26 @@
 
+export interface DashboardMetrics {
+  totalCases: number;
+  openCases: number;
+  pendingReview: number;
+  averageRiskScore: number;
+  riskScoreTrend: number;
+}
+
 export interface ComplianceCase {
   id: string;
   userId: string;
-  type: 'aml' | 'kyc' | 'sanctions' | 'fraud';
-  status: 'open' | 'under_review' | 'closed' | 'escalated';
+  type: 'kyc' | 'aml' | 'sanctions';
+  status: 'open' | 'under_review' | 'escalated' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   description: string;
-  assignedTo?: string;
+  assignedTo: string;
   createdAt: string;
   updatedAt: string;
-  dueDate?: string;
-  tags?: string[];
-  notes?: string[];
   riskScore: number;
 }
 
-export interface DashboardMetrics {
-  totalUsers: number;
-  pendingVerifications: number;
-  completedThisMonth: number;
-  pendingDocuments: number;
-  activeAlerts: number;
-  pendingKycReviews: number;
-  riskDistribution: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  recentDocuments: Document[];
-  complianceCases: ComplianceCase[];
-}
+export type CasePriority = 'low' | 'medium' | 'high' | 'critical';
+export type CaseStatus = 'open' | 'under_review' | 'escalated' | 'closed';
+export type CaseType = 'kyc' | 'aml' | 'sanctions';

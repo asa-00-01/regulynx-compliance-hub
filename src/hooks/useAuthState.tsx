@@ -38,12 +38,22 @@ export const useAuthState = (): AuthState => {
           const minimalUser = createMockUser(currentSession.user.email || 'default@example.com');
           setUser(minimalUser);
         } else {
-          // Merge Supabase auth user with profile data
-          const extendedUser: StandardUser = {
+          // Convert Supabase profile data to StandardUser format
+          const standardUser: StandardUser = {
             ...currentSession.user,
-            ...profile,
-          } as StandardUser;
-          setUser(extendedUser);
+            name: profile.name,
+            role: profile.role,
+            status: profile.status,
+            avatarUrl: profile.avatar_url || `https://i.pravatar.cc/150?u=${currentSession.user.email}`,
+            riskScore: profile.risk_score || 0,
+            email: currentSession.user.email || '',
+            title: currentSession.user.user_metadata?.title,
+            department: currentSession.user.user_metadata?.department,
+            phone: currentSession.user.user_metadata?.phone,
+            location: currentSession.user.user_metadata?.location,
+            preferences: currentSession.user.user_metadata?.preferences,
+          };
+          setUser(standardUser);
         }
       } catch (err: any) {
         console.error('Unexpected error fetching profile:', err);

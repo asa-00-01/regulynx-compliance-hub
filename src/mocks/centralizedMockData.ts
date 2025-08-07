@@ -1,100 +1,95 @@
 
-import { UnifiedUserData } from '@/context/compliance/types';
-import { Document, ComplianceCase } from '@/types';
-import { AMLTransaction } from '@/types/aml';
-import { ComplianceCaseDetails } from '@/types/case';
-import { enhancedUserProfiles, convertToUnifiedUserData } from './generators/enhancedUserGenerator';
-import { generateEnhancedDocuments, EnhancedDocument } from './generators/enhancedDocumentGenerator';
+import { generateTransactions } from './generators/enhancedTransactionGenerator';
+import { generateUsers } from './generators/enhancedUserGenerator';
+import { generateDocuments } from './generators/enhancedDocumentGenerator';
+import { generateCases } from './generators/caseGenerator';
+import { generateNews } from './generators/newsGenerator';
+import { AMLTransaction } from '@/hooks/types/transactionTypes';
+import { ComplianceCase } from '@/types/compliance';
+import { StandardUser } from '@/types/user';
+import { Document } from '@/types/supabase';
+import { NewsItem } from '@/hooks/data/mockNewsItems';
 
-// Generate mock compliance cases
-const generateMockComplianceCases = (): ComplianceCaseDetails[] => {
-  return enhancedUserProfiles.slice(0, 10).map((profile, index) => ({
-    id: `case_${index + 1}`,
-    userId: profile.id,
-    userName: profile.fullName,
-    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    type: ['kyc', 'aml', 'sanctions'][Math.floor(Math.random() * 3)] as 'kyc' | 'aml' | 'sanctions',
-    status: ['open', 'under_review', 'escalated', 'pending_info', 'closed'][Math.floor(Math.random() * 5)] as any,
-    riskScore: Math.floor(Math.random() * 100),
-    description: `Case investigation for ${profile.fullName}`,
-    priority: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
-    source: 'manual' as any,
-  }));
-};
+// Constants for data generation
+const TRANSACTION_COUNT = 1000;
+const USER_COUNT = 200;
+const DOCUMENT_COUNT = 150;
+const CASE_COUNT = 80;
+const NEWS_COUNT = 25;
 
-// Generate mock transactions
-const generateMockTransactions = (): AMLTransaction[] => {
-  return enhancedUserProfiles.slice(0, 50).map((profile, index) => ({
-    id: `tx_${index + 1}`,
-    senderUserId: profile.id,
-    senderName: profile.fullName,
-    receiverName: `Receiver ${index + 1}`,
-    amount: Math.floor(Math.random() * 100000) + 1000,
-    currency: 'USD',
-    timestamp: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
-    type: ['deposit', 'withdrawal', 'transfer'][Math.floor(Math.random() * 3)] as any,
-    status: 'completed',
-    riskScore: Math.floor(Math.random() * 100),
-    senderCountry: profile.countryOfResidence,
-    receiverCountry: ['US', 'GB', 'DE', 'FR', 'SE'][Math.floor(Math.random() * 5)],
-    flags: [],
-  }));
-};
-
-// Convert enhanced profiles to unified format
-export const unifiedMockData: UnifiedUserData[] = enhancedUserProfiles.map(profile => {
-  const userData = convertToUnifiedUserData(profile);
-  
-  // Generate enhanced documents for each user
-  const enhancedDocs = generateEnhancedDocuments(profile);
-  
-  // Convert enhanced documents to regular Document format
-  const documents: Document[] = enhancedDocs.map((doc: EnhancedDocument) => ({
-    id: doc.id,
-    userId: doc.userId,
-    type: doc.type,
-    fileName: doc.fileName,
-    uploadDate: doc.uploadDate,
-    status: doc.status,
-    verifiedBy: doc.verifiedBy,
-    verificationDate: doc.verificationDate,
-    extractedData: doc.extractedData,
-  }));
-  
-  return {
-    ...userData,
-    documents,
-    transactions: [], // Would be populated from AML mock data
-    complianceCases: [], // Would be populated from compliance mock data
-  };
-});
-
-// Generate the collections
-const mockComplianceCasesDetails = generateMockComplianceCases();
-const mockTransactionsData = generateMockTransactions();
-
-// Export individual collections for backward compatibility
-export const mockDocuments: Document[] = unifiedMockData.flatMap(user => user.documents);
-export const mockComplianceCases: ComplianceCase[] = mockComplianceCasesDetails.map(caseDetails => ({
-  id: caseDetails.id,
-  userId: caseDetails.userId,
-  type: caseDetails.type,
-  status: caseDetails.status,
-  priority: caseDetails.priority,
-  title: caseDetails.description, // Map description to title for compatibility
-  description: caseDetails.description,
-  assignedTo: caseDetails.assignedTo,
-  createdAt: caseDetails.createdAt,
-  updatedAt: caseDetails.updatedAt,
-  dueDate: caseDetails.createdAt, // Use createdAt as fallback
-  tags: [],
-  notes: [],
-  riskScore: caseDetails.riskScore,
+// Generate enhanced transactions with proper AMLTransaction interface
+const generatedTransactions = generateTransactions(TRANSACTION_COUNT);
+export const mockTransactions: AMLTransaction[] = generatedTransactions.map(transaction => ({
+  id: transaction.id,
+  senderUserId: transaction.senderUserId,
+  senderName: transaction.senderName,
+  senderAmount: transaction.amount,
+  senderCurrency: transaction.currency,
+  senderCountry: transaction.senderCountry,
+  senderCountryCode: transaction.senderCountry.substring(0, 2).toUpperCase(),
+  receiverName: transaction.receiverName,
+  receiverAmount: transaction.amount,
+  receiverCurrency: transaction.currency,
+  receiverCountry: transaction.receiverCountry,
+  receiverCountryCode: transaction.receiverCountry.substring(0, 2).toUpperCase(),
+  amount: transaction.amount,
+  currency: transaction.currency,
+  timestamp: transaction.timestamp,
+  type: transaction.type,
+  status: transaction.status,
+  riskScore: transaction.riskScore,
+  flags: transaction.flags,
 }));
-export const mockTransactions: AMLTransaction[] = mockTransactionsData;
 
-// Export the collections that other files are trying to import
-export const mockDocumentsCollection = mockDocuments;
-export const mockTransactionsCollection = mockTransactions;
-export const mockComplianceCasesCollection = mockComplianceCasesDetails;
+// Generate mock users
+export const mockUsers: StandardUser[] = generateUsers(USER_COUNT);
+
+// Generate mock documents  
+export const mockDocuments: Document[] = generateDocuments(DOCUMENT_COUNT);
+
+// Generate mock cases with correct status values
+const generatedCases = generateCases(CASE_COUNT);
+export const mockCases: ComplianceCase[] = generatedCases.map(caseData => ({
+  ...caseData,
+  // Ensure status is one of the allowed values, convert pending_info to under_review
+  status: caseData.status === 'pending_info' ? 'under_review' : caseData.status as 'open' | 'under_review' | 'escalated' | 'closed',
+}));
+
+// Generate mock news
+export const mockNews: NewsItem[] = generateNews(NEWS_COUNT);
+
+// Export statistics for dashboard use
+export const mockStats = {
+  transactions: {
+    total: mockTransactions.length,
+    highRisk: mockTransactions.filter(t => t.riskScore > 70).length,
+    flagged: mockTransactions.filter(t => t.flags.length > 0).length,
+  },
+  users: {
+    total: mockUsers.length,
+    verified: mockUsers.filter(u => u.status === 'verified').length,
+    pending: mockUsers.filter(u => u.status === 'pending').length,
+    flagged: mockUsers.filter(u => u.status === 'flagged').length,
+  },
+  documents: {
+    total: mockDocuments.length,
+    verified: mockDocuments.filter(d => d.status === 'verified').length,
+    pending: mockDocuments.filter(d => d.status === 'pending').length,
+    rejected: mockDocuments.filter(d => d.status === 'rejected').length,
+  },
+  cases: {
+    total: mockCases.length,
+    open: mockCases.filter(c => c.status === 'open').length,
+    underReview: mockCases.filter(c => c.status === 'under_review').length,
+    escalated: mockCases.filter(c => c.status === 'escalated').length,
+    closed: mockCases.filter(c => c.status === 'closed').length,
+  },
+};
+
+console.log('Mock data initialized:', {
+  transactions: mockTransactions.length,
+  users: mockUsers.length,
+  documents: mockDocuments.length,
+  cases: mockCases.length,
+  news: mockNews.length,
+});
