@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +51,7 @@ export const useAuth = (): AuthHook => {
             const fallbackUser: StandardUser = {
               ...session.user,
               name: session.user.email?.split('@')[0] || 'User',
-              role: 'user',
+              role: 'support', // Use valid UserRole
               riskScore: 0,
               status: 'active',
               avatarUrl: null,

@@ -1,4 +1,3 @@
-
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { StandardUser } from '@/types/user';
@@ -27,9 +26,10 @@ export class UserProfileService {
           const basicProfile = {
             id: user.id,
             name: user.email?.split('@')[0] || 'User',
-            role: 'user',
+            email: user.email || '', // Add required email field
+            role: 'support' as const, // Use proper enum type
             risk_score: 0,
-            status: 'active',
+            status: 'active' as const, // Use proper enum type
             avatar_url: null
           };
 
@@ -68,7 +68,7 @@ export class UserProfileService {
     return {
       ...user,
       name: profile.name || user.email?.split('@')[0] || 'User',
-      role: profile.role || 'user',
+      role: profile.role || 'support',
       riskScore: profile.risk_score || 0,
       status: profile.status || 'active',
       avatarUrl: profile.avatar_url,
