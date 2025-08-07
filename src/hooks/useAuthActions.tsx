@@ -1,17 +1,15 @@
+
 import { useCallback } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
-import { StandardUser, UserRole } from '@/types';
+import { StandardUser, UserRole } from '@/types/user';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateUserData, createStandardUser } from '@/types/userHelpers';
 
 export const useAuthActions = () => {
-  const { setUser, setSession, setLoading, setAuthLoaded } = useAuthContext();
-  const router = useRouter();
+  const { user, session, loading, authLoaded } = useAuthContext();
 
   const signIn = useCallback(async (email: string, password: string) => {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -22,20 +20,16 @@ export const useAuthActions = () => {
       }
 
       if (data?.user) {
-        setUser(data.user as StandardUser);
-        setSession(data.session);
         toast.success(`Signed in as ${email}`);
-        router.push('/dashboard');
       }
       return { error: null };
-    } finally {
-      setLoading(false);
-      setAuthLoaded(true);
+    } catch (error: any) {
+      console.error('Sign-in error:', error);
+      return { error };
     }
-  }, [setUser, setSession, setLoading, setAuthLoaded, router]);
+  }, []);
 
   const signUp = useCallback(async (email: string, password: string, userData: CreateUserData) => {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -59,20 +53,16 @@ export const useAuthActions = () => {
       }
 
       if (data?.user) {
-        setUser(data.user as StandardUser);
-        setSession(data.session);
         toast.success(`Signed up as ${email}`);
-        router.push('/dashboard');
       }
       return { error: null };
-    } finally {
-      setLoading(false);
-      setAuthLoaded(true);
+    } catch (error: any) {
+      console.error('Sign-up error:', error);
+      return { error };
     }
-  }, [setUser, setSession, setLoading, setAuthLoaded, router]);
+  }, []);
 
   const signOut = useCallback(async () => {
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
 
@@ -82,18 +72,13 @@ export const useAuthActions = () => {
         return;
       }
 
-      setUser(null);
-      setSession(null);
       toast.success('Signed out successfully');
-      router.push('/auth');
-    } finally {
-      setLoading(false);
-      setAuthLoaded(true);
+    } catch (error: any) {
+      console.error('Sign-out error:', error);
     }
-  }, [setUser, setSession, setLoading, setAuthLoaded, router]);
+  }, []);
 
   const updateUserProfile = useCallback(async (updates: any) => {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.updateUser({ data: updates });
 
@@ -103,12 +88,11 @@ export const useAuthActions = () => {
         return;
       }
 
-      setUser(data.user as StandardUser);
       toast.success('Profile updated successfully');
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error('Update user error:', error);
     }
-  }, [setUser, setLoading]);
+  }, []);
 
   const createMockUser = useCallback((email: string): StandardUser => {
     const userData = createStandardUser({

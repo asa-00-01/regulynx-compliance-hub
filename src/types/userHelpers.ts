@@ -1,5 +1,5 @@
 
-import { StandardUser, UserRole, UserStatus } from './user';
+import { StandardUser, UserRole, UserStatus, UserPreferences } from './user';
 
 export interface CreateUserData {
   id?: string;
@@ -13,6 +13,7 @@ export interface CreateUserData {
   department?: string;
   phone?: string;
   location?: string;
+  preferences?: UserPreferences;
 }
 
 export const createStandardUser = (userData: CreateUserData): StandardUser => {
@@ -35,5 +36,6 @@ export const createStandardUser = (userData: CreateUserData): StandardUser => {
     department: userData.department,
     phone: userData.phone,
     location: userData.location,
+    preferences: userData.preferences,
   };
 };

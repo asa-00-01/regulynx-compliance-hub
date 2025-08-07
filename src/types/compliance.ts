@@ -13,12 +13,16 @@ export interface ComplianceCase {
   dueDate?: string;
   tags?: string[];
   notes?: string[];
+  riskScore: number;
 }
 
 export interface DashboardMetrics {
   totalUsers: number;
   pendingVerifications: number;
   completedThisMonth: number;
+  pendingDocuments: number;
+  activeAlerts: number;
+  pendingKycReviews: number;
   riskDistribution: {
     low: number;
     medium: number;
