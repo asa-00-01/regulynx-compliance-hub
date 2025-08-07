@@ -25,11 +25,20 @@ export const useComplianceOperations = (
     const user = getUserById(userId);
     if (!user) return [];
     
-    // Ensure proper type casting for documents
-    return user.documents.map(doc => ({
-      ...doc,
-      type: doc.type as 'id' | 'passport' | 'license',
-      status: doc.status as 'pending' | 'verified' | 'rejected' | 'information_requested'
+    // Properly cast documents to match the Supabase Document type
+    return user.documents.map((doc): Document => ({
+      id: doc.id,
+      user_id: doc.user_id,
+      type: doc.type as Document['type'],
+      file_name: doc.file_name,
+      file_path: doc.file_path,
+      upload_date: doc.upload_date,
+      status: doc.status as Document['status'],
+      verified_by: doc.verified_by,
+      verification_date: doc.verification_date,
+      extracted_data: doc.extracted_data,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
     }));
   }, [getUserById]);
   
