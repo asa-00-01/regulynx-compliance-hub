@@ -1,6 +1,7 @@
 
 import { Document } from '@/types/supabase';
 import { UnifiedUserData } from '@/context/compliance/types';
+import { unifiedMockData, mockDocumentsCollection } from '@/mocks/centralizedMockData';
 
 export const validateDocumentData = (documents: Document[]): boolean => {
   if (!Array.isArray(documents)) {
@@ -84,6 +85,29 @@ export const validateMockData = (data: { users: UnifiedUserData[], documents: Do
     return true;
   } else {
     console.error('✗ Mock data validation failed');
+    return false;
+  }
+};
+
+// Add the missing logValidationResults function
+export const logValidationResults = () => {
+  console.log('🔍 Running mock data validation...');
+  
+  try {
+    const validationResult = validateMockData({
+      users: unifiedMockData,
+      documents: mockDocumentsCollection
+    });
+    
+    if (validationResult) {
+      console.log('✅ Mock data validation completed successfully');
+    } else {
+      console.error('❌ Mock data validation failed');
+    }
+    
+    return validationResult;
+  } catch (error) {
+    console.error('Error during validation:', error);
     return false;
   }
 };

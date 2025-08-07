@@ -1,107 +1,70 @@
+import { AMLTransaction, TransactionStatus } from '@/types/aml';
 
-import { AMLTransaction } from '@/types/aml';
-import { userProfiles } from './userGenerator';
-
-const getRandomDateInPast = (daysBack: number): string => {
-  const date = new Date();
-  date.setDate(date.getDate() - Math.floor(Math.random() * daysBack));
-  return date.toISOString();
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
 
-const getRandomAmount = (riskScore: number): number => {
-  // Higher risk users tend to have larger transaction amounts
-  if (riskScore > 70) return Math.floor(Math.random() * 100000) + 50000;
-  if (riskScore > 50) return Math.floor(Math.random() * 50000) + 10000;
-  if (riskScore > 30) return Math.floor(Math.random() * 25000) + 5000;
-  return Math.floor(Math.random() * 10000) + 1000;
+const getRandomValue = (array: any[]) => array[Math.floor(Math.random() * array.length)];
+
+const generateRandomAmount = (min: number, max: number): number => {
+  return Math.random() * (max - min) + min;
 };
 
-const getReceivingCountry = (riskScore: number): string => {
-  const highRiskCountries = ['AF', 'IR', 'KP', 'SY', 'VE', 'BY', 'MM'];
-  const mediumRiskCountries = ['RU', 'CU', 'SO', 'YE', 'TR'];
-  const lowRiskCountries = ['GB', 'DE', 'FR', 'CA', 'AU', 'SE', 'NO', 'DK'];
-  
-  if (riskScore > 70) {
-    return highRiskCountries[Math.floor(Math.random() * highRiskCountries.length)];
-  } else if (riskScore > 50) {
-    return mediumRiskCountries[Math.floor(Math.random() * mediumRiskCountries.length)];
-  } else {
-    return lowRiskCountries[Math.floor(Math.random() * lowRiskCountries.length)];
-  }
+const generateRandomDate = (start: Date, end: Date): string => {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString();
 };
 
-const getTransactionMethod = (riskScore: number): 'card' | 'bank' | 'cash' | 'mobile' | 'crypto' => {
-  if (riskScore > 70) return Math.random() > 0.6 ? 'crypto' : 'cash';
-  if (riskScore > 50) return Math.random() > 0.7 ? 'cash' : 'bank';
-  return Math.random() > 0.8 ? 'mobile' : 'bank';
-};
+export const generateMockTransactions = (count: number = 50): AMLTransaction[] => {
+  return Array.from({ length: count }, () => {
+    const id = generateUUID();
+    const senderUserId = generateUUID();
+    const receiverUserId = generateUUID();
+    const senderName = `Sender ${Math.floor(Math.random() * 100)}`;
+    const receiverName = `Receiver ${Math.floor(Math.random() * 100)}`;
+    const timestamp = generateRandomDate(new Date(2023, 0, 1), new Date());
+    const statuses: TransactionStatus[] = ['pending', 'completed', 'failed', 'flagged'];
+    const status = getRandomValue(statuses);
+    const senderAmount = generateRandomAmount(100, 10000);
+    const receiverAmount = senderAmount - generateRandomAmount(0, 10);
+    const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
+    const senderCurrency = getRandomValue(currencies);
+    const receiverCurrency = senderCurrency;
+    const countryCodes = ['US', 'CA', 'GB', 'DE', 'FR'];
+    const senderCountryCode = getRandomValue(countryCodes);
+    const receiverCountryCode = getRandomValue(countryCodes);
+    const methods = ['bank', 'credit_card', 'paypal'];
+    const method = getRandomValue(methods);
+    const reasons = ['invoice', 'gift', 'investment', 'personal'];
+    const reasonForSending = getRandomValue(reasons);
+    const isSuspect = Math.random() < 0.2;
+    const riskScore = Math.floor(Math.random() * 100);
 
-const getReasonForSending = (riskScore: number): string => {
-  const highRiskReasons = ['Investment', 'Business loan', 'Property purchase', 'Consulting fee'];
-  const mediumRiskReasons = ['Business payment', 'Invoice payment', 'Service fee', 'Equipment purchase'];
-  const lowRiskReasons = ['Personal transfer', 'Family support', 'Gift', 'Tuition payment', 'Travel expenses'];
-  
-  if (riskScore > 70) {
-    return highRiskReasons[Math.floor(Math.random() * highRiskReasons.length)];
-  } else if (riskScore > 50) {
-    return mediumRiskReasons[Math.floor(Math.random() * mediumRiskReasons.length)];
-  } else {
-    return lowRiskReasons[Math.floor(Math.random() * lowRiskReasons.length)];
-  }
-};
-
-export const generateTransactionsForUser = (user: typeof userProfiles[0], count: number = 5): AMLTransaction[] => {
-  const transactions: AMLTransaction[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    const amount = getRandomAmount(user.riskScore);
-    const receiverCountry = getReceivingCountry(user.riskScore);
-    const method = getTransactionMethod(user.riskScore);
-    const reason = getReasonForSending(user.riskScore);
-    
-    transactions.push({
-      id: `tx_${user.id}_${i + 1}`,
-      senderUserId: user.id,
-      senderName: user.fullName,
-      receiverUserId: `receiver_${user.id}_${i + 1}`,
-      receiverName: `Receiver ${i + 1}`,
-      timestamp: getRandomDateInPast(90),
-      status: Math.random() > 0.1 ? 'completed' : 'pending',
-      senderAmount: amount,
-      receiverAmount: amount * 0.98, // 2% fee
-      senderCurrency: 'USD',
-      receiverCurrency: 'USD',
-      senderCountryCode: user.countryOfResidence === 'United States' ? 'US' : 
-                        user.countryOfResidence === 'Spain' ? 'ES' :
-                        user.countryOfResidence === 'Egypt' ? 'EG' :
-                        user.countryOfResidence === 'China' ? 'CN' :
-                        user.countryOfResidence === 'Canada' ? 'CA' :
-                        user.countryOfResidence === 'Russia' ? 'RU' :
-                        user.countryOfResidence === 'United Arab Emirates' ? 'AE' :
-                        user.countryOfResidence === 'Colombia' ? 'CO' :
-                        user.countryOfResidence === 'United Kingdom' ? 'GB' :
-                        user.countryOfResidence === 'India' ? 'IN' :
-                        user.countryOfResidence === 'Poland' ? 'PL' :
-                        user.countryOfResidence === 'Saudi Arabia' ? 'SA' :
-                        user.countryOfResidence === 'France' ? 'FR' :
-                        user.countryOfResidence === 'Germany' ? 'DE' :
-                        user.countryOfResidence === 'Brazil' ? 'BR' :
-                        user.countryOfResidence === 'Japan' ? 'JP' :
-                        user.countryOfResidence === 'Ukraine' ? 'UA' :
-                        user.countryOfResidence === 'Denmark' ? 'DK' :
-                        user.countryOfResidence === 'Qatar' ? 'QA' : 'US',
-      receiverCountryCode: receiverCountry,
+    const transaction = {
+      id,
+      senderUserId,
+      senderName,
+      receiverUserId,
+      receiverName,
+      timestamp,
+      status,
+      senderAmount,
+      receiverAmount,
+      senderCurrency,
+      receiverCurrency,
+      senderCountryCode,
+      receiverCountryCode,
       method,
-      reasonForSending: reason,
-      isSuspect: user.riskScore > 60 && Math.random() > 0.7,
-      riskScore: Math.max(10, user.riskScore + Math.floor(Math.random() * 20 - 10)),
-      notes: user.riskScore > 70 ? ['High-value transaction', 'Enhanced monitoring required'] : []
-    });
-  }
-  
-  return transactions;
-};
+      reasonForSending,
+      isSuspect,
+      riskScore,
+      flags: isSuspect ? ['High Risk'] : [], // Add the missing flags property
+      notes: []
+    };
 
-export const generateAllTransactions = (): AMLTransaction[] => {
-  return userProfiles.flatMap(user => generateTransactionsForUser(user, Math.floor(Math.random() * 8) + 3));
+    return transaction as AMLTransaction;
+  });
 };

@@ -1,32 +1,140 @@
-
+import { ComplianceCase, ComplianceCaseStatus, ComplianceCaseType } from '@/types/compliance';
 import { ComplianceCaseDetails } from '@/types/case';
-import { mockComplianceCasesCollection } from '@/mocks/centralizedMockData';
 
-// Convert ComplianceCase to ComplianceCaseDetails by adding missing properties
-export const mockComplianceCases: ComplianceCaseDetails[] = mockComplianceCasesCollection.map(caseData => ({
-  id: caseData.id,
-  userId: caseData.userId,
-  userName: `User ${caseData.userId.substring(0, 8)}`, // Generate a userName since it doesn't exist
-  createdAt: caseData.createdAt,
-  createdBy: caseData.createdBy || 'system', // Default createdBy
-  updatedAt: caseData.updatedAt,
-  type: caseData.type,
-  status: caseData.status,
-  riskScore: caseData.riskScore,
-  description: caseData.description,
-  assignedTo: caseData.assignedTo,
-  assignedToName: `Admin ${caseData.assignedTo}`, // Generate assignedToName
-  priority: caseData.priority,
-  source: 'system', // Add default source as it's required by ComplianceCaseDetails
-  relatedTransactions: [], // Add empty arrays for missing properties
-  relatedAlerts: [],
-  documents: [],
-}));
-
-export const complianceOfficers = [
-  { id: 'admin_001', name: 'Alex Nordström' },
-  { id: 'admin_002', name: 'Johan Berg' },
-  { id: 'admin_003', name: 'Lena Wikström' },
-  { id: 'admin_004', name: 'Maria Svensson' },
-  { id: 'admin_005', name: 'Erik Lindqvist' }
+// Mock data for compliance cases
+const mockCasesData: Omit<ComplianceCase, 'title' | 'assignedTo'>[] = [
+  {
+    id: 'case-001',
+    caseNumber: 'CC-2023-001',
+    type: 'kyc' as ComplianceCaseType,
+    status: 'open' as ComplianceCaseStatus,
+    priority: 'high',
+    description: 'KYC verification failed for user John Doe',
+    createdAt: '2023-01-15T14:30:00Z',
+    updatedAt: '2023-01-15T14:30:00Z',
+    userName: 'John Doe',
+  },
+  {
+    id: 'case-002',
+    caseNumber: 'CC-2023-002',
+    type: 'aml' as ComplianceCaseType,
+    status: 'under_review' as ComplianceCaseStatus,
+    priority: 'medium',
+    description: 'Suspicious transaction detected for user Jane Smith',
+    createdAt: '2023-02-01T09:15:00Z',
+    updatedAt: '2023-02-05T16:45:00Z',
+    userName: 'Jane Smith',
+  },
+  {
+    id: 'case-003',
+    caseNumber: 'CC-2023-003',
+    type: 'fraud' as ComplianceCaseType,
+    status: 'escalated' as ComplianceCaseStatus,
+    priority: 'high',
+    description: 'Potential fraud detected in user account Robert Johnson',
+    createdAt: '2023-02-10T11:00:00Z',
+    updatedAt: '2023-02-12T18:20:00Z',
+    userName: 'Robert Johnson',
+  },
+  {
+    id: 'case-004',
+    caseNumber: 'CC-2023-004',
+    type: 'kyc' as ComplianceCaseType,
+    status: 'closed' as ComplianceCaseStatus,
+    priority: 'low',
+    description: 'KYC verification completed for user Emily White',
+    createdAt: '2023-03-01T16:00:00Z',
+    updatedAt: '2023-03-05T10:00:00Z',
+    userName: 'Emily White',
+  },
+  {
+    id: 'case-005',
+    caseNumber: 'CC-2023-005',
+    type: 'aml' as ComplianceCaseType,
+    status: 'open' as ComplianceCaseStatus,
+    priority: 'medium',
+    description: 'Unusual transaction pattern observed for user Michael Brown',
+    createdAt: '2023-03-15T08:00:00Z',
+    updatedAt: '2023-03-15T08:00:00Z',
+    userName: 'Michael Brown',
+  },
+  {
+    id: 'case-006',
+    caseNumber: 'CC-2023-006',
+    type: 'fraud' as ComplianceCaseType,
+    status: 'under_review' as ComplianceCaseStatus,
+    priority: 'high',
+    description: 'Suspicious login activity detected for user Linda Davis',
+    createdAt: '2023-04-01T13:00:00Z',
+    updatedAt: '2023-04-03T19:00:00Z',
+    userName: 'Linda Davis',
+  },
+  {
+    id: 'case-007',
+    caseNumber: 'CC-2023-007',
+    type: 'kyc' as ComplianceCaseType,
+    status: 'escalated' as ComplianceCaseStatus,
+    priority: 'high',
+    description: 'Further KYC information required for user David Wilson',
+    createdAt: '2023-04-15T10:30:00Z',
+    updatedAt: '2023-04-18T14:45:00Z',
+    userName: 'David Wilson',
+  },
+  {
+    id: 'case-008',
+    caseNumber: 'CC-2023-008',
+    type: 'aml' as ComplianceCaseType,
+    status: 'closed' as ComplianceCaseStatus,
+    priority: 'low',
+    description: 'Transaction review completed for user Barbara Garcia',
+    createdAt: '2023-05-01T17:00:00Z',
+    updatedAt: '2023-05-03T11:00:00Z',
+    userName: 'Barbara Garcia',
+  },
+  {
+    id: 'case-009',
+    caseNumber: 'CC-2023-009',
+    type: 'fraud' as ComplianceCaseType,
+    status: 'open' as ComplianceCaseStatus,
+    priority: 'medium',
+    description: 'Unauthorized account access reported by user Charles Rodriguez',
+    createdAt: '2023-05-15T14:00:00Z',
+    updatedAt: '2023-05-15T14:00:00Z',
+    userName: 'Charles Rodriguez',
+  },
+  {
+    id: 'case-010',
+    caseNumber: 'CC-2023-010',
+    type: 'kyc' as ComplianceCaseType,
+    status: 'under_review' as ComplianceCaseStatus,
+    priority: 'medium',
+    description: 'KYC documents under review for user Susan Martinez',
+    createdAt: '2023-06-01T09:00:00Z',
+    updatedAt: '2023-06-05T15:30:00Z',
+    userName: 'Susan Martinez',
+  },
 ];
+
+export const mapCaseToDetails = (complianceCase: ComplianceCase): ComplianceCaseDetails => {
+  return {
+    id: complianceCase.id,
+    caseNumber: complianceCase.caseNumber,
+    type: complianceCase.type,
+    status: complianceCase.status,
+    priority: complianceCase.priority,
+    description: complianceCase.description,
+    createdAt: complianceCase.createdAt,
+    updatedAt: complianceCase.updatedAt,
+    userName: complianceCase.userName || 'Unknown User',
+    createdBy: complianceCase.assignedTo || 'System', // Use assignedTo as fallback for createdBy
+    assignedToName: complianceCase.assignedTo || 'Unassigned',
+    source: 'System Generated',
+    relatedTransactions: [],
+    relatedAlerts: [],
+    documents: [],
+    notes: [],
+    timeline: []
+  };
+};
+
+export default mockCasesData;
