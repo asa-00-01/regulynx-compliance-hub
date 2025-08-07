@@ -33,11 +33,11 @@ const IntegrationConfigDialog = ({
   const [formData, setFormData] = useState({
     clientId: '',
     clientName: '',
-    integrationType: 'api_realtime' as const,
+    integrationType: 'api_realtime' as 'api_realtime' | 'batch_processing' | 'hybrid',
     webhookUrl: '',
     batchFrequency: '',
     dataMapping: '{}',
-    status: 'active' as const,
+    status: 'active' as 'active' | 'inactive' | 'suspended',
   });
   const [saving, setSaving] = useState(false);
 
@@ -133,7 +133,9 @@ const IntegrationConfigDialog = ({
             <Label htmlFor="integrationType">Integration Type</Label>
             <Select
               value={formData.integrationType}
-              onValueChange={(value: any) => setFormData({ ...formData, integrationType: value })}
+              onValueChange={(value: 'api_realtime' | 'batch_processing' | 'hybrid') => 
+                setFormData({ ...formData, integrationType: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -170,7 +172,9 @@ const IntegrationConfigDialog = ({
             <Label htmlFor="status">Status</Label>
             <Select
               value={formData.status}
-              onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+              onValueChange={(value: 'active' | 'inactive' | 'suspended') => 
+                setFormData({ ...formData, status: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
