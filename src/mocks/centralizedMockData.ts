@@ -2,13 +2,13 @@
 import { generateTransactions } from './generators/enhancedTransactionGenerator';
 import { generateUsers } from './generators/enhancedUserGenerator';
 import { generateDocuments } from './generators/enhancedDocumentGenerator';
-import { generateCases } from './generators/caseGenerator';
+import { generateAllCases } from './generators/caseGenerator';
 import { generateNews } from './generators/newsGenerator';
-import { AMLTransaction } from '@/hooks/types/transactionTypes';
+import { AMLTransaction } from '@/types/aml';
 import { ComplianceCase } from '@/types/compliance';
-import { StandardUser } from '@/types/user';
+import { UnifiedUserData } from '@/context/compliance/types';
 import { Document } from '@/types/supabase';
-import { NewsItem } from '@/hooks/data/mockNewsItems';
+import { NewsItem } from '@/types/news';
 
 // Constants for data generation
 const TRANSACTION_COUNT = 1000;
@@ -23,32 +23,32 @@ export const mockTransactions: AMLTransaction[] = generatedTransactions.map(tran
   id: transaction.id,
   senderUserId: transaction.senderUserId,
   senderName: transaction.senderName,
-  senderAmount: transaction.amount,
-  senderCurrency: transaction.currency,
-  senderCountry: transaction.senderCountry,
-  senderCountryCode: transaction.senderCountry.substring(0, 2).toUpperCase(),
+  senderAmount: transaction.senderAmount,
+  senderCurrency: transaction.senderCurrency,
+  senderCountry: transaction.senderCountryCode,
+  senderCountryCode: transaction.senderCountryCode,
   receiverName: transaction.receiverName,
-  receiverAmount: transaction.amount,
-  receiverCurrency: transaction.currency,
-  receiverCountry: transaction.receiverCountry,
-  receiverCountryCode: transaction.receiverCountry.substring(0, 2).toUpperCase(),
-  amount: transaction.amount,
-  currency: transaction.currency,
+  receiverAmount: transaction.receiverAmount,
+  receiverCurrency: transaction.receiverCurrency,
+  receiverCountry: transaction.receiverCountryCode,
+  receiverCountryCode: transaction.receiverCountryCode,
+  amount: transaction.senderAmount,
+  currency: transaction.senderCurrency,
   timestamp: transaction.timestamp,
-  type: transaction.type,
+  type: 'transfer',
   status: transaction.status,
   riskScore: transaction.riskScore,
-  flags: transaction.flags,
+  flags: transaction.isSuspect ? ['High Risk'] : [],
 }));
 
 // Generate mock users
-export const mockUsers: StandardUser[] = generateUsers(USER_COUNT);
+export const mockUsers: UnifiedUserData[] = generateUsers(USER_COUNT);
 
 // Generate mock documents  
 export const mockDocuments: Document[] = generateDocuments(DOCUMENT_COUNT);
 
 // Generate mock cases with correct status values
-const generatedCases = generateCases(CASE_COUNT);
+const generatedCases = generateAllCases();
 export const mockCases: ComplianceCase[] = generatedCases.map(caseData => ({
   ...caseData,
   // Ensure status is one of the allowed values, convert pending_info to under_review
@@ -57,6 +57,12 @@ export const mockCases: ComplianceCase[] = generatedCases.map(caseData => ({
 
 // Generate mock news
 export const mockNews: NewsItem[] = generateNews(NEWS_COUNT);
+
+// Export with consistent naming for backward compatibility
+export const mockTransactionsCollection = mockTransactions;
+export const unifiedMockData = mockUsers;
+export const mockDocumentsCollection = mockDocuments;
+export const mockComplianceCasesCollection = mockCases;
 
 // Export statistics for dashboard use
 export const mockStats = {
@@ -67,9 +73,9 @@ export const mockStats = {
   },
   users: {
     total: mockUsers.length,
-    verified: mockUsers.filter(u => u.status === 'verified').length,
-    pending: mockUsers.filter(u => u.status === 'pending').length,
-    flagged: mockUsers.filter(u => u.status === 'flagged').length,
+    verified: mockUsers.filter(u => u.kycStatus === 'verified').length,
+    pending: mockUsers.filter(u => u.kycStatus === 'pending').length,
+    flagged: mockUsers.filter(u => u.kycStatus === 'rejected').length,
   },
   documents: {
     total: mockDocuments.length,

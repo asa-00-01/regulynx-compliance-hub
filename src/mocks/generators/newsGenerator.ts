@@ -1,4 +1,3 @@
-
 import { NewsItem, RSSFeed } from '@/types/news';
 
 const getRandomDateInPast = (daysBack: number): string => {
@@ -205,4 +204,10 @@ export const generateRSSFeeds = (): RSSFeed[] => {
       lastUpdated: getRandomDateInPast(5)
     }
   ];
+};
+
+// NEW: Add the missing generateNews function for centralized data
+export const generateNews = (count: number): NewsItem[] => {
+  const newsItems = generateNewsItems();
+  return newsItems.slice(0, count);
 };

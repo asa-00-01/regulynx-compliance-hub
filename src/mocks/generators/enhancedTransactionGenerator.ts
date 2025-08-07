@@ -1,4 +1,3 @@
-
 import { AMLTransaction } from '@/types/aml';
 import { EnhancedUserProfile } from './enhancedUserGenerator';
 
@@ -147,4 +146,26 @@ const getReasonForSending = (relationship: string, amount: number): string => {
   } else {
     return friendReasons[Math.floor(Math.random() * friendReasons.length)];
   }
+};
+
+// NEW: Add the missing generateTransactions function for centralized data
+export const generateTransactions = (count: number): AMLTransaction[] => {
+  // Import the enhanced user profiles
+  const { enhancedUserProfiles } = require('./enhancedUserGenerator');
+  const transactions: AMLTransaction[] = [];
+  
+  // Generate transactions for each user
+  enhancedUserProfiles.forEach((user: EnhancedUserProfile) => {
+    const userTransactions = generateRealisticTransactions(user);
+    transactions.push(...userTransactions);
+  });
+  
+  // If we need more transactions, generate additional ones with random users
+  while (transactions.length < count) {
+    const randomUser = enhancedUserProfiles[Math.floor(Math.random() * enhancedUserProfiles.length)];
+    const additionalTransactions = generateRealisticTransactions(randomUser);
+    transactions.push(...additionalTransactions.slice(0, count - transactions.length));
+  }
+  
+  return transactions.slice(0, count);
 };

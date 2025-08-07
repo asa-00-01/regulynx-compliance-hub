@@ -1,4 +1,3 @@
-
 import { Document } from '@/types';
 import { EnhancedUserProfile } from './enhancedUserGenerator';
 
@@ -255,4 +254,30 @@ const generateFinancialDocument = (user: EnhancedUserProfile): EnhancedDocument 
       pepScreening: true
     }
   };
+};
+
+// NEW: Add the missing generateDocuments function for centralized data
+export const generateDocuments = (count: number): Document[] => {
+  const { enhancedUserProfiles } = require('./enhancedUserGenerator');
+  const documents: Document[] = [];
+  
+  // Generate documents for each user
+  enhancedUserProfiles.forEach((user: EnhancedUserProfile) => {
+    const userDocuments = generateEnhancedDocuments(user);
+    // Convert enhanced documents to regular documents
+    const regularDocuments = userDocuments.map((doc: EnhancedDocument) => ({
+      id: doc.id,
+      userId: doc.userId,
+      type: doc.type,
+      fileName: doc.fileName,
+      uploadDate: doc.uploadDate,
+      status: doc.status,
+      verifiedBy: doc.verifiedBy,
+      verificationDate: doc.verificationDate,
+      extractedData: doc.extractedData
+    }));
+    documents.push(...regularDocuments);
+  });
+  
+  return documents.slice(0, count);
 };

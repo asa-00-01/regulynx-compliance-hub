@@ -1,4 +1,3 @@
-
 import { UnifiedUserData } from '@/context/compliance/types';
 
 // Enhanced user profiles with more realistic attributes
@@ -242,5 +241,61 @@ export const convertToUnifiedUserData = (profile: EnhancedUserProfile): UnifiedU
     transactions: [],
     complianceCases: [],
     notes: []
+  };
+};
+
+// NEW: Add the missing generateUsers function for centralized data
+export const generateUsers = (count: number): UnifiedUserData[] => {
+  const users: UnifiedUserData[] = [];
+  
+  // Convert all enhanced user profiles to unified format
+  enhancedUserProfiles.forEach(profile => {
+    users.push(convertToUnifiedUserData(profile));
+  });
+  
+  // Generate additional users if needed
+  while (users.length < count) {
+    const additionalProfile = generateRandomUserProfile();
+    users.push(convertToUnifiedUserData(additionalProfile));
+  }
+  
+  return users.slice(0, count);
+};
+
+// Generate additional random user profiles
+const generateRandomUserProfile = (): EnhancedUserProfile => {
+  const firstNames = ['John', 'Sarah', 'Michael', 'Emma', 'David', 'Anna', 'Robert', 'Maria'];
+  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+  
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+  const fullName = `${firstName} ${lastName}`;
+  const dateOfBirth = new Date(1970 + Math.floor(Math.random() * 35), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0];
+  
+  return {
+    id: generateUUID(),
+    personalIdentityNumber: generatePersonalIdentityNumber(dateOfBirth),
+    firstName,
+    lastName,
+    fullName,
+    dateOfBirth,
+    phoneNumber: `+46${Math.floor(Math.random() * 1000000000)}`,
+    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+    emailConsent: Math.random() > 0.2,
+    transferHabit: 'oneToFiveThousandSEK',
+    frequencyOfTransaction: 'oncePerMonth',
+    receiverCountries: ['Norway', 'Denmark'],
+    sendToMultipleRecipients: false,
+    recipientRelationship: ['family'],
+    originsOfFunds: ['salary'],
+    nationality: 'Swedish',
+    countryOfResidence: 'Sweden',
+    address: `${Math.floor(Math.random() * 100) + 1} Main St, Stockholm, Sweden`,
+    kycStatus: 'verified',
+    riskScore: Math.floor(Math.random() * 60) + 20,
+    isPEP: Math.random() > 0.9,
+    isSanctioned: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 };
