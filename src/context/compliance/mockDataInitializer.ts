@@ -56,11 +56,11 @@ export const initializeMockData = (): UnifiedUserData[] => {
       {
         id: `doc_${userId}_passport`,
         user_id: userId,
-        type: 'passport' as const,
+        type: 'passport',
         file_name: `passport_${userId.split('-')[0]}.pdf`,
         file_path: `documents/${userId}/passport_${userId.split('-')[0]}.pdf`,
         upload_date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'verified' as const,
+        status: 'verified',
         verified_by: 'admin_001',
         verification_date: new Date().toISOString(),
         extracted_data: {
@@ -75,11 +75,11 @@ export const initializeMockData = (): UnifiedUserData[] => {
       {
         id: `doc_${userId}_id`,
         user_id: userId,
-        type: 'id' as const,
+        type: 'id',
         file_name: `id_${userId.split('-')[0]}.pdf`,
         file_path: `documents/${userId}/id_${userId.split('-')[0]}.pdf`,
         upload_date: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'pending' as const,
+        status: 'pending',
         verified_by: null,
         verification_date: null,
         extracted_data: {
@@ -94,11 +94,11 @@ export const initializeMockData = (): UnifiedUserData[] => {
       {
         id: `doc_${userId}_license`,
         user_id: userId,
-        type: 'license' as const,
+        type: 'license',
         file_name: `license_${userId.split('-')[0]}.pdf`,
         file_path: `documents/${userId}/license_${userId.split('-')[0]}.pdf`,
         upload_date: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'rejected' as const,
+        status: 'rejected',
         verified_by: null,
         verification_date: null,
         extracted_data: {

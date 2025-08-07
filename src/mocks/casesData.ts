@@ -1,139 +1,95 @@
-import { ComplianceCase, ComplianceCaseStatus, ComplianceCaseType } from '@/types/compliance';
-import { ComplianceCaseDetails } from '@/types/case';
+
+import { ComplianceCase } from '@/types/compliance';
+import { ComplianceCaseDetails, CasePriority } from '@/types/case';
+
+// Mock compliance officers data
+export const complianceOfficers = [
+  { id: 'officer-1', name: 'Sarah Johnson', role: 'Senior Compliance Officer' },
+  { id: 'officer-2', name: 'Michael Chen', role: 'AML Specialist' },
+  { id: 'officer-3', name: 'Emma Williams', role: 'KYC Manager' },
+  { id: 'officer-4', name: 'David Rodriguez', role: 'Compliance Analyst' }
+];
 
 // Mock data for compliance cases
-const mockCasesData: Omit<ComplianceCase, 'title' | 'assignedTo'>[] = [
+const mockCasesData: ComplianceCaseDetails[] = [
   {
     id: 'case-001',
     caseNumber: 'CC-2023-001',
-    type: 'kyc' as ComplianceCaseType,
-    status: 'open' as ComplianceCaseStatus,
-    priority: 'high',
+    type: 'kyc',
+    status: 'open',
+    priority: 'high' as CasePriority,
     description: 'KYC verification failed for user John Doe',
     createdAt: '2023-01-15T14:30:00Z',
     updatedAt: '2023-01-15T14:30:00Z',
     userName: 'John Doe',
-  },
-  {
-    id: 'case-002',
-    caseNumber: 'CC-2023-002',
-    type: 'aml' as ComplianceCaseType,
-    status: 'under_review' as ComplianceCaseStatus,
-    priority: 'medium',
-    description: 'Suspicious transaction detected for user Jane Smith',
-    createdAt: '2023-02-01T09:15:00Z',
-    updatedAt: '2023-02-05T16:45:00Z',
-    userName: 'Jane Smith',
-  },
-  {
-    id: 'case-003',
-    caseNumber: 'CC-2023-003',
-    type: 'fraud' as ComplianceCaseType,
-    status: 'escalated' as ComplianceCaseStatus,
-    priority: 'high',
-    description: 'Potential fraud detected in user account Robert Johnson',
-    createdAt: '2023-02-10T11:00:00Z',
-    updatedAt: '2023-02-12T18:20:00Z',
-    userName: 'Robert Johnson',
-  },
-  {
-    id: 'case-004',
-    caseNumber: 'CC-2023-004',
-    type: 'kyc' as ComplianceCaseType,
-    status: 'closed' as ComplianceCaseStatus,
-    priority: 'low',
-    description: 'KYC verification completed for user Emily White',
-    createdAt: '2023-03-01T16:00:00Z',
-    updatedAt: '2023-03-05T10:00:00Z',
-    userName: 'Emily White',
-  },
-  {
-    id: 'case-005',
-    caseNumber: 'CC-2023-005',
-    type: 'aml' as ComplianceCaseType,
-    status: 'open' as ComplianceCaseStatus,
-    priority: 'medium',
-    description: 'Unusual transaction pattern observed for user Michael Brown',
-    createdAt: '2023-03-15T08:00:00Z',
-    updatedAt: '2023-03-15T08:00:00Z',
-    userName: 'Michael Brown',
-  },
-  {
-    id: 'case-006',
-    caseNumber: 'CC-2023-006',
-    type: 'fraud' as ComplianceCaseType,
-    status: 'under_review' as ComplianceCaseStatus,
-    priority: 'high',
-    description: 'Suspicious login activity detected for user Linda Davis',
-    createdAt: '2023-04-01T13:00:00Z',
-    updatedAt: '2023-04-03T19:00:00Z',
-    userName: 'Linda Davis',
-  },
-  {
-    id: 'case-007',
-    caseNumber: 'CC-2023-007',
-    type: 'kyc' as ComplianceCaseType,
-    status: 'escalated' as ComplianceCaseStatus,
-    priority: 'high',
-    description: 'Further KYC information required for user David Wilson',
-    createdAt: '2023-04-15T10:30:00Z',
-    updatedAt: '2023-04-18T14:45:00Z',
-    userName: 'David Wilson',
-  },
-  {
-    id: 'case-008',
-    caseNumber: 'CC-2023-008',
-    type: 'aml' as ComplianceCaseType,
-    status: 'closed' as ComplianceCaseStatus,
-    priority: 'low',
-    description: 'Transaction review completed for user Barbara Garcia',
-    createdAt: '2023-05-01T17:00:00Z',
-    updatedAt: '2023-05-03T11:00:00Z',
-    userName: 'Barbara Garcia',
-  },
-  {
-    id: 'case-009',
-    caseNumber: 'CC-2023-009',
-    type: 'fraud' as ComplianceCaseType,
-    status: 'open' as ComplianceCaseStatus,
-    priority: 'medium',
-    description: 'Unauthorized account access reported by user Charles Rodriguez',
-    createdAt: '2023-05-15T14:00:00Z',
-    updatedAt: '2023-05-15T14:00:00Z',
-    userName: 'Charles Rodriguez',
-  },
-  {
-    id: 'case-010',
-    caseNumber: 'CC-2023-010',
-    type: 'kyc' as ComplianceCaseType,
-    status: 'under_review' as ComplianceCaseStatus,
-    priority: 'medium',
-    description: 'KYC documents under review for user Susan Martinez',
-    createdAt: '2023-06-01T09:00:00Z',
-    updatedAt: '2023-06-05T15:30:00Z',
-    userName: 'Susan Martinez',
-  },
-];
-
-export const mapCaseToDetails = (complianceCase: ComplianceCase): ComplianceCaseDetails => {
-  return {
-    id: complianceCase.id,
-    caseNumber: complianceCase.caseNumber,
-    type: complianceCase.type,
-    status: complianceCase.status,
-    priority: complianceCase.priority,
-    description: complianceCase.description,
-    createdAt: complianceCase.createdAt,
-    updatedAt: complianceCase.updatedAt,
-    userName: complianceCase.userName || 'Unknown User',
-    createdBy: complianceCase.assignedTo || 'System', // Use assignedTo as fallback for createdBy
-    assignedToName: complianceCase.assignedTo || 'Unassigned',
-    source: 'System Generated',
+    userId: 'user-001',
+    createdBy: 'system',
+    assignedToName: 'Sarah Johnson',
+    source: 'system',
+    riskScore: 75,
     relatedTransactions: [],
     relatedAlerts: [],
     documents: [],
     notes: [],
     timeline: []
+  },
+  {
+    id: 'case-002',
+    caseNumber: 'CC-2023-002',
+    type: 'aml',
+    status: 'under_review',
+    priority: 'medium' as CasePriority,
+    description: 'Suspicious transaction detected for user Jane Smith',
+    createdAt: '2023-02-01T09:15:00Z',
+    updatedAt: '2023-02-05T16:45:00Z',
+    userName: 'Jane Smith',
+    userId: 'user-002',
+    createdBy: 'system',
+    assignedToName: 'Michael Chen',
+    source: 'transaction_alert',
+    riskScore: 65,
+    relatedTransactions: [],
+    relatedAlerts: [],
+    documents: [],
+    notes: [],
+    timeline: []
+  },
+  {
+    id: 'case-003',
+    caseNumber: 'CC-2023-003',
+    type: 'sanctions',
+    status: 'escalated',
+    priority: 'high' as CasePriority,
+    description: 'Potential sanctions hit detected in user account Robert Johnson',
+    createdAt: '2023-02-10T11:00:00Z',
+    updatedAt: '2023-02-12T18:20:00Z',
+    userName: 'Robert Johnson',
+    userId: 'user-003',
+    createdBy: 'system',
+    assignedToName: 'Emma Williams',
+    source: 'sanctions_hit',
+    riskScore: 85,
+    relatedTransactions: [],
+    relatedAlerts: [],
+    documents: [],
+    notes: [],
+    timeline: []
+  }
+];
+
+export const mockComplianceCases = mockCasesData;
+
+export const mapCaseToDetails = (complianceCase: ComplianceCaseDetails): ComplianceCaseDetails => {
+  return {
+    ...complianceCase,
+    createdBy: complianceCase.createdBy || 'System',
+    assignedToName: complianceCase.assignedToName || 'Unassigned',
+    source: complianceCase.source || 'system',
+    relatedTransactions: complianceCase.relatedTransactions || [],
+    relatedAlerts: complianceCase.relatedAlerts || [],
+    documents: complianceCase.documents || [],
+    notes: complianceCase.notes || [],
+    timeline: complianceCase.timeline || []
   };
 };
 

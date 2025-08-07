@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, User } from 'react-feather';
+import { Search, FileText, User } from 'lucide-react';
 import { UnifiedUserData } from '@/context/compliance/types';
 import { Document } from '@/types/supabase';
 
