@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { ExtendedUser } from '@/types/auth';
+import { StandardUser } from '@/types/user';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface UserProfileFormProps {
-  user: ExtendedUser | null;
+  user: StandardUser | null;
 }
 
 const UserProfileForm = ({ user }: UserProfileFormProps) => {
