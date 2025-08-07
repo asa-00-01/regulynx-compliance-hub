@@ -15,11 +15,11 @@ export const useEnhancedAuth = () => {
       
       const result = await auth.login(email, password);
       
-      if (result) {
+      if (!result.error) {
         await logAuthentication('login_success', { 
           email, 
           method: 'password',
-          user_id: result.id 
+          user_id: auth.user?.id || 'unknown'
         }, true);
         console.log('✅ Login successful for:', email);
       } else {
@@ -79,7 +79,7 @@ export const useEnhancedAuth = () => {
       
       await logAuthentication('signup_attempt', { email, role, name });
       
-      await auth.signup(email, password, role, name);
+      await auth.signup(email, password, { role, name });
       
       await logAuthentication('signup_success', { 
         email, 

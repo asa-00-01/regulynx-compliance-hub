@@ -2,13 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useRoleBasedPermissions, CustomerRole, PlatformRole } from '@/hooks/useRoleBasedPermissions';
+import { UserRole } from '@/types/index';
 
 // Extended user type that includes profile data
 interface ExtendedUser extends SupabaseUser {
   name: string;
   avatarUrl: string;
-  status: string;
+  status: 'verified' | 'pending' | 'flagged';
   riskScore: number;
+  email: string; // Make email required for compatibility
+  role: UserRole; // Use proper UserRole type
 }
 
 interface AuthContextType {
@@ -26,6 +29,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   updateUserProfile: (updates: any) => Promise<void>;
+  // Legacy method aliases for compatibility
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  canAccess: (roles: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,19 +70,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return {
         ...supabaseUser,
+        email: supabaseUser.email || '',
         name: profile?.name || supabaseUser.email || '',
         avatarUrl: profile?.avatar_url || '',
-        status: profile?.status || 'active',
+        status: (profile?.status as 'verified' | 'pending' | 'flagged') || 'pending',
         riskScore: profile?.risk_score || 0,
+        role: 'admin' as UserRole, // Legacy role support
       };
     } catch (error) {
       // Return basic user info if profile fetch fails
       return {
         ...supabaseUser,
+        email: supabaseUser.email || '',
         name: supabaseUser.email || '',
         avatarUrl: '',
-        status: 'active',
+        status: 'pending' as const,
         riskScore: 0,
+        role: 'admin' as UserRole, // Legacy role support
       };
     }
   };
@@ -164,6 +176,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Legacy method aliases for compatibility
+  const canAccess = (roles: string[]) => {
+    if (!user) return false;
+    return roles.includes(user.role || 'admin');
+  };
+
   const value = {
     user,
     session,
@@ -179,6 +197,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     refreshAuth,
     updateUserProfile,
+    // Legacy method aliases
+    login: signIn,
+    logout: signOut,
+    signup: signUp,
+    canAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
