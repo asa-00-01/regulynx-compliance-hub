@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { UserProfileForm } from '@/components/profile/UserProfileForm';
-import { UserSecuritySettings } from '@/components/profile/UserSecuritySettings';
-import { UserPreferences } from '@/components/profile/UserPreferences';
-import { SubscriptionManagement } from '@/components/profile/SubscriptionManagement';
+import UserProfileForm from '@/components/profile/UserProfileForm';
+import UserSecuritySettings from '@/components/profile/UserSecuritySettings';
+import UserPreferences from '@/components/profile/UserPreferences';
+import SubscriptionManagement from '@/components/profile/SubscriptionManagement';
 import { useAuthState } from '@/hooks/useAuthState';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
