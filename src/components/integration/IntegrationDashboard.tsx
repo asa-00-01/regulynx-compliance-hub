@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings, Database, Key } from 'lucide-react';
+import { Plus, Settings, Database, Key, Send, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useIntegrationManagement } from '@/hooks/useIntegrationManagement';
@@ -11,6 +11,8 @@ import IntegrationConfigDialog from './IntegrationConfigDialog';
 import DataIngestionMonitor from './DataIngestionMonitor';
 import APIKeyManagement from './APIKeyManagement';
 import CustomerMappingView from './CustomerMappingView';
+import WebhookMonitor from './WebhookMonitor';
+import APIDocumentation from './APIDocumentation';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const IntegrationDashboard = () => {
@@ -97,8 +99,16 @@ const IntegrationDashboard = () => {
             <Key className="mr-2 h-4 w-4" />
             API Keys
           </TabsTrigger>
+          <TabsTrigger value="webhooks">
+            <Send className="mr-2 h-4 w-4" />
+            Webhooks
+          </TabsTrigger>
           <TabsTrigger value="mappings">
             Customer Mappings
+          </TabsTrigger>
+          <TabsTrigger value="docs">
+            <FileText className="mr-2 h-4 w-4" />
+            API Docs
           </TabsTrigger>
         </TabsList>
 
@@ -158,6 +168,10 @@ const IntegrationDashboard = () => {
           />
         </TabsContent>
 
+        <TabsContent value="webhooks" className="space-y-4">
+          <WebhookMonitor />
+        </TabsContent>
+
         <TabsContent value="mappings" className="space-y-4">
           <CustomerMappingView
             customerMappings={customerMappings}
@@ -166,6 +180,10 @@ const IntegrationDashboard = () => {
             onClientSelect={setSelectedClientId}
             integrationConfigs={integrationConfigs}
           />
+        </TabsContent>
+
+        <TabsContent value="docs" className="space-y-4">
+          <APIDocumentation />
         </TabsContent>
       </Tabs>
 
