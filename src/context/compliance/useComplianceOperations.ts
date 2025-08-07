@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { ComplianceState, ComplianceAction, UnifiedUserData } from './types';
-import { Document } from '@/types';
+import { Document } from '@/types/supabase';
 import { AMLTransaction } from '@/types/aml';
 import { ComplianceCaseDetails } from '@/types/case';
 
@@ -23,7 +23,14 @@ export const useComplianceOperations = (
   
   const getRelatedDocuments = useCallback((userId: string): Document[] => {
     const user = getUserById(userId);
-    return user ? user.documents : [];
+    if (!user) return [];
+    
+    // Ensure proper type casting for documents
+    return user.documents.map(doc => ({
+      ...doc,
+      type: doc.type as 'id' | 'passport' | 'license',
+      status: doc.status as 'pending' | 'verified' | 'rejected' | 'information_requested'
+    }));
   }, [getUserById]);
   
   const getRelatedTransactions = useCallback((userId: string): AMLTransaction[] => {
