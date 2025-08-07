@@ -79,17 +79,7 @@ export default function Profile() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Update your personal information and contact details.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserProfileForm user={user} />
-              </CardContent>
-            </Card>
+            <UserProfileForm user={user} />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-4">
