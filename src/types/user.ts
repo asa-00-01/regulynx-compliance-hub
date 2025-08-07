@@ -1,5 +1,6 @@
 
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { Document } from '@/types/supabase';
 
 export type UserStatus = 'verified' | 'pending' | 'flagged';
 export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
@@ -28,4 +29,25 @@ export interface StandardUser extends SupabaseUser {
   phone?: string;
   location?: string;
   preferences?: UserPreferences;
+}
+
+// Add the User interface that was missing
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  identityNumber?: string;
+  phoneNumber?: string;
+  address?: string;
+  countryOfResidence?: string;
+  riskScore: number;
+  isPEP?: boolean;
+  isSanctioned?: boolean;
+  kycStatus: 'verified' | 'pending' | 'rejected' | 'information_requested';
+  createdAt: string;
+  documents?: Document[];
+  status: UserStatus;
+  role: UserRole;
 }

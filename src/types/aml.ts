@@ -1,6 +1,8 @@
 
 import { TransactionCurrency, TransactionMethod } from './transaction';
 
+export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'flagged';
+
 export interface AMLTransaction {
   id: string;
   senderUserId: string;
@@ -19,7 +21,7 @@ export interface AMLTransaction {
   currency?: TransactionCurrency;
   timestamp: string;
   type?: string;
-  status: 'completed' | 'pending' | 'failed' | 'flagged';
+  status: TransactionStatus;
   reasonForSending: string;
   method: TransactionMethod;
   isSuspect: boolean;

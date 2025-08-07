@@ -1,3 +1,4 @@
+
 import { AMLTransaction } from '@/types/aml';
 
 // Utility function to generate a random number within a range
@@ -31,13 +32,13 @@ const generateCountryCode = (): string => {
 
 // Function to generate a random transaction status
 const generateTransactionStatus = (): AMLTransaction['status'] => {
-  const statuses: AMLTransaction['status'][] = ['completed', 'pending', 'failed', 'processing', 'refunded'];
+  const statuses: AMLTransaction['status'][] = ['completed', 'pending', 'failed', 'flagged'];
   return getRandomItem(statuses);
 };
 
 // Function to generate a random method
-const generateMethod = (): string => {
-  const methods = ['bank', 'credit_card', 'paypal', 'crypto'];
+const generateMethod = (): 'card' | 'bank' | 'cash' | 'mobile' | 'crypto' => {
+  const methods: ('card' | 'bank' | 'cash' | 'mobile' | 'crypto')[] = ['bank', 'card', 'mobile', 'crypto'];
   return getRandomItem(methods);
 };
 
@@ -58,8 +59,8 @@ export const generateTransactions = (count: number = 100): AMLTransaction[] => {
     const status = generateTransactionStatus();
     const senderAmount = getRandomNumber(10, 10000);
     const receiverAmount = senderAmount - getRandomNumber(0, 100); // Simulate fees
-    const senderCurrency = 'USD';
-    const receiverCurrency = 'USD';
+    const senderCurrency = 'USD' as const;
+    const receiverCurrency = 'USD' as const;
     const senderCountryCode = generateCountryCode();
     const receiverCountryCode = generateCountryCode();
     const method = generateMethod();
