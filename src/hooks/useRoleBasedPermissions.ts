@@ -79,8 +79,15 @@ export const useRoleBasedPermissions = () => {
       const newPermissions = calculatePermissions(userCustomerRoles, userPlatformRoles);
       setPermissions(newPermissions);
 
+      // Log for debugging
+      console.log('User roles fetched:', { userCustomerRoles, userPlatformRoles, newPermissions });
+
     } catch (error) {
       console.error('Error fetching user roles:', error);
+      // If role fetching fails, provide default permissions for backward compatibility
+      const defaultPermissions = getDefaultPermissions();
+      setPermissions(defaultPermissions);
+      console.log('Using default permissions due to error:', defaultPermissions);
     } finally {
       setLoading(false);
     }
@@ -119,7 +126,7 @@ export const useRoleBasedPermissions = () => {
   const hasCustomerRole = (role: CustomerRole) => customerRoles.includes(role);
   const hasPlatformRole = (role: PlatformRole) => platformRoles.includes(role);
   const isPlatformUser = platformRoles.length > 0;
-  const isCustomerUser = customerRoles.length > 0;
+  const isCustomerUser = customerRoles.length > 0 || (customerRoles.length === 0 && platformRoles.length === 0); // Default to customer if no roles
 
   return {
     customerRoles,
@@ -135,6 +142,12 @@ export const useRoleBasedPermissions = () => {
 };
 
 function calculatePermissions(customerRoles: CustomerRole[], platformRoles: PlatformRole[]): UserPermissions {
+  // If no roles are found, provide default customer permissions for backward compatibility
+  if (customerRoles.length === 0 && platformRoles.length === 0) {
+    console.log('No roles found, using default customer permissions');
+    return getDefaultPermissions();
+  }
+
   const permissions: UserPermissions = {
     canViewCompliance: false,
     canManageCases: false,
@@ -196,4 +209,23 @@ function calculatePermissions(customerRoles: CustomerRole[], platformRoles: Plat
   }
 
   return permissions;
+}
+
+function getDefaultPermissions(): UserPermissions {
+  // Provide full customer access for backward compatibility
+  return {
+    canViewCompliance: true,
+    canManageCases: true,
+    canViewReports: true,
+    canManageKYC: true,
+    canViewTransactions: true,
+    canManageDocuments: true,
+    canViewAnalytics: true,
+    canManagePlatform: false,
+    canManageUsers: false,
+    canViewDeveloperTools: false,
+    canManageIntegrations: false,
+    canViewSystemLogs: false,
+    canManageSubscriptions: false,
+  };
 }
