@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AuthProvider as ContextAuthProvider } from '@/context/AuthContext';
+import { AuthProvider as ContextAuthProvider } from '@/context/auth/AuthContext';
 
 interface AuthProviderProps {
   children: React.ReactNode;
