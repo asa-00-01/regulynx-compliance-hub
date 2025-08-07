@@ -25,15 +25,15 @@ const UserPreferences = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user?.preferences) {
-      if (user.preferences.notifications) {
-        setNotifications(user.preferences.notifications);
+    if (user?.user_metadata) {
+      if (user.user_metadata.preferences?.notifications) {
+        setNotifications(user.user_metadata.preferences.notifications);
       }
-      if (user.preferences.theme) {
-        setTheme(user.preferences.theme);
+      if (user.user_metadata.preferences?.theme) {
+        setTheme(user.user_metadata.preferences.theme);
       }
-      if (user.preferences.language) {
-        i18n.changeLanguage(user.preferences.language);
+      if (user.user_metadata.preferences?.language) {
+        i18n.changeLanguage(user.user_metadata.preferences.language);
       }
     }
   }, [user, setTheme, i18n]);

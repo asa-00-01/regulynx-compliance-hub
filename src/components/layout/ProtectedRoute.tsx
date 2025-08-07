@@ -2,18 +2,19 @@
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types';
+import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRoles?: UserRole[];
+  requiresAuth?: boolean;
 }
 
-const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
-  const { user, isAuthenticated, authLoaded } = useAuth();
+const ProtectedRoute = ({ children, requiresAuth = true }: ProtectedRouteProps) => {
+  const { user, loading } = useAuth();
+  const { loading: permissionsLoading } = useRoleBasedPermissions();
 
   // Show loading while auth is being determined
-  if (!authLoaded) {
+  if (loading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse">Loading...</div>
@@ -21,18 +22,9 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
     );
   }
 
-  // If not authenticated, redirect to auth page
-  if (!isAuthenticated) {
+  // If not authenticated and auth is required, redirect to auth page
+  if (requiresAuth && !user) {
     return <Navigate to="/auth" replace />;
-  }
-
-  // If roles are required, check if user has necessary permissions
-  if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = user && requiredRoles.includes(user.role);
-    
-    if (!hasRequiredRole) {
-      return <Navigate to="/unauthorized" replace />;
-    }
   }
 
   return <>{children}</>;

@@ -1,61 +1,185 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useRoleBasedPermissions, CustomerRole, PlatformRole } from '@/hooks/useRoleBasedPermissions';
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { Session } from '@supabase/supabase-js';
-import { UserRole } from '@/types';
-import { ExtendedUser } from '@/types/auth';
-import { useAuthState } from '@/hooks/useAuthState';
-import { useAuthActions } from '@/hooks/useAuthActions';
+// Extended user type that includes profile data
+interface ExtendedUser extends SupabaseUser {
+  name: string;
+  avatarUrl: string;
+  status: string;
+  riskScore: number;
+}
 
 interface AuthContextType {
   user: ExtendedUser | null;
-  loading: boolean;
-  authLoaded: boolean;
-  login: (email: string, password: string) => Promise<ExtendedUser | null>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, role: UserRole, name?: string) => Promise<void>;
-  isAuthenticated: boolean;
-  canAccess: (requiredRoles: UserRole[]) => boolean;
   session: Session | null;
-  updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
+  customerRoles: CustomerRole[];
+  platformRoles: PlatformRole[];
+  loading: boolean;
+  isPlatformUser: boolean;
+  isCustomerUser: boolean;
+  isAuthenticated: boolean;
+  authLoaded: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
+  updateUserProfile: (updates: any) => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, session, loading, authLoaded, setUser } = useAuthState();
-  const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
-
-  const isAuthenticated = !!user && !!session;
-
-  const canAccess = (requiredRoles: UserRole[]): boolean => {
-    if (!user) return false;
-    return requiredRoles.includes(user.role);
-  };
-
-  return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        loading, 
-        authLoaded,
-        login, 
-        logout, 
-        signup,
-        isAuthenticated,
-        canAccess,
-        session,
-        updateUserProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const {
+    customerRoles,
+    platformRoles,
+    isPlatformUser,
+    isCustomerUser,
+    refreshRoles,
+    loading: rolesLoading,
+  } = useRoleBasedPermissions();
+
+  const enrichUserWithProfile = async (supabaseUser: SupabaseUser): Promise<ExtendedUser> => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, avatar_url, status, risk_score')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      return {
+        ...supabaseUser,
+        name: profile?.name || supabaseUser.email || '',
+        avatarUrl: profile?.avatar_url || '',
+        status: profile?.status || 'active',
+        riskScore: profile?.risk_score || 0,
+      };
+    } catch (error) {
+      // Return basic user info if profile fetch fails
+      return {
+        ...supabaseUser,
+        name: supabaseUser.email || '',
+        avatarUrl: '',
+        status: 'active',
+        riskScore: 0,
+      };
+    }
+  };
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          const enrichedUser = await enrichUserWithProfile(session.user);
+          setUser(enrichedUser);
+        } else {
+          setUser(null);
+        }
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Defer role refresh to avoid blocking auth state update
+          setTimeout(() => {
+            refreshRoles();
+          }, 0);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const enrichedUser = await enrichUserWithProfile(session.user);
+        setUser(enrichedUser);
+      } else {
+        setUser(null);
+      }
+      
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [refreshRoles]);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, userData?: any) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: userData || {}
+      }
+    });
+    return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const refreshAuth = async () => {
+    await supabase.auth.refreshSession();
+    await refreshRoles();
+  };
+
+  const updateUserProfile = async (updates: any) => {
+    try {
+      if (!user) throw new Error('No user logged in');
+      
+      const { error } = await supabase.auth.updateUser({
+        data: updates
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  };
+
+  const value = {
+    user,
+    session,
+    customerRoles,
+    platformRoles,
+    loading: loading || rolesLoading,
+    isPlatformUser,
+    isCustomerUser,
+    isAuthenticated: !!user,
+    authLoaded: !loading,
+    signIn,
+    signUp,
+    signOut,
+    refreshAuth,
+    updateUserProfile,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

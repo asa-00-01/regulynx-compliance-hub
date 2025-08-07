@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/context/RefactoredAuthContext';
+import { useAuth } from '@/context/AuthContext';
 import CustomerSidebar from './CustomerSidebar';
 import PlatformSidebar from './PlatformSidebar';
 

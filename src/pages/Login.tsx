@@ -15,7 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -25,18 +25,18 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const user = await login(email, password);
+    const { error } = await signIn(email, password);
 
     setLoading(false);
 
-    if (user) {
+    if (!error) {
       toast({
         title: t('login.successTitle'),
         description: t('login.successDescription'),
       });
       navigate('/dashboard');
     } else {
-      setError(t('login.error'));
+      setError(error.message || t('login.error'));
     }
   };
 

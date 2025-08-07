@@ -13,7 +13,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/RefactoredAuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/common/LanguageSelector';
