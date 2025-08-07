@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,19 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { RefreshCw, Send, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-interface WebhookNotification {
-  id: string;
-  client_id: string;
-  event_type: string;
-  payload: any;
-  webhook_url: string;
-  status: 'pending' | 'delivered' | 'failed';
-  retry_count: number;
-  last_attempt_at?: string;
-  created_at: string;
-  delivered_at?: string;
-}
+import { WebhookNotification } from './WebhookNotificationTypes';
 
 const WebhookMonitor = () => {
   const [webhooks, setWebhooks] = useState<WebhookNotification[]>([]);
