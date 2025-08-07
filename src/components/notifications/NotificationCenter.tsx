@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/auth/AuthContext';
-import { useNotificationManager } from '@/hooks/notifications/useNotificationManager';
 
 interface Notification {
   id: string;
@@ -16,22 +16,30 @@ interface Notification {
 
 const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
-  const { notifications, markAsRead, clearAllNotifications } = useNotificationManager();
   const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const markAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
 
   useEffect(() => {
-    // Simulate adding a notification every 10 seconds (for testing)
-    // const intervalId = setInterval(() => {
-    //   addNotification({
-    //     id: Math.random().toString(),
-    //     type: 'info',
-    //     message: `New notification ${Math.random()}`,
-    //     timestamp: new Date(),
-    //     read: false,
-    //   });
-    // }, 10000);
-
-    // return () => clearInterval(intervalId);
+    // Initialize with some sample notifications
+    setNotifications([
+      {
+        id: '1',
+        type: 'info',
+        message: 'Welcome to ComplianceOS',
+        timestamp: new Date(),
+        read: false,
+      },
+    ]);
   }, []);
 
   const toggleOpen = () => {

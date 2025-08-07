@@ -1,113 +1,74 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   LayoutDashboard,
-  Settings,
   Users,
-  Database,
+  FileText,
   Shield,
+  TrendingUp,
+  Settings,
+  Building,
+  Globe,
   BarChart3,
-  Code,
-  Zap,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-interface PlatformSidebarProps extends React.HTMLAttributes<HTMLElement> {
+interface SidebarProps {
   className?: string;
 }
 
-const PlatformSidebar = React.forwardRef<HTMLElement, PlatformSidebarProps>(
-  ({ className, ...props }, ref) => {
-    const { isPlatformUser } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
+export const PlatformSidebar: React.FC<SidebarProps> = ({ className }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-    const platformRoutes = [
-      {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/dashboard',
-      },
-      {
-        icon: Users,
-        label: 'User Management',
-        href: '/users',
-      },
-      {
-        icon: Database,
-        label: 'Data Management',
-        href: '/data',
-      },
-      {
-        icon: Shield,
-        label: 'Security',
-        href: '/security',
-      },
-      {
-        icon: BarChart3,
-        label: 'Analytics',
-        href: '/analytics',
-      },
-      {
-        icon: Code,
-        label: 'Developer Tools',
-        href: '/developer',
-      },
-      {
-        icon: Zap,
-        label: 'Integrations',
-        href: '/integrations',
-      },
-      {
-        icon: Settings,
-        label: 'Settings',
-        href: '/settings',
-      },
-    ];
+  const isLinkActive = (href: string) => {
+    return location.pathname === href;
+  };
 
-    if (!isPlatformUser) {
-      return null;
-    }
-
+  const SidebarLink: React.FC<{
+    href: string;
+    icon: React.ReactNode;
+    label: string;
+  }> = ({ href, icon, label }) => {
+    const isActive = isLinkActive(href);
     return (
-      <div
+      <Button
+        variant="ghost"
+        onClick={() => navigate(href)}
         className={cn(
-          'flex h-full w-[280px] flex-col border-r bg-secondary',
-          className
+          'justify-start px-4 w-full',
+          isActive ? 'bg-secondary text-foreground hover:bg-secondary/80' : 'hover:bg-accent hover:text-accent-foreground'
         )}
-        ref={ref}
-        {...props}
       >
-        <div className="px-6 py-4">
-          <Button variant="ghost" className="font-bold">
-            Platform Admin
-          </Button>
-        </div>
-        <ScrollArea className="flex-1 space-y-2 px-3">
-          {platformRoutes.map((route) => (
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full justify-start gap-2',
-                location.pathname === route.href
-                  ? 'bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-              key={route.href}
-              onClick={() => navigate(route.href)}
-            >
-              <route.icon className="h-4 w-4" />
-              <span>{route.label}</span>
-            </Button>
-          ))}
-        </ScrollArea>
-      </div>
+        {icon}
+        <span>{label}</span>
+      </Button>
     );
-  }
-);
-PlatformSidebar.displayName = 'PlatformSidebar';
+  };
 
-export { PlatformSidebar };
+  return (
+    <div className={cn('flex flex-col space-y-4 w-64 border-r bg-secondary h-full', className)}>
+      <div className="px-4 py-6">
+        <Button variant="ghost" className="gap-2 h-auto p-0 font-normal text-lg">
+          <Globe className="h-6 w-6" />
+          <span>Platform Admin</span>
+        </Button>
+      </div>
+      <ScrollArea className="flex-1 space-y-2 px-3">
+        <SidebarLink href="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
+        <SidebarLink href="/customers" icon={<Building className="h-4 w-4" />} label="Customers" />
+        <SidebarLink href="/users" icon={<Users className="h-4 w-4" />} label="Users" />
+        <SidebarLink href="/analytics" icon={<BarChart3 className="h-4 w-4" />} label="Analytics" />
+        <SidebarLink href="/integration" icon={<Globe className="h-4 w-4" />} label="Integrations" />
+        <SidebarLink href="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" />
+      </ScrollArea>
+    </div>
+  );
+};
+
+export default PlatformSidebar;
