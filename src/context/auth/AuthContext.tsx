@@ -2,6 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { useAuth as useAuthHook, AuthHook } from '@/hooks/auth/useAuth';
 import { useRoleBasedPermissions } from '@/hooks/useRoleBasedPermissions';
+import { AuthErrorBoundary } from '@/components/auth/AuthErrorBoundary';
 
 // Extend the AuthHook with role-based permissions
 interface AuthContextType extends AuthHook {
@@ -9,6 +10,7 @@ interface AuthContextType extends AuthHook {
   platformRoles: any[];
   isPlatformUser: boolean;
   isCustomerUser: boolean;
+  profileError: string | null;
   
   // Legacy compatibility aliases
   login: (email: string, password: string) => Promise<{ error: any }>;
@@ -28,7 +30,7 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AuthProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const authHook = useAuthHook();
   const {
     customerRoles,
@@ -41,11 +43,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Legacy compatibility function
   const canAccess = (roles: string[]) => {
     if (!authHook.user) return false;
-    return roles.includes(authHook.user.role || 'user');
+    return roles.includes(authHook.user.role || 'support');
   };
 
   // The loading should be false if auth hook loading is false, regardless of roles loading
-  // This prevents infinite loading when roles can't be determined
   const isLoading = authHook.loading;
 
   const value: AuthContextType = {
@@ -68,10 +69,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: value.user?.email || 'null',
     isAuthenticated: value.isAuthenticated,
     loading: value.loading,
-    authLoaded: value.authLoaded
+    authLoaded: value.authLoaded,
+    profileError: value.profileError
   });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <AuthErrorBoundary>
+      <AuthProviderInner>{children}</AuthProviderInner>
+    </AuthErrorBoundary>
+  );
 };
 
 export type { AuthContextType };

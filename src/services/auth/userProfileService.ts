@@ -1,11 +1,14 @@
+
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { StandardUser } from '@/types/user';
 import { toast } from 'sonner';
 
 export class UserProfileService {
-  static async enrichUserWithProfile(user: User): Promise<StandardUser | null> {
-    if (!user) return null;
+  static async enrichUserWithProfile(user: User): Promise<StandardUser> {
+    if (!user) {
+      throw new Error('No user provided for profile enrichment');
+    }
 
     try {
       console.log('Enriching user profile for:', user.email);
@@ -22,35 +25,10 @@ export class UserProfileService {
         // If profile doesn't exist (PGRST116), create a basic profile
         if (error.code === 'PGRST116') {
           console.log('No profile found, creating basic profile');
-          
-          const basicProfile = {
-            id: user.id,
-            name: user.email?.split('@')[0] || 'User',
-            email: user.email || '', // Add required email field
-            role: 'support' as const, // Use proper enum type
-            risk_score: 0,
-            status: 'active' as const, // Use proper enum type
-            avatar_url: null
-          };
-
-          try {
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert(basicProfile);
-            
-            if (insertError) {
-              console.error('Failed to create profile:', insertError);
-              throw insertError;
-            }
-            
-            return this.createStandardUser(user, basicProfile);
-          } catch (insertError) {
-            console.error('Profile creation failed, using fallback');
-            throw insertError;
-          }
+          return await this.createBasicProfile(user);
         }
         
-        throw error;
+        throw new Error(`Profile lookup failed: ${error.message}`);
       }
 
       console.log('Profile found:', profile);
@@ -58,8 +36,45 @@ export class UserProfileService {
       
     } catch (error) {
       console.error("Error in enrichUserWithProfile:", error);
-      throw error; // Let the caller handle this
+      
+      // If it's a creation error, try once more to create a basic profile
+      if (error instanceof Error && error.message.includes('Profile lookup failed')) {
+        try {
+          return await this.createBasicProfile(user);
+        } catch (createError) {
+          console.error('Failed to create fallback profile:', createError);
+          throw new Error('Unable to create user profile. Please try signing in again.');
+        }
+      }
+      
+      throw error;
     }
+  }
+
+  private static async createBasicProfile(user: User): Promise<StandardUser> {
+    const basicProfile = {
+      id: user.id,
+      name: user.email?.split('@')[0] || 'User',
+      email: user.email || '',
+      role: 'support' as const,
+      risk_score: 0,
+      status: 'active' as const,
+      avatar_url: null
+    };
+
+    const { data, error: insertError } = await supabase
+      .from('profiles')
+      .insert(basicProfile)
+      .select()
+      .single();
+    
+    if (insertError) {
+      console.error('Failed to create profile:', insertError);
+      throw new Error(`Profile creation failed: ${insertError.message}`);
+    }
+    
+    console.log('Basic profile created:', data);
+    return this.createStandardUser(user, data);
   }
 
   private static createStandardUser(user: User, profile: any): StandardUser {
@@ -96,6 +111,7 @@ export class UserProfileService {
         .eq('id', userId);
 
       if (error) {
+        console.error('Profile update error:', error);
         toast.error(`Failed to update profile: ${error.message}`);
         throw error;
       }
@@ -115,6 +131,7 @@ export class UserProfileService {
       });
 
       if (error) {
+        console.error('User metadata update error:', error);
         toast.error(`Failed to update user details: ${error.message}`);
         throw error;
       }
