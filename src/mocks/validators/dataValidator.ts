@@ -9,7 +9,7 @@ export const validateDocumentData = (documents: Document[]): boolean => {
     return false;
   }
 
-  const requiredFields = ['id', 'user_id', 'file_name', 'type', 'status'];
+  const requiredFields = ['id', 'user_id', 'file_name', 'type', 'status', 'created_at', 'file_path', 'updated_at'];
   
   for (const doc of documents) {
     for (const field of requiredFields) {

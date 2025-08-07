@@ -1,6 +1,6 @@
 
 import { AMLTransaction } from '@/types/aml';
-import { Document } from '@/types';
+import { Document } from '@/types/supabase';
 import { ComplianceCaseDetails } from '@/types/case';
 
 export interface UnifiedUserData {
