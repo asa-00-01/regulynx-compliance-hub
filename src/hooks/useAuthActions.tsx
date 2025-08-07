@@ -100,7 +100,7 @@ export const useAuthActions = () => {
       name: email.split('@')[0],
       role: email.includes('admin') ? 'admin' : 'complianceOfficer',
       riskScore: Math.floor(Math.random() * 100),
-      status: 'verified',
+      status: 'active',
       title: 'Mock User',
       department: 'Compliance',
       phone: '+1234567890',

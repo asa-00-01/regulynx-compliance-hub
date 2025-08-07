@@ -10,7 +10,7 @@ export const mockUsers: User[] = [
     name: 'Alex Nordström',
     avatarUrl: 'https://i.pravatar.cc/150?img=1',
     riskScore: 25,
-    status: 'verified',
+    status: 'active',
   }),
   createStandardUser({
     id: '2',
@@ -19,7 +19,7 @@ export const mockUsers: User[] = [
     name: 'Johan Berg',
     avatarUrl: 'https://i.pravatar.cc/150?img=2',
     riskScore: 15,
-    status: 'verified',
+    status: 'active',
   }),
   createStandardUser({
     id: '3',
@@ -28,7 +28,7 @@ export const mockUsers: User[] = [
     name: 'Lena Wikström',
     avatarUrl: 'https://i.pravatar.cc/150?img=3',
     riskScore: 20,
-    status: 'verified',
+    status: 'active',
   }),
   createStandardUser({
     id: '4',
@@ -37,7 +37,7 @@ export const mockUsers: User[] = [
     name: 'Astrid Lindqvist',
     avatarUrl: 'https://i.pravatar.cc/150?img=4',
     riskScore: 30,
-    status: 'verified',
+    status: 'active',
   }),
   createStandardUser({
     id: '5',
@@ -53,6 +53,6 @@ export const mockUsers: User[] = [
     role: 'support',
     name: 'Maria Andersson',
     riskScore: 35,
-    status: 'verified',
+    status: 'active',
   }),
 ];
