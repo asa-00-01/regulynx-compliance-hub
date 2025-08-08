@@ -30,6 +30,8 @@ import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
 import DeveloperTools from '@/pages/DeveloperTools';
 import PlatformManagement from '@/pages/PlatformManagement';
+import Pricing from '@/pages/Pricing';
+import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
 
@@ -50,6 +52,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/subscription-success" element={<SubscriptionSuccess />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Protected routes - all wrapped in DashboardShell */}

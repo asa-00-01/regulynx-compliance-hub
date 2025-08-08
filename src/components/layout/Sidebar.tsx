@@ -1,282 +1,138 @@
 
 import React from 'react';
-import {
-  Home,
-  Shield,
-  Users,
-  FileText,
-  FileSearch,
-  CircleDollarSign,
-  LineChart,
-  PieChart,
-  FileWarning,
-  History,
-  UserCheck,
-  User,
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  LayoutDashboard, 
+  Shield, 
+  Users, 
+  FileText, 
+  AlertTriangle,
+  BarChart3,
+  Settings,
+  Search,
   Bot,
   Newspaper,
   Zap,
   Code,
-  Database,
-  BarChart3,
   Building2,
+  CreditCard,
+  UserCheck,
+  DollarSign,
+  Activity,
+  Archive,
+  Gauge,
+  Plug
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { usePermissions } from '@/hooks/use-permissions';
-import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import LanguageSelector from '@/components/common/LanguageSelector';
-import {
-  useSidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-} from '@/components/ui/sidebar';
+
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Compliance', href: '/compliance', icon: Shield },
+  { name: 'Compliance Cases', href: '/compliance-cases', icon: FileText },
+  { name: 'KYC Verification', href: '/kyc-verification', icon: UserCheck, roles: ['admin', 'complianceOfficer'] },
+  { name: 'Transactions', href: '/transactions', icon: DollarSign },
+  { name: 'Documents', href: '/documents', icon: Archive },
+  { name: 'AML Monitoring', href: '/aml-monitoring', icon: Activity },
+  { name: 'Risk Analysis', href: '/risk-analysis', icon: AlertTriangle },
+  { name: 'SAR Center', href: '/sar-center', icon: Shield, roles: ['admin', 'complianceOfficer'] },
+  { name: 'Integration', href: '/integration', icon: Plug },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Audit Logs', href: '/audit-logs', icon: Search },
+  { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
+];
+
+const secondaryNavigation = [
+  { name: 'AI Agent', href: '/ai-agent', icon: Bot },
+  { name: 'News', href: '/news', icon: Newspaper },
+  { name: 'Optimization', href: '/optimization', icon: Gauge },
+  { name: 'Developer Tools', href: '/developer-tools', icon: Code },
+  { name: 'Platform Management', href: '/platform-management', icon: Building2 },
+  { name: 'Pricing', href: '/pricing', icon: CreditCard },
+];
 
 const Sidebar = () => {
-  const { user } = useAuth();
-  const { hasPermission } = usePermissions();
-  const { isPlatformOwner, isPlatformAdmin } = usePlatformRoleAccess();
   const location = useLocation();
-  const { t } = useTranslation();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+  const { user } = useAuth();
 
-  const navigationItems = [
-    {
-      title: t('navigation.dashboard'),
-      href: '/dashboard',
-      icon: Home,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.aiAgent'),
-      href: '/ai-agent',
-      icon: Bot,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.news'),
-      href: '/news',
-      icon: Newspaper,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.compliance'),
-      href: '/compliance',
-      icon: Shield,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.complianceCases'),
-      href: '/compliance-cases',
-      icon: FileText,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.kycVerification'),
-      href: '/kyc-verification',
-      icon: UserCheck,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: t('navigation.transactions'),
-      href: '/transactions',
-      icon: CircleDollarSign,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.documents'),
-      href: '/documents',
-      icon: FileSearch,
-      allowedRoles: ['admin', 'complianceOfficer', 'support'],
-    },
-    {
-      title: t('navigation.amlMonitoring'),
-      href: '/aml-monitoring',
-      icon: LineChart,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.riskAnalysis'),
-      href: '/risk-analysis',
-      icon: PieChart,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.sarCenter'),
-      href: '/sar-center',
-      icon: FileWarning,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: 'Integration Management',
-      href: '/integration',
-      icon: Database,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: 'Usage Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.auditLogs'),
-      href: '/audit-logs',
-      icon: History,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: t('navigation.users'),
-      href: '/users',
-      icon: Users,
-      allowedRoles: ['admin'],
-    },
-    {
-      title: t('navigation.profile'),
-      href: '/profile',
-      icon: User,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-  ];
+  const isActive = (href: string) => location.pathname === href;
 
-  // Platform management items for platform owners
-  const platformItems = [
-    {
-      title: 'Platform Management',
-      href: '/platform-management',
-      icon: Building2,
-    },
-  ];
-
-  // Developer/Admin-only items for footer
-  const developerItems = [
-    {
-      title: 'Performance Optimization',
-      href: '/optimization',
-      icon: Zap,
-    },
-    {
-      title: 'Developer Tools',
-      href: '/developer-tools',
-      icon: Code,
-    },
-  ];
-
-  const isAdmin = user?.role === 'admin';
+  const hasAccess = (item: any) => {
+    if (!item.roles) return true;
+    return item.roles.includes(user?.role);
+  };
 
   return (
-    <>
-      <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
-        <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">
-          {isCollapsed ? "AML" : t('layout.sidebar.title')}
-        </h1>
-      </SidebarHeader>
+    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
+      <div className="flex h-16 shrink-0 items-center px-6">
+        <h1 className="text-xl font-bold text-gray-900">Regulynx</h1>
+      </div>
       
-      <SidebarContent className={cn(!isCollapsed && "p-2")}>
-        <SidebarMenu>
-          {/* Platform Management Section - Only for Platform Owners */}
-          {isPlatformOwner() && (
-            <>
-              <div className="px-2 py-1">
-                <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Platform</p>
-                {platformItems.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  
-                  return (
-                    <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                      >
-                        <NavLink to={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </div>
-              <SidebarSeparator />
-            </>
-          )}
-
-          {/* Regular navigation items */}
-          {navigationItems.map((item) => {
-            if (!user || !item.allowedRoles.includes(user.role)) {
-              return null;
-            }
-
-            const isActive = location.pathname === item.href || 
-              (item.href === '/dashboard' && location.pathname === '/');
-
+      <ScrollArea className="flex-1 px-3">
+        <nav className="flex flex-col space-y-1">
+          {navigation.filter(hasAccess).map((item) => {
+            const Icon = item.icon;
             return (
-              <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  tooltip={item.title}
-                >
-                  <NavLink to={item.href}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <Button
+                key={item.name}
+                asChild
+                variant={isActive(item.href) ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start",
+                  isActive(item.href) && "bg-blue-50 text-blue-700"
+                )}
+              >
+                <Link to={item.href}>
+                  <Icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Link>
+              </Button>
             );
           })}
-        </SidebarMenu>
-      </SidebarContent>
-      
-      <SidebarSeparator />
-      
-      <SidebarFooter className={cn(isCollapsed && "hidden")}>
-        {/* Developer Tools Section - Admin Only */}
-        {(isAdmin || isPlatformAdmin()) && (
-          <>
-            <div className="px-2 py-1">
-              <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Developer Tools</p>
-              <SidebarMenu>
-                {developerItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
-                  
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                        size="sm"
-                      >
-                        <NavLink to={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </div>
-            <SidebarSeparator />
-          </>
-        )}
-        
-        <LanguageSelector />
-        <p className="text-xs text-sidebar-foreground/70 text-center">
-          {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
-        </p>
-      </SidebarFooter>
-    </>
+          
+          <Separator className="my-4" />
+          
+          {secondaryNavigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.name}
+                asChild
+                variant={isActive(item.href) ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start",
+                  isActive(item.href) && "bg-blue-50 text-blue-700"
+                )}
+              >
+                <Link to={item.href}>
+                  <Icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Link>
+              </Button>
+            );
+          })}
+          
+          <Separator className="my-4" />
+          
+          <Button
+            asChild
+            variant={isActive('/profile') ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start",
+              isActive('/profile') && "bg-blue-50 text-blue-700"
+            )}
+          >
+            <Link to="/profile">
+              <Settings className="mr-2 h-4 w-4" />
+              Profile & Settings
+            </Link>
+          </Button>
+        </nav>
+      </ScrollArea>
+    </div>
   );
 };
 
