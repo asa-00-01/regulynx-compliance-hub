@@ -13,9 +13,16 @@ export const useAuthActions = (
 ) => {
   const login = async (email: string, password: string): Promise<ExtendedUser | null> => {
     try {
+      console.log('🔐 useAuthActions: Starting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ useAuthActions: Sign in error:', error);
+        throw error;
+      }
+
+      console.log('✅ useAuthActions: Sign in successful:', data.user?.email);
 
       if (data.user) {
         const { data: profile, error: profileError } = await supabase
@@ -24,50 +31,59 @@ export const useAuthActions = (
           .eq('id', data.user.id)
           .single();
 
-        if (profileError) throw profileError;
-
-        if (profile) {
-          const userMetadata = data.user.user_metadata;
-          
-          // Map database status to ExtendedUser status
-          const mapStatus = (dbStatus: string): 'verified' | 'pending' | 'rejected' | 'information_requested' => {
-            switch (dbStatus) {
-              case 'active':
-                return 'verified';
-              case 'suspended':
-              case 'banned':
-                return 'rejected';
-              case 'pending':
-              default:
-                return 'pending';
-            }
-          };
-
-          const userData: ExtendedUser = {
-            id: data.user.id,
-            email: data.user.email || '',
-            name: profile.name,
-            role: profile.role,
-            riskScore: profile.risk_score,
-            status: mapStatus(profile.status),
-            avatarUrl: profile.avatar_url,
-            title: userMetadata.title,
-            department: userMetadata.department,
-            phone: userMetadata.phone,
-            location: userMetadata.location,
-            preferences: userMetadata.preferences,
-            customer_id: (profile as any).customer_id || undefined, // Safely access customer_id
-            platform_roles: [],
-            customer_roles: [],
-            isPlatformOwner: false,
-          };
-          return userData;
+        if (profileError) {
+          console.error('❌ useAuthActions: Profile fetch error:', profileError);
+          // Don't throw here, we can still continue with basic user data
         }
+
+        const userMetadata = data.user.user_metadata;
+        
+        // Map database status to ExtendedUser status
+        const mapStatus = (dbStatus: string): 'verified' | 'pending' | 'rejected' | 'information_requested' => {
+          switch (dbStatus) {
+            case 'active':
+              return 'verified';
+            case 'suspended':
+            case 'banned':
+              return 'rejected';
+            case 'pending':
+            default:
+              return 'pending';
+          }
+        };
+
+        const userData: ExtendedUser = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: profile?.name || data.user.email || '',
+          role: (profile?.role || 'support') as UserRole,
+          riskScore: profile?.risk_score || 0,
+          status: profile ? mapStatus(profile.status) : 'pending',
+          avatarUrl: profile?.avatar_url,
+          title: userMetadata?.title,
+          department: userMetadata?.department,
+          phone: userMetadata?.phone,
+          location: userMetadata?.location,
+          preferences: userMetadata?.preferences,
+          customer_id: (profile as any)?.customer_id || undefined,
+          platform_roles: [],
+          customer_roles: [],
+          isPlatformOwner: false,
+        };
+        
+        console.log('✅ useAuthActions: User data created:', {
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          hasProfile: !!profile
+        });
+        
+        return userData;
       }
       return null;
     } catch (error: any) {
+      console.error('❌ useAuthActions: Login error:', error);
       toast.error(error.message);
-      console.error('Login error:', error);
       return null;
     }
   };
@@ -139,10 +155,13 @@ export const useAuthActions = (
   };
 
   const logout = async () => {
+    console.log('🔐 useAuthActions: Starting logout');
     const { error } = await supabase.auth.signOut();
     if (error) {
+      console.error('❌ useAuthActions: Logout error:', error);
       toast.error(error.message);
-      console.error('Logout error:', error);
+    } else {
+      console.log('✅ useAuthActions: Logout successful');
     }
   };
 

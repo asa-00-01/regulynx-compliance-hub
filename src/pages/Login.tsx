@@ -25,18 +25,33 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const user = await login(email, password);
-
-    setLoading(false);
-
-    if (user) {
+    try {
+      console.log('🔐 Starting login process for:', email);
+      const user = await login(email, password);
+      
+      if (user) {
+        console.log('✅ Login successful, redirecting to dashboard');
+        toast({
+          title: t('login.successTitle'),
+          description: t('login.successDescription'),
+        });
+        
+        // Force navigation to dashboard
+        window.location.href = '/dashboard';
+      } else {
+        console.warn('❌ Login failed - no user returned');
+        setError(t('login.error'));
+      }
+    } catch (error: any) {
+      console.error('🚨 Login error:', error);
+      setError(error.message || t('login.error'));
       toast({
-        title: t('login.successTitle'),
-        description: t('login.successDescription'),
+        title: 'Error',
+        description: error.message || t('login.error'),
+        variant: 'destructive',
       });
-      navigate('/dashboard');
-    } else {
-      setError(t('login.error'));
+    } finally {
+      setLoading(false);
     }
   };
 
