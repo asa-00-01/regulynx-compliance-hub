@@ -1,25 +1,32 @@
 
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number, currency: string): string {
-  const currencyConfig: Record<string, { locale: string, symbol: string }> = {
-    'USD': { locale: 'en-US', symbol: '$' },
-    'EUR': { locale: 'de-DE', symbol: '€' },
-    'GBP': { locale: 'en-GB', symbol: '£' },
-    'SEK': { locale: 'sv-SE', symbol: 'kr' },
-  };
+export function generateRandomKey(length: number = 32): string {
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'ak_'; // API key prefix
+  
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  
+  return result;
+}
 
-  const config = currencyConfig[currency] || { locale: 'en-US', symbol: currency };
-
-  return new Intl.NumberFormat(config.locale, {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+export function formatDistanceToNow(date: Date, options?: { addSuffix?: boolean }): string {
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  
+  if (diffInMinutes < 1) return options?.addSuffix ? 'just now' : '0 minutes';
+  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'}${options?.addSuffix ? ' ago' : ''}`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours === 1 ? '' : 's'}${options?.addSuffix ? ' ago' : ''}`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} day${diffInDays === 1 ? '' : 's'}${options?.addSuffix ? ' ago' : ''}`;
 }

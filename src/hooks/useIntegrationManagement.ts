@@ -184,6 +184,28 @@ export function useIntegrationManagement() {
     }
   }, [toast]);
 
+  // Revoke API key
+  const revokeAPIKey = useCallback(async (keyId: string) => {
+    try {
+      await integrationService.revokeAPIKey(keyId);
+      setAPIKeys(prev => 
+        prev.map(key => key.id === keyId ? { ...key, isActive: false } : key)
+      );
+      toast({
+        title: 'Success',
+        description: 'API key has been revoked.',
+      });
+    } catch (error) {
+      console.error('Error revoking API key:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to revoke API key.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  }, [toast]);
+
   // Initialize data
   useEffect(() => {
     const initializeData = async () => {
@@ -222,10 +244,14 @@ export function useIntegrationManagement() {
     createIntegrationConfig,
     updateIntegrationConfig,
     createAPIKey,
+    revokeAPIKey,
     refreshData: () => {
       loadIntegrationConfigs();
       loadDataIngestionLogs();
       loadStats();
+      if (selectedClientId) {
+        loadAPIKeys(selectedClientId);
+      }
     },
   };
 }

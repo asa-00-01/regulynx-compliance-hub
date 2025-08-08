@@ -152,6 +152,24 @@ export class IntegrationService {
     return this.mapAPIKeyFromDb(data);
   }
 
+  async revokeAPIKey(keyId: string): Promise<void> {
+    const { error } = await supabase
+      .from('integration_api_keys')
+      .update({ is_active: false })
+      .eq('id', keyId);
+
+    if (error) throw error;
+  }
+
+  async updateAPIKeyLastUsed(keyId: string): Promise<void> {
+    const { error } = await supabase
+      .from('integration_api_keys')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', keyId);
+
+    if (error) throw error;
+  }
+
   // Statistics
   async getIntegrationStats(): Promise<IntegrationStats> {
     const [configsData, logsData] = await Promise.all([
