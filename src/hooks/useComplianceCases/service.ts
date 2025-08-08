@@ -1,3 +1,4 @@
+
 import { ComplianceCaseDetails, CaseAction, CaseFilters } from '@/types/case';
 import { CaseServiceOperations } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,10 +36,48 @@ const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
   actionBy: a.action_by || '',
   actionByName: a.action_by_name || 'System',
   actionDate: a.action_date,
-  actionType: a.action_type,
+  actionType: mapSupabaseActionType(a.action_type),
   description: a.description,
   details: a.details as Record<string, any> | undefined,
 });
+
+// Map Supabase action types to our application types
+const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution' => {
+  switch (supabaseType) {
+    case 'created':
+    case 'updated':
+    case 'note_added':
+      return 'note';
+    case 'closed':
+    case 'escalated':
+    case 'resolved':
+      return 'status_change';
+    case 'assigned':
+      return 'assignment';
+    default:
+      return 'note';
+  }
+};
+
+// Map application action types to Supabase types
+const mapToSupabaseActionType = (appType: 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution'): string => {
+  switch (appType) {
+    case 'note':
+      return 'note_added';
+    case 'status_change':
+      return 'updated';
+    case 'assignment':
+      return 'assigned';
+    case 'document_request':
+      return 'created';
+    case 'escalation':
+      return 'escalated';
+    case 'resolution':
+      return 'resolved';
+    default:
+      return 'note_added';
+  }
+};
 
 export const complianceCaseService: CaseServiceOperations = {
   async fetchCases(filters: CaseFilters): Promise<ComplianceCaseDetails[]> {
@@ -87,7 +126,7 @@ export const complianceCaseService: CaseServiceOperations = {
       assigned_to: caseData.assignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: caseData.source,
+      source: caseData.source as any,
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,
@@ -119,16 +158,6 @@ export const complianceCaseService: CaseServiceOperations = {
       throw error;
     }
     
-    return data ? data.map(a => ({
-        id: a.id,
-        caseId: a.case_id,
-        actionBy: a.action_by || '',
-        actionByName: a.action_by_name || 'System',
-        actionDate: a.action_date,
-        actionType: a.action_type,
-        description: a.description,
-        details: a.details as Record<string, any> | undefined,
-      })) 
-      : [];
+    return data ? data.map(mapToCaseAction) : [];
   }
 };

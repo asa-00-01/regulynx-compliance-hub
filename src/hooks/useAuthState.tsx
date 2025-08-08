@@ -39,10 +39,7 @@ export const useAuthState = () => {
         // Get basic profile
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select(`
-            *,
-            customer:customers(*)
-          `)
+          .select('*')
           .eq('id', session.user.id)
           .single();
         
@@ -68,13 +65,28 @@ export const useAuthState = () => {
           if (customerError) throw customerError;
 
           const userMetadata = session.user.user_metadata;
+          
+          // Map database status to ExtendedUser status
+          const mapStatus = (dbStatus: string): 'verified' | 'pending' | 'rejected' | 'information_requested' => {
+            switch (dbStatus) {
+              case 'active':
+                return 'verified';
+              case 'suspended':
+              case 'banned':
+                return 'rejected';
+              case 'pending':
+              default:
+                return 'pending';
+            }
+          };
+
           const userData: ExtendedUser = {
             id: session.user.id,
             email: session.user.email || '',
             name: profile.name,
             role: profile.role, // Legacy role
             riskScore: profile.risk_score,
-            status: profile.status,
+            status: mapStatus(profile.status),
             avatarUrl: profile.avatar_url,
             title: userMetadata.title,
             department: userMetadata.department,
@@ -83,10 +95,10 @@ export const useAuthState = () => {
             preferences: userMetadata.preferences,
             
             // New platform-aware fields
-            customer_id: profile.customer_id,
+            customer_id: profile.customer_id || undefined,
             platform_roles: platformRoles?.map(r => r.role) || [],
             customer_roles: customerRoles?.map(r => r.role) || [],
-            customer: profile.customer?.[0] || undefined,
+            customer: undefined, // Will be populated separately if needed
             isPlatformOwner: (platformRoles?.length || 0) > 0,
           };
           setUser(userData);

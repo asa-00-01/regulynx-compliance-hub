@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,19 +27,38 @@ export const useAuthActions = (
 
         if (profile) {
           const userMetadata = data.user.user_metadata;
+          
+          // Map database status to ExtendedUser status
+          const mapStatus = (dbStatus: string): 'verified' | 'pending' | 'rejected' | 'information_requested' => {
+            switch (dbStatus) {
+              case 'active':
+                return 'verified';
+              case 'suspended':
+              case 'banned':
+                return 'rejected';
+              case 'pending':
+              default:
+                return 'pending';
+            }
+          };
+
           const userData: ExtendedUser = {
             id: data.user.id,
             email: data.user.email || '',
             name: profile.name,
             role: profile.role,
             riskScore: profile.risk_score,
-            status: profile.status,
+            status: mapStatus(profile.status),
             avatarUrl: profile.avatar_url,
             title: userMetadata.title,
             department: userMetadata.department,
             phone: userMetadata.phone,
             location: userMetadata.location,
             preferences: userMetadata.preferences,
+            customer_id: profile.customer_id || undefined,
+            platform_roles: [],
+            customer_roles: [],
+            isPlatformOwner: false,
           };
           return userData;
         }

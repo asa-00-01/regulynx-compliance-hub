@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useComplianceCases } from '@/hooks/useComplianceCases';
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { User } from '@/types';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
@@ -22,6 +22,27 @@ const ComplianceCases = () => {
   const { t } = useTranslation();
   
   const location = useLocation();
+  
+  // Convert ExtendedUser to User for compatibility
+  const compatibleUser: User | undefined = user ? {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    riskScore: user.riskScore,
+    status: user.status,
+    avatarUrl: user.avatarUrl,
+    title: user.title,
+    department: user.department,
+    phone: user.phone,
+    location: user.location,
+    preferences: user.preferences,
+    customer_id: user.customer_id,
+    platform_roles: user.platform_roles,
+    customer_roles: user.customer_roles,
+    customer: user.customer,
+    isPlatformOwner: user.isPlatformOwner,
+  } : undefined;
   
   const {
     cases,
@@ -36,7 +57,7 @@ const ComplianceCases = () => {
     updateCaseStatus,
     assignCase,
     createCase,
-  } = useComplianceCases(user);
+  } = useComplianceCases(compatibleUser);
   
   // Check for location state actions
   useEffect(() => {
@@ -108,7 +129,7 @@ const ComplianceCases = () => {
                 onUpdateStatus={updateCaseStatus}
                 onAssign={assignCase}
                 onBackToList={() => setActiveTab('cases')}
-                currentUser={user}
+                currentUser={compatibleUser}
               />
             )}
           </TabsContent>
@@ -119,7 +140,7 @@ const ComplianceCases = () => {
         open={showNewCaseDialog}
         onOpenChange={setShowNewCaseDialog}
         onCreateCase={createCase}
-        currentUser={user}
+        currentUser={compatibleUser}
         initialData={initialCaseData}
       />
     </DashboardLayout>

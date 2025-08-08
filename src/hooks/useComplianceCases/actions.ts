@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -20,7 +21,7 @@ export const useCaseActions = (
         case_id: caseId,
         action_by: currentUser?.id,
         action_by_name: currentUser?.name,
-        action_type: 'note',
+        action_type: 'note_added',
         description: note,
       };
 
@@ -38,7 +39,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: 'note',
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };
@@ -92,7 +93,7 @@ export const useCaseActions = (
         case_id: caseId,
         action_by: currentUser?.id,
         action_by_name: currentUser?.name || 'Unknown User',
-        action_type: 'status_change',
+        action_type: 'updated',
         description: `Case status changed to ${newStatus.replace(/_/g, ' ')}`,
         details: note ? { note } : undefined
       };
@@ -111,7 +112,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: 'status_change',
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };
@@ -170,7 +171,7 @@ export const useCaseActions = (
         case_id: caseId,
         action_by: currentUser?.id,
         action_by_name: currentUser?.name || 'Unknown User',
-        action_type: 'assignment',
+        action_type: 'assigned',
         description: `Case assigned to ${assignToName}`
       };
       
@@ -188,7 +189,7 @@ export const useCaseActions = (
         actionBy: data.action_by || '',
         actionByName: data.action_by_name || 'System',
         actionDate: data.action_date,
-        actionType: data.action_type,
+        actionType: 'assignment',
         description: data.description,
         details: data.details as Record<string, any> | undefined,
       };

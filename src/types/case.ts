@@ -1,3 +1,4 @@
+
 import { User } from "./index";
 
 export type CasePriority = 'low' | 'medium' | 'high' | 'critical';
