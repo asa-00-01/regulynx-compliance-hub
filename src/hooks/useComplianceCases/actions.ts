@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -164,10 +163,25 @@ export const useCaseActions = (
     assignToName: string
   ) => {
     try {
-       const { error: updateError } = await supabase
+      // Check if the assignToId is a valid UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      
+      let actualAssignedTo: string | null = null;
+      
+      // If it's a valid UUID, use it directly
+      if (uuidRegex.test(assignToId)) {
+        actualAssignedTo = assignToId;
+      } else {
+        // For mock data or non-UUID IDs, we'll store null in the database 
+        // but keep the name for display purposes
+        console.log(`Assignment ID ${assignToId} is not a valid UUID, storing null but keeping name`);
+        actualAssignedTo = null;
+      }
+
+      const { error: updateError } = await supabase
         .from('compliance_cases')
         .update({ 
-          assigned_to: assignToId, 
+          assigned_to: actualAssignedTo, 
           assigned_to_name: assignToName,
           updated_at: new Date().toISOString() 
         })
@@ -178,7 +192,7 @@ export const useCaseActions = (
       if (selectedCase?.id === caseId) {
         const updatedCase = { 
           ...selectedCase, 
-          assignedTo: assignToId, 
+          assignedTo: actualAssignedTo, 
           assignedToName: assignToName, 
           updatedAt: new Date().toISOString() 
         };
