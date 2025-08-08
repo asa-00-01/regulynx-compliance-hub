@@ -178,17 +178,83 @@ export const mockUsers = [
   { id: '4', name: 'Astrid Lindqvist' }
 ];
 
-// Mock transaction data for selection
+// Mock transaction data for selection - now with complete transaction details
 export const mockAvailableTransactions = [
-  { id: 'TX-78901', description: '15,000 SEK to Somalia on 2023-11-05' },
-  { id: 'TX-78902', description: '12,000 SEK to Somalia on 2023-11-07' },
-  { id: 'TX-78903', description: '18,500 SEK to Somalia on 2023-11-09' },
-  { id: 'TX-82901', description: '9,500 SEK domestic transfer on 2023-11-28' },
-  { id: 'TX-82902', description: '9,400 SEK domestic transfer on 2023-11-28' },
-  { id: 'TX-82903', description: '9,700 SEK domestic transfer on 2023-11-28' },
-  { id: 'TX-82904', description: '9,300 SEK domestic transfer on 2023-11-28' },
-  { id: 'TX-91245', description: '25,000 SEK at 2:12 AM on 2024-01-10' },
-  { id: 'TX-91246', description: '22,000 SEK to UK at 2:34 AM on 2024-01-12' },
-  { id: 'TX-95872', description: '85,000 SEK to Cayman Islands on 2024-02-05' },
-  { id: 'TX-95873', description: '72,000 SEK to Cayman Islands on 2024-02-06' }
+  { 
+    id: 'TX-78901', 
+    description: '15,000 SEK to Somalia on 2023-11-05',
+    amount: 15000,
+    currency: 'SEK',
+    date: '2023-11-05'
+  },
+  { 
+    id: 'TX-78902', 
+    description: '12,000 SEK to Somalia on 2023-11-07',
+    amount: 12000,
+    currency: 'SEK',
+    date: '2023-11-07'
+  },
+  { 
+    id: 'TX-78903', 
+    description: '18,500 SEK to Somalia on 2023-11-09',
+    amount: 18500,
+    currency: 'SEK',
+    date: '2023-11-09'
+  },
+  { 
+    id: 'TX-82901', 
+    description: '9,500 SEK domestic transfer on 2023-11-28',
+    amount: 9500,
+    currency: 'SEK',
+    date: '2023-11-28'
+  },
+  { 
+    id: 'TX-82902', 
+    description: '9,400 SEK domestic transfer on 2023-11-28',
+    amount: 9400,
+    currency: 'SEK',
+    date: '2023-11-28'
+  },
+  { 
+    id: 'TX-82903', 
+    description: '9,700 SEK domestic transfer on 2023-11-28',
+    amount: 9700,
+    currency: 'SEK',
+    date: '2023-11-28'
+  },
+  { 
+    id: 'TX-82904', 
+    description: '9,300 SEK domestic transfer on 2023-11-28',
+    amount: 9300,
+    currency: 'SEK',
+    date: '2023-11-28'
+  },
+  { 
+    id: 'TX-91245', 
+    description: '25,000 SEK at 2:12 AM on 2024-01-10',
+    amount: 25000,
+    currency: 'SEK',
+    date: '2024-01-10'
+  },
+  { 
+    id: 'TX-91246', 
+    description: '22,000 SEK to UK at 2:34 AM on 2024-01-12',
+    amount: 22000,
+    currency: 'SEK',
+    date: '2024-01-12'
+  },
+  { 
+    id: 'TX-95872', 
+    description: '85,000 SEK to Cayman Islands on 2024-02-05',
+    amount: 85000,
+    currency: 'SEK',
+    date: '2024-02-05'
+  },
+  { 
+    id: 'TX-95873', 
+    description: '72,000 SEK to Cayman Islands on 2024-02-06',
+    amount: 72000,
+    currency: 'SEK',
+    date: '2024-02-06'
+  }
 ];
