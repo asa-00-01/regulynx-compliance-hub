@@ -1,282 +1,195 @@
-
 import React from 'react';
 import {
   Home,
-  Shield,
+  LayoutDashboard,
   Users,
   FileText,
-  FileSearch,
-  CircleDollarSign,
-  LineChart,
-  PieChart,
-  FileWarning,
-  History,
-  UserCheck,
-  User,
-  Bot,
-  Newspaper,
-  Zap,
-  Code,
-  Database,
-  BarChart3,
-  Building2,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Server,
+  Activity,
+  TrendingUp,
+  UserCog,
+  Mailbox,
+  LucideIcon
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { usePermissions } from '@/hooks/use-permissions';
-import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import LanguageSelector from '@/components/common/LanguageSelector';
-import {
-  useSidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-} from '@/components/ui/sidebar';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { useNavigate } from 'react-router-dom';
 
-const Sidebar = () => {
-  const { user } = useAuth();
-  const { hasPermission } = usePermissions();
-  const { isPlatformOwner, isPlatformAdmin } = usePlatformRoleAccess();
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  roles?: string[];
+}
+
+interface SidebarSection {
+  title: string;
+  items: NavItem[];
+}
+
+const sidebarItems = [
+  {
+    title: 'Main',
+    items: [
+      {
+        name: 'Dashboard',
+        href: '/',
+        icon: LayoutDashboard,
+      },
+      {
+        name: 'Cases',
+        href: '/cases',
+        icon: FileText,
+      },
+    ]
+  },
+  {
+    title: 'Customers',
+    items: [
+      {
+        name: 'Customer List',
+        href: '/customers',
+        icon: Users,
+      },
+    ]
+  },
+  {
+    title: 'Compliance',
+    items: [
+      {
+        name: 'Transaction Alerts',
+        href: '/alerts',
+        icon: Activity,
+      },
+      {
+        name: 'Trends',
+        href: '/trends',
+        icon: TrendingUp,
+      },
+    ]
+  },
+  {
+    title: 'Administration',
+    items: [
+      {
+        name: 'User Management',
+        href: '/users',
+        icon: UserCog,
+        roles: ['admin'],
+      },
+      {
+        name: 'Email Management',
+        href: '/emails',
+        icon: Mailbox,
+        roles: ['admin'],
+      },
+      {
+        name: 'Production Monitor',
+        href: '/production-monitor',
+        icon: Server,
+        roles: ['admin'],
+      },
+    ]
+  },
+];
+
+const Sidebar: React.FC = () => {
   const location = useLocation();
-  const { t } = useTranslation();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const navigationItems = [
-    {
-      title: t('navigation.dashboard'),
-      href: '/dashboard',
-      icon: Home,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.aiAgent'),
-      href: '/ai-agent',
-      icon: Bot,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.news'),
-      href: '/news',
-      icon: Newspaper,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-    {
-      title: t('navigation.compliance'),
-      href: '/compliance',
-      icon: Shield,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.complianceCases'),
-      href: '/compliance-cases',
-      icon: FileText,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.kycVerification'),
-      href: '/kyc-verification',
-      icon: UserCheck,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: t('navigation.transactions'),
-      href: '/transactions',
-      icon: CircleDollarSign,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.documents'),
-      href: '/documents',
-      icon: FileSearch,
-      allowedRoles: ['admin', 'complianceOfficer', 'support'],
-    },
-    {
-      title: t('navigation.amlMonitoring'),
-      href: '/aml-monitoring',
-      icon: LineChart,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.riskAnalysis'),
-      href: '/risk-analysis',
-      icon: PieChart,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.sarCenter'),
-      href: '/sar-center',
-      icon: FileWarning,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: 'Integration Management',
-      href: '/integration',
-      icon: Database,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: 'Usage Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive'],
-    },
-    {
-      title: t('navigation.auditLogs'),
-      href: '/audit-logs',
-      icon: History,
-      allowedRoles: ['admin', 'complianceOfficer'],
-    },
-    {
-      title: t('navigation.users'),
-      href: '/users',
-      icon: Users,
-      allowedRoles: ['admin'],
-    },
-    {
-      title: t('navigation.profile'),
-      href: '/profile',
-      icon: User,
-      allowedRoles: ['admin', 'complianceOfficer', 'executive', 'support'],
-    },
-  ];
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out."
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      toast({
+        title: "Sign Out Failed",
+        description: "There was an error signing you out. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
-  // Platform management items for platform owners
-  const platformItems = [
-    {
-      title: 'Platform Management',
-      href: '/platform-management',
-      icon: Building2,
-    },
-  ];
-
-  // Developer/Admin-only items for footer
-  const developerItems = [
-    {
-      title: 'Performance Optimization',
-      href: '/optimization',
-      icon: Zap,
-    },
-    {
-      title: 'Developer Tools',
-      href: '/developer-tools',
-      icon: Code,
-    },
-  ];
-
-  const isAdmin = user?.role === 'admin';
+  const renderSidebarSection = (section: SidebarSection, index: number) => (
+    <div key={index} className="pb-4">
+      <div className="text-sm font-semibold text-muted-foreground px-4 py-2">{section.title}</div>
+      {section.items.map((item) => {
+        if (item.roles && !item.roles.includes(user?.role || '')) {
+          return null;
+        }
+        return (
+          <NavLink
+            key={item.name}
+            to={item.href}
+            className={`flex items-center text-sm font-medium py-2 px-4 rounded-md transition-colors hover:bg-secondary hover:text-foreground ${location.pathname === item.href ? 'bg-secondary text-foreground' : 'text-muted-foreground'}`}
+          >
+            <item.icon className="mr-2 h-4 w-4" />
+            {item.name}
+          </NavLink>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <>
-      <SidebarHeader className={cn('px-6 py-4', isCollapsed && "px-2 justify-center")}>
-        <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">
-          {isCollapsed ? "AML" : t('layout.sidebar.title')}
-        </h1>
-      </SidebarHeader>
-      
-      <SidebarContent className={cn(!isCollapsed && "p-2")}>
-        <SidebarMenu>
-          {/* Platform Management Section - Only for Platform Owners */}
-          {isPlatformOwner() && (
-            <>
-              <div className="px-2 py-1">
-                <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Platform</p>
-                {platformItems.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  
-                  return (
-                    <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                      >
-                        <NavLink to={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+    <div className="flex flex-col h-full border-r bg-secondary/50">
+      <div className="flex-1 px-6 py-4">
+        <NavLink to="/" className="flex items-center py-3">
+          <Home className="mr-2 h-6 w-6" />
+          <span className="text-lg font-semibold">Compliance Portal</span>
+        </NavLink>
+        <ScrollArea className="flex-1">
+          <div className="space-y-1">
+            {sidebarItems.map(renderSidebarSection)}
+          </div>
+        </ScrollArea>
+      </div>
+      <div className="border-t p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative flex items-center gap-2 w-full rounded-md p-2 text-sm font-normal focus:outline-none">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.image} alt={user?.name} />
+                <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col text-left">
+                <span>{user?.name}</span>
+                <Badge variant="secondary">{user?.role}</Badge>
               </div>
-              <SidebarSeparator />
-            </>
-          )}
-
-          {/* Regular navigation items */}
-          {navigationItems.map((item) => {
-            if (!user || !item.allowedRoles.includes(user.role)) {
-              return null;
-            }
-
-            const isActive = location.pathname === item.href || 
-              (item.href === '/dashboard' && location.pathname === '/');
-
-            return (
-              <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  tooltip={item.title}
-                >
-                  <NavLink to={item.href}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarContent>
-      
-      <SidebarSeparator />
-      
-      <SidebarFooter className={cn(isCollapsed && "hidden")}>
-        {/* Developer Tools Section - Admin Only */}
-        {(isAdmin || isPlatformAdmin()) && (
-          <>
-            <div className="px-2 py-1">
-              <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Developer Tools</p>
-              <SidebarMenu>
-                {developerItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
-                  
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                        size="sm"
-                      >
-                        <NavLink to={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </div>
-            <SidebarSeparator />
-          </>
-        )}
-        
-        <LanguageSelector />
-        <p className="text-xs text-sidebar-foreground/70 text-center">
-          {t('layout.sidebar.footer', { year: new Date().getFullYear() })}
-        </p>
-      </SidebarFooter>
-    </>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 };
 

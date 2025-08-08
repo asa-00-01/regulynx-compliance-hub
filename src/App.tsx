@@ -1,57 +1,63 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/hooks/use-toast';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import AppRoutes from '@/components/app/AppRoutes';
+import AppInitializer from '@/components/app/AppInitializer';
+import SecurityProvider from '@/components/security/SecurityProvider';
+import EnvironmentChecker from '@/components/common/EnvironmentChecker';
+import EnhancedErrorBoundary from '@/components/common/EnhancedErrorBoundary';
+import { useErrorTracking } from '@/hooks/useErrorTracking';
 
-import React, { Suspense, useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import AppRoutes from "@/components/app/AppRoutes";
-import { AppProviders } from "@/components/app/AppProviders";
-import LoadingScreen from "@/components/app/LoadingScreen";
-import AppInitializer from "@/components/app/AppInitializer";
-import GlobalErrorBoundary from "@/components/common/GlobalErrorBoundary";
-import EnhancedErrorTrackingService from "@/components/common/EnhancedErrorTrackingService";
-import { auditLogger } from "@/services/auditLogger";
+function App() {
+  const { logError } = useErrorTracking();
 
-const App = () => {
-  useEffect(() => {
-    // Initialize application logging
-    auditLogger.logSystemEvent('application_start', {
-      url: window.location.href,
-      user_agent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-      app_version: '1.0.0'
-    });
-
-    // Log when user leaves the page
-    const handleBeforeUnload = () => {
-      auditLogger.logSystemEvent('application_exit', {
-        url: window.location.href,
-        session_duration: Date.now() - performance.timeOrigin
-      });
+  // Global error handler for unhandled promise rejections
+  React.useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      logError(new Error(event.reason || 'Unhandled Promise Rejection'), 'global_promise_rejection', 'high');
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    const handleError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+      logError(event.error || new Error(event.message), 'global_error', 'high');
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [logError]);
 
   return (
-    <GlobalErrorBoundary>
-      <AppProviders>
-        <TooltipProvider>
-          <EnhancedErrorTrackingService context="app_providers">
-            <Suspense fallback={<LoadingScreen />}>
-              <AppInitializer />
-              <AppRoutes />
-            </Suspense>
-          </EnhancedErrorTrackingService>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </AppProviders>
-    </GlobalErrorBoundary>
+    <EnhancedErrorBoundary context="App">
+      <div className="min-h-screen bg-background font-sans antialiased">
+        <SecurityProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <AppInitializer>
+                <Router>
+                  <EnvironmentChecker />
+                  <SiteHeader />
+                  <DashboardLayout>
+                    <AppRoutes />
+                  </DashboardLayout>
+                  <SiteFooter />
+                </Router>
+              </AppInitializer>
+            </ToastProvider>
+          </AuthProvider>
+        </SecurityProvider>
+      </div>
+    </EnhancedErrorBoundary>
   );
-};
+}
 
 export default App;
