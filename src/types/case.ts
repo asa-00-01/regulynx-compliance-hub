@@ -12,7 +12,7 @@ export interface ComplianceCaseDetails {
   createdBy?: string;
   updatedAt: string;
   type: 'kyc' | 'aml' | 'sanctions';
-  status: 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed';
+  status: 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed'; // Match database enum
   riskScore: number;
   description: string;
   assignedTo?: string;

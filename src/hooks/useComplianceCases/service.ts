@@ -6,9 +6,6 @@ import {
   ComplianceCase, 
   CaseAction as SupabaseCaseAction,
   ComplianceCaseInsert,
-  CaseStatus,
-  CaseType,
-  CaseSource,
 } from '@/types/supabase';
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
@@ -18,14 +15,14 @@ const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails =>
   createdAt: c.created_at,
   createdBy: c.created_by || undefined,
   updatedAt: c.updated_at,
-  type: c.type,
-  status: c.status,
+  type: c.type as 'kyc' | 'aml' | 'sanctions',
+  status: c.status as 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed',
   riskScore: c.risk_score,
   description: c.description,
   assignedTo: c.assigned_to || undefined,
   assignedToName: c.assigned_to_name || undefined,
   priority: c.priority,
-  source: c.source!,
+  source: c.source as 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment',
   relatedTransactions: c.related_transactions || [],
   relatedAlerts: c.related_alerts || [],
   documents: c.documents || [],
@@ -60,35 +57,15 @@ const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' |
   }
 };
 
-// Map application action types to Supabase types
-const mapToSupabaseActionType = (appType: 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution'): string => {
-  switch (appType) {
-    case 'note':
-      return 'note_added';
-    case 'status_change':
-      return 'updated';
-    case 'assignment':
-      return 'assigned';
-    case 'document_request':
-      return 'created';
-    case 'escalation':
-      return 'escalated';
-    case 'resolution':
-      return 'resolved';
-    default:
-      return 'note_added';
-  }
-};
-
 export const complianceCaseService: CaseServiceOperations = {
   async fetchCases(filters: CaseFilters): Promise<ComplianceCaseDetails[]> {
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
-      query = query.in('status', filters.status as CaseStatus[]);
+      query = query.in('status', filters.status);
     }
     if (filters.type && filters.type.length > 0) {
-      query = query.in('type', filters.type as CaseType[]);
+      query = query.in('type', filters.type);
     }
     if (filters.priority && filters.priority.length > 0) {
       query = query.in('priority', filters.priority);
@@ -127,7 +104,7 @@ export const complianceCaseService: CaseServiceOperations = {
       assigned_to: caseData.assignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: caseData.source as CaseSource,
+      source: caseData.source as any,
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,

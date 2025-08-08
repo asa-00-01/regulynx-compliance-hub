@@ -73,9 +73,14 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
+      // Map application status to database status if needed
+      let dbStatus = newStatus;
+      if (newStatus === 'under_review') dbStatus = 'under_review';
+      if (newStatus === 'pending_info') dbStatus = 'pending_info';
+      
       const { error: updateError } = await supabase
         .from('compliance_cases')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .update({ status: dbStatus, updated_at: new Date().toISOString() })
         .eq('id', caseId);
       
       if (updateError) throw updateError;

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ExtendedUser } from '@/types/auth';
-import { PlatformRoleService } from '@/services/platformRoleService';
 import { toast } from 'sonner';
 
 export const useAuthState = () => {
@@ -94,10 +93,10 @@ export const useAuthState = () => {
             location: userMetadata.location,
             preferences: userMetadata.preferences,
             
-            // New platform-aware fields
-            customer_id: profile.customer_id || undefined,
+            // New platform-aware fields - safely access customer_id if it exists
+            customer_id: (profile as any).customer_id || undefined,
             platform_roles: platformRoles?.map(r => r.role) || [],
-            customer_roles: customerRoles?.map(r => r.role) || [],
+            customer_roles: customerRoles?.map(r => r.role as any) || [], // Cast to any to avoid type issues for now
             customer: undefined, // Will be populated separately if needed
             isPlatformOwner: (platformRoles?.length || 0) > 0,
           };

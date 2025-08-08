@@ -36,7 +36,7 @@ export interface User {
   email: string;
   role: UserRole;
   riskScore: number;
-  status: 'verified' | 'pending' | 'flagged';
+  status: 'verified' | 'pending' | 'rejected' | 'information_requested'; // Updated to match ExtendedUser
   documents?: Document[];
   avatarUrl?: string;
   title?: string;

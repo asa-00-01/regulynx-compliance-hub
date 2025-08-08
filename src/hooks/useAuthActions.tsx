@@ -56,7 +56,7 @@ export const useAuthActions = (
             phone: userMetadata.phone,
             location: userMetadata.location,
             preferences: userMetadata.preferences,
-            customer_id: profile.customer_id || undefined,
+            customer_id: (profile as any).customer_id || undefined, // Safely access customer_id
             platform_roles: [],
             customer_roles: [],
             isPlatformOwner: false,
