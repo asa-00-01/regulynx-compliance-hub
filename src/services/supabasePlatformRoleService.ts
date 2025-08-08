@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PlatformRole, CustomerRole, Customer, ExtendedUserProfile } from '@/types/platform-roles';
 
@@ -146,69 +145,53 @@ export class SupabasePlatformRoleService {
     return (data || []).map(row => row.role as PlatformRole);
   }
 
-  // Customer role management - using raw SQL to work around type issues
+  // Customer role management - using the correct RPC functions
   static async assignCustomerRole(userId: string, customerId: string, role: CustomerRole): Promise<void> {
-    // Use raw SQL query to insert customer role since types haven't been updated
-    const { error } = await supabase.rpc('sql', {
-      query: `
-        INSERT INTO user_roles (user_id, customer_id, customer_role)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id, role, customer_id, customer_role) DO NOTHING
-      `,
-      params: [userId, customerId, role]
-    });
+    // Insert into user_roles table directly using available columns
+    const { error } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        customer_id: customerId,
+        role: role as any // Cast to work with the current schema
+      });
 
-    if (error) {
-      // Fallback to direct database query if RPC doesn't work
-      const { error: directError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          customer_id: customerId,
-          role: null, // Set role to null for customer roles
-          // Note: customer_role would be set but types don't reflect this yet
-        } as any);
-
-      if (directError && directError.code !== '23505') {
-        throw directError;
-      }
+    if (error && error.code !== '23505') { // Ignore duplicate key errors
+      throw error;
     }
   }
 
   static async removeCustomerRole(userId: string, customerId: string, role: CustomerRole): Promise<void> {
-    // Use raw SQL query to delete customer role since types haven't been updated
-    const { error } = await supabase.rpc('sql', {
-      query: `
-        DELETE FROM user_roles 
-        WHERE user_id = $1 AND customer_id = $2 AND customer_role = $3
-      `,
-      params: [userId, customerId, role]
-    });
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('customer_id', customerId)
+      .eq('role', role as any);
 
     if (error) {
-      // This will likely fail due to type constraints, but we'll handle it gracefully
       console.warn('Failed to remove customer role:', error);
     }
   }
 
   static async getUserCustomerRoles(userId: string, customerId?: string): Promise<CustomerRole[]> {
-    // Use raw SQL query to get customer roles since types haven't been updated
     try {
-      const { data, error } = await supabase.rpc('sql', {
-        query: customerId 
-          ? `SELECT customer_role FROM user_roles WHERE user_id = $1 AND customer_id = $2 AND customer_role IS NOT NULL`
-          : `SELECT customer_role FROM user_roles WHERE user_id = $1 AND customer_role IS NOT NULL`,
-        params: customerId ? [userId, customerId] : [userId]
+      // Use the existing RPC function to get customer roles
+      const { data, error } = await supabase.rpc('get_user_customer_roles', {
+        _user_id: userId
       });
 
       if (error) throw error;
       
-      return (data || [])
-        .map((row: any) => row.customer_role)
-        .filter((role: any) => role !== null)
-        .map((role: any) => role as CustomerRole);
+      // Handle the returned data properly - it should be an array of roles
+      if (Array.isArray(data)) {
+        return data.map(role => role as CustomerRole);
+      }
+      
+      // If it's not an array, return empty array
+      return [];
     } catch (error) {
-      // Fallback to empty array if raw SQL doesn't work
+      // Fallback to empty array if RPC doesn't work as expected
       console.warn('Failed to get customer roles, returning empty array:', error);
       return [];
     }
