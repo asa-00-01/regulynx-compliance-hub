@@ -8,6 +8,10 @@ export interface ExtractedData {
   idNumber?: string;
   nationality?: string;
   expiryDate?: string;
+  issueDate?: string;
+  address?: string;
+  documentType?: string;
+  issuingAuthority?: string;
   rejection_reason?: string;
 }
 

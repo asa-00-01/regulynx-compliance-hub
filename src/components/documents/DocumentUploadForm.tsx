@@ -23,6 +23,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
   const [documentType, setDocumentType] = useState<DocumentType>('passport');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(preSelectedCustomerId || '');
   const [isUploading, setIsUploading] = useState(false);
+  const [lastOCRResult, setLastOCRResult] = useState<any>(null);
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
   const { user, session } = useAuth();
@@ -74,6 +75,9 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       const result = await processImage(file);
       console.log('OCR processing completed:', result);
       
+      // Store the result for display
+      setLastOCRResult(result);
+      
       // Create a unique file path
       const timestamp = new Date().getTime();
       const fileExt = file.name.split('.').pop();
@@ -120,15 +124,22 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       });
       
       // Display extracted data in the toast if available
-      if (result && result.extractedData && result.extractedData.name) {
-        toast({
-          title: "Document Processed",
-          description: `Detected name: ${result.extractedData.name}`,
-        });
+      if (result && result.extractedData) {
+        const extractedFields = Object.keys(result.extractedData).filter(key => 
+          result.extractedData[key] && result.extractedData[key].trim() !== ''
+        );
+        
+        if (extractedFields.length > 0) {
+          toast({
+            title: "OCR Processing Complete",
+            description: `Successfully extracted ${extractedFields.length} field${extractedFields.length !== 1 ? 's' : ''} from the document`,
+          });
+        }
       }
       
       // Reset form state
       setFile(null);
+      setLastOCRResult(null);
       if (!preSelectedCustomerId) {
         setSelectedCustomerId('');
       }
@@ -213,6 +224,18 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
           <p className="text-xs text-muted-foreground">
             {progress}% complete - OCR is analyzing the document
           </p>
+        </div>
+      )}
+      
+      {lastOCRResult && lastOCRResult.extractedData && Object.keys(lastOCRResult.extractedData).length > 0 && (
+        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-md border border-green-200">
+          <strong>OCR Success:</strong> Successfully extracted data from the document!
+          <br />
+          <span className="text-xs">
+            Detected fields: {Object.keys(lastOCRResult.extractedData).filter(key => 
+              lastOCRResult.extractedData[key] && lastOCRResult.extractedData[key].trim() !== ''
+            ).join(', ')}
+          </span>
         </div>
       )}
       
