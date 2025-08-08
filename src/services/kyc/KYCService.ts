@@ -1,6 +1,5 @@
 
 import { KYCUser, KYCVerification } from '@/types/kyc';
-import { mockUsers, mockVerifications } from '@/components/kyc/mockKycData';
 import { BaseMockService, simulateDelay } from '../base/BaseMockService';
 
 export class KYCService extends BaseMockService {
@@ -9,28 +8,12 @@ export class KYCService extends BaseMockService {
       throw new Error('Mock data is disabled. Use real API service.');
     }
     
-    console.log('👤 Fetching mock KYC users...', filters ? 'with filters' : '');
+    console.log('👤 KYC Service: Use compliance context for consistent data instead of this service');
+    console.log('👤 This service is deprecated - use useCompliance hook to get centralized user data');
     await simulateDelay();
     
-    let filteredUsers = [...mockUsers];
-    
-    // Apply filters if provided
-    if (filters) {
-      if (filters.kycStatus && filters.kycStatus.length > 0) {
-        // Note: mockUsers doesn't have kycStatus directly, would need to join with verifications
-        // For now, return all users
-      }
-      
-      if (filters.searchTerm) {
-        const term = filters.searchTerm.toLowerCase();
-        filteredUsers = filteredUsers.filter(u => 
-          u.fullName.toLowerCase().includes(term) || 
-          u.email.toLowerCase().includes(term)
-        );
-      }
-    }
-    
-    return filteredUsers;
+    // Return empty array to encourage use of compliance context
+    return [];
   }
 
   static async getKYCVerifications(): Promise<KYCVerification[]> {
@@ -38,8 +21,10 @@ export class KYCService extends BaseMockService {
       throw new Error('Mock data is disabled. Use real API service.');
     }
     
-    console.log('✅ Fetching mock KYC verifications...');
+    console.log('✅ KYC Service: Use compliance context for consistent data instead of this service');
     await simulateDelay();
-    return mockVerifications;
+    
+    // Return empty array to encourage use of compliance context
+    return [];
   }
 }
