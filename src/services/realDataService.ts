@@ -110,7 +110,10 @@ export class RealDataService {
     console.log('🌐 Fetching AML transactions from database...');
     
     try {
-      let query = supabase.from('aml_transactions').select('*');
+      let query = supabase.from('aml_transactions').select(`
+        *,
+        organization_customers!inner(full_name)
+      `);
       
       if (filters?.status) {
         query = query.eq('status', filters.status);
@@ -133,21 +136,26 @@ export class RealDataService {
         return [];
       }
       
-      // Transform to AMLTransaction format
+      // Transform to AMLTransaction format - matching the interface from src/types/aml.ts
       const transactions: AMLTransaction[] = (data || []).map(tx => ({
         id: tx.id,
-        userId: tx.organization_customer_id,
-        transactionId: tx.external_transaction_id,
-        amount: parseFloat(tx.amount.toString()),
-        currency: tx.currency,
-        fromAccount: tx.from_account,
-        toAccount: tx.to_account,
-        transactionDate: tx.transaction_date,
-        transactionType: tx.transaction_type,
-        description: tx.description || '',
-        status: tx.status as 'pending' | 'approved' | 'flagged' | 'rejected',
+        senderUserId: tx.organization_customer_id,
+        senderName: (tx as any).organization_customers?.full_name || 'Unknown',
+        receiverUserId: tx.to_account, // Using to_account as receiver identifier
+        receiverName: 'Unknown Receiver', // Would need additional join for receiver info
+        senderAmount: parseFloat(tx.amount.toString()),
+        senderCurrency: tx.currency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD',
+        receiverAmount: parseFloat(tx.amount.toString()),
+        receiverCurrency: tx.currency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD',
+        senderCountryCode: 'US', // Would need additional data for proper country codes
+        receiverCountryCode: 'US', // Would need additional data for proper country codes
+        timestamp: tx.transaction_date,
+        status: tx.status as 'completed' | 'pending' | 'failed' | 'flagged',
+        reasonForSending: tx.description || 'No reason provided',
+        method: 'bank_transfer' as const, // Would need additional data for proper method
+        isSuspect: tx.status === 'flagged',
         riskScore: tx.risk_score,
-        flags: Array.isArray(tx.flags) ? tx.flags : []
+        notes: Array.isArray(tx.flags) ? tx.flags.map(flag => String(flag)) : []
       }));
       
       return transactions;
