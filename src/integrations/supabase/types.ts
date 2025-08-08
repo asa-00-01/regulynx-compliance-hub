@@ -116,42 +116,6 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_logs: {
-        Row: {
-          backup_type: string
-          completed_at: string | null
-          created_at: string
-          duration_seconds: number | null
-          error_message: string | null
-          file_path: string | null
-          file_size: number | null
-          id: string
-          status: string
-        }
-        Insert: {
-          backup_type: string
-          completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_path?: string | null
-          file_size?: number | null
-          id?: string
-          status: string
-        }
-        Update: {
-          backup_type?: string
-          completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_path?: string | null
-          file_size?: number | null
-          id?: string
-          status?: string
-        }
-        Relationships: []
-      }
       case_actions: {
         Row: {
           action_by: string | null
@@ -338,57 +302,6 @@ export type Database = {
         }
         Relationships: []
       }
-      deployment_logs: {
-        Row: {
-          branch: string | null
-          build_duration_seconds: number | null
-          commit_hash: string | null
-          completed_at: string | null
-          created_at: string
-          deployed_by: string | null
-          deployment_duration_seconds: number | null
-          deployment_id: string
-          environment: string
-          error_message: string | null
-          id: string
-          rollback_reason: string | null
-          status: string
-          version: string
-        }
-        Insert: {
-          branch?: string | null
-          build_duration_seconds?: number | null
-          commit_hash?: string | null
-          completed_at?: string | null
-          created_at?: string
-          deployed_by?: string | null
-          deployment_duration_seconds?: number | null
-          deployment_id: string
-          environment: string
-          error_message?: string | null
-          id?: string
-          rollback_reason?: string | null
-          status: string
-          version: string
-        }
-        Update: {
-          branch?: string | null
-          build_duration_seconds?: number | null
-          commit_hash?: string | null
-          completed_at?: string | null
-          created_at?: string
-          deployed_by?: string | null
-          deployment_duration_seconds?: number | null
-          deployment_id?: string
-          environment?: string
-          error_message?: string | null
-          id?: string
-          rollback_reason?: string | null
-          status?: string
-          version?: string
-        }
-        Relationships: []
-      }
       documents: {
         Row: {
           created_at: string
@@ -454,93 +367,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      environment_validations: {
-        Row: {
-          environment: string
-          id: string
-          message: string
-          recommendation: string | null
-          severity: string
-          status: string
-          validated_at: string
-          validation_type: string
-        }
-        Insert: {
-          environment: string
-          id?: string
-          message: string
-          recommendation?: string | null
-          severity: string
-          status: string
-          validated_at?: string
-          validation_type: string
-        }
-        Update: {
-          environment?: string
-          id?: string
-          message?: string
-          recommendation?: string | null
-          severity?: string
-          status?: string
-          validated_at?: string
-          validation_type?: string
-        }
-        Relationships: []
-      }
-      error_logs: {
-        Row: {
-          additional_context: Json | null
-          created_at: string
-          environment: string | null
-          error_id: string
-          error_message: string
-          error_stack: string | null
-          error_type: string
-          id: string
-          resolved: boolean | null
-          resolved_at: string | null
-          resolved_by: string | null
-          severity: string
-          url: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          additional_context?: Json | null
-          created_at?: string
-          environment?: string | null
-          error_id: string
-          error_message: string
-          error_stack?: string | null
-          error_type: string
-          id?: string
-          resolved?: boolean | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          severity: string
-          url?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          additional_context?: Json | null
-          created_at?: string
-          environment?: string | null
-          error_id?: string
-          error_message?: string
-          error_stack?: string | null
-          error_type?: string
-          id?: string
-          resolved?: boolean | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          severity?: string
-          url?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       external_customer_mappings: {
         Row: {
@@ -1234,36 +1060,9 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
-      log_error: {
-        Args: {
-          p_error_id: string
-          p_error_message: string
-          p_error_stack?: string
-          p_error_type?: string
-          p_severity?: string
-          p_url?: string
-          p_user_agent?: string
-          p_additional_context?: Json
-        }
-        Returns: string
-      }
-      schedule_backup: {
-        Args: { backup_type?: string }
-        Returns: string
-      }
       track_usage: {
         Args: { metric_type: string }
         Returns: undefined
-      }
-      validate_environment_config: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          validation_type: string
-          status: string
-          message: string
-          recommendation: string
-          severity: string
-        }[]
       }
     }
     Enums: {

@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import LoadingScreen from './LoadingScreen';
@@ -31,7 +32,6 @@ import DeveloperTools from '@/pages/DeveloperTools';
 import PlatformManagement from '@/pages/PlatformManagement';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
-import ProductionMonitor from '@/pages/ProductionMonitor';
 
 const AppRoutes = () => {
   const { loading, authLoaded } = useAuth();
@@ -223,8 +223,6 @@ const AppRoutes = () => {
 
       {/* Catch all - 404 */}
       <Route path="*" element={<NotFound />} />
-
-      <Route path="/production-monitor" element={<ProductionMonitor />} />
     </Routes>
   );
 };

@@ -1,26 +1,78 @@
 
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
-import { ExtendedUser, UserRole } from '@/types/auth';
+import { UserRole } from '@/types';
+import { ExtendedUser } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthActions } from '@/hooks/useAuthActions';
 
-export interface AuthContextType {
+interface AuthContextType {
   user: ExtendedUser | null;
-  session: Session | null;
   loading: boolean;
   authLoaded: boolean;
-  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<ExtendedUser | null>;
   logout: () => Promise<void>;
   signup: (email: string, password: string, role: UserRole, name?: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  isAuthenticated: boolean;
+  canAccess: (requiredRoles: UserRole[]) => boolean;
+  session: Session | null;
   updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
-  canAccess: (requiredRoles: string[]) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { user, session, loading, authLoaded, setUser, refreshUserProfile } = useAuthState();
+  const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
+
+  const isAuthenticated = !!user && !!session;
+
+  const canAccess = (requiredRoles: UserRole[]): boolean => {
+    if (!user) return false;
+    
+    // Platform owners always have access
+    if (user.isPlatformOwner) return true;
+    
+    // Check customer roles mapped to legacy roles
+    const hasCustomerRole = user.customer_roles?.some(customerRole => {
+      switch (customerRole) {
+        case 'customer_admin':
+          return requiredRoles.includes('admin');
+        case 'customer_compliance':
+          return requiredRoles.includes('complianceOfficer');
+        case 'customer_executive':
+          return requiredRoles.includes('executive');
+        case 'customer_support':
+          return requiredRoles.includes('support');
+        default:
+          return false;
+      }
+    }) || false;
+    
+    return hasCustomerRole || requiredRoles.includes(user.role);
+  };
+
+  return (
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        authLoaded,
+        login, 
+        logout, 
+        signup,
+        isAuthenticated,
+        canAccess,
+        session,
+        updateUserProfile,
+        refreshUserProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -28,54 +80,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session, loading, authLoaded, setUser, refreshUserProfile } = useAuthState();
-  const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
-
-  const isAuthenticated = !!user && !!session;
-
-  const signOut = async () => {
-    await logout();
-  };
-
-  // Memoize canAccess function to prevent unnecessary re-renders
-  const canAccess = useCallback((requiredRoles: string[]): boolean => {
-    if (!user || !requiredRoles.length) return true;
-    return requiredRoles.includes(user.role);
-  }, [user?.role]); // Only depend on user.role, not the entire user object
-
-  const value: AuthContextType = React.useMemo(() => ({
-    user,
-    session,
-    loading,
-    authLoaded,
-    isAuthenticated,
-    login,
-    logout,
-    signup,
-    signOut,
-    updateUserProfile,
-    refreshUserProfile,
-    canAccess
-  }), [
-    user, 
-    session, 
-    loading, 
-    authLoaded, 
-    isAuthenticated, 
-    login, 
-    logout, 
-    signup, 
-    updateUserProfile, 
-    refreshUserProfile, 
-    canAccess
-  ]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
 };
