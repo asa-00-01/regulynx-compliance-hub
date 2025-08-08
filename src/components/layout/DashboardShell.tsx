@@ -1,11 +1,14 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { SidebarProvider, SidebarInset, Sidebar as ShadcnSidebar } from '@/components/ui/sidebar';
 import LayoutSidebar from './Sidebar';
 import Header from './Header';
 
-const DashboardShell = () => {
+interface DashboardShellProps {
+  children: React.ReactNode;
+}
+
+const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -16,7 +19,7 @@ const DashboardShell = () => {
           <Header />
           <main className="flex-1 overflow-y-auto bg-background p-6">
             <div className="container mx-auto max-w-7xl">
-              <Outlet />
+              {children}
             </div>
           </main>
         </SidebarInset>

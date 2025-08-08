@@ -49,50 +49,175 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Protected routes - wrapped in DashboardShell */}
+      {/* Protected routes - all wrapped in DashboardShell */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
-          <DashboardShell />
+          <DashboardShell>
+            <Dashboard />
+          </DashboardShell>
         </ProtectedRoute>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route path="compliance" element={<Compliance />} />
-        <Route path="compliance-cases" element={<ComplianceCases />} />
-        <Route path="compliance-cases/:id" element={<CaseDetails />} />
-        <Route path="user-case/:userId" element={<UserCase />} />
-        <Route path="kyc-verification" element={
-          <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-            <KYCVerification />
-          </ProtectedRoute>
-        } />
-        <Route path="transactions" element={<Transactions />} />
-        <Route path="documents" element={<Documents />} />
-        <Route path="aml-monitoring" element={<AMLMonitoring />} />
-        <Route path="risk-analysis" element={<RiskAnalysis />} />
-        <Route path="sar-center" element={
-          <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-            <SARCenter />
-          </ProtectedRoute>
-        } />
-        <Route path="integration" element={<Integration />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="audit-logs" element={<AuditLogs />} />
-        <Route path="users" element={
-          <ProtectedRoute requiredRoles={['admin']}>
-            <Users />
-          </ProtectedRoute>
-        } />
-        <Route path="profile" element={<Profile />} />
-        <Route path="ai-agent" element={<AIAgent />} />
-        <Route path="news" element={<News />} />
-        <Route path="optimization" element={<Optimization />} />
-        <Route path="developer-tools" element={<DeveloperTools />} />
-        <Route path="platform-management" element={<PlatformManagement />} />
-      </Route>
-
-      {/* Redirect legacy routes */}
-      <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
+      } />
       
+      <Route path="/compliance" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Compliance />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/compliance-cases" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <ComplianceCases />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/compliance-cases/:id" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <CaseDetails />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/user-case/:userId" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <UserCase />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/kyc-verification" element={
+        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+          <DashboardShell>
+            <KYCVerification />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/transactions" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Transactions />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/documents" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Documents />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/aml-monitoring" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <AMLMonitoring />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/risk-analysis" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <RiskAnalysis />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/sar-center" element={
+        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+          <DashboardShell>
+            <SARCenter />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/integration" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Integration />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Analytics />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/audit-logs" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <AuditLogs />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/users" element={
+        <ProtectedRoute requiredRoles={['admin']}>
+          <DashboardShell>
+            <Users />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Profile />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/ai-agent" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <AIAgent />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/news" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <News />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/optimization" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <Optimization />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/developer-tools" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <DeveloperTools />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/platform-management" element={
+        <ProtectedRoute>
+          <DashboardShell>
+            <PlatformManagement />
+          </DashboardShell>
+        </ProtectedRoute>
+      } />
+
       {/* Catch all - 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
