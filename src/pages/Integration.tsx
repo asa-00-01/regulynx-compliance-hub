@@ -1,14 +1,15 @@
 
 import React from 'react';
 import IntegrationDashboard from '@/components/integration/IntegrationDashboard';
-import { useFeatureAccess } from '@/hooks/use-permissions';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import RefreshProfileButton from '@/components/platform/RefreshProfileButton';
 
 const Integration = () => {
-  const { canManageCases } = useFeatureAccess();
+  const { canManageCustomers, isPlatformAdmin } = usePlatformRoleAccess();
 
-  if (!canManageCases) {
+  if (!canManageCustomers && !isPlatformAdmin) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -17,10 +18,11 @@ const Integration = () => {
               <AlertCircle className="h-12 w-12 text-yellow-500 mr-4" />
               <div>
                 <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground mb-4">
                   You don't have permission to access integration management.
-                  Contact your administrator for access.
+                  Platform admin access is required.
                 </p>
+                <RefreshProfileButton />
               </div>
             </div>
           </CardContent>

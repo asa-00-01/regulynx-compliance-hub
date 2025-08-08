@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { Session } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ExtendedUser } from '@/types/auth';
-import { toast } from 'sonner';
+import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
@@ -11,126 +11,108 @@ export const useAuthState = () => {
   const [loading, setLoading] = useState(true);
   const [authLoaded, setAuthLoaded] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
+  const refreshUserProfile = async () => {
+    if (!session?.user) return;
     
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setAuthLoaded(true);
-      if (!initialSession) {
-        setLoading(false);
+    try {
+      const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(session.user.id);
+      if (extendedProfile) {
+        setUser(extendedProfile);
+        console.log('✅ User profile refreshed with roles:', extendedProfile.platform_roles);
       }
-    });
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error);
+    }
+  };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-    });
+  useEffect(() => {
+    let mounted = true;
+
+    const handleAuthChange = async (event: string, currentSession: Session | null) => {
+      console.log('🔐 Auth state change:', event, currentSession?.user?.email);
+      
+      if (!mounted) return;
+
+      setSession(currentSession);
+      setLoading(false);
+      
+      if (currentSession?.user) {
+        try {
+          // Get extended user profile with roles
+          const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(currentSession.user.id);
+          if (extendedProfile && mounted) {
+            setUser(extendedProfile);
+            console.log('✅ Extended user profile loaded:', {
+              email: extendedProfile.email,
+              platformRoles: extendedProfile.platform_roles,
+              customerRoles: extendedProfile.customer_roles,
+              isPlatformOwner: extendedProfile.isPlatformOwner
+            });
+          }
+        } catch (error) {
+          console.error('❌ Failed to load extended user profile:', error);
+          // Fallback to basic user data
+          if (mounted) {
+            setUser({
+              id: currentSession.user.id,
+              email: currentSession.user.email || '',
+              name: currentSession.user.user_metadata?.name || currentSession.user.email || '',
+              role: 'support',
+              riskScore: 0,
+              status: 'pending',
+              platform_roles: [],
+              customer_roles: [],
+              isPlatformOwner: false
+            } as ExtendedUser);
+          }
+        }
+      } else {
+        if (mounted) {
+          setUser(null);
+        }
+      }
+      
+      if (mounted) {
+        setAuthLoaded(true);
+      }
+    };
+
+    // Set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('❌ Error getting initial session:', error);
+        }
+        if (mounted) {
+          await handleAuthChange('INITIAL_SESSION', initialSession);
+        }
+      } catch (error) {
+        console.error('❌ Failed to get initial session:', error);
+        if (mounted) {
+          setLoading(false);
+          setAuthLoaded(true);
+        }
+      }
+    };
+
+    getInitialSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const fetchUserProfile = async (session: Session | null) => {
-    if (session?.user) {
-      setLoading(true);
-      try {
-        // Get basic profile
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        if (profile) {
-          // Get platform roles
-          const { data: platformRoles, error: platformError } = await supabase
-            .from('platform_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-
-          if (platformError) throw platformError;
-
-          // Get customer roles
-          const { data: customerRoles, error: customerError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-
-          if (customerError) throw customerError;
-
-          const userMetadata = session.user.user_metadata;
-          
-          // Map database status to ExtendedUser status
-          const mapStatus = (dbStatus: string): 'verified' | 'pending' | 'rejected' | 'information_requested' => {
-            switch (dbStatus) {
-              case 'active':
-                return 'verified';
-              case 'suspended':
-              case 'banned':
-                return 'rejected';
-              case 'pending':
-              default:
-                return 'pending';
-            }
-          };
-
-          const userData: ExtendedUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profile.name,
-            role: profile.role, // Legacy role
-            riskScore: profile.risk_score,
-            status: mapStatus(profile.status),
-            avatarUrl: profile.avatar_url,
-            title: userMetadata.title,
-            department: userMetadata.department,
-            phone: userMetadata.phone,
-            location: userMetadata.location,
-            preferences: userMetadata.preferences,
-            
-            // New platform-aware fields - safely access customer_id if it exists
-            customer_id: (profile as any).customer_id || undefined,
-            platform_roles: platformRoles?.map(r => r.role) || [],
-            customer_roles: customerRoles?.map(r => r.role as any) || [], // Cast to any to avoid type issues for now
-            customer: undefined, // Will be populated separately if needed
-            isPlatformOwner: (platformRoles?.length || 0) > 0,
-          };
-          setUser(userData);
-        } else {
-          console.error("CRITICAL: User is authenticated but no profile found in 'profiles' table. Forcing logout.");
-          toast.error("Your user profile is missing or corrupted. Please contact support. You will be logged out.");
-          await supabase.auth.signOut();
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        toast.error("An error occurred while fetching your profile. Logging out.");
-        await supabase.auth.signOut();
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setUser(null);
-      setLoading(false);
-    }
+  return { 
+    user, 
+    session, 
+    loading, 
+    authLoaded, 
+    setUser, 
+    refreshUserProfile 
   };
-
-  const refreshUserProfile = async () => {
-    if (session) {
-      await fetchUserProfile(session);
-    }
-  };
-  
-  useEffect(() => {
-    if (!authLoaded) return;
-    fetchUserProfile(session);
-  }, [session, authLoaded]);
-
-  return { user, session, loading, authLoaded, setUser, refreshUserProfile };
 };
