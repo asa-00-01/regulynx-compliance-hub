@@ -1,4 +1,3 @@
-
 import { SAR, Pattern, PatternMatch } from '@/types/sar';
 
 // Mock SARs
@@ -55,21 +54,24 @@ export const mockPatterns: Pattern[] = [
     name: 'Multiple Small Transfers (Structuring)',
     description: 'Series of small transfers just below reporting thresholds to the same destination',
     matchCount: 14,
-    category: 'structuring'
+    category: 'structuring',
+    createdAt: '2023-10-15T08:30:00'
   },
   {
     id: 'PTN-002',
     name: 'High-Risk Country Corridors',
     description: 'Transfers between countries with elevated risk profiles',
     matchCount: 8,
-    category: 'high_risk_corridor'
+    category: 'high_risk_corridor',
+    createdAt: '2023-11-01T10:15:00'
   },
   {
     id: 'PTN-003',
     name: 'After-Hours Activity Pattern',
     description: 'Transactions consistently occurring during non-business hours (1AM-4AM)',
     matchCount: 6,
-    category: 'time_pattern'
+    category: 'time_pattern',
+    createdAt: '2023-12-05T14:20:00'
   }
 ];
 
@@ -85,7 +87,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Sweden',
       amount: 9500,
       currency: 'SEK',
-      timestamp: '2023-11-28T14:05:22'
+      timestamp: '2023-11-28T14:05:22',
+      createdAt: '2023-11-28T14:05:22'
     },
     {
       id: 'MATCH-002',
@@ -96,7 +99,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Sweden',
       amount: 9400,
       currency: 'SEK',
-      timestamp: '2023-11-28T14:35:12'
+      timestamp: '2023-11-28T14:35:12',
+      createdAt: '2023-11-28T14:35:12'
     },
     {
       id: 'MATCH-003',
@@ -107,7 +111,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Sweden',
       amount: 9700,
       currency: 'SEK',
-      timestamp: '2023-11-28T15:17:45'
+      timestamp: '2023-11-28T15:17:45',
+      createdAt: '2023-11-28T15:17:45'
     }
   ],
   'PTN-002': [
@@ -120,7 +125,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Somalia',
       amount: 15000,
       currency: 'SEK',
-      timestamp: '2023-11-05T09:22:31'
+      timestamp: '2023-11-05T09:22:31',
+      createdAt: '2023-11-05T09:22:31'
     },
     {
       id: 'MATCH-005',
@@ -131,7 +137,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Somalia',
       amount: 12000,
       currency: 'SEK',
-      timestamp: '2023-11-07T08:45:19'
+      timestamp: '2023-11-07T08:45:19',
+      createdAt: '2023-11-07T08:45:19'
     }
   ],
   'PTN-003': [
@@ -144,7 +151,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'Sweden',
       amount: 25000,
       currency: 'SEK',
-      timestamp: '2024-01-10T02:12:41'
+      timestamp: '2024-01-10T02:12:41',
+      createdAt: '2024-01-10T02:12:41'
     },
     {
       id: 'MATCH-007',
@@ -155,7 +163,8 @@ export const mockPatternMatches: Record<string, PatternMatch[]> = {
       country: 'United Kingdom',
       amount: 22000,
       currency: 'SEK',
-      timestamp: '2024-01-12T02:34:55'
+      timestamp: '2024-01-12T02:34:55',
+      createdAt: '2024-01-12T02:34:55'
     }
   ]
 };

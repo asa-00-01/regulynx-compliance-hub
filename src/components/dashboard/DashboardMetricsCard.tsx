@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
@@ -12,6 +13,7 @@ interface MetricCardProps {
   icon: React.ElementType;
   changeDirection?: 'positive-up' | 'positive-down' | 'standard';
   valueColor?: string;
+  loading?: boolean;
 }
 
 const DashboardMetricsCard = ({ 
@@ -21,7 +23,8 @@ const DashboardMetricsCard = ({
   changeType = 'neutral', 
   icon: Icon, 
   changeDirection = 'standard',
-  valueColor
+  valueColor,
+  loading = false
 }: MetricCardProps) => {
   const { t } = useTranslation();
   // Determine the appropriate color class based on change type and direction
@@ -42,6 +45,20 @@ const DashboardMetricsCard = ({
 
   const changeColorClass = getChangeColorClass();
   const valueColorClass = valueColor || '';
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">Loading...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -77,3 +94,4 @@ const DashboardMetricsCard = ({
 };
 
 export default DashboardMetricsCard;
+

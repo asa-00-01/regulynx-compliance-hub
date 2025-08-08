@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -12,6 +13,7 @@ import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { ComplianceCase } from '@/types/supabase';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -50,19 +52,21 @@ const Dashboard = () => {
     }
   ];
 
-  const mockComplianceCases = [
+  const mockComplianceCases: ComplianceCase[] = [
     {
       id: '1',
-      userId: 'user1',
-      userName: 'John Doe',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      user_id: 'user1',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       type: 'kyc' as const,
       status: 'open' as const,
-      riskScore: 75,
+      risk_score: 75,
       description: 'KYC review required',
       priority: 'medium' as const,
       source: 'manual' as const,
+      assigned_to: 'admin_001',
+      title: 'KYC Review Case',
+      created_by: 'system'
     }
   ];
 
@@ -117,3 +121,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

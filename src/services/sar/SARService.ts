@@ -1,4 +1,3 @@
-
 import { SAR, SARStatus, Pattern, PatternMatch } from '@/types/sar';
 
 // Mock data with proper type alignment
@@ -23,6 +22,7 @@ const mockPatterns: Pattern[] = [
     name: 'High-Risk Corridor',
     description: 'Transactions to/from high-risk jurisdictions',
     category: 'high_risk_corridor', // Use proper pattern category
+    matchCount: 3,
     createdAt: new Date().toISOString()
   }
 ];
