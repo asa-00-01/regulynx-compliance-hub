@@ -1,78 +1,29 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types';
-import { ExtendedUser } from '@/types/auth';
-import { useAuthState } from '@/hooks/useAuthState';
-import { useAuthActions } from '@/hooks/useAuthActions';
 
-interface AuthContextType {
-  user: ExtendedUser | null;
-  loading: boolean;
-  authLoaded: boolean;
-  login: (email: string, password: string) => Promise<ExtendedUser | null>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, role: UserRole, name?: string) => Promise<void>;
-  isAuthenticated: boolean;
-  canAccess: (requiredRoles: UserRole[]) => boolean;
-  session: Session | null;
-  updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
-  refreshUserProfile: () => Promise<void>;
+export interface ExtendedUser extends User {
+  name?: string;
+  role?: UserRole;
+  image?: string;
+  platform_roles?: string[];
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+export interface AuthContextType {
+  user: ExtendedUser | null;
+  session: Session | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, session, loading, authLoaded, setUser, refreshUserProfile } = useAuthState();
-  const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
-
-  const isAuthenticated = !!user && !!session;
-
-  const canAccess = (requiredRoles: UserRole[]): boolean => {
-    if (!user) return false;
-    
-    // Platform owners always have access
-    if (user.isPlatformOwner) return true;
-    
-    // Check customer roles mapped to legacy roles
-    const hasCustomerRole = user.customer_roles?.some(customerRole => {
-      switch (customerRole) {
-        case 'customer_admin':
-          return requiredRoles.includes('admin');
-        case 'customer_compliance':
-          return requiredRoles.includes('complianceOfficer');
-        case 'customer_executive':
-          return requiredRoles.includes('executive');
-        case 'customer_support':
-          return requiredRoles.includes('support');
-        default:
-          return false;
-      }
-    }) || false;
-    
-    return hasCustomerRole || requiredRoles.includes(user.role);
-  };
-
-  return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        loading, 
-        authLoaded,
-        login, 
-        logout, 
-        signup,
-        isAuthenticated,
-        canAccess,
-        session,
-        updateUserProfile,
-        refreshUserProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+  signOut: async () => {},
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -80,4 +31,71 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || session.user.email,
+          role: 'admin', // Default role
+          image: session.user.user_metadata?.avatar_url,
+          platform_roles: ['platform_admin']
+        };
+        setUser(extendedUser);
+      }
+      
+      setSession(session);
+      setLoading(false);
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || session.user.email,
+          role: 'admin',
+          image: session.user.user_metadata?.avatar_url,
+          platform_roles: ['platform_admin']
+        };
+        setUser(extendedUser);
+      } else {
+        setUser(null);
+      }
+      
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const value = {
+    user,
+    session,
+    loading,
+    signOut
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

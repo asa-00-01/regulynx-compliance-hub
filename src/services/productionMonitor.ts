@@ -90,7 +90,7 @@ class ProductionMonitorService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as BackupStatus[];
     } catch (error) {
       console.error('Failed to fetch backup logs:', error);
       return [];
@@ -139,7 +139,7 @@ class ProductionMonitorService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as ErrorLog[];
     } catch (error) {
       console.error('Failed to fetch error logs:', error);
       return [];
@@ -176,7 +176,7 @@ class ProductionMonitorService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as DeploymentLog[];
     } catch (error) {
       console.error('Failed to fetch deployment logs:', error);
       return [];
@@ -191,7 +191,7 @@ class ProductionMonitorService {
       if (error) throw error;
       
       console.log('🔍 Environment validation completed:', data);
-      return data || [];
+      return (data || []) as EnvironmentValidation[];
     } catch (error) {
       console.error('Failed to validate environment:', error);
       return [];

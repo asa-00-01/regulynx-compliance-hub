@@ -1,9 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
-import { ToastProvider } from '@/hooks/use-toast';
-import { SiteHeader } from '@/components/layout/SiteHeader';
-import { SiteFooter } from '@/components/layout/SiteFooter';
+import { Toaster } from '@/components/ui/toaster';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AppRoutes from '@/components/app/AppRoutes';
 import AppInitializer from '@/components/app/AppInitializer';
@@ -41,18 +40,15 @@ function App() {
       <div className="min-h-screen bg-background font-sans antialiased">
         <SecurityProvider>
           <AuthProvider>
-            <ToastProvider>
-              <AppInitializer>
-                <Router>
-                  <EnvironmentChecker />
-                  <SiteHeader />
-                  <DashboardLayout>
-                    <AppRoutes />
-                  </DashboardLayout>
-                  <SiteFooter />
-                </Router>
-              </AppInitializer>
-            </ToastProvider>
+            <AppInitializer>
+              <Router>
+                <EnvironmentChecker />
+                <DashboardLayout>
+                  <AppRoutes />
+                </DashboardLayout>
+                <Toaster />
+              </Router>
+            </AppInitializer>
           </AuthProvider>
         </SecurityProvider>
       </div>
