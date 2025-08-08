@@ -19,10 +19,12 @@ import {
   Code,
   Database,
   BarChart3,
+  Building2,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { usePermissions } from '@/hooks/use-permissions';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/common/LanguageSelector';
@@ -40,6 +42,7 @@ import {
 const Sidebar = () => {
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
+  const { isPlatformOwner, isPlatformAdmin } = usePlatformRoleAccess();
   const location = useLocation();
   const { t } = useTranslation();
   const { state } = useSidebar();
@@ -144,6 +147,15 @@ const Sidebar = () => {
     },
   ];
 
+  // Platform management items for platform owners
+  const platformItems = [
+    {
+      title: 'Platform Management',
+      href: '/platform-management',
+      icon: Building2,
+    },
+  ];
+
   // Developer/Admin-only items for footer
   const developerItems = [
     {
@@ -170,6 +182,35 @@ const Sidebar = () => {
       
       <SidebarContent className={cn(!isCollapsed && "p-2")}>
         <SidebarMenu>
+          {/* Platform Management Section - Only for Platform Owners */}
+          {isPlatformOwner() && (
+            <>
+              <div className="px-2 py-1">
+                <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Platform</p>
+                {platformItems.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  
+                  return (
+                    <SidebarMenuItem key={item.title} className={cn(isCollapsed && 'flex justify-center')}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.title}
+                      >
+                        <NavLink to={item.href}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </div>
+              <SidebarSeparator />
+            </>
+          )}
+
+          {/* Regular navigation items */}
           {navigationItems.map((item) => {
             if (!user || !item.allowedRoles.includes(user.role)) {
               return null;
@@ -200,7 +241,7 @@ const Sidebar = () => {
       
       <SidebarFooter className={cn(isCollapsed && "hidden")}>
         {/* Developer Tools Section - Admin Only */}
-        {isAdmin && (
+        {(isAdmin || isPlatformAdmin()) && (
           <>
             <div className="px-2 py-1">
               <p className="text-xs font-medium text-sidebar-foreground/70 mb-2">Developer Tools</p>

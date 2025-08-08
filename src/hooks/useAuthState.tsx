@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ExtendedUser } from '@/types/auth';
+import { PlatformRoleService } from '@/services/platformRoleService';
 import { toast } from 'sonner';
 
 export const useAuthState = () => {
@@ -35,9 +36,13 @@ export const useAuthState = () => {
     if (session?.user) {
       setLoading(true);
       try {
+        // Get basic profile
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select(`
+            *,
+            customer:customers(*)
+          `)
           .eq('id', session.user.id)
           .single();
         
@@ -46,12 +51,28 @@ export const useAuthState = () => {
         }
 
         if (profile) {
+          // Get platform roles
+          const { data: platformRoles, error: platformError } = await supabase
+            .from('platform_roles')
+            .select('role')
+            .eq('user_id', session.user.id);
+
+          if (platformError) throw platformError;
+
+          // Get customer roles
+          const { data: customerRoles, error: customerError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id);
+
+          if (customerError) throw customerError;
+
           const userMetadata = session.user.user_metadata;
           const userData: ExtendedUser = {
             id: session.user.id,
             email: session.user.email || '',
             name: profile.name,
-            role: profile.role,
+            role: profile.role, // Legacy role
             riskScore: profile.risk_score,
             status: profile.status,
             avatarUrl: profile.avatar_url,
@@ -60,6 +81,13 @@ export const useAuthState = () => {
             phone: userMetadata.phone,
             location: userMetadata.location,
             preferences: userMetadata.preferences,
+            
+            // New platform-aware fields
+            customer_id: profile.customer_id,
+            platform_roles: platformRoles?.map(r => r.role) || [],
+            customer_roles: customerRoles?.map(r => r.role) || [],
+            customer: profile.customer?.[0] || undefined,
+            isPlatformOwner: (platformRoles?.length || 0) > 0,
           };
           setUser(userData);
         } else {
@@ -81,11 +109,17 @@ export const useAuthState = () => {
       setLoading(false);
     }
   };
+
+  const refreshUserProfile = async () => {
+    if (session) {
+      await fetchUserProfile(session);
+    }
+  };
   
   useEffect(() => {
     if (!authLoaded) return;
     fetchUserProfile(session);
   }, [session, authLoaded]);
 
-  return { user, session, loading, authLoaded, setUser };
+  return { user, session, loading, authLoaded, setUser, refreshUserProfile };
 };

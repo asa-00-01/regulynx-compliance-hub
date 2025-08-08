@@ -1,4 +1,3 @@
-
 export interface Document {
   id: string;
   userId: string;
@@ -25,7 +24,10 @@ export interface Document {
   };
 }
 
-export type UserRole = 'complianceOfficer' | 'admin' | 'executive' | 'support';
+export type { PlatformRole, CustomerRole, Customer, PlatformRoleAssignment, CustomerRoleAssignment, ExtendedUserProfile } from './platform-roles';
+
+// Legacy role type for backward compatibility
+export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
 
 export interface User {
   id: string;

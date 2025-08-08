@@ -1,176 +1,103 @@
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import AuthPage from '@/pages/AuthPage';
-import Dashboard from '@/pages/Dashboard';
-import Profile from '@/pages/Profile';
-import NotFound from '@/pages/NotFound';
-import Unauthorized from '@/pages/Unauthorized';
-import DashboardShell from '@/components/layout/DashboardShell';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
+import LoadingScreen from './LoadingScreen';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
+import DashboardShell from '@/components/layout/DashboardShell';
+
+// Import all page components
+import Index from '@/pages/Index';
+import AuthPage from '@/pages/AuthPage';
+import Login from '@/pages/Login';
+import Dashboard from '@/pages/Dashboard';
+import Compliance from '@/pages/Compliance';
 import ComplianceCases from '@/pages/ComplianceCases';
 import CaseDetails from '@/pages/CaseDetails';
-import Documents from '@/pages/Documents';
-import Users from '@/pages/Users';
-import Settings from '@/pages/Settings';
-import Audits from '@/pages/Audits';
-import Pricing from '@/pages/Pricing';
-import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
+import UserCase from '@/pages/UserCase';
+import KYCVerification from '@/pages/KYCVerification';
 import Transactions from '@/pages/Transactions';
+import Documents from '@/pages/Documents';
+import AMLMonitoring from '@/pages/AMLMonitoring';
 import RiskAnalysis from '@/pages/RiskAnalysis';
 import SARCenter from '@/pages/SARCenter';
+import Integration from '@/pages/Integration';
+import Analytics from '@/pages/Analytics';
 import AuditLogs from '@/pages/AuditLogs';
-import Compliance from '@/pages/Compliance';
-import AMLMonitoring from '@/pages/AMLMonitoring';
-import KYCVerification from '@/pages/KYCVerification';
-import UserCase from '@/pages/UserCase';
+import Users from '@/pages/Users';
+import Profile from '@/pages/Profile';
 import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
 import DeveloperTools from '@/pages/DeveloperTools';
-import Integration from '@/pages/Integration';
-import Analytics from '@/pages/Analytics';
+import PlatformManagement from '@/pages/PlatformManagement';
+import NotFound from '@/pages/NotFound';
+import Unauthorized from '@/pages/Unauthorized';
 
 const AppRoutes = () => {
+  const { loading, isAuthenticated } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-      
-      {/* Protected routes with persistent dashboard shell */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <DashboardShell />
-        </ProtectedRoute>
-      }>
-        {/* Default dashboard route */}
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
+    <Router>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected routes - wrapped in DashboardShell */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <DashboardShell />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="compliance" element={<Compliance />} />
+          <Route path="compliance-cases" element={<ComplianceCases />} />
+          <Route path="compliance-cases/:id" element={<CaseDetails />} />
+          <Route path="user-case/:userId" element={<UserCase />} />
+          <Route path="kyc-verification" element={
+            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+              <KYCVerification />
+            </ProtectedRoute>
+          } />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="aml-monitoring" element={<AMLMonitoring />} />
+          <Route path="risk-analysis" element={<RiskAnalysis />} />
+          <Route path="sar-center" element={
+            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+              <SARCenter />
+            </ProtectedRoute>
+          } />
+          <Route path="integration" element={<Integration />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="audit-logs" element={<AuditLogs />} />
+          <Route path="users" element={
+            <ProtectedRoute requiredRoles={['admin']}>
+              <Users />
+            </ProtectedRoute>
+          } />
+          <Route path="profile" element={<Profile />} />
+          <Route path="ai-agent" element={<AIAgent />} />
+          <Route path="news" element={<News />} />
+          <Route path="optimization" element={<Optimization />} />
+          <Route path="developer-tools" element={<DeveloperTools />} />
+          <Route path="platform-management" element={<PlatformManagement />} />
+        </Route>
+
+        {/* Redirect legacy routes */}
+        <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
         
-        {/* Profile route - accessible to all authenticated users */}
-        <Route path="profile" element={<Profile />} />
-
-        {/* AI Agent - accessible to all authenticated users */}
-        <Route path="ai-agent" element={<AIAgent />} />
-
-        {/* News - accessible to all authenticated users */}
-        <Route path="news" element={<News />} />
-
-        {/* Compliance routes */}
-        <Route path="compliance" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <Compliance />
-          </DashboardLayout>
-        } />
-
-        <Route path="compliance-cases" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <ComplianceCases />
-          </DashboardLayout>
-        } />
-
-        <Route path="cases/:caseId" element={<CaseDetails />} />
-
-        <Route path="kyc-verification" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-            <KYCVerification />
-          </DashboardLayout>
-        } />
-
-        <Route path="transactions" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <Transactions />
-          </DashboardLayout>
-        } />
-
-        <Route path="documents" element={<Documents />} />
-
-        <Route path="aml-monitoring" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <AMLMonitoring />
-          </DashboardLayout>
-        } />
-
-        <Route path="risk-analysis" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <RiskAnalysis />
-          </DashboardLayout>
-        } />
-
-        <Route path="sar-center" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-            <SARCenter />
-          </DashboardLayout>
-        } />
-
-        <Route path="audit-logs" element={
-          <DashboardLayout requiredRoles={['admin', 'complianceOfficer']}>
-            <AuditLogs />
-          </DashboardLayout>
-        } />
-
-        <Route path="integration" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-            <Integration />
-          </DashboardLayout>
-        } />
-
-        <Route path="user-case" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-            <UserCase />
-          </DashboardLayout>
-        } />
-
-        <Route path="user-case/:userId" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-            <UserCase />
-          </DashboardLayout>
-        } />
-
-        {/* Admin-only routes */}
-        <Route path="users" element={
-          <DashboardLayout requiredRoles={['admin']}>
-            <Users />
-          </DashboardLayout>
-        } />
-
-        <Route path="settings" element={
-          <DashboardLayout requiredRoles={['admin']}>
-            <Settings />
-          </DashboardLayout>
-        } />
-
-        <Route path="audits" element={
-          <DashboardLayout requiredRoles={['admin']}>
-            <Audits />
-          </DashboardLayout>
-        } />
-
-        <Route path="optimization" element={
-          <DashboardLayout requiredRoles={['admin']}>
-            <Optimization />
-          </DashboardLayout>
-        } />
-
-        <Route path="developer-tools" element={
-          <DashboardLayout requiredRoles={['admin']}>
-            <DeveloperTools />
-          </DashboardLayout>
-        } />
-
-        <Route path="analytics" element={
-          <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-            <Analytics />
-          </DashboardLayout>
-        } />
-      </Route>
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Catch all - 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 };
 

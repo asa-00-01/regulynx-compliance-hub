@@ -17,19 +17,40 @@ interface AuthContextType {
   canAccess: (requiredRoles: UserRole[]) => boolean;
   session: Session | null;
   updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, session, loading, authLoaded, setUser } = useAuthState();
+  const { user, session, loading, authLoaded, setUser, refreshUserProfile } = useAuthState();
   const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
 
   const isAuthenticated = !!user && !!session;
 
   const canAccess = (requiredRoles: UserRole[]): boolean => {
     if (!user) return false;
-    return requiredRoles.includes(user.role);
+    
+    // Platform owners always have access
+    if (user.isPlatformOwner) return true;
+    
+    // Check customer roles mapped to legacy roles
+    const hasCustomerRole = user.customer_roles.some(customerRole => {
+      switch (customerRole) {
+        case 'customer_admin':
+          return requiredRoles.includes('admin');
+        case 'customer_compliance':
+          return requiredRoles.includes('complianceOfficer');
+        case 'customer_executive':
+          return requiredRoles.includes('executive');
+        case 'customer_support':
+          return requiredRoles.includes('support');
+        default:
+          return false;
+      }
+    });
+    
+    return hasCustomerRole || requiredRoles.includes(user.role);
   };
 
   return (
@@ -45,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         canAccess,
         session,
         updateUserProfile,
+        refreshUserProfile,
       }}
     >
       {children}

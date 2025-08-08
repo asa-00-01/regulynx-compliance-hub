@@ -49,7 +49,7 @@ export type Database = {
           action_by: string | null
           action_by_name: string | null
           action_date: string
-          action_type: Database["public"]["Enums"]["case_action_type"]
+          action_type: Database["public"]["Enums"]["action_type"]
           case_id: string
           description: string
           details: Json | null
@@ -59,7 +59,7 @@ export type Database = {
           action_by?: string | null
           action_by_name?: string | null
           action_date?: string
-          action_type: Database["public"]["Enums"]["case_action_type"]
+          action_type: Database["public"]["Enums"]["action_type"]
           case_id: string
           description: string
           details?: Json | null
@@ -69,28 +69,13 @@ export type Database = {
           action_by?: string | null
           action_by_name?: string | null
           action_date?: string
-          action_type?: Database["public"]["Enums"]["case_action_type"]
+          action_type?: Database["public"]["Enums"]["action_type"]
           case_id?: string
           description?: string
           details?: Json | null
           id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "case_actions_action_by_fkey"
-            columns: ["action_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_actions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_cases"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       compliance_cases: {
         Row: {
@@ -153,29 +138,7 @@ export type Database = {
           user_id?: string | null
           user_name?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "compliance_cases_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "compliance_cases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       data_ingestion_logs: {
         Row: {
@@ -214,15 +177,7 @@ export type Database = {
           status?: string
           success_count?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "data_ingestion_logs_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "integration_configs"
-            referencedColumns: ["client_id"]
-          },
-        ]
+        Relationships: []
       }
       documents: {
         Row: {
@@ -300,15 +255,7 @@ export type Database = {
           last_synced_at?: string | null
           sync_status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "external_customer_mappings_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "integration_configs"
-            referencedColumns: ["client_id"]
-          },
-        ]
+        Relationships: []
       }
       external_transaction_mappings: {
         Row: {
@@ -341,15 +288,7 @@ export type Database = {
           risk_assessment?: Json | null
           transaction_data?: Json
         }
-        Relationships: [
-          {
-            foreignKeyName: "external_transaction_mappings_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "integration_configs"
-            referencedColumns: ["client_id"]
-          },
-        ]
+        Relationships: []
       }
       integration_api_keys: {
         Row: {
@@ -385,15 +324,7 @@ export type Database = {
           last_used_at?: string | null
           permissions?: Json
         }
-        Relationships: [
-          {
-            foreignKeyName: "integration_api_keys_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "integration_configs"
-            referencedColumns: ["client_id"]
-          },
-        ]
+        Relationships: []
       }
       integration_configs: {
         Row: {
@@ -474,22 +405,7 @@ export type Database = {
           user_id?: string
           user_name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "pattern_matches_pattern_id_fkey"
-            columns: ["pattern_id"]
-            isOneToOne: false
-            referencedRelation: "patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pattern_matches_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       patterns: {
         Row: {
@@ -512,6 +428,27 @@ export type Database = {
           description?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      platform_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -579,15 +516,7 @@ export type Database = {
           matched_at?: string | null
           rule_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "risk_matches_rule_id_fkey"
-            columns: ["rule_id"]
-            isOneToOne: false
-            referencedRelation: "rules"
-            referencedColumns: ["rule_id"]
-          },
-        ]
+        Relationships: []
       }
       rules: {
         Row: {
@@ -671,15 +600,7 @@ export type Database = {
           user_id?: string
           user_name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "sars_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       subscribers: {
         Row: {
@@ -792,6 +713,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["customer_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["customer_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["customer_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       webhook_notifications: {
         Row: {
           client_id: string
@@ -836,9 +778,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_customer_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["customer_role"][]
+      }
+      get_user_platform_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["platform_role"][]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
+      }
+      has_customer_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["customer_role"]
+        }
+        Returns: boolean
+      }
+      has_platform_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["platform_role"]
+        }
+        Returns: boolean
+      }
+      is_platform_owner: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       track_usage: {
         Args: { metric_type: string }
@@ -846,6 +814,14 @@ export type Database = {
       }
     }
     Enums: {
+      action_type:
+        | "created"
+        | "updated"
+        | "assigned"
+        | "escalated"
+        | "resolved"
+        | "closed"
+        | "note_added"
       case_action_type:
         | "note"
         | "status_change"
@@ -854,30 +830,39 @@ export type Database = {
         | "escalation"
         | "resolution"
       case_priority: "low" | "medium" | "high" | "critical"
-      case_source:
-        | "manual"
-        | "transaction_alert"
-        | "kyc_flag"
-        | "sanctions_hit"
-        | "system"
-        | "risk_assessment"
+      case_source: "system" | "manual" | "api" | "webhook"
       case_status:
         | "open"
-        | "under_review"
+        | "investigating"
         | "escalated"
-        | "pending_info"
+        | "resolved"
         | "closed"
-      case_type: "kyc" | "aml" | "sanctions"
+      case_type:
+        | "kyc"
+        | "aml"
+        | "transaction"
+        | "document"
+        | "sanctions"
+        | "pep"
+      customer_role:
+        | "admin"
+        | "compliance_officer"
+        | "analyst"
+        | "viewer"
+        | "support"
       document_status: "pending" | "verified" | "rejected"
-      document_type: "passport" | "id" | "license"
-      pattern_category:
-        | "structuring"
-        | "high_risk_corridor"
-        | "time_pattern"
+      document_type:
+        | "passport"
+        | "id"
+        | "license"
+        | "utility_bill"
+        | "bank_statement"
         | "other"
-      sar_status: "draft" | "submitted" | "reviewed"
-      user_role: "complianceOfficer" | "admin" | "executive" | "support"
-      user_status: "verified" | "pending" | "flagged"
+      pattern_category: "structuring" | "velocity" | "geography" | "amount"
+      platform_role: "platform_admin" | "platform_support"
+      sar_status: "draft" | "submitted" | "filed" | "rejected"
+      user_role: "admin" | "complianceOfficer" | "executive" | "support"
+      user_status: "active" | "pending" | "suspended" | "banned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1005,6 +990,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      action_type: [
+        "created",
+        "updated",
+        "assigned",
+        "escalated",
+        "resolved",
+        "closed",
+        "note_added",
+      ],
       case_action_type: [
         "note",
         "status_change",
@@ -1014,33 +1008,30 @@ export const Constants = {
         "resolution",
       ],
       case_priority: ["low", "medium", "high", "critical"],
-      case_source: [
-        "manual",
-        "transaction_alert",
-        "kyc_flag",
-        "sanctions_hit",
-        "system",
-        "risk_assessment",
+      case_source: ["system", "manual", "api", "webhook"],
+      case_status: ["open", "investigating", "escalated", "resolved", "closed"],
+      case_type: ["kyc", "aml", "transaction", "document", "sanctions", "pep"],
+      customer_role: [
+        "admin",
+        "compliance_officer",
+        "analyst",
+        "viewer",
+        "support",
       ],
-      case_status: [
-        "open",
-        "under_review",
-        "escalated",
-        "pending_info",
-        "closed",
-      ],
-      case_type: ["kyc", "aml", "sanctions"],
       document_status: ["pending", "verified", "rejected"],
-      document_type: ["passport", "id", "license"],
-      pattern_category: [
-        "structuring",
-        "high_risk_corridor",
-        "time_pattern",
+      document_type: [
+        "passport",
+        "id",
+        "license",
+        "utility_bill",
+        "bank_statement",
         "other",
       ],
-      sar_status: ["draft", "submitted", "reviewed"],
-      user_role: ["complianceOfficer", "admin", "executive", "support"],
-      user_status: ["verified", "pending", "flagged"],
+      pattern_category: ["structuring", "velocity", "geography", "amount"],
+      platform_role: ["platform_admin", "platform_support"],
+      sar_status: ["draft", "submitted", "filed", "rejected"],
+      user_role: ["admin", "complianceOfficer", "executive", "support"],
+      user_status: ["active", "pending", "suspended", "banned"],
     },
   },
 } as const
