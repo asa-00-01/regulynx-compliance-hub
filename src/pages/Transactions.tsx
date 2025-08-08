@@ -96,21 +96,10 @@ const Transactions = () => {
             />
 
             <AMLTransactionTableSection
-              filteredTransactions={paginatedTransactions}
-              onViewDetails={handleViewDetails}
+              transactions={paginatedTransactions}
+              onViewTransaction={handleViewDetails}
               onFlagTransaction={handleFlagTransaction}
               onCreateCase={handleCreateCase}
-              showUserColumn={!filters.userId}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              goToPage={goToPage}
-              goToNextPage={goToNextPage}
-              goToPrevPage={goToPrevPage}
-              hasNextPage={hasNextPage}
-              hasPrevPage={hasPrevPage}
-              startIndex={startIndex}
-              endIndex={endIndex}
-              totalItems={totalItems}
             />
           </TabsContent>
         </Tabs>

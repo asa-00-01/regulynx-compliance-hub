@@ -171,11 +171,11 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
                     )}
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {getStatusIcon(document.status)}
+                        {getStatusIcon(document.status as DocumentStatus)}
                         <div>
                           <div className="font-medium">{document.file_name}</div>
                           <div className="text-xs text-muted-foreground">
-                            {document.document_type}
+                            {document.type}
                           </div>
                         </div>
                       </div>
@@ -187,7 +187,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(document.status)}
+                      {getStatusBadge(document.status as DocumentStatus)}
                     </TableCell>
                     <TableCell>
                       {formatDate(document.created_at)}

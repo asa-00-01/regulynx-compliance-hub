@@ -100,7 +100,7 @@ const AMLTransactionTableSection: React.FC<AMLTransactionTableSectionProps> = ({
                 <div>
                   <div className="font-medium">{transaction.senderName}</div>
                   <div className="text-sm text-muted-foreground">
-                    {transaction.senderCountry}
+                    {transaction.senderCountryCode}
                   </div>
                 </div>
               </TableCell>
@@ -108,7 +108,7 @@ const AMLTransactionTableSection: React.FC<AMLTransactionTableSectionProps> = ({
                 <div>
                   <div className="font-medium">{transaction.receiverName}</div>
                   <div className="text-sm text-muted-foreground">
-                    {transaction.receiverCountry}
+                    {transaction.receiverCountryCode}
                   </div>
                 </div>
               </TableCell>
@@ -146,9 +146,19 @@ const AMLTransactionTableSection: React.FC<AMLTransactionTableSectionProps> = ({
                       Suspect
                     </Badge>
                   )}
-                  {transaction.status === 'normal' && (
+                  {transaction.status === 'completed' && (
                     <Badge variant="secondary" className="text-xs">
-                      Normal
+                      Completed
+                    </Badge>
+                  )}
+                  {transaction.status === 'pending' && (
+                    <Badge variant="default" className="text-xs">
+                      Pending
+                    </Badge>
+                  )}
+                  {transaction.status === 'failed' && (
+                    <Badge variant="destructive" className="text-xs">
+                      Failed
                     </Badge>
                   )}
                 </div>
