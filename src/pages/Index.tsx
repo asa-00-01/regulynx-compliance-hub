@@ -28,7 +28,7 @@ const Index = () => {
 
   // Show loading while auth is being determined
   if (loading || !authLoaded) {
-    return <LoadingScreen text="Checking authentication..." />;
+    return <LoadingScreen text="Initializing application..." />;
   }
 
   return null; // This component just redirects, no need to render anything

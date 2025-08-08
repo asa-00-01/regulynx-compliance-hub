@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user.isPlatformOwner) return true;
     
     // Check customer roles mapped to legacy roles
-    const hasCustomerRole = user.customer_roles.some(customerRole => {
+    const hasCustomerRole = user.customer_roles?.some(customerRole => {
       switch (customerRole) {
         case 'customer_admin':
           return requiredRoles.includes('admin');
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         default:
           return false;
       }
-    });
+    }) || false;
     
     return hasCustomerRole || requiredRoles.includes(user.role);
   };

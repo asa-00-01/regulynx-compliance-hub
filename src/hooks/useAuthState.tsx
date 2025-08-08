@@ -17,7 +17,6 @@ export const useAuthState = () => {
     try {
       const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(session.user.id);
       if (extendedProfile) {
-        // Convert ExtendedUserProfile to ExtendedUser
         const convertedUser: ExtendedUser = {
           id: extendedProfile.id,
           email: extendedProfile.email,
@@ -33,7 +32,7 @@ export const useAuthState = () => {
           isPlatformOwner: extendedProfile.isPlatformOwner
         };
         setUser(convertedUser);
-        console.log('✅ User profile refreshed with roles:', convertedUser.platform_roles);
+        console.log('✅ User profile refreshed successfully');
       }
     } catch (error) {
       console.error('Failed to refresh user profile:', error);
@@ -43,7 +42,7 @@ export const useAuthState = () => {
   useEffect(() => {
     let mounted = true;
 
-    const handleAuthChange = async (event: string, currentSession: Session | null) => {
+    const handleAuthChange = (event: string, currentSession: Session | null) => {
       console.log('🔐 Auth state change:', event, currentSession?.user?.email);
       
       if (!mounted) return;
@@ -52,50 +51,47 @@ export const useAuthState = () => {
       setLoading(false);
       
       if (currentSession?.user) {
-        try {
-          // Get extended user profile with roles
-          const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(currentSession.user.id);
-          if (extendedProfile && mounted) {
-            // Convert ExtendedUserProfile to ExtendedUser
-            const convertedUser: ExtendedUser = {
-              id: extendedProfile.id,
-              email: extendedProfile.email,
-              name: extendedProfile.name,
-              role: extendedProfile.role as UserRole,
-              riskScore: extendedProfile.risk_score || 0,
-              status: extendedProfile.status,
-              avatarUrl: extendedProfile.avatar_url,
-              customer_id: extendedProfile.customer_id,
-              platform_roles: extendedProfile.platform_roles,
-              customer_roles: extendedProfile.customer_roles,
-              customer: extendedProfile.customer,
-              isPlatformOwner: extendedProfile.isPlatformOwner
-            };
-            setUser(convertedUser);
-            console.log('✅ Extended user profile loaded:', {
-              email: convertedUser.email,
-              platformRoles: convertedUser.platform_roles,
-              customerRoles: convertedUser.customer_roles,
-              isPlatformOwner: convertedUser.isPlatformOwner
-            });
+        // Use setTimeout to prevent potential deadlocks
+        setTimeout(async () => {
+          if (!mounted) return;
+          
+          try {
+            const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(currentSession.user.id);
+            if (extendedProfile && mounted) {
+              const convertedUser: ExtendedUser = {
+                id: extendedProfile.id,
+                email: extendedProfile.email,
+                name: extendedProfile.name,
+                role: extendedProfile.role as UserRole,
+                riskScore: extendedProfile.risk_score || 0,
+                status: extendedProfile.status,
+                avatarUrl: extendedProfile.avatar_url,
+                customer_id: extendedProfile.customer_id,
+                platform_roles: extendedProfile.platform_roles,
+                customer_roles: extendedProfile.customer_roles,
+                customer: extendedProfile.customer,
+                isPlatformOwner: extendedProfile.isPlatformOwner
+              };
+              setUser(convertedUser);
+            }
+          } catch (error) {
+            console.error('❌ Failed to load extended user profile:', error);
+            // Create fallback user data
+            if (mounted) {
+              setUser({
+                id: currentSession.user.id,
+                email: currentSession.user.email || '',
+                name: currentSession.user.user_metadata?.name || currentSession.user.email || '',
+                role: 'support',
+                riskScore: 0,
+                status: 'pending',
+                platform_roles: [],
+                customer_roles: [],
+                isPlatformOwner: false
+              } as ExtendedUser);
+            }
           }
-        } catch (error) {
-          console.error('❌ Failed to load extended user profile:', error);
-          // Fallback to basic user data
-          if (mounted) {
-            setUser({
-              id: currentSession.user.id,
-              email: currentSession.user.email || '',
-              name: currentSession.user.user_metadata?.name || currentSession.user.email || '',
-              role: 'support',
-              riskScore: 0,
-              status: 'pending',
-              platform_roles: [],
-              customer_roles: [],
-              isPlatformOwner: false
-            } as ExtendedUser);
-          }
-        }
+        }, 0);
       } else {
         if (mounted) {
           setUser(null);
@@ -107,10 +103,10 @@ export const useAuthState = () => {
       }
     };
 
-    // Set up the auth state listener
+    // Set up the auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Get initial session
+    // Then get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
@@ -118,7 +114,7 @@ export const useAuthState = () => {
           console.error('❌ Error getting initial session:', error);
         }
         if (mounted) {
-          await handleAuthChange('INITIAL_SESSION', initialSession);
+          handleAuthChange('INITIAL_SESSION', initialSession);
         }
       } catch (error) {
         console.error('❌ Failed to get initial session:', error);

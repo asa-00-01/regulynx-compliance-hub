@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import LoadingScreen from '@/components/app/LoadingScreen';
 
@@ -11,13 +11,15 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
   const { user, isAuthenticated, authLoaded, loading } = useAuth();
+  const location = useLocation();
 
   console.log('🛡️ ProtectedRoute check:', { 
     loading, 
     authLoaded, 
     isAuthenticated, 
     userEmail: user?.email,
-    requiredRoles 
+    requiredRoles,
+    currentPath: location.pathname
   });
 
   // Show loading while auth is being determined
@@ -25,10 +27,10 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
     return <LoadingScreen text="Verifying access..." />;
   }
 
-  // If not authenticated, redirect to login page
+  // If not authenticated, redirect to login page with return URL
   if (!isAuthenticated) {
     console.log('❌ ProtectedRoute - Not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If roles are required, check if user has necessary permissions
