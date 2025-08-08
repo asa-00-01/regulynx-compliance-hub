@@ -88,7 +88,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
           </TabsContent>
           
           <TabsContent value="documents">
-            <DocumentsTab identityNumber={user.identityNumber} />
+            <DocumentsTab userId={user.id} />
           </TabsContent>
           
           <TabsContent value="risk">
