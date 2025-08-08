@@ -8,7 +8,7 @@ import { ComplianceCaseDetails } from '@/types/case';
 import { enhancedUserProfiles, convertToUnifiedUserData } from './generators/enhancedUserGenerator';
 import { generateRealisticTransactions } from './generators/enhancedTransactionGenerator';
 import { generateEnhancedDocuments } from './generators/enhancedDocumentGenerator';
-import { generateCasesForUser, generateAllCases } from './generators/caseGenerator';
+import { generateCasesForUser } from './generators/caseGenerator';
 
 // Generate the complete unified user data using enhanced generators
 export const generateUnifiedUserData = (): UnifiedUserData[] => {
@@ -59,7 +59,7 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
       ...unifiedUser,
       documents,
       transactions,
-      complianceCases: [], // Will be populated after all users are created
+      complianceCases: [], // Will be populated next
       notes,
       // Additional enhanced fields
       metadata: {
@@ -76,21 +76,19 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
     };
   });
 
-  // Now generate cases using the correct user IDs
-  const userProfiles = unifiedUsers.map(user => ({
-    id: user.id,
-    fullName: user.fullName,
-    riskScore: user.riskScore,
-    isPEP: user.isPEP,
-    isSanctioned: user.isSanctioned,
-    kycStatus: user.kycStatus
-  }));
-
-  const allCases = generateAllCases(userProfiles);
-  
-  // Distribute cases back to users
+  // Now generate cases for each user individually
   unifiedUsers.forEach(user => {
-    user.complianceCases = allCases.filter(case_ => case_.userId === user.id);
+    const userProfile = {
+      id: user.id,
+      fullName: user.fullName,
+      riskScore: user.riskScore,
+      isPEP: user.isPEP,
+      isSanctioned: user.isSanctioned,
+      kycStatus: user.kycStatus
+    };
+    
+    const userCases = generateCasesForUser(userProfile);
+    user.complianceCases = userCases;
   });
 
   console.log('✅ Cases assigned to users');
