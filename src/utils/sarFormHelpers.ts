@@ -13,7 +13,7 @@ export interface SARFormData {
 
 /**
  * Transforms a SAR object to SARFormData format for editing
- * Maps 'reviewed' status to 'submitted' since reviewed SARs cannot be edited as drafts
+ * Maps database statuses to form-compatible statuses
  */
 export const transformSARToFormData = (sar: SAR): Partial<SARFormData> => {
   return {
@@ -23,7 +23,7 @@ export const transformSARToFormData = (sar: SAR): Partial<SARFormData> => {
     summary: sar.summary,
     transactions: sar.transactions,
     notes: sar.notes,
-    // Map 'reviewed' status to 'submitted' for form compatibility
-    status: sar.status === 'reviewed' ? 'submitted' : sar.status as 'draft' | 'submitted'
+    // Map database statuses to form-compatible statuses
+    status: (sar.status === 'filed' || sar.status === 'rejected') ? 'submitted' : sar.status as 'draft' | 'submitted'
   };
 };

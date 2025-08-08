@@ -1,5 +1,5 @@
 
-export type SARStatus = 'draft' | 'submitted' | 'reviewed';
+export type SARStatus = 'draft' | 'submitted' | 'filed' | 'rejected';
 
 export interface SAR {
   id: string;

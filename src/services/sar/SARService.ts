@@ -1,4 +1,3 @@
-
 import { SAR, SARStatus, Pattern, PatternMatch } from '@/types/sar';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,6 +62,9 @@ export class SARService {
 
   static async createSAR(sarData: Omit<SAR, 'id'>): Promise<SAR> {
     try {
+      // Ensure the status is valid for the database
+      const validStatus = sarData.status === 'reviewed' ? 'submitted' : sarData.status;
+      
       const { data, error } = await supabase
         .from('sars')
         .insert({
@@ -70,7 +72,7 @@ export class SARService {
           user_name: sarData.userName,
           date_submitted: sarData.dateSubmitted,
           date_of_activity: sarData.dateOfActivity,
-          status: sarData.status,
+          status: validStatus,
           summary: sarData.summary,
           transactions: sarData.transactions || [],
           documents: sarData.documents || [],
@@ -111,7 +113,10 @@ export class SARService {
       if (updates.userName) dbUpdates.user_name = updates.userName;
       if (updates.dateSubmitted) dbUpdates.date_submitted = updates.dateSubmitted;
       if (updates.dateOfActivity) dbUpdates.date_of_activity = updates.dateOfActivity;
-      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.status) {
+        // Ensure the status is valid for the database
+        dbUpdates.status = updates.status === 'reviewed' ? 'submitted' : updates.status;
+      }
       if (updates.summary) dbUpdates.summary = updates.summary;
       if (updates.transactions) dbUpdates.transactions = updates.transactions;
       if (updates.documents) dbUpdates.documents = updates.documents;
