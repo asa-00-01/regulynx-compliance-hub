@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,13 +29,37 @@ const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ embedded = false }) => 
   const devPanelButtonRef = useRef<HTMLButtonElement>(null);
   const { style, onMouseDown, hasInitialized } = useDraggable(devPanelButtonRef);
   
-  const [apiConfig, setApiConfig] = useState({ baseUrl: config.api.baseUrl });
-  const [appConfig, setAppConfig] = useState({ 
-    name: config.app.name, 
-    domain: config.app.domain, 
-    supportEmail: config.app.supportEmail 
+  // Initialize with actual current values (including localStorage overrides)
+  const getStoredValue = (key: string, defaultValue: any) => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
+  const [apiConfig, setApiConfig] = useState(() => ({
+    baseUrl: getStoredValue('dev_api_baseUrl', config.api.baseUrl)
+  }));
+  
+  const [appConfig, setAppConfig] = useState(() => ({ 
+    name: getStoredValue('dev_app_name', config.app.name),
+    domain: getStoredValue('dev_app_domain', config.app.domain),
+    supportEmail: getStoredValue('dev_app_supportEmail', config.app.supportEmail)
+  }));
+  
+  const [featureFlags, setFeatureFlags] = useState(() => {
+    const initialFlags = { ...config.features };
+    // Load any stored feature flag overrides
+    Object.keys(config.features).forEach(key => {
+      const storedValue = getStoredValue(`dev_features_${key}`, null);
+      if (storedValue !== null) {
+        initialFlags[key as keyof typeof config.features] = storedValue;
+      }
+    });
+    return initialFlags;
   });
-  const [featureFlags, setFeatureFlags] = useState(config.features);
 
   const handleFeatureFlagChange = (flagName: keyof typeof config.features, value: boolean) => {
     setFeatureFlags((prev) => ({ ...prev, [flagName]: value }));
