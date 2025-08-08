@@ -39,4 +39,9 @@ export interface ExtendedUserProfile {
   customer?: Customer;
   created_at: string;
   updated_at: string;
+  // Legacy fields for backward compatibility
+  role?: string;
+  riskScore?: number;
+  status?: 'verified' | 'pending' | 'rejected' | 'information_requested';
+  isPlatformOwner?: boolean;
 }

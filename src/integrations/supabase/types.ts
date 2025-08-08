@@ -140,6 +140,36 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          created_at: string
+          domain: string | null
+          id: string
+          name: string
+          settings: Json
+          subscription_tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name: string
+          settings?: Json
+          subscription_tier?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name?: string
+          settings?: Json
+          subscription_tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       data_ingestion_logs: {
         Row: {
           client_id: string
@@ -456,6 +486,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          customer_id: string | null
           email: string
           id: string
           name: string
@@ -467,6 +498,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          customer_id?: string | null
           email: string
           id: string
           name: string
@@ -478,6 +510,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          customer_id?: string | null
           email?: string
           id?: string
           name?: string
@@ -486,7 +519,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       risk_matches: {
         Row: {
@@ -716,23 +757,34 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
+          customer_id: string | null
           id: string
           role: Database["public"]["Enums"]["customer_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           id?: string
           role: Database["public"]["Enums"]["customer_role"]
           user_id: string
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["customer_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_notifications: {
         Row: {

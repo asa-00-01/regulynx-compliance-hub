@@ -19,9 +19,9 @@ export class SupabasePlatformRoleService {
       .from('customers')
       .select('*')
       .eq('id', customerId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     return data;
   }
 
@@ -185,9 +185,9 @@ export class SupabasePlatformRoleService {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     if (!profile) return null;
 
     const [platformRoles, customerRoles, customer] = await Promise.all([
