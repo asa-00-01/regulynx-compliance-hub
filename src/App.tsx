@@ -1,5 +1,5 @@
 
-import { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,8 +9,6 @@ import LoadingScreen from "@/components/app/LoadingScreen";
 import AppInitializer from "@/components/app/AppInitializer";
 import GlobalErrorBoundary from "@/components/common/GlobalErrorBoundary";
 import EnhancedErrorTrackingService from "@/components/common/EnhancedErrorTrackingService";
-import AnalyticsProvider from "@/components/app/AnalyticsProvider";
-import ComplianceProvider from "@/components/app/ComplianceProvider";
 import { auditLogger } from "@/services/auditLogger";
 
 const App = () => {
