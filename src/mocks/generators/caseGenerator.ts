@@ -83,7 +83,7 @@ export const generateCasesForUser = (user: UserProfile): ComplianceCaseDetails[]
     
     const caseItem: ComplianceCaseDetails = {
       id: generateUUID(),
-      userId: user.id, // Use the actual user ID
+      userId: user.id, // Use the actual user ID from the UnifiedUserData
       userName: user.fullName,
       createdAt,
       createdBy: officer.id,
@@ -104,17 +104,6 @@ export const generateCasesForUser = (user: UserProfile): ComplianceCaseDetails[]
     cases.push(caseItem);
   }
   
+  console.log(`Generated ${cases.length} cases for user ${user.fullName} (${user.id})`);
   return cases;
-};
-
-export const generateAllCases = (users: UserProfile[]): ComplianceCaseDetails[] => {
-  const allCases: ComplianceCaseDetails[] = [];
-  
-  users.forEach(user => {
-    const userCases = generateCasesForUser(user);
-    allCases.push(...userCases);
-  });
-  
-  console.log(`Generated ${allCases.length} compliance cases for ${users.length} users`);
-  return allCases;
 };

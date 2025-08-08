@@ -1,5 +1,6 @@
 
 import { UnifiedUserData } from './types';
+import { generateCasesForUser } from '../../mocks/generators/caseGenerator';
 
 // Generate proper UUIDs for mock users
 const generateUUID = () => {
@@ -42,7 +43,7 @@ export const initializeMockData = (): UnifiedUserData[] => {
     { fullName: 'Carlos Silva', email: 'carlos.silva@email.com', dateOfBirth: '1984-08-25', nationality: 'Brazilian', identityNumber: 'BR789456123', phoneNumber: '+55-11-99999-9999', address: 'Rua Augusta 123, São Paulo, SP 01305-000', countryOfResidence: 'Brazil' },
   ];
 
-  return baseUsers.map((userData, index) => {
+  const users = baseUsers.map((userData, index) => {
     const userId = mockUserIds[index];
     const riskScore = Math.floor(Math.random() * 100);
     const isPEP = Math.random() < 0.1;
@@ -172,4 +173,24 @@ export const initializeMockData = (): UnifiedUserData[] => {
       notes: []
     };
   });
+
+  // Now generate compliance cases for each user and assign them back
+  users.forEach(user => {
+    const userProfile = {
+      id: user.id,
+      fullName: user.fullName,
+      riskScore: user.riskScore,
+      isPEP: user.isPEP,
+      isSanctioned: user.isSanctioned,
+      kycStatus: user.kycStatus
+    };
+    
+    const userCases = generateCasesForUser(userProfile);
+    user.complianceCases = userCases;
+  });
+
+  console.log(`Generated ${users.length} users with compliance cases`);
+  console.log('User IDs:', users.map(u => ({ id: u.id, name: u.fullName, casesCount: u.complianceCases.length })));
+
+  return users;
 };
