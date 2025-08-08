@@ -1,17 +1,18 @@
+
 import React, { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import UserCaseOverview from '@/components/user/UserCaseOverview';
 import { useCompliance } from '@/context/ComplianceContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const UserCasePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const [searchParams] = useSearchParams();
-  const { setSelectedUser, getUserById } = useCompliance();
+  const { setSelectedUser, getUserById, selectedUser } = useCompliance();
   const navigate = useNavigate();
   const { t } = useTranslation();
   
@@ -24,17 +25,25 @@ const UserCasePage = () => {
   // Set the selected user on component mount
   useEffect(() => {
     if (userIdToUse) {
+      console.log('UserCase: Setting selected user to:', userIdToUse);
       setSelectedUser(userIdToUse);
     }
     
     // Cleanup on unmount
     return () => {
+      console.log('UserCase: Cleaning up selected user');
       setSelectedUser(null);
     };
   }, [userIdToUse, setSelectedUser]);
   
   // Check if the user exists
-  const userExists = userIdToUse ? !!getUserById(userIdToUse) : false;
+  const user = userIdToUse ? getUserById(userIdToUse) : null;
+  
+  console.log('UserCase render:', {
+    userIdToUse,
+    user: user ? `${user.fullName} (${user.id})` : 'null',
+    selectedUser: selectedUser ? `${selectedUser.fullName} (${selectedUser.id})` : 'null'
+  });
   
   return (
     <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
@@ -51,7 +60,7 @@ const UserCasePage = () => {
             </Button>
             <h1 className="text-3xl font-bold tracking-tight">{t('userCase.title')}</h1>
             <p className="text-muted-foreground">
-              {t('userCase.description')}
+              {user ? `Compliance profile for ${user.fullName}` : t('userCase.description')}
             </p>
           </div>
         </div>
@@ -59,33 +68,50 @@ const UserCasePage = () => {
         {!userIdToUse && (
           <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
             <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium">{t('userCase.noUserSelectedTitle')}</h3>
               <p className="text-muted-foreground mt-1">
                 {t('userCase.noUserSelectedDescription')}
-              </p>
-            </div>
-          </div>
-        )}
-        
-        {userIdToUse && !userExists && (
-          <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
-            <div className="text-center">
-              <h3 className="text-lg font-medium">{t('userCase.userNotFoundTitle')}</h3>
-              <p className="text-muted-foreground mt-1">
-                {t('userCase.userNotFoundDescription')}
               </p>
               <Button 
                 onClick={() => navigate('/compliance')}
                 className="mt-4"
                 variant="outline"
               >
-                {t('userCase.returnToComplianceButton')}
+                Go to Compliance Dashboard
               </Button>
             </div>
           </div>
         )}
         
-        {userIdToUse && userExists && <UserCaseOverview />}
+        {userIdToUse && !user && (
+          <div className="flex items-center justify-center h-64 border border-dashed rounded-lg">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-red-700">User Not Found</h3>
+              <p className="text-muted-foreground mt-1">
+                The user with ID <code className="bg-muted px-2 py-1 rounded text-sm">{userIdToUse}</code> could not be found in the system.
+              </p>
+              <div className="flex gap-2 justify-center mt-4">
+                <Button 
+                  onClick={() => navigate(backPath)}
+                  variant="outline"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Go Back
+                </Button>
+                <Button 
+                  onClick={() => navigate('/compliance')}
+                  variant="default"
+                >
+                  Compliance Dashboard
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {userIdToUse && user && <UserCaseOverview />}
       </div>
     </DashboardLayout>
   );

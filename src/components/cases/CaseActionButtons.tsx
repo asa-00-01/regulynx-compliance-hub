@@ -20,10 +20,14 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setSelectedUser } = useCompliance();
+  const { setSelectedUser, getUserById } = useCompliance();
 
   const handleViewCase = () => {
-    navigate(`/case-details/${caseItem.id}`);
+    // For now, show case details in a toast since we don't have a dedicated case details page
+    toast({
+      title: 'Case Details',
+      description: `Viewing details for case ${caseItem.id}`,
+    });
   };
 
   const handleEditCase = () => {
@@ -36,13 +40,42 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   };
 
   const handleViewUserProfile = () => {
-    if (caseItem.userId) {
-      setSelectedUser(caseItem.userId);
-      navigate(`/user-case/${caseItem.userId}`);
-      toast({
-        title: 'User Profile',
-        description: `Opening profile for ${caseItem.userName}`,
-      });
+    setLoading('profile');
+    try {
+      if (caseItem.userId) {
+        // Check if user exists in our compliance context
+        const user = getUserById(caseItem.userId);
+        
+        if (!user) {
+          toast({
+            title: 'User Not Found',
+            description: `User ${caseItem.userName} could not be found in the system`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Set the selected user and navigate
+        setSelectedUser(caseItem.userId);
+        navigate(`/user-case/${caseItem.userId}`, {
+          state: {
+            returnTo: '/compliance-cases'
+          }
+        });
+        
+        toast({
+          title: 'User Profile',
+          description: `Opening profile for ${caseItem.userName}`,
+        });
+      } else {
+        toast({
+          title: 'No User Associated',
+          description: 'This case does not have an associated user',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -89,6 +122,38 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
     });
   };
 
+  const handleViewDocuments = () => {
+    if (caseItem.userId) {
+      navigate(`/documents?userId=${caseItem.userId}`);
+      toast({
+        title: 'Documents',
+        description: `Viewing documents for ${caseItem.userName}`,
+      });
+    } else {
+      toast({
+        title: 'No User Associated',
+        description: 'This case does not have an associated user',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewTransactions = () => {
+    if (caseItem.userId) {
+      navigate(`/aml-monitoring?userId=${caseItem.userId}`);
+      toast({
+        title: 'Transaction History',
+        description: `Viewing transactions for ${caseItem.userName}`,
+      });
+    } else {
+      toast({
+        title: 'No User Associated',
+        description: 'This case does not have an associated user',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="flex gap-2 flex-wrap">
       <Button
@@ -112,15 +177,39 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
       </Button>
 
       {caseItem.userId && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleViewUserProfile}
-          disabled={loading === 'profile'}
-        >
-          <UserCheck className="h-4 w-4 mr-1" />
-          User Profile
-        </Button>
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewUserProfile}
+            disabled={loading === 'profile'}
+          >
+            <UserCheck className="h-4 w-4 mr-1" />
+            User Profile
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewDocuments}
+            disabled={loading === 'documents'}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Documents
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewTransactions}
+            disabled={loading === 'transactions'}
+            className="text-purple-600 hover:text-purple-700"
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Transactions
+          </Button>
+        </>
       )}
 
       {caseItem.status === 'open' && (
