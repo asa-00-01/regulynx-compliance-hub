@@ -1,29 +1,26 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types';
-
-export interface ExtendedUser extends User {
-  name?: string;
-  role?: UserRole;
-  image?: string;
-  platform_roles?: string[];
-}
+import React, { createContext, useContext } from 'react';
+import { Session } from '@supabase/supabase-js';
+import { ExtendedUser, UserRole } from '@/types/auth';
+import { useAuthState } from '@/hooks/useAuthState';
+import { useAuthActions } from '@/hooks/useAuthActions';
 
 export interface AuthContextType {
   user: ExtendedUser | null;
   session: Session | null;
   loading: boolean;
+  authLoaded: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<ExtendedUser | null>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, role: UserRole, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUserProfile: (updates: Partial<ExtendedUser>) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
+  canAccess: (requiredRoles: string[]) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
-  loading: true,
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -34,63 +31,33 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<ExtendedUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, session, loading, authLoaded, setUser, refreshUserProfile } = useAuthState();
+  const { login, logout, signup, updateUserProfile } = useAuthActions(user, session, setUser);
+
+  const isAuthenticated = !!user && !!session;
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await logout();
   };
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const extendedUser: ExtendedUser = {
-          ...session.user,
-          name: session.user.user_metadata?.full_name || session.user.email,
-          role: 'admin', // Default role
-          image: session.user.user_metadata?.avatar_url,
-          platform_roles: ['platform_admin']
-        };
-        setUser(extendedUser);
-      }
-      
-      setSession(session);
-      setLoading(false);
-    };
+  const canAccess = (requiredRoles: string[]): boolean => {
+    if (!user || !requiredRoles.length) return true;
+    return requiredRoles.includes(user.role);
+  };
 
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const extendedUser: ExtendedUser = {
-          ...session.user,
-          name: session.user.user_metadata?.full_name || session.user.email,
-          role: 'admin',
-          image: session.user.user_metadata?.avatar_url,
-          platform_roles: ['platform_admin']
-        };
-        setUser(extendedUser);
-      } else {
-        setUser(null);
-      }
-      
-      setSession(session);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,
-    signOut
+    authLoaded,
+    isAuthenticated,
+    login,
+    logout,
+    signup,
+    signOut,
+    updateUserProfile,
+    refreshUserProfile,
+    canAccess
   };
 
   return (

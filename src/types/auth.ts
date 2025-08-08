@@ -36,25 +36,7 @@ export interface ExtendedUser {
 }
 
 // Legacy User type for backward compatibility - updated to match ExtendedUser
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  riskScore: number;
-  status: 'verified' | 'pending' | 'rejected' | 'information_requested';
-  avatarUrl?: string;
-  title?: string;
-  department?: string;
-  phone?: string;
-  location?: string;
-  preferences?: UserPreferences;
-  customer_id?: string;
-  platform_roles?: PlatformRole[];
-  customer_roles?: CustomerRole[];
-  customer?: Customer;
-  isPlatformOwner?: boolean;
-}
+export interface User extends ExtendedUser {}
 
 // Helper type for role checking
 export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -41,13 +40,11 @@ function App() {
         <SecurityProvider>
           <AuthProvider>
             <AppInitializer>
-              <Router>
-                <EnvironmentChecker />
-                <DashboardLayout>
-                  <AppRoutes />
-                </DashboardLayout>
-                <Toaster />
-              </Router>
+              <EnvironmentChecker />
+              <DashboardLayout>
+                <AppRoutes />
+              </DashboardLayout>
+              <Toaster />
             </AppInitializer>
           </AuthProvider>
         </SecurityProvider>
