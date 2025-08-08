@@ -12,6 +12,7 @@ import GoAMLReporting from '@/components/sar/GoAMLReporting';
 import { useSARData } from '@/hooks/useSARData';
 import { useTranslation } from 'react-i18next';
 import { SAR } from '@/types/sar';
+import { SARFormData, transformSARToFormData } from '@/utils/sarFormHelpers';
 
 const SARCenter = () => {
   const [activeTab, setActiveTab] = useState('reports');
@@ -29,7 +30,7 @@ const SARCenter = () => {
     deleteSAR
   } = useSARData();
 
-  const handleCreateSAR = async (sarData: any) => {
+  const handleCreateSAR = async (sarData: SARFormData) => {
     try {
       await createSAR(sarData);
       setShowNewSARForm(false);
@@ -39,7 +40,7 @@ const SARCenter = () => {
     }
   };
 
-  const handleUpdateSAR = async (sarData: any) => {
+  const handleUpdateSAR = async (sarData: SARFormData) => {
     if (!editingSAR) return;
     
     try {
@@ -170,7 +171,7 @@ const SARCenter = () => {
                   <SARForm 
                     onSubmit={editingSAR ? handleUpdateSAR : handleCreateSAR}
                     onCancel={handleCancelForm}
-                    initialData={editingSAR || undefined}
+                    initialData={editingSAR ? transformSARToFormData(editingSAR) : undefined}
                   />
                 </CardContent>
               </Card>

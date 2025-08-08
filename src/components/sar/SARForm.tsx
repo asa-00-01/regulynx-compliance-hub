@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,16 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, UserIcon, FileTextIcon, AlertTriangleIcon } from 'lucide-react';
 import { useCompliance } from '@/context/ComplianceContext';
 import { mockAvailableTransactions } from './mockSARData';
-
-interface SARFormData {
-  userId: string;
-  userName: string;
-  dateOfActivity: string;
-  summary: string;
-  transactions: string[];
-  notes?: string[];
-  status: 'draft' | 'submitted';
-}
+import { SARFormData } from '@/utils/sarFormHelpers';
 
 interface SARFormProps {
   onSubmit: (data: SARFormData) => void;
