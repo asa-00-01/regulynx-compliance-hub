@@ -6,12 +6,16 @@ import LoadingScreen from "@/components/app/LoadingScreen";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, authLoaded } = useAuth();
+  const { isAuthenticated, authLoaded, loading } = useAuth();
   
   useEffect(() => {
-    if (!authLoaded) return; // Wait for auth to be loaded
+    // Don't do anything while auth is still loading
+    if (loading || !authLoaded) {
+      console.log('🏠 Index page - Waiting for auth to load...', { loading, authLoaded });
+      return;
+    }
     
-    console.log('🏠 Index page - Auth status:', { isAuthenticated, authLoaded });
+    console.log('🏠 Index page - Auth loaded:', { isAuthenticated, authLoaded, loading });
     
     if (isAuthenticated) {
       console.log('✅ User is authenticated, redirecting to dashboard');
@@ -20,10 +24,11 @@ const Index = () => {
       console.log('❌ User not authenticated, redirecting to login');
       navigate("/login", { replace: true });
     }
-  }, [isAuthenticated, authLoaded, navigate]);
+  }, [isAuthenticated, authLoaded, loading, navigate]);
 
-  if (!authLoaded) {
-    return <LoadingScreen />;
+  // Show loading while auth is being determined
+  if (loading || !authLoaded) {
+    return <LoadingScreen text="Checking authentication..." />;
   }
 
   return null; // This component just redirects, no need to render anything

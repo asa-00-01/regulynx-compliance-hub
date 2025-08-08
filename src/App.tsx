@@ -20,7 +20,7 @@ const App = () => {
       url: window.location.href,
       user_agent: navigator.userAgent,
       timestamp: new Date().toISOString(),
-      app_version: '1.0.0' // You can make this dynamic
+      app_version: '1.0.0'
     });
 
     // Log when user leaves the page
@@ -44,12 +44,8 @@ const App = () => {
         <TooltipProvider>
           <EnhancedErrorTrackingService context="app_providers">
             <Suspense fallback={<LoadingScreen />}>
-              <AnalyticsProvider>
-                <ComplianceProvider>
-                  <AppInitializer />
-                  <AppRoutes />
-                </ComplianceProvider>
-              </AnalyticsProvider>
+              <AppInitializer />
+              <AppRoutes />
             </Suspense>
           </EnhancedErrorTrackingService>
           <Toaster />

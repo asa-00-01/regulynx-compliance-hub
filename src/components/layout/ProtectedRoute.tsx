@@ -2,6 +2,7 @@
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import LoadingScreen from '@/components/app/LoadingScreen';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,20 +10,25 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
-  const { user, isAuthenticated, authLoaded } = useAuth();
+  const { user, isAuthenticated, authLoaded, loading } = useAuth();
+
+  console.log('🛡️ ProtectedRoute check:', { 
+    loading, 
+    authLoaded, 
+    isAuthenticated, 
+    userEmail: user?.email,
+    requiredRoles 
+  });
 
   // Show loading while auth is being determined
-  if (!authLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
+  if (loading || !authLoaded) {
+    return <LoadingScreen text="Verifying access..." />;
   }
 
-  // If not authenticated, redirect to auth page
+  // If not authenticated, redirect to login page
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    console.log('❌ ProtectedRoute - Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
   }
 
   // If roles are required, check if user has necessary permissions
@@ -30,10 +36,15 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
     const hasRequiredRole = requiredRoles.includes(user.role);
     
     if (!hasRequiredRole) {
+      console.log('❌ ProtectedRoute - Insufficient permissions', { 
+        userRole: user.role, 
+        requiredRoles 
+      });
       return <Navigate to="/unauthorized" replace />;
     }
   }
 
+  console.log('✅ ProtectedRoute - Access granted');
   return <>{children}</>;
 };
 

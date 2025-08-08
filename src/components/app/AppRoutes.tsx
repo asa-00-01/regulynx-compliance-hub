@@ -1,7 +1,6 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import LoadingScreen from './LoadingScreen';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -35,11 +34,15 @@ import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
 
 const AppRoutes = () => {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, authLoaded } = useAuth();
 
-  if (loading) {
-    return <LoadingScreen />;
+  // Show loading screen while auth is being determined
+  if (loading || !authLoaded) {
+    console.log('🔄 AppRoutes - Auth loading...', { loading, authLoaded });
+    return <LoadingScreen text="Loading application..." />;
   }
+
+  console.log('✅ AppRoutes - Auth loaded, rendering routes');
 
   return (
     <Routes>
