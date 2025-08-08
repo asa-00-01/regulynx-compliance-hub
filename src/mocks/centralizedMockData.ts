@@ -61,7 +61,7 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
       transactions,
       complianceCases: [], // Will be populated after all users are created
       notes,
-      // Additional enhanced fields for developer testing
+      // Additional enhanced fields
       metadata: {
         enhancedProfile: true,
         transferHabit: profile.transferHabit,
@@ -71,14 +71,7 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
         recipientRelationship: profile.recipientRelationship,
         originsOfFunds: profile.originsOfFunds,
         lastScreenedAt: profile.screenedAt,
-        lastLogin: profile.lastLogin,
-        // Coherence indicators for testing
-        hasCompleteDocuments: enhancedDocs.length >= 3,
-        hasRecentTransactions: transactions.some(tx => 
-          new Date(tx.timestamp) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        ),
-        dataQualityScore: calculateDataQualityScore(profile, documents, transactions),
-        testingReady: true
+        lastLogin: profile.lastLogin
       }
     };
   });
@@ -95,81 +88,13 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
 
   const allCases = generateAllCases(userProfiles);
   
-  // Distribute cases back to users and ensure coherent connections
+  // Distribute cases back to users
   unifiedUsers.forEach(user => {
-    const userCases = allCases.filter(case_ => case_.userId === user.id);
-    user.complianceCases = userCases;
-    
-    // Ensure case consistency with user data
-    userCases.forEach(case_ => {
-      case_.userName = user.fullName;
-      case_.riskScore = user.riskScore;
-      
-      // Link related transactions and documents
-      if (case_.type === 'aml' && user.transactions.length > 0) {
-        case_.relatedTransactions = user.transactions
-          .filter(tx => tx.isSuspect || tx.riskScore > 70)
-          .slice(0, 2)
-          .map(tx => tx.id);
-      }
-      
-      if (case_.type === 'kyc' && user.documents.length > 0) {
-        case_.documents = user.documents
-          .filter(doc => doc.status === 'pending' || doc.status === 'rejected')
-          .slice(0, 2)
-          .map(doc => doc.id);
-      }
-    });
+    user.complianceCases = allCases.filter(case_ => case_.userId === user.id);
   });
 
-  // Final validation and coherence check
   console.log('✅ Cases assigned to users');
-  console.log('🔗 Validating data coherence...');
-  
-  const coherenceReport = {
-    totalUsers: unifiedUsers.length,
-    usersWithDocuments: unifiedUsers.filter(u => u.documents.length > 0).length,
-    usersWithTransactions: unifiedUsers.filter(u => u.transactions.length > 0).length,
-    usersWithCases: unifiedUsers.filter(u => u.complianceCases.length > 0).length,
-    completeTestUsers: unifiedUsers.filter(u => 
-      u.documents.length > 0 && 
-      u.transactions.length > 0 && 
-      u.complianceCases.length > 0
-    ).length
-  };
-  
-  console.log('🎯 Data Coherence Report:', coherenceReport);
-  
-  if (coherenceReport.completeTestUsers === 0) {
-    console.warn('⚠️ No users with complete test data found!');
-  } else {
-    console.log(`✅ ${coherenceReport.completeTestUsers} users ready for complete workflow testing`);
-  }
-  
   return unifiedUsers;
-};
-
-// Helper function to calculate data quality score for testing
-const calculateDataQualityScore = (profile: any, documents: any[], transactions: any[]): number => {
-  let score = 0;
-  
-  // Profile completeness (40 points)
-  if (profile.fullName) score += 10;
-  if (profile.email) score += 10;
-  if (profile.phoneNumber) score += 10;
-  if (profile.address) score += 10;
-  
-  // Document coverage (30 points)
-  if (documents.length >= 1) score += 10;
-  if (documents.length >= 2) score += 10;
-  if (documents.length >= 3) score += 10;
-  
-  // Transaction history (30 points)
-  if (transactions.length >= 1) score += 10;
-  if (transactions.length >= 5) score += 10;
-  if (transactions.length >= 10) score += 10;
-  
-  return score;
 };
 
 // Export the generated data

@@ -1,269 +1,327 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Code, 
-  Database, 
-  Users, 
   Settings, 
-  TestTube, 
-  CheckCircle, 
-  AlertTriangle,
-  Info
+  Activity, 
+  Shield, 
+  Zap, 
+  Code,
+  Monitor,
+  CheckCircle,
+  Globe,
+  HelpCircle,
+  BarChart3
 } from 'lucide-react';
-import MockDataValidator from '@/components/developer/MockDataValidator';
-import { useCoherentMockData } from '@/hooks/useCoherentMockData';
-import { config } from '@/config/environment';
+import OptimizationCenter from '@/components/common/OptimizationCenter';
+import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
+import SecurityAuditLog from '@/components/security/SecurityAuditLog';
+import DeveloperPanel from '@/components/dev/DeveloperPanel';
+import SecurityMonitor from '@/components/security/SecurityMonitor';
+import EnvironmentChecker from '@/components/common/EnvironmentChecker';
+import ProductionReadinessChecker from '@/components/common/ProductionReadinessChecker';
+import HelpPanel from '@/components/common/HelpPanel';
+import AnalyticsContent from '@/components/dev/AnalyticsContent';
+import PerformanceContent from '@/components/dev/PerformanceContent';
 
 const DeveloperTools: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const { 
-    isMockMode, 
-    completeTestUser, 
-    highRiskUsers, 
-    pendingKYCUsers, 
-    suspiciousAMLUsers 
-  } = useCoherentMockData();
-
-  const testScenarios = [
-    {
-      id: 'complete_user',
-      name: 'Complete Test User',
-      description: 'User with all data types for full workflow testing',
-      userCount: completeTestUser ? 1 : 0,
-      icon: Users
-    },
-    {
-      id: 'high_risk',
-      name: 'High Risk Users',
-      description: 'Users with high risk scores for compliance testing',
-      userCount: highRiskUsers.length,
-      icon: AlertTriangle
-    },
-    {
-      id: 'pending_kyc',
-      name: 'Pending KYC',
-      description: 'Users with incomplete KYC for verification testing',
-      userCount: pendingKYCUsers.length,
-      icon: CheckCircle
-    },
-    {
-      id: 'suspicious_aml',
-      name: 'Suspicious AML',
-      description: 'Users with flagged transactions for AML testing',
-      userCount: suspiciousAMLUsers.length,
-      icon: TestTube
-    }
-  ];
-
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="flex items-center gap-3 mb-6">
-        <Code className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">Developer Tools</h1>
-          <p className="text-muted-foreground">
-            Tools for testing and validating compliance workflows
+    <DashboardLayout>
+      <div 
+        id="developer-tools-page"
+        className="developer-tools-container flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-full overflow-hidden"
+      >
+        <div 
+          id="developer-tools-header"
+          className="developer-tools-header border-b pb-4"
+        >
+          <h1 
+            id="developer-tools-title"
+            className="developer-tools-title text-3xl font-bold tracking-tight text-foreground"
+          >
+            Developer Tools
+          </h1>
+          <p 
+            id="developer-tools-subtitle"
+            className="developer-tools-subtitle text-muted-foreground mt-2"
+          >
+            Advanced development and optimization tools for administrators and developers.
           </p>
         </div>
-      </div>
+        
+        <Tabs 
+          id="developer-tools-tabs"
+          defaultValue="optimization" 
+          className="developer-tools-tabs w-full"
+        >
+          <TabsList 
+            id="developer-tools-tabs-list"
+            className="developer-tools-tabs-navigation grid w-full grid-cols-9 mb-6"
+          >
+            <TabsTrigger 
+              id="optimization-tab"
+              value="optimization" 
+              className="optimization-tab-trigger flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              <span className="hidden sm:inline">Optimization</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="analytics-tab"
+              value="analytics" 
+              className="analytics-tab-trigger flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="performance-tab"
+              value="performance" 
+              className="performance-tab-trigger flex items-center gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Performance</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="production-readiness-tab"
+              value="production-readiness" 
+              className="production-readiness-tab-trigger flex items-center gap-2"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Production</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="environment-tab"
+              value="environment" 
+              className="environment-tab-trigger flex items-center gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Environment</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="system-health-tab"
+              value="system-health" 
+              className="system-health-tab-trigger flex items-center gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">System Health</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="security-tab"
+              value="security" 
+              className="security-tab-trigger flex items-center gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="help-tab"
+              value="help" 
+              className="help-tab-trigger flex items-center gap-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Help</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              id="dev-panel-tab"
+              value="dev-panel" 
+              className="dev-panel-tab-trigger flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configuration</span>
+            </TabsTrigger>
+          </TabsList>
 
-      <div className="grid gap-6 mb-6">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <div className="flex items-center justify-between">
-              <span>
-                Mock data mode is currently <strong>{isMockMode ? 'enabled' : 'disabled'}</strong>
-              </span>
-              <Badge variant={isMockMode ? "default" : "secondary"}>
-                {config.app.environment}
-              </Badge>
+          <TabsContent 
+            id="optimization-content"
+            value="optimization" 
+            className="optimization-tab-content space-y-4"
+          >
+            <OptimizationCenter embedded={true} />
+          </TabsContent>
+
+          <TabsContent 
+            id="analytics-content"
+            value="analytics" 
+            className="analytics-tab-content space-y-4"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Analytics Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsContent />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent 
+            id="performance-content"
+            value="performance" 
+            className="performance-tab-content space-y-4"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Performance Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PerformanceContent />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent 
+            id="production-readiness-content"
+            value="production-readiness" 
+            className="production-readiness-tab-content space-y-4"
+          >
+            <ProductionReadinessChecker />
+          </TabsContent>
+
+          <TabsContent 
+            id="environment-content"
+            value="environment" 
+            className="environment-tab-content space-y-4"
+          >
+            <EnvironmentChecker />
+          </TabsContent>
+
+          <TabsContent 
+            id="system-health-content"
+            value="system-health" 
+            className="system-health-tab-content space-y-4"
+          >
+            <Card 
+              id="system-health-card"
+              className="system-health-monitor-card"
+            >
+              <CardHeader 
+                id="system-health-card-header"
+                className="system-health-card-header"
+              >
+                <CardTitle 
+                  id="system-health-card-title"
+                  className="system-health-card-title flex items-center gap-2"
+                >
+                  <Activity className="h-5 w-5" />
+                  System Health Monitor
+                </CardTitle>
+              </CardHeader>
+              <CardContent 
+                id="system-health-card-content"
+                className="system-health-card-content"
+              >
+                <SystemHealthMonitor />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent 
+            id="security-content"
+            value="security" 
+            className="security-tab-content space-y-4"
+          >
+            <div 
+              id="security-grid-container"
+              className="security-dashboard-grid grid grid-cols-1 lg:grid-cols-2 gap-6"
+            >
+              <Card 
+                id="security-audit-card"
+                className="security-audit-log-card"
+              >
+                <CardHeader 
+                  id="security-audit-card-header"
+                  className="security-audit-card-header"
+                >
+                  <CardTitle 
+                    id="security-audit-card-title"
+                    className="security-audit-card-title flex items-center gap-2"
+                  >
+                    <Shield className="h-5 w-5" />
+                    Security Audit Log
+                  </CardTitle>
+                </CardHeader>
+                <CardContent 
+                  id="security-audit-card-content"
+                  className="security-audit-card-content p-0"
+                >
+                  <SecurityAuditLog embedded={true} />
+                </CardContent>
+              </Card>
+              
+              <Card 
+                id="security-monitor-card"
+                className="security-status-monitor-card"
+              >
+                <CardHeader 
+                  id="security-monitor-card-header"
+                  className="security-monitor-card-header"
+                >
+                  <CardTitle 
+                    id="security-monitor-card-title"
+                    className="security-monitor-card-title flex items-center gap-2"
+                  >
+                    <Monitor className="h-5 w-5" />
+                    Security Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent 
+                  id="security-monitor-card-content"
+                  className="security-monitor-card-content"
+                >
+                  <SecurityMonitor embedded={true} />
+                </CardContent>
+              </Card>
             </div>
-          </AlertDescription>
-        </Alert>
+          </TabsContent>
 
-        {isMockMode && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {testScenarios.map((scenario) => {
-              const IconComponent = scenario.icon;
-              return (
-                <Card key={scenario.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <IconComponent className="h-5 w-5 text-primary" />
-                      <Badge variant="outline">
-                        {scenario.userCount} users
-                      </Badge>
-                    </div>
-                    <h3 className="font-semibold mb-1">{scenario.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {scenario.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+          <TabsContent 
+            id="help-content"
+            value="help" 
+            className="help-tab-content space-y-4"
+          >
+            <HelpPanel />
+          </TabsContent>
+
+          <TabsContent 
+            id="dev-panel-content"
+            value="dev-panel" 
+            className="dev-panel-tab-content space-y-4"
+          >
+            <Card 
+              id="dev-configuration-card"
+              className="developer-configuration-card"
+            >
+              <CardHeader 
+                id="dev-configuration-card-header"
+                className="dev-configuration-card-header"
+              >
+                <CardTitle 
+                  id="dev-configuration-card-title"
+                  className="dev-configuration-card-title flex items-center gap-2"
+                >
+                  <Code className="h-5 w-5" />
+                  Development Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent 
+                id="dev-configuration-card-content"
+                className="dev-configuration-card-content"
+              >
+                <DeveloperPanel embedded={true} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="validator">Data Validator</TabsTrigger>
-          <TabsTrigger value="scenarios">Test Scenarios</TabsTrigger>
-          <TabsTrigger value="config">Configuration</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Mock Data Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Mock Data Mode</span>
-                    <Badge variant={isMockMode ? "default" : "secondary"}>
-                      {isMockMode ? 'Enabled' : 'Disabled'}
-                    </Badge>
-                  </div>
-                  
-                  {isMockMode && completeTestUser && (
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Complete Test User Available:</div>
-                      <div className="text-sm text-muted-foreground">
-                        {completeTestUser.fullName} (ID: {completeTestUser.id.slice(0, 8)}...)
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Documents: {completeTestUser.documents.length} | 
-                        Transactions: {completeTestUser.transactions.length} | 
-                        Cases: {completeTestUser.complianceCases.length}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Environment Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Environment:</span>
-                    <Badge variant="outline">{config.app.environment}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Development Mode:</span>
-                    <Badge variant={config.isDevelopment ? "default" : "secondary"}>
-                      {config.isDevelopment ? 'Yes' : 'No'}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Mock Features:</span>
-                    <Badge variant={config.features.useMockData ? "default" : "secondary"}>
-                      {config.features.useMockData ? 'Enabled' : 'Disabled'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="validator">
-          <MockDataValidator />
-        </TabsContent>
-
-        <TabsContent value="scenarios" className="space-y-6">
-          <div className="grid gap-6">
-            {isMockMode ? (
-              testScenarios.map((scenario) => {
-                const IconComponent = scenario.icon;
-                return (
-                  <Card key={scenario.id}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <IconComponent className="h-5 w-5" />
-                        {scenario.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <p className="text-muted-foreground">{scenario.description}</p>
-                        <div className="flex items-center gap-4">
-                          <Badge variant="outline">
-                            {scenario.userCount} users available
-                          </Badge>
-                          {scenario.userCount > 0 && (
-                            <Button variant="outline" size="sm">
-                              View Test Data
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Enable mock data mode to access test scenarios.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="config">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuration Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    Configuration is managed through environment variables and can be updated in the project settings.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="grid gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium mb-2">Current Configuration</h4>
-                    <pre className="text-sm bg-muted p-2 rounded overflow-auto">
-{JSON.stringify({
-  environment: config.app.environment,
-  isDevelopment: config.isDevelopment,
-  features: config.features
-}, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    </DashboardLayout>
   );
 };
 
