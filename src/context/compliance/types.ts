@@ -1,4 +1,3 @@
-
 import { AMLTransaction } from '@/types/aml';
 import { Document } from '@/types';
 import { ComplianceCaseDetails } from '@/types/case';
@@ -30,6 +29,27 @@ export interface UnifiedUserData {
   transactions: AMLTransaction[];
   complianceCases: ComplianceCaseDetails[];
   notes: any[];
+  metadata?: {
+    hasDocuments?: boolean;
+    hasTransactions?: boolean;
+    hasCases?: boolean;
+    totalTransactionAmount?: number;
+    lastActivityDate?: string;
+    completenessScore?: number;
+    enhancedProfile?: boolean;
+    transferHabit?: string;
+    frequencyOfTransaction?: string;
+    receiverCountries?: string[];
+    sendToMultipleRecipients?: boolean;
+    recipientRelationship?: string[];
+    originsOfFunds?: string[];
+    lastScreenedAt?: string;
+    lastLogin?: string;
+    hasCompleteDocuments?: boolean;
+    hasRecentTransactions?: boolean;
+    dataQualityScore?: number;
+    testingReady?: boolean;
+  };
 }
 
 export interface GlobalFilters {
