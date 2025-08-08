@@ -55,6 +55,23 @@ const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' |
   }
 };
 
+// Helper function to validate and convert UUID
+const validateAndConvertUuid = (value: string | undefined): string | null => {
+  if (!value) return null;
+  
+  // Check if it's already a valid UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  
+  if (uuidRegex.test(value)) {
+    return value;
+  }
+  
+  // If it's a non-UUID string like "admin_001", return null
+  // This prevents the "invalid input syntax for type uuid" error
+  console.warn(`Invalid UUID format: ${value}, setting to null`);
+  return null;
+};
+
 // Valid database status values based on schema
 const VALID_DB_STATUSES = ['open', 'closed', 'resolved', 'in_progress'] as const;
 const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'fraud', 'other'] as const;
@@ -123,14 +140,19 @@ export const complianceCaseService: CaseServiceOperations = {
   },
 
   async createCase(caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails> {
+    // Validate and clean UUID fields
+    const validatedAssignedTo = validateAndConvertUuid(caseData.assignedTo);
+    const validatedCreatedBy = validateAndConvertUuid(caseData.createdBy);
+    const validatedUserId = validateAndConvertUuid(caseData.userId);
+
     const dbCase: Omit<ComplianceCaseInsert, 'id' | 'created_at' | 'updated_at' | 'status'> = {
-      user_id: caseData.userId,
+      user_id: validatedUserId,
       user_name: caseData.userName,
-      created_by: caseData.createdBy,
+      created_by: validatedCreatedBy,
       type: caseData.type!,
       risk_score: caseData.riskScore!,
       description: caseData.description!,
-      assigned_to: caseData.assignedTo,
+      assigned_to: validatedAssignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
       source: caseData.source as any,
@@ -138,6 +160,8 @@ export const complianceCaseService: CaseServiceOperations = {
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,
     };
+
+    console.log('Creating compliance case with data:', dbCase);
 
     const { data, error } = await supabase
       .from('compliance_cases')

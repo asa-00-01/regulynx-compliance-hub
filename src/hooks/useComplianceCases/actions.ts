@@ -1,9 +1,16 @@
+
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CaseActionInsert } from '@/types/supabase';
+
+// Helper function to validate UUID
+const isValidUuid = (value: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
+};
 
 export const useCaseActions = (
   currentUser?: User,
@@ -163,25 +170,22 @@ export const useCaseActions = (
     assignToName: string
   ) => {
     try {
-      // Check if the assignToId is a valid UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      // Validate UUID format for database insertion
+      let validatedAssignedTo: string | null = null;
       
-      let actualAssignedTo: string | null = null;
-      
-      // If it's a valid UUID, use it directly
-      if (uuidRegex.test(assignToId)) {
-        actualAssignedTo = assignToId;
+      if (isValidUuid(assignToId)) {
+        validatedAssignedTo = assignToId;
       } else {
         // For mock data or non-UUID IDs, we'll store null in the database 
         // but keep the name for display purposes
         console.log(`Assignment ID ${assignToId} is not a valid UUID, storing null but keeping name`);
-        actualAssignedTo = null;
+        validatedAssignedTo = null;
       }
 
       const { error: updateError } = await supabase
         .from('compliance_cases')
         .update({ 
-          assigned_to: actualAssignedTo, 
+          assigned_to: validatedAssignedTo, 
           assigned_to_name: assignToName,
           updated_at: new Date().toISOString() 
         })
@@ -192,7 +196,7 @@ export const useCaseActions = (
       if (selectedCase?.id === caseId) {
         const updatedCase = { 
           ...selectedCase, 
-          assignedTo: actualAssignedTo, 
+          assignedTo: validatedAssignedTo, 
           assignedToName: assignToName, 
           updatedAt: new Date().toISOString() 
         };
