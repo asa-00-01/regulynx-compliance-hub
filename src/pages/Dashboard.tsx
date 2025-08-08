@@ -43,8 +43,8 @@ const Dashboard = () => {
     {
       id: '2',
       userId: 'user2', 
-      type: 'id' as const,
-      fileName: 'id_jane_smith.pdf',
+      type: 'drivers_license' as const,
+      fileName: 'license_jane_smith.pdf',
       uploadDate: new Date(Date.now() - 86400000).toISOString(),
       status: 'verified' as const,
     }
