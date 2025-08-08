@@ -49,6 +49,10 @@ export class MockDataService {
   static shouldUseMockData(): boolean {
     return process.env.NODE_ENV === 'development';
   }
+
+  static isMockMode(): boolean {
+    return this.shouldUseMockData();
+  }
 }
 
 // Auto-validate data in development

@@ -3,11 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UnifiedUserData } from '@/context/compliance/types';
-import { useComplianceActions } from './hooks/useComplianceActions';
 import { FilePlus, Flag, ShieldCheck } from 'lucide-react';
 import { useToast } from '../ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { useCompliance } from '@/context/compliance';
+import { useCompliance } from '@/context/compliance/useCompliance';
 
 // This is a new implementation of useComplianceActions hook that was in a read-only file
 // It is created here to make the component work.
