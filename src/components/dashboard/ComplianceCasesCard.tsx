@@ -1,13 +1,13 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ComplianceCase, User } from '@/types';
+import { ComplianceCaseDetails } from '@/types/case';
+import { User } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
 interface ComplianceCasesCardProps {
-  complianceCases: ComplianceCase[];
+  complianceCases: ComplianceCaseDetails[];
   loading: boolean;
   currentUser?: User;
 }
@@ -19,7 +19,7 @@ const ComplianceCasesCard = ({ complianceCases, loading, currentUser }: Complian
     navigate('/compliance-cases');
   };
   
-  const handleViewCase = (caseItem: ComplianceCase) => {
+  const handleViewCase = (caseItem: ComplianceCaseDetails) => {
     navigate('/compliance-cases', {
       state: {
         viewCase: caseItem.id

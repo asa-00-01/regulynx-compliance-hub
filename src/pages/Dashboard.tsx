@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -12,7 +11,7 @@ import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { ComplianceCase } from '@/types';
+import { ComplianceCaseDetails } from '@/types/case';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -51,7 +50,7 @@ const Dashboard = () => {
     }
   ];
 
-  const mockComplianceCases: ComplianceCase[] = [
+  const mockComplianceCases: ComplianceCaseDetails[] = [
     {
       id: '1',
       userId: 'user1',
