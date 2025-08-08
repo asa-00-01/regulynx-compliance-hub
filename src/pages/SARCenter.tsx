@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,6 +32,8 @@ const SARCenter = () => {
 
   const handleCreateSAR = async (sarData: SARFormData) => {
     try {
+      console.log('Creating SAR with form data:', sarData);
+      
       // Transform SARFormData to the format expected by createSAR
       const newSAR: Omit<SAR, 'id'> = {
         userId: sarData.userId,
@@ -41,9 +42,11 @@ const SARCenter = () => {
         dateOfActivity: sarData.dateOfActivity,
         status: sarData.status,
         summary: sarData.summary,
-        transactions: sarData.transactions,
-        notes: sarData.notes,
+        transactions: sarData.transactions || [], // Ensure transactions are included
+        notes: sarData.notes || [],
       };
+      
+      console.log('Transformed SAR data for creation:', newSAR);
       
       await createSAR(newSAR);
       setShowNewSARForm(false);
@@ -57,9 +60,14 @@ const SARCenter = () => {
     if (!editingSAR) return;
     
     try {
+      console.log('Updating SAR with form data:', sarData);
+      
       await updateSAR({ 
         id: editingSAR.id, 
-        updates: sarData 
+        updates: {
+          ...sarData,
+          transactions: sarData.transactions || [] // Ensure transactions are included
+        }
       });
       setEditingSAR(null);
       setShowNewSARForm(false);

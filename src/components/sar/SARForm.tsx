@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
         ? prev.filter(id => id !== transactionId)
         : [...prev, transactionId];
       
+      // Update formData immediately when transactions change
       setFormData(prevForm => ({
         ...prevForm,
         transactions: updated
@@ -76,11 +78,13 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
   };
 
   const handleSubmit = (status: 'draft' | 'submitted') => {
+    console.log('Submitting SAR with transactions:', selectedTransactions);
     const finalData = {
       ...formData,
       status,
-      transactions: selectedTransactions
+      transactions: selectedTransactions // Ensure transactions are included
     };
+    console.log('Final SAR data being submitted:', finalData);
     onSubmit(finalData);
   };
 
@@ -214,7 +218,7 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
           </div>
           {selectedTransactions.length > 0 && (
             <div className="mt-4">
-              <p className="text-sm text-muted-foreground mb-2">Selected transactions:</p>
+              <p className="text-sm text-muted-foreground mb-2">Selected transactions ({selectedTransactions.length}):</p>
               <div className="flex flex-wrap gap-2">
                 {selectedTransactions.map((txId) => {
                   const tx = mockAvailableTransactions.find(t => t.id === txId);
