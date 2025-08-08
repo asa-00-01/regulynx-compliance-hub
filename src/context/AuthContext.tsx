@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { ExtendedUser, UserRole } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
@@ -40,12 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await logout();
   };
 
-  const canAccess = (requiredRoles: string[]): boolean => {
+  // Memoize canAccess function to prevent unnecessary re-renders
+  const canAccess = useCallback((requiredRoles: string[]): boolean => {
     if (!user || !requiredRoles.length) return true;
     return requiredRoles.includes(user.role);
-  };
+  }, [user?.role]); // Only depend on user.role, not the entire user object
 
-  const value: AuthContextType = {
+  const value: AuthContextType = React.useMemo(() => ({
     user,
     session,
     loading,
@@ -58,7 +59,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserProfile,
     refreshUserProfile,
     canAccess
-  };
+  }), [
+    user, 
+    session, 
+    loading, 
+    authLoaded, 
+    isAuthenticated, 
+    login, 
+    logout, 
+    signup, 
+    updateUserProfile, 
+    refreshUserProfile, 
+    canAccess
+  ]);
 
   return (
     <AuthContext.Provider value={value}>

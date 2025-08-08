@@ -13,14 +13,17 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
   const { isAuthenticated, canAccess } = useAuth();
   const navigate = useNavigate();
 
+  // Memoize the required roles array to prevent unnecessary re-renders
+  const memoizedRequiredRoles = React.useMemo(() => requiredRoles, [requiredRoles.join(',')]);
+
   // Redirect to auth if not authenticated
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate('/auth');
-    } else if (requiredRoles.length > 0 && !canAccess(requiredRoles)) {
+    } else if (memoizedRequiredRoles.length > 0 && !canAccess(memoizedRequiredRoles)) {
       navigate('/unauthorized');
     }
-  }, [isAuthenticated, navigate, canAccess, requiredRoles]);
+  }, [isAuthenticated, navigate, canAccess, memoizedRequiredRoles]);
 
   if (!isAuthenticated) {
     return (
