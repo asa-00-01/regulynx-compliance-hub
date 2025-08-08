@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useComplianceCases } from '@/hooks/useComplianceCases';
@@ -30,17 +31,13 @@ const ComplianceCases = () => {
     name: user.name,
     role: user.role,
     riskScore: user.riskScore,
-    status: user.status,
+    status: user.status === 'rejected' ? 'flagged' : user.status === 'information_requested' ? 'pending' : user.status,
     avatarUrl: user.avatarUrl,
-    title: user.title,
     department: user.department,
     phone: user.phone,
-    location: user.location,
-    preferences: user.preferences,
     customer_id: user.customer_id,
     platform_roles: user.platform_roles,
     customer_roles: user.customer_roles,
-    customer: user.customer,
     isPlatformOwner: user.isPlatformOwner,
   } : undefined;
   

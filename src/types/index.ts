@@ -1,3 +1,4 @@
+
 export interface Document {
   id: string;
   userId: string;
@@ -38,6 +39,14 @@ export interface User {
   status: 'verified' | 'pending' | 'flagged';
   documents?: Document[];
   avatarUrl?: string;
+  title?: string;
+  department?: string;
+  phone?: string;
+  location?: string;
+  customer_id?: string;
+  platform_roles?: string[];
+  customer_roles?: string[];
+  isPlatformOwner?: boolean;
 }
 
 export interface Transaction {

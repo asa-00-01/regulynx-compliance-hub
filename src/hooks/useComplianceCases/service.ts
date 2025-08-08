@@ -8,6 +8,7 @@ import {
   ComplianceCaseInsert,
   CaseStatus,
   CaseType,
+  CaseSource,
 } from '@/types/supabase';
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
@@ -126,7 +127,7 @@ export const complianceCaseService: CaseServiceOperations = {
       assigned_to: caseData.assignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: caseData.source as any,
+      source: caseData.source as CaseSource,
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,
