@@ -1,4 +1,3 @@
-
 export interface Document {
   id: string;
   userId: string;
@@ -22,6 +21,7 @@ export interface Document {
     accountHolder?: string;
     averageBalance?: string;
     transactionHistory?: string;
+    rejection_reason?: string;
   };
 }
 
