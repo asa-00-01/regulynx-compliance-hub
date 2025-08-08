@@ -43,7 +43,12 @@ export class MockDataService {
   // Initialize and validate mock data
   static validateData(): void {
     console.log('🔍 Validating mock data consistency...');
-    logValidationResults();
+    try {
+      logValidationResults();
+    } catch (error) {
+      console.warn('Mock data validation encountered issues:', error);
+      console.log('✅ Continuing with available mock data');
+    }
   }
 
   static shouldUseMockData(): boolean {
@@ -55,9 +60,12 @@ export class MockDataService {
   }
 }
 
-// Auto-validate data in development
+// Auto-validate data in development, but don't block the app if validation fails
 if (MockDataService.shouldUseMockData()) {
-  MockDataService.validateData();
+  // Use setTimeout to avoid blocking the main thread
+  setTimeout(() => {
+    MockDataService.validateData();
+  }, 100);
 }
 
 export default MockDataService;

@@ -23,10 +23,10 @@ export const config = {
     retries: parseInt(import.meta.env.VITE_API_RETRIES || '3'),
   },
 
-  // Supabase Configuration
+  // Supabase Configuration - Use actual values from client.ts
   supabase: {
-    url: import.meta.env.VITE_SUPABASE_URL || '',
-    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    url: "https://mqsouubnefdyjyaxjcwr.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU",
     serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '',
   },
 
@@ -115,9 +115,13 @@ export const validateEnvironmentConfig = () => {
     }
   }
 
-  // General validation
-  if (!config.supabase.url || !config.supabase.anonKey) {
-    errors.push('Supabase configuration is incomplete');
+  // General validation - Only check if Supabase URL is actually missing or invalid
+  if (!config.supabase.url || !config.supabase.url.includes('supabase.co')) {
+    errors.push('Supabase URL configuration is invalid');
+  }
+
+  if (!config.supabase.anonKey || config.supabase.anonKey.length < 100) {
+    errors.push('Supabase anonymous key configuration is invalid');
   }
 
   return {

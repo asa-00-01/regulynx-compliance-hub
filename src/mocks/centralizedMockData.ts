@@ -14,7 +14,7 @@ import { generateCasesForUser, generateAllCases } from './generators/caseGenerat
 export const generateUnifiedUserData = (): UnifiedUserData[] => {
   console.log('🔄 Generating enhanced unified user data...');
   
-  return enhancedUserProfiles.map(profile => {
+  const unifiedUsers = enhancedUserProfiles.map(profile => {
     // Convert to unified format
     const unifiedUser = convertToUnifiedUserData(profile);
     
@@ -36,23 +36,6 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
       extractedData: doc.extractedData
     }));
     console.log(`Generated ${documents.length} documents for ${profile.fullName}`);
-    
-    // Generate compliance cases
-    const complianceCases = generateCasesForUser({
-      id: profile.id,
-      fullName: profile.fullName,
-      email: profile.email,
-      dateOfBirth: profile.dateOfBirth,
-      nationality: profile.nationality,
-      identityNumber: profile.personalIdentityNumber,
-      phoneNumber: profile.phoneNumber,
-      address: profile.address,
-      countryOfResidence: profile.countryOfResidence,
-      riskScore: profile.riskScore,
-      isPEP: profile.isPEP,
-      isSanctioned: profile.isSanctioned,
-      kycStatus: profile.kycStatus
-    });
     
     // Enhanced notes based on user profile
     const notes = [];
@@ -76,7 +59,7 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
       ...unifiedUser,
       documents,
       transactions,
-      complianceCases,
+      complianceCases: [], // Will be populated after all users are created
       notes,
       // Additional enhanced fields
       metadata: {
@@ -92,6 +75,26 @@ export const generateUnifiedUserData = (): UnifiedUserData[] => {
       }
     };
   });
+
+  // Now generate cases using the correct user IDs
+  const userProfiles = unifiedUsers.map(user => ({
+    id: user.id,
+    fullName: user.fullName,
+    riskScore: user.riskScore,
+    isPEP: user.isPEP,
+    isSanctioned: user.isSanctioned,
+    kycStatus: user.kycStatus
+  }));
+
+  const allCases = generateAllCases(userProfiles);
+  
+  // Distribute cases back to users
+  unifiedUsers.forEach(user => {
+    user.complianceCases = allCases.filter(case_ => case_.userId === user.id);
+  });
+
+  console.log('✅ Cases assigned to users');
+  return unifiedUsers;
 };
 
 // Export the generated data
@@ -101,7 +104,7 @@ export const unifiedMockData = generateUnifiedUserData();
 export const mockUsersCollection = unifiedMockData;
 export const mockTransactionsCollection = unifiedMockData.flatMap(user => user.transactions);
 export const mockDocumentsCollection = unifiedMockData.flatMap(user => user.documents);
-export const mockComplianceCasesCollection = generateAllCases();
+export const mockComplianceCasesCollection = unifiedMockData.flatMap(user => user.complianceCases);
 
 // Legacy exports for backward compatibility
 export const baseCustomers = enhancedUserProfiles;

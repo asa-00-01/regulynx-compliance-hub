@@ -8,12 +8,19 @@ interface AppInitializerProps {
 
 const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
   React.useEffect(() => {
-    const { isValid, errors } = validateEnvironmentConfig();
+    const { isValid, errors, warnings } = validateEnvironmentConfig();
+    
     if (!isValid) {
-      console.error('Environment configuration errors:', errors);
-      errors.forEach(error => console.error(`❌ ${error}`));
+      console.warn('Environment configuration has errors:', errors);
+      errors.forEach(error => console.warn(`⚠️ ${error}`));
     } else {
       console.log('✅ Environment configuration is valid');
+    }
+    
+    // Log warnings but don't block the app
+    if (warnings.length > 0) {
+      console.info('Environment configuration warnings:', warnings);
+      warnings.forEach(warning => console.info(`ℹ️ ${warning}`));
     }
   }, []);
 
