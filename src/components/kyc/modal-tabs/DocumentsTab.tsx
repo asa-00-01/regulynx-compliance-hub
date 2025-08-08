@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, CheckCircle, XCircle, Clock, Download } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Download, Eye } from 'lucide-react';
 import { useCompliance } from '@/context/ComplianceContext';
 import { format } from 'date-fns';
+import DocumentVerificationModal from './DocumentVerificationModal';
+import { Document } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface DocumentsTabProps {
   userId: string;
@@ -13,10 +16,11 @@ interface DocumentsTabProps {
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ userId }) => {
   const { getRelatedDocuments } = useCompliance();
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>(() => getRelatedDocuments(userId));
+  const { toast } = useToast();
   
-  // Get documents for this specific user
-  const userDocuments = getRelatedDocuments(userId);
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified':
@@ -47,7 +51,53 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ userId }) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  if (userDocuments.length === 0) {
+  const handleViewDocument = (document: Document) => {
+    setSelectedDocument(document);
+    setIsModalOpen(true);
+  };
+
+  const handleVerificationComplete = (documentId: string, status: 'verified' | 'rejected', reason?: string) => {
+    // Update the local documents state
+    setDocuments(prevDocs => 
+      prevDocs.map(doc => 
+        doc.id === documentId 
+          ? {
+              ...doc,
+              status,
+              verificationDate: new Date().toISOString(),
+              verifiedBy: 'current-user-id', // In real app, get from auth context
+              extractedData: {
+                ...doc.extractedData,
+                ...(status === 'rejected' && reason ? { rejection_reason: reason } : {})
+              }
+            }
+          : doc
+      )
+    );
+
+    toast({
+      title: `Document ${status === 'verified' ? 'Verified' : 'Rejected'}`,
+      description: `The document has been ${status} successfully.`
+    });
+  };
+
+  const handleRequestInfo = (document: Document) => {
+    toast({
+      title: "Information Requested",
+      description: "User has been notified to provide additional information."
+    });
+    
+    // Update document status
+    setDocuments(prevDocs => 
+      prevDocs.map(doc => 
+        doc.id === document.id 
+          ? { ...doc, status: 'information_requested' }
+          : doc
+      )
+    );
+  };
+
+  if (documents.length === 0) {
     return (
       <div className="space-y-4">
         <Card>
@@ -74,11 +124,11 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ userId }) => {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Identity Documents ({userDocuments.length})</CardTitle>
+          <CardTitle className="text-base">Identity Documents ({documents.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {userDocuments.map((document) => (
+            {documents.map((document) => (
               <div key={document.id} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -147,13 +197,36 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ userId }) => {
                   </div>
                 )}
 
+                {document.status === 'rejected' && document.extractedData?.rejection_reason && (
+                  <div className="bg-red-50 border border-red-200 p-3 rounded-md">
+                    <p className="text-xs font-medium text-red-700 mb-1">Rejection Reason</p>
+                    <p className="text-xs text-red-600">{document.extractedData.rejection_reason}</p>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2 pt-2 border-t">
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <Download className="h-3 w-3" />
                     Download
                   </Button>
-                  <Button size="sm">
-                    Review Document
+                  
+                  {document.status === 'pending' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleRequestInfo(document)}
+                    >
+                      Request Info
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleViewDocument(document)}
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="h-3 w-3" />
+                    {document.status === 'pending' ? 'Verify' : 'View Details'}
                   </Button>
                 </div>
               </div>
@@ -161,6 +234,13 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ userId }) => {
           </div>
         </CardContent>
       </Card>
+
+      <DocumentVerificationModal
+        document={selectedDocument}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onVerificationComplete={handleVerificationComplete}
+      />
     </div>
   );
 };
