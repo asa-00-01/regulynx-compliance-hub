@@ -30,3 +30,31 @@ export function formatDistanceToNow(date: Date, options?: { addSuffix?: boolean 
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays} day${diffInDays === 1 ? '' : 's'}${options?.addSuffix ? ' ago' : ''}`;
 }
+
+export function formatCurrency(amount: number, currency: string): string {
+  // Currency-specific locale mapping
+  const currencyLocaleMap: Record<string, string> = {
+    'USD': 'en-US',
+    'EUR': 'de-DE',
+    'SEK': 'sv-SE'
+  };
+
+  const locale = currencyLocaleMap[currency] || 'en-US';
+  
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch (error) {
+    // Fallback for unknown currencies - use the currency code as symbol
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount).replace('$', `${currency}\u00A0`);
+  }
+}
