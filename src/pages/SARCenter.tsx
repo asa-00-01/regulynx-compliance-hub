@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,7 +33,19 @@ const SARCenter = () => {
 
   const handleCreateSAR = async (sarData: SARFormData) => {
     try {
-      await createSAR(sarData);
+      // Transform SARFormData to the format expected by createSAR
+      const newSAR: Omit<SAR, 'id'> = {
+        userId: sarData.userId,
+        userName: sarData.userName,
+        dateSubmitted: new Date().toISOString(),
+        dateOfActivity: sarData.dateOfActivity,
+        status: sarData.status,
+        summary: sarData.summary,
+        transactions: sarData.transactions,
+        notes: sarData.notes,
+      };
+      
+      await createSAR(newSAR);
       setShowNewSARForm(false);
       setEditingSAR(null);
     } catch (error) {
