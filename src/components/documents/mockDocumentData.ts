@@ -37,6 +37,8 @@ export const generateMockDocument = (
   return {
     id,
     user_id: userId,
+    customer_id: 'mock-customer-id',
+    organization_customer_id: 'mock-org-customer-id',
     file_name: `${typeNames[type]}_${id.substring(0, 5)}.pdf`,
     file_path: `documents/${userId}/${id}.pdf`,
     type,
@@ -57,6 +59,8 @@ export const generateMockDocuments = (count = 5): Document[] => {
     return mockDocumentsCollection.slice(0, count).map(doc => ({
       id: doc.id,
       user_id: doc.userId,
+      customer_id: 'mock-customer-id',
+      organization_customer_id: 'mock-org-customer-id',
       file_name: doc.fileName,
       file_path: `documents/${doc.userId}/${doc.id}.pdf`,
       type: doc.type as DocumentType,
@@ -90,6 +94,8 @@ export const ensureMockDocuments = (documents: Document[]): Document[] => {
     return mockDocumentsCollection.map(doc => ({
       id: doc.id,
       user_id: doc.userId,
+      customer_id: 'mock-customer-id',
+      organization_customer_id: 'mock-org-customer-id',
       file_name: doc.fileName,
       file_path: `documents/${doc.userId}/${doc.id}.pdf`,
       type: doc.type as DocumentType,
