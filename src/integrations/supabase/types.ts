@@ -1081,7 +1081,14 @@ export type Database = {
         | "escalation"
         | "resolution"
       case_priority: "low" | "medium" | "high" | "critical"
-      case_source: "manual" | "system" | "external"
+      case_source:
+        | "manual"
+        | "system"
+        | "external"
+        | "transaction_alert"
+        | "kyc_flag"
+        | "sanctions_hit"
+        | "risk_assessment"
       case_status: "open" | "in_progress" | "resolved" | "closed"
       case_type: "kyc" | "aml" | "sanctions" | "fraud" | "other"
       customer_role:
@@ -1250,7 +1257,15 @@ export const Constants = {
         "resolution",
       ],
       case_priority: ["low", "medium", "high", "critical"],
-      case_source: ["manual", "system", "external"],
+      case_source: [
+        "manual",
+        "system",
+        "external",
+        "transaction_alert",
+        "kyc_flag",
+        "sanctions_hit",
+        "risk_assessment",
+      ],
       case_status: ["open", "in_progress", "resolved", "closed"],
       case_type: ["kyc", "aml", "sanctions", "fraud", "other"],
       customer_role: [
