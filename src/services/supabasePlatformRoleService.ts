@@ -11,7 +11,10 @@ export class SupabasePlatformRoleService {
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(customer => ({
+      ...customer,
+      settings: customer.settings as Record<string, any>
+    }));
   }
 
   static async getCustomer(customerId: string): Promise<Customer | null> {
@@ -22,7 +25,10 @@ export class SupabasePlatformRoleService {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      settings: data.settings as Record<string, any>
+    } : null;
   }
 
   static async createCustomer(customerData: Partial<Customer>): Promise<Customer> {
@@ -38,7 +44,10 @@ export class SupabasePlatformRoleService {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      settings: data.settings as Record<string, any>
+    };
   }
 
   static async updateCustomer(customerId: string, updates: Partial<Customer>): Promise<Customer> {
@@ -55,7 +64,10 @@ export class SupabasePlatformRoleService {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      settings: data.settings as Record<string, any>
+    };
   }
 
   // User management
@@ -141,7 +153,7 @@ export class SupabasePlatformRoleService {
       .insert({
         user_id: userId,
         customer_id: customerId,
-        role: role
+        customer_role: role
       });
 
     if (error && error.code !== '23505') { // Ignore duplicate key errors
@@ -155,7 +167,7 @@ export class SupabasePlatformRoleService {
       .delete()
       .eq('user_id', userId)
       .eq('customer_id', customerId)
-      .eq('role', role);
+      .eq('customer_role', role);
 
     if (error) throw error;
   }
@@ -163,8 +175,9 @@ export class SupabasePlatformRoleService {
   static async getUserCustomerRoles(userId: string, customerId?: string): Promise<CustomerRole[]> {
     let query = supabase
       .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
+      .select('customer_role')
+      .eq('user_id', userId)
+      .not('customer_role', 'is', null);
 
     if (customerId) {
       query = query.eq('customer_id', customerId);
@@ -174,8 +187,8 @@ export class SupabasePlatformRoleService {
 
     if (error) throw error;
     return (data || [])
-      .map(row => row.role)
-      .filter(role => ['customer_admin', 'customer_compliance', 'customer_executive', 'customer_support'].includes(role))
+      .map(row => row.customer_role)
+      .filter(role => role !== null)
       .map(role => role as CustomerRole);
   }
 
