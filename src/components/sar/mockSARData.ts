@@ -1,3 +1,4 @@
+
 import { SAR, Pattern, PatternMatch } from '@/types/sar';
 
 // Mock SARs
@@ -19,7 +20,7 @@ export const mockSARs: SAR[] = [
     userName: 'Lena Wikström',
     dateSubmitted: '2023-12-05T14:22:33',
     dateOfActivity: '2023-12-01T00:00:00',
-    status: 'reviewed',
+    status: 'filed',
     summary: 'Unusual pattern of structuring transactions below reporting threshold',
     transactions: ['TX-82901', 'TX-82902', 'TX-82903', 'TX-82904'],
     notes: ['Follow-up investigation required']
