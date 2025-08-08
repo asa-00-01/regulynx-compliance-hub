@@ -12,7 +12,7 @@ import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { ComplianceCase } from '@/types/supabase';
+import { ComplianceCase } from '@/types';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -54,21 +54,21 @@ const Dashboard = () => {
   const mockComplianceCases: ComplianceCase[] = [
     {
       id: '1',
-      user_id: 'user1',
-      user_name: 'John Doe',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      userId: 'user1',
+      userName: 'John Doe',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       type: 'kyc' as const,
       status: 'open' as const,
-      risk_score: 75,
+      riskScore: 75,
       description: 'KYC review required',
       priority: 'medium' as const,
       source: 'manual' as const,
-      assigned_to: 'admin_001',
-      assigned_to_name: 'Alex Nordström',
-      created_by: 'system',
-      related_transactions: [],
-      related_alerts: [],
+      assignedTo: 'admin_001',
+      assignedToName: 'Alex Nordström',
+      createdBy: 'system',
+      relatedTransactions: [],
+      relatedAlerts: [],
       documents: []
     }
   ];
