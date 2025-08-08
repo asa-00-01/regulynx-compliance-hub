@@ -1,259 +1,305 @@
 
-import React from 'react';
-import { SAR } from '@/types/sar';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { mockUsers, mockAvailableTransactions } from './mockSARData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CalendarIcon, UserIcon, FileTextIcon, AlertTriangleIcon } from 'lucide-react';
+import { useCompliance } from '@/context/ComplianceContext';
+import { mockAvailableTransactions } from './mockSARData';
 
-const formSchema = z.object({
-  userId: z.string().nonempty('User is required'),
-  dateOfActivity: z.string().nonempty('Date is required'),
-  summary: z.string().min(10, 'Summary must be at least 10 characters'),
-  transactions: z.array(z.string()).min(1, 'At least one transaction must be selected'),
-  hasDocuments: z.boolean().optional(),
-  notes: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-interface SARFormProps {
-  initialData?: Partial<SAR>;
-  onSubmit: (data: Omit<SAR, 'id'>, isDraft: boolean) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+interface SARFormData {
+  userId: string;
+  userName: string;
+  dateOfActivity: string;
+  summary: string;
+  transactions: string[];
+  notes?: string[];
+  status: 'draft' | 'submitted';
 }
 
-const SARForm: React.FC<SARFormProps> = ({ 
-  initialData, 
-  onSubmit, 
-  onCancel, 
-  isSubmitting = false 
-}) => {
-  // Initialize form with schema and default values
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      userId: initialData?.userId || '',
-      dateOfActivity: initialData?.dateOfActivity ? 
-        new Date(initialData.dateOfActivity).toISOString().split('T')[0] : 
-        new Date().toISOString().split('T')[0],
-      summary: initialData?.summary || '',
-      transactions: initialData?.transactions || [],
-      hasDocuments: initialData?.documents && initialData.documents.length > 0 || false,
-      notes: initialData?.notes?.join('\n') || '',
-    },
+interface SARFormProps {
+  onSubmit: (data: SARFormData) => void;
+  onCancel: () => void;
+  initialData?: Partial<SARFormData>;
+}
+
+const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) => {
+  const { state } = useCompliance();
+  const [formData, setFormData] = useState<SARFormData>({
+    userId: initialData?.userId || '',
+    userName: initialData?.userName || '',
+    dateOfActivity: initialData?.dateOfActivity || '',
+    summary: initialData?.summary || '',
+    transactions: initialData?.transactions || [],
+    notes: initialData?.notes || [],
+    status: initialData?.status || 'draft',
   });
-  
-  const handleSubmit = (values: FormValues, isDraft: boolean) => {
-    const userName = mockUsers.find(user => user.id === values.userId)?.name || '';
-    
-    onSubmit({
-      userId: values.userId,
-      userName,
-      dateSubmitted: new Date().toISOString(),
-      dateOfActivity: new Date(values.dateOfActivity).toISOString(),
-      status: isDraft ? 'draft' : 'submitted',
-      summary: values.summary,
-      transactions: values.transactions,
-      documents: values.hasDocuments ? ['mock-document-1'] : undefined,
-      notes: values.notes ? [values.notes] : undefined,
-    }, isDraft);
+
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>(
+    initialData?.transactions || []
+  );
+  const [noteInput, setNoteInput] = useState('');
+
+  const handleUserChange = (userId: string) => {
+    const selectedUser = state.users.find(user => user.id === userId);
+    setFormData(prev => ({
+      ...prev,
+      userId,
+      userName: selectedUser?.fullName || ''
+    }));
   };
+
+  const handleTransactionToggle = (transactionId: string) => {
+    setSelectedTransactions(prev => {
+      const updated = prev.includes(transactionId)
+        ? prev.filter(id => id !== transactionId)
+        : [...prev, transactionId];
+      
+      setFormData(prevForm => ({
+        ...prevForm,
+        transactions: updated
+      }));
+      
+      return updated;
+    });
+  };
+
+  const addNote = () => {
+    if (noteInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        notes: [...(prev.notes || []), noteInput.trim()]
+      }));
+      setNoteInput('');
+    }
+  };
+
+  const removeNote = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      notes: prev.notes?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const handleSubmit = (status: 'draft' | 'submitted') => {
+    const finalData = {
+      ...formData,
+      status,
+      transactions: selectedTransactions
+    };
+    onSubmit(finalData);
+  };
+
+  const selectedUser = state.users.find(user => user.id === formData.userId);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {initialData?.id ? `Edit SAR: ${initialData.id}` : 'Create New Suspicious Activity Report'}
-        </h2>
-        <p className="text-muted-foreground">
-          Complete all required fields to submit a new suspicious activity report
-        </p>
-      </div>
-
-      <Form {...form}>
-        <form className="space-y-6">
-          <FormField
-            control={form.control}
-            name="userId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Subject User</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a user" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {mockUsers.map(user => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dateOfActivity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Suspicious Activity</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="summary"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Summary of Suspicion</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Describe the suspicious activity in detail..." 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="transactions"
-            render={() => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel>Involved Transactions</FormLabel>
-                  <FormDescription>
-                    Select all transactions related to this suspicious activity
-                  </FormDescription>
-                </div>
-                {mockAvailableTransactions.map((transaction) => (
-                  <FormField
-                    key={transaction.id}
-                    control={form.control}
-                    name="transactions"
-                    render={({ field }) => {
-                      return (
-                        <FormItem key={transaction.id} className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(transaction.id)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, transaction.id])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== transaction.id
-                                      )
-                                    )
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal">
-                            {transaction.id}: {transaction.description}
-                          </FormLabel>
-                        </FormItem>
-                      )
-                    }}
-                  />
+      {/* User Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserIcon className="h-5 w-5" />
+            Subject User
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="user-select">Select User</Label>
+            <Select value={formData.userId} onValueChange={handleUserChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a user..." />
+              </SelectTrigger>
+              <SelectContent>
+                {state.users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    <div className="flex items-center justify-between w-full">
+                      <span>{user.fullName}</span>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Badge variant={user.riskScore > 70 ? 'destructive' : user.riskScore > 40 ? 'secondary' : 'outline'}>
+                          Risk: {user.riskScore}
+                        </Badge>
+                        {user.isPEP && <Badge variant="outline">PEP</Badge>}
+                        {user.isSanctioned && <Badge variant="destructive">Sanctioned</Badge>}
+                      </div>
+                    </div>
+                  </SelectItem>
                 ))}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              </SelectContent>
+            </Select>
+          </div>
 
-          <FormField
-            control={form.control}
-            name="hasDocuments"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Supporting Documents
-                  </FormLabel>
-                  <FormDescription>
-                    Check if you have supporting documents to upload
-                  </FormDescription>
+          {selectedUser && (
+            <div className="p-4 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">User Details</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Email:</span>
+                  <p>{selectedUser.email}</p>
                 </div>
-              </FormItem>
-            )}
-          />
-
-          {form.watch("hasDocuments") && (
-            <FormItem>
-              <FormLabel>Upload Documents</FormLabel>
-              <FormControl>
-                <Input type="file" multiple disabled={isSubmitting} />
-              </FormControl>
-              <FormDescription>
-                Document uploads are mocked in this frontend implementation
-              </FormDescription>
-            </FormItem>
+                <div>
+                  <span className="text-muted-foreground">Country:</span>
+                  <p>{selectedUser.countryOfResidence}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">KYC Status:</span>
+                  <Badge variant={selectedUser.kycStatus === 'verified' ? 'default' : 'secondary'}>
+                    {selectedUser.kycStatus}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Risk Score:</span>
+                  <Badge variant={selectedUser.riskScore > 70 ? 'destructive' : selectedUser.riskScore > 40 ? 'secondary' : 'outline'}>
+                    {selectedUser.riskScore}
+                  </Badge>
+                </div>
+              </div>
+            </div>
           )}
+        </CardContent>
+      </Card>
 
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Additional Notes</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Any additional information or context..." 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      {/* Activity Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Activity Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="dateOfActivity">Date of Activity</Label>
+            <Input
+              id="dateOfActivity"
+              type="date"
+              value={formData.dateOfActivity}
+              onChange={(e) => setFormData(prev => ({ ...prev, dateOfActivity: e.target.value }))}
+              required
+            />
+          </div>
 
-          <div className="flex justify-end space-x-4">
-            <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button 
-              variant="secondary" 
-              onClick={() => form.handleSubmit((values) => handleSubmit(values, true))()}
-              disabled={isSubmitting}
-            >
-              Save Draft
-            </Button>
-            <Button 
-              onClick={() => form.handleSubmit((values) => handleSubmit(values, false))()}
-              disabled={isSubmitting}
-            >
-              Submit SAR
+          <div>
+            <Label htmlFor="summary">Summary</Label>
+            <Textarea
+              id="summary"
+              placeholder="Describe the suspicious activity..."
+              value={formData.summary}
+              onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
+              rows={4}
+              required
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transaction Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileTextIcon className="h-5 w-5" />
+            Related Transactions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {mockAvailableTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center space-x-2 p-2 border rounded hover:bg-muted cursor-pointer"
+                onClick={() => handleTransactionToggle(transaction.id)}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTransactions.includes(transaction.id)}
+                  onChange={() => handleTransactionToggle(transaction.id)}
+                  className="rounded"
+                />
+                <span className="text-sm">{transaction.description}</span>
+              </div>
+            ))}
+          </div>
+          {selectedTransactions.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground mb-2">Selected transactions:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedTransactions.map((txId) => {
+                  const tx = mockAvailableTransactions.find(t => t.id === txId);
+                  return tx ? (
+                    <Badge key={txId} variant="outline">
+                      {txId}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Notes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangleIcon className="h-5 w-5" />
+            Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add a note..."
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addNote()}
+            />
+            <Button onClick={addNote} variant="outline">
+              Add
             </Button>
           </div>
-        </form>
-      </Form>
+
+          {formData.notes && formData.notes.length > 0 && (
+            <div className="space-y-2">
+              {formData.notes.map((note, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <span className="text-sm">{note}</span>
+                  <Button
+                    onClick={() => removeNote(index)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex justify-end space-x-4">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => handleSubmit('draft')}
+          disabled={!formData.userId || !formData.dateOfActivity || !formData.summary}
+        >
+          Save as Draft
+        </Button>
+        <Button
+          onClick={() => handleSubmit('submitted')}
+          disabled={!formData.userId || !formData.dateOfActivity || !formData.summary}
+        >
+          Submit SAR
+        </Button>
+      </div>
     </div>
   );
 };
