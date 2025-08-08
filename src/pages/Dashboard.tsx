@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -56,6 +55,7 @@ const Dashboard = () => {
     {
       id: '1',
       user_id: 'user1',
+      user_name: 'John Doe',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       type: 'kyc' as const,
@@ -65,8 +65,11 @@ const Dashboard = () => {
       priority: 'medium' as const,
       source: 'manual' as const,
       assigned_to: 'admin_001',
-      title: 'KYC Review Case',
-      created_by: 'system'
+      assigned_to_name: 'Alex Nordström',
+      created_by: 'system',
+      related_transactions: [],
+      related_alerts: [],
+      documents: []
     }
   ];
 
@@ -121,4 +124,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
