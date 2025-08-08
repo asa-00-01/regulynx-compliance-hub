@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,10 +19,13 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setSelectedUser, getUserById } = useCompliance();
+  const { setSelectedUser, getUserById, state } = useCompliance();
+
+  console.log('CaseActionButtons - Case userId:', caseItem.userId);
+  console.log('CaseActionButtons - Available users:', state.users.length);
+  console.log('CaseActionButtons - User IDs:', state.users.map(u => u.id));
 
   const handleViewCase = () => {
-    // For now, show case details in a toast since we don't have a dedicated case details page
     toast({
       title: 'Case Details',
       description: `Viewing details for case ${caseItem.id}`,
@@ -42,38 +44,52 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const handleViewUserProfile = () => {
     setLoading('profile');
     try {
-      if (caseItem.userId) {
-        // Check if user exists in our compliance context
-        const user = getUserById(caseItem.userId);
-        
-        if (!user) {
-          toast({
-            title: 'User Not Found',
-            description: `User ${caseItem.userName} could not be found in the system`,
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        // Set the selected user and navigate
-        setSelectedUser(caseItem.userId);
-        navigate(`/user-case/${caseItem.userId}`, {
-          state: {
-            returnTo: '/compliance-cases'
-          }
-        });
-        
-        toast({
-          title: 'User Profile',
-          description: `Opening profile for ${caseItem.userName}`,
-        });
-      } else {
+      if (!caseItem.userId) {
         toast({
           title: 'No User Associated',
           description: 'This case does not have an associated user',
           variant: 'destructive',
         });
+        return;
       }
+
+      // Check if user exists in our compliance context
+      const user = getUserById(caseItem.userId);
+      console.log('Found user in context:', user ? `${user.fullName} (${user.id})` : 'null');
+      
+      if (!user) {
+        console.error('User not found in compliance context:', {
+          searchedUserId: caseItem.userId,
+          availableUserIds: state.users.map(u => ({ id: u.id, name: u.fullName }))
+        });
+        
+        toast({
+          title: 'User Data Issue',
+          description: `User data for ${caseItem.userName} is not available in the system. Please refresh the page or contact support.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Set the selected user and navigate
+      setSelectedUser(caseItem.userId);
+      navigate(`/user-case/${caseItem.userId}`, {
+        state: {
+          returnTo: '/compliance-cases'
+        }
+      });
+      
+      toast({
+        title: 'User Profile',
+        description: `Opening profile for ${caseItem.userName}`,
+      });
+    } catch (error) {
+      console.error('Error in handleViewUserProfile:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while trying to open the user profile',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(null);
     }

@@ -1,5 +1,5 @@
 
-import { ComplianceCaseDetails } from '@/types/case';
+import { ComplianceCaseDetails, CasePriority, CaseSource } from '@/types/case';
 
 // Generate UUID v4
 const generateUUID = (): string => {
@@ -10,18 +10,19 @@ const generateUUID = (): string => {
   });
 };
 
-const getRandomDateInPast = (daysBack: number): string => {
-  const date = new Date();
-  date.setDate(date.getDate() - Math.floor(Math.random() * daysBack));
-  return date.toISOString();
-};
+// Case types and sources for realistic generation
+const caseTypes: ('kyc' | 'aml' | 'sanctions')[] = ['kyc', 'aml', 'sanctions'];
+const caseSources: CaseSource[] = ['manual', 'transaction_alert', 'kyc_flag', 'sanctions_hit', 'system', 'risk_assessment'];
+const caseStatuses = ['open', 'under_review', 'escalated', 'pending_info', 'closed'] as const;
+const priorities: CasePriority[] = ['low', 'medium', 'high', 'critical'];
 
+// Compliance officers for case assignment
 const complianceOfficers = [
-  { id: generateUUID(), name: 'Alex Nordström' },
-  { id: generateUUID(), name: 'Johan Berg' },
-  { id: generateUUID(), name: 'Lena Wikström' },
-  { id: generateUUID(), name: 'Maria Svensson' },
-  { id: generateUUID(), name: 'Erik Lindqvist' }
+  { id: 'admin_001', name: 'Alex Nordström' },
+  { id: 'admin_002', name: 'Johan Berg' },
+  { id: 'admin_003', name: 'Lena Wikström' },
+  { id: 'admin_004', name: 'Maria Svensson' },
+  { id: 'admin_005', name: 'Erik Lindqvist' }
 ];
 
 interface UserProfile {
@@ -33,97 +34,87 @@ interface UserProfile {
   kycStatus: string;
 }
 
-const getCaseType = (user: UserProfile): 'kyc' | 'aml' | 'sanctions' => {
-  if (user.isSanctioned) return 'sanctions';
-  if (user.riskScore > 60) return 'aml';
-  return 'kyc';
-};
-
-const getCaseStatus = (user: UserProfile): 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed' => {
-  if (user.isSanctioned) return 'escalated';
-  if (user.kycStatus === 'information_requested') return 'pending_info';
-  if (user.kycStatus === 'verified') return Math.random() > 0.7 ? 'closed' : 'under_review';
-  if (user.riskScore > 70) return Math.random() > 0.5 ? 'escalated' : 'under_review';
-  return Math.random() > 0.6 ? 'open' : 'under_review';
-};
-
-const getCasePriority = (user: UserProfile): 'low' | 'medium' | 'high' | 'critical' => {
-  if (user.isSanctioned || user.riskScore > 80) return 'critical';
-  if (user.riskScore > 70 || user.isPEP) return 'high';
-  if (user.riskScore > 50) return 'medium';
-  return 'low';
-};
-
-const getCaseDescription = (user: UserProfile, type: string): string => {
-  const descriptions = {
-    sanctions: `Sanctions screening identified potential match for ${user.fullName}. Requires immediate investigation and potential account restriction.`,
-    aml: `High-risk transaction patterns detected for ${user.fullName}. Risk score: ${user.riskScore}. Enhanced due diligence required.`,
-    kyc: `KYC documentation review required for ${user.fullName}. Additional verification needed for identity confirmation.`
-  };
-  
-  return descriptions[type as keyof typeof descriptions] || 'Standard compliance review required.';
-};
-
-const getCaseSource = (user: UserProfile): 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment' => {
-  if (user.isSanctioned) return 'sanctions_hit';
-  if (user.riskScore > 70) return 'risk_assessment';
-  if (user.kycStatus === 'information_requested') return 'kyc_flag';
-  if (user.riskScore > 50) return 'transaction_alert';
-  return 'system';
-};
-
 export const generateCasesForUser = (user: UserProfile): ComplianceCaseDetails[] => {
   const cases: ComplianceCaseDetails[] = [];
   
-  // Determine if user should have cases based on risk profile
-  const shouldHaveCases = user.riskScore > 45 || user.isPEP || user.isSanctioned || user.kycStatus !== 'verified';
+  // Determine number of cases based on risk factors
+  let numCases = 0;
+  if (user.riskScore > 80) numCases = Math.floor(Math.random() * 3) + 2; // 2-4 cases
+  else if (user.riskScore > 60) numCases = Math.floor(Math.random() * 2) + 1; // 1-2 cases
+  else if (user.isPEP || user.isSanctioned) numCases = Math.floor(Math.random() * 2) + 1; // 1-2 cases
+  else if (user.kycStatus !== 'verified') numCases = 1;
+  else if (Math.random() < 0.3) numCases = 1; // 30% chance for low-risk users
   
-  if (!shouldHaveCases) return cases;
-  
-  // Number of cases based on risk level
-  const caseCount = user.riskScore > 70 ? Math.floor(Math.random() * 3) + 2 : 
-                   user.riskScore > 50 ? Math.floor(Math.random() * 2) + 1 : 1;
-  
-  for (let i = 0; i < caseCount; i++) {
-    const type = getCaseType(user);
-    const status = getCaseStatus(user);
-    const priority = getCasePriority(user);
+  for (let i = 0; i < numCases; i++) {
     const officer = complianceOfficers[Math.floor(Math.random() * complianceOfficers.length)];
-    const createdAt = getRandomDateInPast(60);
-    const updatedAt = new Date(new Date(createdAt).getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString();
+    const caseType = caseTypes[Math.floor(Math.random() * caseTypes.length)];
+    const source = caseSources[Math.floor(Math.random() * caseSources.length)];
+    const status = caseStatuses[Math.floor(Math.random() * caseStatuses.length)];
     
-    cases.push({
+    // Determine priority based on user risk factors
+    let priority: CasePriority;
+    if (user.isSanctioned) priority = 'critical';
+    else if (user.riskScore > 90) priority = 'critical';
+    else if (user.riskScore > 70 || user.isPEP) priority = 'high';
+    else if (user.riskScore > 50) priority = 'medium';
+    else priority = 'low';
+    
+    // Generate realistic descriptions based on case type and user factors
+    let description = '';
+    switch (caseType) {
+      case 'kyc':
+        if (user.isPEP) description = `PEP verification required for ${user.fullName} - Enhanced due diligence needed`;
+        else if (user.kycStatus === 'information_requested') description = `Additional KYC information requested for ${user.fullName}`;
+        else description = `KYC review for ${user.fullName} - Risk score: ${user.riskScore}`;
+        break;
+      case 'aml':
+        if (user.riskScore > 70) description = `High-risk transaction patterns detected for ${user.fullName}`;
+        else description = `AML monitoring alert for ${user.fullName} - Unusual transaction activity`;
+        break;
+      case 'sanctions':
+        if (user.isSanctioned) description = `SANCTIONS HIT: ${user.fullName} found on sanctions list - Immediate review required`;
+        else description = `Sanctions screening review for ${user.fullName}`;
+        break;
+    }
+    
+    const createdDaysAgo = Math.floor(Math.random() * 30);
+    const createdAt = new Date(Date.now() - createdDaysAgo * 24 * 60 * 60 * 1000).toISOString();
+    const updatedAt = new Date(Date.now() - Math.floor(Math.random() * createdDaysAgo) * 24 * 60 * 60 * 1000).toISOString();
+    
+    const caseItem: ComplianceCaseDetails = {
       id: generateUUID(),
-      userId: user.id,
+      userId: user.id, // Use the actual user ID
       userName: user.fullName,
       createdAt,
-      createdBy: 'system',
+      createdBy: officer.id,
       updatedAt,
-      type,
+      type: caseType,
       status,
       riskScore: user.riskScore,
-      description: getCaseDescription(user, type),
-      assignedTo: officer.id,
-      assignedToName: officer.name,
+      description,
+      assignedTo: Math.random() > 0.3 ? officer.id : undefined,
+      assignedToName: Math.random() > 0.3 ? officer.name : undefined,
       priority,
-      source: getCaseSource(user),
-      relatedTransactions: [generateUUID(), generateUUID()],
-      relatedAlerts: user.riskScore > 60 ? [generateUUID()] : [],
-      documents: [generateUUID(), generateUUID()]
-    });
+      source,
+      relatedTransactions: caseType === 'aml' ? [`tx_${user.id}_${i + 1}`] : [],
+      relatedAlerts: [`alert_${generateUUID()}`],
+      documents: [`doc_${user.id}_passport`, `doc_${user.id}_drivers_license`]
+    };
+    
+    cases.push(caseItem);
   }
   
   return cases;
 };
 
-// This function will be called from centralizedMockData with the actual user data
-export const generateAllCases = (users: UserProfile[] = []): ComplianceCaseDetails[] => {
-  if (users.length === 0) {
-    console.warn('No users provided for case generation');
-    return [];
-  }
+export const generateAllCases = (users: UserProfile[]): ComplianceCaseDetails[] => {
+  const allCases: ComplianceCaseDetails[] = [];
   
-  const allCases = users.flatMap(user => generateCasesForUser(user));
-  console.log(`Generated ${allCases.length} cases for ${users.length} users`);
+  users.forEach(user => {
+    const userCases = generateCasesForUser(user);
+    allCases.push(...userCases);
+  });
+  
+  console.log(`Generated ${allCases.length} compliance cases for ${users.length} users`);
   return allCases;
 };
