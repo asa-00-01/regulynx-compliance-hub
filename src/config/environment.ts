@@ -4,21 +4,31 @@ const environment = import.meta.env.VITE_ENVIRONMENT || 'development';
 const isDevelopment = environment === 'development';
 const isProduction = environment === 'production';
 
+// Helper function to get stored configuration values
+const getStoredConfigValue = (key: string, defaultValue: any) => {
+  try {
+    const stored = localStorage.getItem(`dev_${key}`);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
 // Base configuration
 export const config = {
   app: {
-    name: import.meta.env.VITE_APP_NAME || 'AML Compliance Platform',
+    name: getStoredConfigValue('app_name', import.meta.env.VITE_APP_NAME || 'AML Compliance Platform'),
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
     environment,
-    domain: import.meta.env.VITE_APP_DOMAIN || (isProduction ? 'aml-compliance.com' : 'localhost'),
+    domain: getStoredConfigValue('app_domain', import.meta.env.VITE_APP_DOMAIN || (isProduction ? 'aml-compliance.com' : 'localhost')),
     port: parseInt(import.meta.env.VITE_PORT || '3000'),
     baseUrl: import.meta.env.VITE_BASE_URL || (isProduction ? 'https://aml-compliance.com' : 'http://localhost:3000'),
-    supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'support@aml-compliance.com',
+    supportEmail: getStoredConfigValue('app_supportEmail', import.meta.env.VITE_SUPPORT_EMAIL || 'support@aml-compliance.com'),
   },
 
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseUrl: getStoredConfigValue('api_baseUrl', import.meta.env.VITE_API_BASE_URL || '/api'),
     timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
     retries: parseInt(import.meta.env.VITE_API_RETRIES || '3'),
   },
@@ -30,14 +40,14 @@ export const config = {
     serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '',
   },
 
-  // Feature Flags - Optimized for production
+  // Feature Flags - Enhanced with localStorage overrides
   features: {
-    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true' || isProduction,
-    enableErrorReporting: import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true' || isProduction,
-    enablePerformanceMonitoring: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true' || isProduction,
-    enableDebugMode: import.meta.env.VITE_DEBUG_MODE === 'true' && !isProduction, // Never enabled in production
-    useMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true' && !isProduction, // Never enabled in production
-    enableDevTools: import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true' && !isProduction,
+    enableAnalytics: getStoredConfigValue('features_enableAnalytics', import.meta.env.VITE_ENABLE_ANALYTICS === 'true' || isProduction),
+    enableErrorReporting: getStoredConfigValue('features_enableErrorReporting', import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true' || isProduction),
+    enablePerformanceMonitoring: getStoredConfigValue('features_enablePerformanceMonitoring', import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true' || isProduction),
+    enableDebugMode: getStoredConfigValue('features_enableDebugMode', import.meta.env.VITE_DEBUG_MODE === 'true' && !isProduction),
+    useMockData: getStoredConfigValue('features_useMockData', import.meta.env.VITE_USE_MOCK_DATA === 'true' && !isProduction),
+    enableDevTools: getStoredConfigValue('features_enableDevTools', import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true' && !isProduction),
   },
 
   // Security Configuration - Enhanced for production

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { NewsItem, RSSFeed } from '@/types/news';
 import { handleAPIError, withRetry } from '@/lib/api';
-import { MockDataService } from '@/services/mockDataService';
+import { UnifiedDataService } from '@/services/unifiedDataService';
 import { config } from '@/config/environment';
 
 export const useNewsData = () => {
@@ -16,32 +16,16 @@ export const useNewsData = () => {
       setLoading(true);
       setError(null);
       
-      if (config.features.useMockData) {
-        // Use mock data service
-        console.log('📰 Loading news data from mock service...');
-        const [mockNews, mockFeeds] = await Promise.all([
-          MockDataService.getNewsItems(),
-          MockDataService.getRSSFeeds()
-        ]);
-        
-        setNewsItems(mockNews);
-        setRssFeeds(mockFeeds);
-      } else {
-        // Use real API with retry logic
-        await withRetry(async () => {
-          // In production, this would be actual API calls
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // This would be replaced with real API calls
-          const [mockNews, mockFeeds] = await Promise.all([
-            MockDataService.getNewsItems(),
-            MockDataService.getRSSFeeds()
-          ]);
-          
-          setNewsItems(mockNews);
-          setRssFeeds(mockFeeds);
-        }, 3, 1000);
-      }
+      console.log(`📰 Loading news data via ${UnifiedDataService.getCurrentDataSource()}...`);
+      
+      // Use the unified service that automatically chooses between mock and real data
+      const [newsData, feedsData] = await Promise.all([
+        UnifiedDataService.getNewsItems(),
+        UnifiedDataService.getRSSFeeds()
+      ]);
+      
+      setNewsItems(newsData);
+      setRssFeeds(feedsData);
       
     } catch (err) {
       const error = handleAPIError(err, 'loading news data');
@@ -53,7 +37,7 @@ export const useNewsData = () => {
 
   useEffect(() => {
     loadNewsData();
-  }, []);
+  }, [config.features.useMockData]); // Re-load when mock mode changes
 
   const refetch = async () => {
     setError(null);
@@ -67,5 +51,6 @@ export const useNewsData = () => {
     error,
     refetch,
     isMockMode: config.features.useMockData,
+    dataSource: UnifiedDataService.getCurrentDataSource(),
   };
 };

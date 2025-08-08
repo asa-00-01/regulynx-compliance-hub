@@ -1,17 +1,19 @@
 
 import { useCallback } from 'react';
 import { config } from '@/config/environment';
-import { MockDataService } from '@/services/mockDataService';
+import { UnifiedDataService } from '@/services/unifiedDataService';
 
 export const useMockDataMode = () => {
   const isMockMode = config.features.useMockData;
 
   const logMockStatus = useCallback(() => {
-    console.log('Mock Data Mode Status:', {
+    console.log('Data Mode Status:', {
+      mode: isMockMode ? 'Mock Data' : 'Real API/Database',
       enabled: isMockMode,
       environment: config.app.environment,
       isDevelopment: config.isDevelopment,
-      canToggle: config.isDevelopment
+      canToggle: config.isDevelopment,
+      dataSource: UnifiedDataService.getCurrentDataSource()
     });
   }, [isMockMode]);
 
@@ -30,13 +32,19 @@ export const useMockDataMode = () => {
     }
   }, [isMockMode]);
 
+  const validateDataSource = useCallback(async () => {
+    return UnifiedDataService.validateCurrentDataSource();
+  }, []);
+
   return {
     isMockMode,
     isRealMode: !isMockMode,
     logMockStatus,
     getDataSource,
     conditionalFetch,
-    MockDataService: isMockMode ? MockDataService : null,
+    validateDataSource,
+    currentDataSource: UnifiedDataService.getCurrentDataSource(),
+    UnifiedDataService: UnifiedDataService,
   };
 };
 
