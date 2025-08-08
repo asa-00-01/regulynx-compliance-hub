@@ -144,15 +144,15 @@ export class RealDataService {
         receiverUserId: tx.to_account, // Using to_account as receiver identifier
         receiverName: 'Unknown Receiver', // Would need additional join for receiver info
         senderAmount: parseFloat(tx.amount.toString()),
-        senderCurrency: tx.currency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD',
+        senderCurrency: tx.currency as 'SEK' | 'USD' | 'EUR' | 'GBP',
         receiverAmount: parseFloat(tx.amount.toString()),
-        receiverCurrency: tx.currency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD',
+        receiverCurrency: tx.currency as 'SEK' | 'USD' | 'EUR' | 'GBP',
         senderCountryCode: 'US', // Would need additional data for proper country codes
         receiverCountryCode: 'US', // Would need additional data for proper country codes
         timestamp: tx.transaction_date,
         status: tx.status as 'completed' | 'pending' | 'failed' | 'flagged',
         reasonForSending: tx.description || 'No reason provided',
-        method: 'bank_transfer' as const, // Would need additional data for proper method
+        method: 'bank' as const, // Would need additional data for proper method
         isSuspect: tx.status === 'flagged',
         riskScore: tx.risk_score,
         notes: Array.isArray(tx.flags) ? tx.flags.map(flag => String(flag)) : []
