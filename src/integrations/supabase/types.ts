@@ -86,7 +86,7 @@ export type Database = {
           description: string
           documents: string[] | null
           id: string
-          priority: Database["public"]["Enums"]["case_priority"]
+          priority: string
           related_alerts: string[] | null
           related_transactions: string[] | null
           resolved_at: string | null
@@ -106,7 +106,7 @@ export type Database = {
           description: string
           documents?: string[] | null
           id?: string
-          priority: Database["public"]["Enums"]["case_priority"]
+          priority: string
           related_alerts?: string[] | null
           related_transactions?: string[] | null
           resolved_at?: string | null
@@ -126,7 +126,7 @@ export type Database = {
           description?: string
           documents?: string[] | null
           id?: string
-          priority?: Database["public"]["Enums"]["case_priority"]
+          priority?: string
           related_alerts?: string[] | null
           related_transactions?: string[] | null
           resolved_at?: string | null
@@ -435,7 +435,15 @@ export type Database = {
           user_id?: string
           user_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pattern_matches_pattern_id_fkey"
+            columns: ["pattern_id"]
+            isOneToOne: false
+            referencedRelation: "patterns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patterns: {
         Row: {
@@ -870,10 +878,9 @@ export type Database = {
         | "created"
         | "updated"
         | "assigned"
-        | "escalated"
         | "resolved"
         | "closed"
-        | "note_added"
+        | "commented"
       case_action_type:
         | "note"
         | "status_change"
@@ -882,35 +889,27 @@ export type Database = {
         | "escalation"
         | "resolution"
       case_priority: "low" | "medium" | "high" | "critical"
-      case_source: "system" | "manual" | "api" | "webhook"
-      case_status:
-        | "open"
-        | "investigating"
-        | "escalated"
-        | "resolved"
-        | "closed"
-      case_type:
-        | "kyc"
-        | "aml"
-        | "transaction"
-        | "document"
-        | "sanctions"
-        | "pep"
+      case_source: "manual" | "system" | "external"
+      case_status: "open" | "in_progress" | "resolved" | "closed"
+      case_type: "kyc" | "aml" | "sanctions" | "fraud" | "other"
       customer_role:
-        | "admin"
-        | "compliance_officer"
-        | "analyst"
-        | "viewer"
-        | "support"
+        | "customer_admin"
+        | "customer_compliance"
+        | "customer_executive"
+        | "customer_support"
       document_status: "pending" | "verified" | "rejected"
       document_type:
         | "passport"
-        | "id"
-        | "license"
+        | "drivers_license"
         | "utility_bill"
         | "bank_statement"
         | "other"
-      pattern_category: "structuring" | "velocity" | "geography" | "amount"
+      pattern_category:
+        | "structuring"
+        | "round_amounts"
+        | "velocity"
+        | "geographic"
+        | "time_based"
       platform_role: "platform_admin" | "platform_support"
       sar_status: "draft" | "submitted" | "filed" | "rejected"
       user_role: "admin" | "complianceOfficer" | "executive" | "support"
@@ -1046,10 +1045,9 @@ export const Constants = {
         "created",
         "updated",
         "assigned",
-        "escalated",
         "resolved",
         "closed",
-        "note_added",
+        "commented",
       ],
       case_action_type: [
         "note",
@@ -1060,26 +1058,30 @@ export const Constants = {
         "resolution",
       ],
       case_priority: ["low", "medium", "high", "critical"],
-      case_source: ["system", "manual", "api", "webhook"],
-      case_status: ["open", "investigating", "escalated", "resolved", "closed"],
-      case_type: ["kyc", "aml", "transaction", "document", "sanctions", "pep"],
+      case_source: ["manual", "system", "external"],
+      case_status: ["open", "in_progress", "resolved", "closed"],
+      case_type: ["kyc", "aml", "sanctions", "fraud", "other"],
       customer_role: [
-        "admin",
-        "compliance_officer",
-        "analyst",
-        "viewer",
-        "support",
+        "customer_admin",
+        "customer_compliance",
+        "customer_executive",
+        "customer_support",
       ],
       document_status: ["pending", "verified", "rejected"],
       document_type: [
         "passport",
-        "id",
-        "license",
+        "drivers_license",
         "utility_bill",
         "bank_statement",
         "other",
       ],
-      pattern_category: ["structuring", "velocity", "geography", "amount"],
+      pattern_category: [
+        "structuring",
+        "round_amounts",
+        "velocity",
+        "geographic",
+        "time_based",
+      ],
       platform_role: ["platform_admin", "platform_support"],
       sar_status: ["draft", "submitted", "filed", "rejected"],
       user_role: ["admin", "complianceOfficer", "executive", "support"],

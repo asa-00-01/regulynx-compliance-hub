@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { PlatformRole, CustomerRole, Customer, ExtendedUserProfile } from '@/types/platform-roles';
 
@@ -80,7 +81,10 @@ export class SupabasePlatformRoleService {
         avatar_url,
         created_at,
         updated_at,
-        customer_id
+        customer_id,
+        role,
+        risk_score,
+        status
       `)
       .eq('customer_id', customerId);
 
@@ -89,21 +93,18 @@ export class SupabasePlatformRoleService {
     // For each user, get their platform and customer roles
     const usersWithRoles = await Promise.all(
       (data || []).map(async (profile) => {
-        const [platformRolesResult, customerRolesResult, customerResult] = await Promise.all([
+        const [platformRoles, customerRoles, customer] = await Promise.all([
           this.getUserPlatformRoles(profile.id),
-          this.getUserCustomerRoles(profile.id, customerId),
+          this.getUserCustomerRoles(profile.id),
           customerId ? this.getCustomer(customerId) : Promise.resolve(null)
         ]);
 
         return {
           ...profile,
-          role: 'support' as any, // Legacy role for backward compatibility
-          riskScore: 0,
-          status: 'verified' as const,
-          platform_roles: platformRolesResult,
-          customer_roles: customerRolesResult,
-          customer: customerResult,
-          isPlatformOwner: platformRolesResult.length > 0
+          platform_roles: platformRoles,
+          customer_roles: customerRoles,
+          customer: customer,
+          isPlatformOwner: platformRoles.length > 0
         } as ExtendedUserProfile;
       })
     );
@@ -145,15 +146,14 @@ export class SupabasePlatformRoleService {
     return (data || []).map(row => row.role as PlatformRole);
   }
 
-  // Customer role management - using the correct RPC functions
+  // Customer role management
   static async assignCustomerRole(userId: string, customerId: string, role: CustomerRole): Promise<void> {
-    // Insert into user_roles table directly using available columns
     const { error } = await supabase
       .from('user_roles')
       .insert({
         user_id: userId,
         customer_id: customerId,
-        role: role as any // Cast to work with the current schema
+        role: role
       });
 
     if (error && error.code !== '23505') { // Ignore duplicate key errors
@@ -167,32 +167,25 @@ export class SupabasePlatformRoleService {
       .delete()
       .eq('user_id', userId)
       .eq('customer_id', customerId)
-      .eq('role', role as any);
+      .eq('role', role);
 
     if (error) {
       console.warn('Failed to remove customer role:', error);
     }
   }
 
-  static async getUserCustomerRoles(userId: string, customerId?: string): Promise<CustomerRole[]> {
+  static async getUserCustomerRoles(userId: string): Promise<CustomerRole[]> {
     try {
-      // Use the existing RPC function to get customer roles
-      const { data, error } = await supabase.rpc('get_user_customer_roles', {
-        _user_id: userId
-      });
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
 
       if (error) throw error;
       
-      // Handle the returned data properly - it should be an array of roles
-      if (Array.isArray(data)) {
-        return data.map(role => role as CustomerRole);
-      }
-      
-      // If it's not an array, return empty array
-      return [];
+      return (data || []).map(row => row.role as CustomerRole);
     } catch (error) {
-      // Fallback to empty array if RPC doesn't work as expected
-      console.warn('Failed to get customer roles, returning empty array:', error);
+      console.warn('Failed to get customer roles:', error);
       return [];
     }
   }
@@ -216,7 +209,6 @@ export class SupabasePlatformRoleService {
 
     return {
       ...profile,
-      role: profile.role || 'support', // Legacy role
       riskScore: profile.risk_score || 0,
       status: this.mapStatus(profile.status),
       platform_roles: platformRoles,

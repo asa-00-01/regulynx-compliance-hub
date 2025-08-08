@@ -9,6 +9,8 @@ export type DocumentType = Database['public']['Enums']['document_type'];
 export type CaseSource = Database['public']['Enums']['case_source'];
 export type PlatformRole = Database['public']['Enums']['platform_role'];
 export type CustomerRole = Database['public']['Enums']['customer_role'];
+export type UserRole = Database['public']['Enums']['user_role'];
+export type UserStatus = Database['public']['Enums']['user_status'];
 
 // Table row types
 export type Profile = Database['public']['Tables']['profiles']['Row'];
