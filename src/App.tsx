@@ -6,7 +6,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import AppRoutes from '@/components/app/AppRoutes';
 import AppInitializer from '@/components/app/AppInitializer';
 import SecurityProvider from '@/components/security/SecurityProvider';
-import EnvironmentChecker from '@/components/common/EnvironmentChecker';
 import EnhancedErrorBoundary from '@/components/common/EnhancedErrorBoundary';
 import { useErrorTracking } from '@/hooks/useErrorTracking';
 
@@ -40,7 +39,6 @@ function App() {
         <SecurityProvider>
           <AuthProvider>
             <AppInitializer>
-              <EnvironmentChecker />
               <DashboardLayout>
                 <AppRoutes />
               </DashboardLayout>
