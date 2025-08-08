@@ -112,7 +112,7 @@ const generateMainIdentityDocument = (user: EnhancedUserProfile): EnhancedDocume
   return {
     id: generateUUID(),
     userId: user.id,
-    type: isPassport ? 'passport' : 'id',
+    type: isPassport ? 'passport' : 'other',
     fileName: `${isPassport ? 'passport' : 'national_id'}_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: documentStatus,
@@ -148,7 +148,7 @@ const generateAddressDocument = (user: EnhancedUserProfile): EnhancedDocument =>
   return {
     id: generateUUID(),
     userId: user.id,
-    type: 'license', // Using license type for address proof
+    type: 'utility_bill',
     fileName: `address_proof_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: documentStatus,
@@ -191,7 +191,7 @@ const generateSourceOfFundsDocument = (user: EnhancedUserProfile): EnhancedDocum
   return {
     id: generateUUID(),
     userId: user.id,
-    type: 'passport', // Using passport type for financial documents
+    type: 'bank_statement',
     fileName: `source_of_funds_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: 'pending',
@@ -230,7 +230,7 @@ const generateFinancialDocument = (user: EnhancedUserProfile): EnhancedDocument 
   return {
     id: generateUUID(),
     userId: user.id,
-    type: 'id',
+    type: 'other',
     fileName: `bank_statement_${user.firstName}_${user.lastName}.pdf`,
     uploadDate,
     status: 'pending',

@@ -9,7 +9,7 @@ const getRandomDateInPast = (daysBack: number): string => {
 };
 
 export const generateDocumentsForUser = (user: typeof userProfiles[0]): Document[] => {
-  const documentTypes: ('passport' | 'id' | 'license')[] = ['passport', 'id', 'license'];
+  const documentTypes: ('passport' | 'drivers_license' | 'utility_bill')[] = ['passport', 'drivers_license', 'utility_bill'];
   const documents: Document[] = [];
   
   documentTypes.forEach((type, index) => {
@@ -55,8 +55,8 @@ export const generateDocumentsForUser = (user: typeof userProfiles[0]): Document
     documents.push({
       id: `doc_${user.id}_additional`,
       userId: user.id,
-      type: 'passport',
-      fileName: `additional_passport_${user.fullName.replace(/\s+/g, '_')}.pdf`,
+      type: 'bank_statement',
+      fileName: `bank_statement_${user.fullName.replace(/\s+/g, '_')}.pdf`,
       uploadDate: getRandomDateInPast(30),
       status: 'pending',
       extractedData: {

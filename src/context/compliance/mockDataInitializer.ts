@@ -50,7 +50,7 @@ export const initializeMockData = (): UnifiedUserData[] => {
     const kycStatus = kycStatuses[Math.floor(Math.random() * kycStatuses.length)];
     const createdAt = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Generate documents for each user - matching the Document type from types/index.ts
+    // Generate documents for each user - using valid DocumentType values
     const documents = [
       {
         id: `doc_${userId}_passport`,
@@ -69,10 +69,10 @@ export const initializeMockData = (): UnifiedUserData[] => {
         }
       },
       {
-        id: `doc_${userId}_id`,
+        id: `doc_${userId}_drivers_license`,
         userId: userId,
-        type: 'id' as const,
-        fileName: `id_${userId.split('-')[0]}.pdf`,
+        type: 'drivers_license' as const,
+        fileName: `drivers_license_${userId.split('-')[0]}.pdf`,
         uploadDate: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'pending' as const,
         verifiedBy: undefined,
@@ -85,19 +85,18 @@ export const initializeMockData = (): UnifiedUserData[] => {
         }
       },
       {
-        id: `doc_${userId}_license`,
+        id: `doc_${userId}_utility_bill`,
         userId: userId,
-        type: 'license' as const,
-        fileName: `license_${userId.split('-')[0]}.pdf`,
+        type: 'utility_bill' as const,
+        fileName: `utility_bill_${userId.split('-')[0]}.pdf`,
         uploadDate: new Date(Date.now() - Math.random() * 21 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'rejected' as const,
         verifiedBy: undefined,
         verificationDate: undefined,
         extractedData: {
           name: userData.fullName,
-          idNumber: userData.identityNumber,
-          dateOfBirth: userData.dateOfBirth,
-          nationality: userData.nationality
+          address: userData.address,
+          dateOfBirth: userData.dateOfBirth
         }
       }
     ];
