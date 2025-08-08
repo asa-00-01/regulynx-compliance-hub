@@ -1,73 +1,67 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Edit, FileWarning, Calendar, User } from 'lucide-react';
+import { Eye, FileWarning, Edit3, Send } from 'lucide-react';
 import { SAR } from '@/types/sar';
-import { useCompliance } from '@/context/ComplianceContext';
+import { format } from 'date-fns';
 
 interface SARListProps {
   sars: SAR[];
   onViewSAR: (id: string) => void;
   onCreateNewSAR: () => void;
+  onEditDraft?: (sar: SAR) => void;
   loading?: boolean;
 }
 
-const SARList: React.FC<SARListProps> = ({ sars, onViewSAR, onCreateNewSAR, loading }) => {
-  const { getUserById } = useCompliance();
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'submitted':
-        return 'default';
-      case 'reviewed':
-        return 'secondary';
-      case 'draft':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
+const SARList: React.FC<SARListProps> = ({ 
+  sars, 
+  onViewSAR, 
+  onCreateNewSAR, 
+  onEditDraft,
+  loading = false 
+}) => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-48">
-          <div className="text-center">
-            <FileWarning className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading SAR reports...</p>
-          </div>
+        <CardContent className="flex items-center justify-center h-32">
+          <div className="text-muted-foreground">Loading SAR reports...</div>
         </CardContent>
       </Card>
     );
   }
 
-  if (sars.length === 0) {
+  if (!sars || sars.length === 0) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center h-48">
-          <FileWarning className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No SAR Reports</h3>
-          <p className="text-muted-foreground text-center mb-4">
-            No suspicious activity reports have been created yet.
-          </p>
+        <CardContent className="flex flex-col items-center justify-center h-32 space-y-4">
+          <FileWarning className="h-12 w-12 text-muted-foreground" />
+          <div className="text-center">
+            <p className="text-lg font-medium">No SAR reports found</p>
+            <p className="text-muted-foreground">Create your first SAR report to get started.</p>
+          </div>
           <Button onClick={onCreateNewSAR}>
-            Create First SAR Report
+            Create New SAR
           </Button>
         </CardContent>
       </Card>
     );
   }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Badge variant="secondary">Draft</Badge>;
+      case 'submitted':
+        return <Badge variant="default">Submitted</Badge>;
+      case 'reviewed':
+        return <Badge variant="outline">Reviewed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   return (
     <Card>
@@ -79,69 +73,59 @@ const SARList: React.FC<SARListProps> = ({ sars, onViewSAR, onCreateNewSAR, load
           <TableHeader>
             <TableRow>
               <TableHead>SAR ID</TableHead>
-              <TableHead>Subject User</TableHead>
+              <TableHead>User</TableHead>
               <TableHead>Date of Activity</TableHead>
               <TableHead>Date Submitted</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Summary</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sars.map((sar) => {
-              const user = getUserById(sar.userId);
-              return (
-                <TableRow key={sar.id}>
-                  <TableCell className="font-medium">{sar.id}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user?.fullName || sar.userName}</p>
-                        <p className="text-sm text-muted-foreground">{user?.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {formatDate(sar.dateOfActivity)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDate(sar.dateSubmitted)}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(sar.status)}>
-                      {sar.status.toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    <p className="truncate" title={sar.summary}>
-                      {sar.summary}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+            {sars.map((sar) => (
+              <TableRow key={sar.id}>
+                <TableCell className="font-mono text-sm">{sar.id.slice(0, 8)}...</TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{sar.userName}</div>
+                    <div className="text-sm text-muted-foreground">{sar.userId.slice(0, 8)}...</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {format(new Date(sar.dateOfActivity), 'MMM dd, yyyy')}
+                </TableCell>
+                <TableCell>
+                  {format(new Date(sar.dateSubmitted), 'MMM dd, yyyy')}
+                </TableCell>
+                <TableCell>{getStatusBadge(sar.status)}</TableCell>
+                <TableCell>
+                  <div className="max-w-xs truncate" title={sar.summary}>
+                    {sar.summary}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewSAR(sar.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {sar.status === 'draft' && onEditDraft && (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => onViewSAR(sar.id)}
+                        onClick={() => onEditDraft(sar)}
                       >
-                        <Eye className="h-4 w-4" />
+                        <Edit3 className="h-4 w-4 mr-1" />
+                        Edit Draft
                       </Button>
-                      {sar.status === 'draft' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onViewSAR(sar.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>

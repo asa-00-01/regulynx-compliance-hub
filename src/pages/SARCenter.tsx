@@ -16,6 +16,7 @@ import { SAR } from '@/types/sar';
 const SARCenter = () => {
   const [activeTab, setActiveTab] = useState('reports');
   const [showNewSARForm, setShowNewSARForm] = useState(false);
+  const [editingSAR, setEditingSAR] = useState<SAR | null>(null);
   const [selectedSAR, setSelectedSAR] = useState<SAR | null>(null);
   const [showSARDetails, setShowSARDetails] = useState(false);
   const { t } = useTranslation();
@@ -32,9 +33,35 @@ const SARCenter = () => {
     try {
       await createSAR(sarData);
       setShowNewSARForm(false);
+      setEditingSAR(null);
     } catch (error) {
       console.error('Error creating SAR:', error);
     }
+  };
+
+  const handleUpdateSAR = async (sarData: any) => {
+    if (!editingSAR) return;
+    
+    try {
+      await updateSAR({ 
+        id: editingSAR.id, 
+        updates: sarData 
+      });
+      setEditingSAR(null);
+      setShowNewSARForm(false);
+    } catch (error) {
+      console.error('Error updating SAR:', error);
+    }
+  };
+
+  const handleEditDraft = (sar: SAR) => {
+    setEditingSAR(sar);
+    setShowNewSARForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowNewSARForm(false);
+    setEditingSAR(null);
   };
 
   const handleViewSAR = (id: string) => {
@@ -43,6 +70,11 @@ const SARCenter = () => {
       setSelectedSAR(sar);
       setShowSARDetails(true);
     }
+  };
+
+  const handleCreateNewSAR = () => {
+    setEditingSAR(null);
+    setShowNewSARForm(true);
   };
 
   return (
@@ -55,7 +87,7 @@ const SARCenter = () => {
               Suspicious Activity Report management and regulatory compliance center.
             </p>
           </div>
-          <Button onClick={() => setShowNewSARForm(true)}>
+          <Button onClick={handleCreateNewSAR}>
             <Plus className="h-4 w-4 mr-2" />
             New SAR Report
           </Button>
@@ -130,12 +162,15 @@ const SARCenter = () => {
             {showNewSARForm ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>New SAR Report</CardTitle>
+                  <CardTitle>
+                    {editingSAR ? 'Edit SAR Draft' : 'New SAR Report'}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <SARForm 
-                    onSubmit={handleCreateSAR}
-                    onCancel={() => setShowNewSARForm(false)}
+                    onSubmit={editingSAR ? handleUpdateSAR : handleCreateSAR}
+                    onCancel={handleCancelForm}
+                    initialData={editingSAR || undefined}
                   />
                 </CardContent>
               </Card>
@@ -143,7 +178,8 @@ const SARCenter = () => {
               <SARList 
                 sars={sars}
                 onViewSAR={handleViewSAR}
-                onCreateNewSAR={() => setShowNewSARForm(true)}
+                onCreateNewSAR={handleCreateNewSAR}
+                onEditDraft={handleEditDraft}
                 loading={loading}
               />
             )}
