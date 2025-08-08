@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -96,14 +97,12 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
     if (!onDocumentSelect) return;
     
     if (checked) {
-      // Select all documents on current page
       paginatedDocuments.forEach(doc => {
         if (!selectedDocuments.includes(doc.id)) {
           onDocumentSelect(doc.id);
         }
       });
     } else {
-      // Deselect all documents on current page
       paginatedDocuments.forEach(doc => {
         if (selectedDocuments.includes(doc.id)) {
           onDocumentSelect(doc.id);
@@ -166,31 +165,39 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
                       <TableCell>
                         <Checkbox
                           checked={selectedDocuments.includes(document.id)}
-                          onCheckedChange={() => onDocumentSelect(document.id)}
+                          onCheckedChange={() => onDocumentSelect!(document.id)}
                         />
                       </TableCell>
                     )}
-                    <TableCell className="font-medium">{document.file_name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(document.status)}
+                        <div>
+                          <div className="font-medium">{document.file_name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {document.document_type}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{getCustomerName(document.user_id)}</span>
+                        {getCustomerName(document.user_id)}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(document.status as DocumentStatus)}
-                        {getStatusBadge(document.status as DocumentStatus)}
-                      </div>
+                      {getStatusBadge(document.status)}
                     </TableCell>
                     <TableCell>
-                      {formatDate(document.upload_date)}
+                      {formatDate(document.created_at)}
                     </TableCell>
                     <TableCell className="text-right">
                       <DocumentActionButtons
                         document={document}
                         onViewDocument={onViewDocument}
                         onReviewDocument={onReviewDocument}
+                        size="sm"
                       />
                     </TableCell>
                   </TableRow>
@@ -199,9 +206,8 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
             </TableBody>
           </Table>
         </div>
-        
-        {/* Pagination */}
-        {!loading && filteredDocuments.length > 0 && (
+
+        {paginatedDocuments.length > 0 && (
           <DocumentsPagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -212,9 +218,9 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
             hasNextPage={hasNextPage}
             hasPrevPage={hasPrevPage}
             onPageChange={goToPage}
-            onItemsPerPageChange={setItemsPerPage}
             onNextPage={goToNextPage}
             onPrevPage={goToPrevPage}
+            onItemsPerPageChange={setItemsPerPage}
           />
         )}
       </Tabs>

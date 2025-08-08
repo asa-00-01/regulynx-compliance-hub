@@ -1,128 +1,191 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import TransactionsOverviewTable from './TransactionsOverviewTable';
-import { AMLTransaction } from '@/types/aml';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AMLTransaction } from '@/types/aml';
+import { Eye, Flag, FileText, AlertTriangle } from 'lucide-react';
 
 interface AMLTransactionTableSectionProps {
-  filteredTransactions: AMLTransaction[];
-  onViewDetails: (transaction: AMLTransaction) => void;
+  transactions: AMLTransaction[];
+  onViewTransaction: (transaction: AMLTransaction) => void;
   onFlagTransaction: (transaction: AMLTransaction) => void;
   onCreateCase: (transaction: AMLTransaction) => void;
-  showUserColumn: boolean;
-  // Pagination props
-  currentPage: number;
-  totalPages: number;
-  goToPage: (page: number) => void;
-  goToNextPage: () => void;
-  goToPrevPage: () => void;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-  startIndex: number;
-  endIndex: number;
-  totalItems: number;
+  loading?: boolean;
 }
 
 const AMLTransactionTableSection: React.FC<AMLTransactionTableSectionProps> = ({
-  filteredTransactions,
-  onViewDetails,
+  transactions,
+  onViewTransaction,
   onFlagTransaction,
   onCreateCase,
-  showUserColumn,
-  currentPage,
-  totalPages,
-  goToPage,
-  goToNextPage,
-  goToPrevPage,
-  hasNextPage,
-  hasPrevPage,
-  startIndex,
-  endIndex,
-  totalItems,
+  loading = false
 }) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>AML Transaction Monitoring</CardTitle>
-        <CardDescription>
-          Review transactions for suspicious activity and compliance violations
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <TransactionsOverviewTable
-          transactions={filteredTransactions}
-          onViewDetails={onViewDetails}
-          onFlagTransaction={onFlagTransaction}
-          onCreateCase={onCreateCase}
-          showUserColumn={showUserColumn}
-        />
-      </CardContent>
-      {totalPages > 1 && (
-        <div className="border-t p-4 flex items-center justify-between flex-wrap gap-2">
-            <div className="text-sm text-muted-foreground">
-                Showing {startIndex} to {endIndex} of {totalItems} transactions.
-            </div>
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={(e) => { e.preventDefault(); goToPrevPage(); }}
-                    href="#"
-                    className={!hasPrevPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(page => {
-                    return page === 1 || 
-                           page === totalPages || 
-                           Math.abs(page - currentPage) <= 1;
-                  })
-                  .map((page, index, array) => {
-                    const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
-                    
-                    return (
-                      <React.Fragment key={page}>
-                        {showEllipsisBefore && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={(e) => { e.preventDefault(); goToPage(page); }}
-                            href="#"
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </React.Fragment>
-                    );
-                  })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={(e) => { e.preventDefault(); goToNextPage(); }}
-                    href="#"
-                    className={!hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+  const getRiskBadgeVariant = (riskScore: number) => {
+    if (riskScore >= 75) return 'destructive';
+    if (riskScore >= 50) return 'default';
+    if (riskScore >= 25) return 'secondary';
+    return 'outline';
+  };
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-muted-foreground">Loading transactions...</div>
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">No Transactions Found</h3>
+          <p className="text-sm text-muted-foreground">
+            No transactions match the current filters.
+          </p>
         </div>
-      )}
-    </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Transaction ID</TableHead>
+            <TableHead>Sender</TableHead>
+            <TableHead>Recipient</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Risk Score</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((transaction) => (
+            <TableRow key={transaction.id}>
+              <TableCell className="font-mono text-sm">
+                {transaction.id.substring(0, 8)}...
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{transaction.senderName}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {transaction.senderCountry}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{transaction.receiverName}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {transaction.receiverCountry}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">
+                    {formatCurrency(transaction.senderAmount, transaction.senderCurrency)}
+                  </div>
+                  {transaction.senderCurrency !== transaction.receiverCurrency && (
+                    <div className="text-sm text-muted-foreground">
+                      {formatCurrency(transaction.receiverAmount, transaction.receiverCurrency)}
+                    </div>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm">
+                  {formatDate(transaction.timestamp)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant={getRiskBadgeVariant(transaction.riskScore)}>
+                  {transaction.riskScore}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-col gap-1">
+                  {transaction.status === 'flagged' && (
+                    <Badge variant="destructive" className="text-xs">
+                      Flagged
+                    </Badge>
+                  )}
+                  {transaction.isSuspect && (
+                    <Badge variant="outline" className="text-xs">
+                      Suspect
+                    </Badge>
+                  )}
+                  {transaction.status === 'normal' && (
+                    <Badge variant="secondary" className="text-xs">
+                      Normal
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewTransaction(transaction)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onFlagTransaction(transaction)}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onCreateCase(transaction)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
