@@ -108,7 +108,7 @@ const TransactionActions: React.FC<TransactionActionsProps> = ({ transaction, on
 
   const getRiskLevelColor = () => {
     if (transaction.riskScore >= 75) return 'destructive';
-    if (transaction.riskScore >= 50) return 'warning';
+    if (transaction.riskScore >= 50) return 'default';
     if (transaction.riskScore >= 25) return 'secondary';
     return 'outline';
   };
@@ -127,7 +127,6 @@ const TransactionActions: React.FC<TransactionActionsProps> = ({ transaction, on
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Immediate Actions */}
         <TransactionActionButtons
           transaction={transaction}
           loading={loading}
@@ -137,14 +136,12 @@ const TransactionActions: React.FC<TransactionActionsProps> = ({ transaction, on
           onViewUserProfile={handleViewUserProfile}
         />
 
-        {/* Investigation Actions */}
         <TransactionInvestigationActions
           transaction={transaction}
           loading={loading}
           onViewUserTransactions={handleViewUserTransactions}
         />
 
-        {/* Transaction Details Summary */}
         <TransactionSummary transaction={transaction} />
       </CardContent>
     </Card>

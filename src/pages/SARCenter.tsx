@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,17 +7,21 @@ import { FileWarning, Plus, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import SARList from '@/components/sar/SARList';
 import SARForm from '@/components/sar/SARForm';
+import SARDetailsModal from '@/components/sar/SARDetailsModal';
 import GoAMLReporting from '@/components/sar/GoAMLReporting';
 import { useSARData } from '@/hooks/useSARData';
 import { useTranslation } from 'react-i18next';
+import { SAR } from '@/types/sar';
 
 const SARCenter = () => {
   const [activeTab, setActiveTab] = useState('reports');
   const [showNewSARForm, setShowNewSARForm] = useState(false);
+  const [selectedSAR, setSelectedSAR] = useState<SAR | null>(null);
+  const [showSARDetails, setShowSARDetails] = useState(false);
   const { t } = useTranslation();
   
   const {
-    sars = [], // Add fallback to empty array
+    sars = [],
     loading,
     createSAR,
     updateSAR,
@@ -35,8 +38,11 @@ const SARCenter = () => {
   };
 
   const handleViewSAR = (id: string) => {
-    // Handle SAR viewing logic
-    console.log('Viewing SAR:', id);
+    const sar = sars.find(s => s.id === id);
+    if (sar) {
+      setSelectedSAR(sar);
+      setShowSARDetails(true);
+    }
   };
 
   return (
@@ -147,6 +153,12 @@ const SARCenter = () => {
             <GoAMLReporting sars={sars || []} />
           </TabsContent>
         </Tabs>
+
+        <SARDetailsModal
+          sar={selectedSAR}
+          open={showSARDetails}
+          onOpenChange={setShowSARDetails}
+        />
       </div>
     </DashboardLayout>
   );

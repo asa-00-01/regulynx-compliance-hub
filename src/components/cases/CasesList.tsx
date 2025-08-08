@@ -13,15 +13,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileTextIcon, AlertTriangleIcon, ShieldIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import CaseActionButtons from './CaseActionButtons';
 
 interface CasesListProps {
   cases: ComplianceCaseDetails[];
   loading: boolean;
   onSelectCase: (caseItem: ComplianceCaseDetails) => void;
+  onCaseUpdated?: () => void;
 }
 
-const CasesList: React.FC<CasesListProps> = ({ cases, loading, onSelectCase }) => {
-  // Helper functions for display
+const CasesList: React.FC<CasesListProps> = ({ 
+  cases, 
+  loading, 
+  onSelectCase, 
+  onCaseUpdated 
+}) => {
   const getCaseTypeIcon = (type: string) => {
     switch (type) {
       case 'kyc':
@@ -84,6 +90,7 @@ const CasesList: React.FC<CasesListProps> = ({ cases, loading, onSelectCase }) =
               <TableHead>Priority</TableHead>
               <TableHead>Risk Score</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,6 +103,7 @@ const CasesList: React.FC<CasesListProps> = ({ cases, loading, onSelectCase }) =
                 <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-6 w-12" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-8 w-32" /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -125,15 +133,12 @@ const CasesList: React.FC<CasesListProps> = ({ cases, loading, onSelectCase }) =
             <TableHead>Priority</TableHead>
             <TableHead>Risk Score</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {cases.map((caseItem) => (
-            <TableRow 
-              key={caseItem.id}
-              onClick={() => onSelectCase(caseItem)}
-              className="cursor-pointer hover:bg-muted/50"
-            >
+            <TableRow key={caseItem.id}>
               <TableCell className="font-medium">{caseItem.id}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
@@ -158,6 +163,12 @@ const CasesList: React.FC<CasesListProps> = ({ cases, loading, onSelectCase }) =
                 </span>
               </TableCell>
               <TableCell>{formatDate(caseItem.createdAt)}</TableCell>
+              <TableCell>
+                <CaseActionButtons 
+                  caseItem={caseItem} 
+                  onCaseUpdated={onCaseUpdated}
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

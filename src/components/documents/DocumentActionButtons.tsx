@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentStatus, Document } from '@/types/supabase';
 import { Check, X, Eye, FileText } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { createAuditLog, supabase } from '@/integrations/supabase/client';
 import { useFeatureAccess } from '@/hooks/use-permissions';
 
@@ -28,13 +29,11 @@ const DocumentActionButtons = ({
   const { toast } = useToast();
   const { canApproveDocuments } = useFeatureAccess();
   
-  // Get the document ID and status from either the document object or the passed props
   const id = document?.id || documentId || '';
   const status = document?.status || currentStatus || 'pending';
   
   const updateDocumentStatus = async (newStatus: DocumentStatus) => {
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -46,7 +45,6 @@ const DocumentActionButtons = ({
         return;
       }
       
-      // Update document status
       const { error } = await supabase
         .from('documents')
         .update({
@@ -58,7 +56,6 @@ const DocumentActionButtons = ({
       
       if (error) throw error;
       
-      // Create audit log
       await createAuditLog({
         action: newStatus === 'verified' ? 'Document Approved' : 'Document Rejected',
         entity: 'document',
@@ -67,13 +64,11 @@ const DocumentActionButtons = ({
         details: { status: newStatus }
       });
       
-      // Show success message
       toast({
         title: `Document ${newStatus === 'verified' ? 'approved' : 'rejected'}`,
         description: `The document has been ${newStatus === 'verified' ? 'approved' : 'rejected'} successfully.`,
       });
       
-      // Call callback if provided
       if (onStatusChange) {
         onStatusChange(id, newStatus);
       }
@@ -87,7 +82,6 @@ const DocumentActionButtons = ({
     }
   };
   
-  // Don't show approval/rejection buttons if already verified or rejected or if user can't approve documents
   const showApprovalButtons = status === 'pending' && canApproveDocuments();
   
   return (
