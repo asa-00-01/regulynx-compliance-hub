@@ -21,6 +21,7 @@ export interface ExtendedUser {
   riskScore: number;
   status: 'verified' | 'pending' | 'rejected' | 'information_requested';
   avatarUrl?: string;
+  image?: string; // Added for compatibility with Sidebar component
   title?: string;
   department?: string;
   phone?: string;

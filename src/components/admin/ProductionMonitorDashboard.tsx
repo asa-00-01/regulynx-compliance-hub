@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -136,7 +137,7 @@ const ProductionMonitorDashboard: React.FC = () => {
   }
 
   return (
-    <Tabs defaultvalue="health" className="w-full space-y-4">
+    <Tabs defaultValue="health" className="w-full space-y-4">
       <TabsList>
         <TabsTrigger value="health"><Activity className="mr-2 h-4 w-4" /> System Health</TabsTrigger>
         <TabsTrigger value="backups"><Database className="mr-2 h-4 w-4" /> Backups</TabsTrigger>
