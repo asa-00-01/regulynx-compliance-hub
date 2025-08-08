@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,17 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
   );
   const [noteInput, setNoteInput] = useState('');
 
+  // Sync selectedTransactions with formData.transactions on mount and when initialData changes
+  useEffect(() => {
+    if (initialData?.transactions) {
+      setSelectedTransactions(initialData.transactions);
+      setFormData(prev => ({
+        ...prev,
+        transactions: initialData.transactions || []
+      }));
+    }
+  }, [initialData?.transactions]);
+
   const handleUserChange = (userId: string) => {
     const selectedUser = state.users.find(user => user.id === userId);
     setFormData(prev => ({
@@ -45,12 +56,16 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
   };
 
   const handleTransactionToggle = (transactionId: string) => {
+    console.log('Toggling transaction:', transactionId);
+    
     setSelectedTransactions(prev => {
       const updated = prev.includes(transactionId)
         ? prev.filter(id => id !== transactionId)
         : [...prev, transactionId];
       
-      // Update formData immediately when transactions change
+      console.log('Updated selected transactions:', updated);
+      
+      // Immediately update formData when transactions change
       setFormData(prevForm => ({
         ...prevForm,
         transactions: updated
@@ -79,11 +94,14 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
 
   const handleSubmit = (status: 'draft' | 'submitted') => {
     console.log('Submitting SAR with transactions:', selectedTransactions);
+    console.log('Form data transactions:', formData.transactions);
+    
     const finalData = {
       ...formData,
       status,
-      transactions: selectedTransactions // Ensure transactions are included
+      transactions: selectedTransactions // Ensure we use the latest selectedTransactions
     };
+    
     console.log('Final SAR data being submitted:', finalData);
     onSubmit(finalData);
   };
@@ -203,7 +221,7 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
             {mockAvailableTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex items-center space-x-2 p-2 border rounded hover:bg-muted cursor-pointer"
+                className="flex items-center space-x-2 p-3 border rounded hover:bg-muted cursor-pointer"
                 onClick={() => handleTransactionToggle(transaction.id)}
               >
                 <input
@@ -211,8 +229,14 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
                   checked={selectedTransactions.includes(transaction.id)}
                   onChange={() => handleTransactionToggle(transaction.id)}
                   className="rounded"
+                  onClick={(e) => e.stopPropagation()} // Prevent double toggle
                 />
-                <span className="text-sm">{transaction.description}</span>
+                <div className="flex-1">
+                  <span className="text-sm font-medium">{transaction.description}</span>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Amount: {transaction.amount} {transaction.currency} | Date: {transaction.date}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -224,7 +248,7 @@ const SARForm: React.FC<SARFormProps> = ({ onSubmit, onCancel, initialData }) =>
                   const tx = mockAvailableTransactions.find(t => t.id === txId);
                   return tx ? (
                     <Badge key={txId} variant="outline">
-                      {txId}
+                      {tx.description} ({tx.amount} {tx.currency})
                     </Badge>
                   ) : null;
                 })}
