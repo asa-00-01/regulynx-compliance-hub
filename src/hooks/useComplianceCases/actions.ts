@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -73,10 +72,19 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
-      // Map application status to database status if needed
-      let dbStatus = newStatus;
-      if (newStatus === 'under_review') dbStatus = 'under_review';
-      if (newStatus === 'pending_info') dbStatus = 'pending_info';
+      // Map application status to database status
+      let dbStatus: string = newStatus;
+      switch (newStatus) {
+        case 'under_review':
+        case 'pending_info':
+          dbStatus = 'investigating';
+          break;
+        case 'closed':
+          dbStatus = 'resolved';
+          break;
+        default:
+          dbStatus = newStatus;
+      }
       
       const { error: updateError } = await supabase
         .from('compliance_cases')

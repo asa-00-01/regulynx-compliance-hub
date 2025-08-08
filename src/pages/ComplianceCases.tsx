@@ -24,14 +24,16 @@ const ComplianceCases = () => {
   
   const location = useLocation();
   
-  // Convert ExtendedUser to User for compatibility
+  // Convert ExtendedUser to User for compatibility - fix status mapping
   const compatibleUser: User | undefined = user ? {
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
     riskScore: user.riskScore,
-    status: user.status === 'rejected' ? 'flagged' : user.status === 'information_requested' ? 'pending' : user.status,
+    status: user.status === 'verified' ? 'verified' : 
+            user.status === 'information_requested' ? 'information_requested' :
+            user.status === 'rejected' ? 'rejected' : 'pending', // Map all other cases to pending
     avatarUrl: user.avatarUrl,
     department: user.department,
     phone: user.phone,
@@ -61,14 +63,12 @@ const ComplianceCases = () => {
     if (location.state?.createCase && location.state?.userData) {
       setInitialCaseData(location.state.userData);
       setShowNewCaseDialog(true);
-      // Clear the location state to prevent modal reopening on refresh
       window.history.replaceState({}, document.title);
     } else if (location.state?.caseId && cases.length > 0) {
       const caseToSelect = cases.find(c => c.id === location.state.caseId);
       if (caseToSelect) {
         selectCase(caseToSelect);
         setActiveTab('details');
-        // Clear the location state to prevent re-triggering
         window.history.replaceState({}, document.title);
       }
     }

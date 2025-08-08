@@ -39,7 +39,6 @@ const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
   details: a.details as Record<string, any> | undefined,
 });
 
-// Map Supabase action types to our application types
 const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution' => {
   switch (supabaseType) {
     case 'created':
@@ -57,16 +56,37 @@ const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' |
   }
 };
 
+// Valid database status values based on schema
+const VALID_DB_STATUSES = ['open', 'closed', 'escalated', 'investigating', 'resolved'] as const;
+const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'transaction', 'document', 'pep'] as const;
+
 export const complianceCaseService: CaseServiceOperations = {
   async fetchCases(filters: CaseFilters): Promise<ComplianceCaseDetails[]> {
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
-      query = query.in('status', filters.status);
+      // Map application statuses to database statuses
+      const dbStatuses = filters.status.map(status => {
+        switch (status) {
+          case 'under_review': return 'investigating';
+          case 'pending_info': return 'investigating'; // Map to available status
+          default: return status;
+        }
+      }).filter(status => VALID_DB_STATUSES.includes(status as any));
+      
+      if (dbStatuses.length > 0) {
+        query = query.in('status', dbStatuses);
+      }
     }
+    
     if (filters.type && filters.type.length > 0) {
-      query = query.in('type', filters.type);
+      // Only use valid database types
+      const dbTypes = filters.type.filter(type => VALID_DB_TYPES.includes(type as any));
+      if (dbTypes.length > 0) {
+        query = query.in('type', dbTypes);
+      }
     }
+    
     if (filters.priority && filters.priority.length > 0) {
       query = query.in('priority', filters.priority);
     }

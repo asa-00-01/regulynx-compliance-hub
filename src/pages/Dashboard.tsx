@@ -1,99 +1,61 @@
-import { DashboardLayout } from '@/components/layouts/dashboard-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RecentDocumentsTable } from '@/components/tables/recent-documents-table';
-import { RiskScoreChart } from '@/components/charts/risk-score-chart';
-import { ComplianceCasesCard } from '@/components/cards/compliance-cases-card';
-import { PerformanceOverviewCard } from '@/components/cards/performance-overview-card';
-import { useAuthState } from '@/hooks/useAuthState';
 
-export default function Dashboard() {
-  const { user } = useAuthState();
+import React from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
+import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
+import ComplianceCasesCard from '@/components/dashboard/ComplianceCasesCard';
+import PerformanceOverviewCard from '@/components/dashboard/PerformanceOverviewCard';
+import DashboardMetricsCard from '@/components/dashboard/DashboardMetricsCard';
+import ComplianceSummaryCard from '@/components/dashboard/ComplianceSummaryCard';
+import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
+
+const Dashboard = () => {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const { metrics, loading } = useDashboardData();
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-6">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('dashboard.welcome')}, {user?.name}
+          </h2>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Replace with actual metric cards */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Users</CardTitle>
-              <CardDescription>Registered users on the platform</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,423</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Cases</CardTitle>
-              <CardDescription>Compliance cases currently under review</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">34</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Documents</CardTitle>
-              <CardDescription>Documents awaiting verification</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>New Alerts</CardTitle>
-              <CardDescription>Unresolved risk alerts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">8</div>
-            </CardContent>
-          </Card>
+          <DashboardMetricsCard 
+            metrics={metrics} 
+            loading={loading} 
+          />
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Risk Score Distribution</CardTitle>
-              <CardDescription>
-                Distribution of user risk scores across the platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <RiskScoreChart />
-            </CardContent>
-          </Card>
-          
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle>Recent Documents</CardTitle>
-              <CardDescription>
-                Latest document submissions requiring review
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RecentDocumentsTable />
-            </CardContent>
-          </Card>
+          <div className="col-span-4">
+            <RiskScoreChart />
+          </div>
+          <div className="col-span-3">
+            <RiskDistributionChart />
+          </div>
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-2">
-          <ComplianceCasesCard />
-          {user && (
-            <PerformanceOverviewCard 
-              user={{
-                ...user,
-                status: user.status as 'verified' | 'pending' | 'rejected' | 'information_requested'
-              }} 
-            />
-          )}
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <div className="col-span-4">
+            <RecentDocumentsTable />
+          </div>
+          <div className="col-span-3 space-y-4">
+            <ComplianceCasesCard />
+            <PerformanceOverviewCard />
+            <ComplianceSummaryCard />
+          </div>
         </div>
       </div>
     </DashboardLayout>
   );
-}
+};
+
+export default Dashboard;
