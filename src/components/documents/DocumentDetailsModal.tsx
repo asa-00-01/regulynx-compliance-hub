@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Document } from '@/types/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,38 @@ interface DocumentDetailsModalProps {
 }
 
 const DocumentDetailsModal = ({ document, open, onOpenChange }: DocumentDetailsModalProps) => {
+  const [verifierName, setVerifierName] = useState<string>('');
+  
+  useEffect(() => {
+    const fetchVerifierName = async () => {
+      if (document?.verified_by) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', document.verified_by)
+            .single();
+          
+          if (!error && data) {
+            setVerifierName(data.name);
+          } else {
+            console.warn('Could not fetch verifier name:', error);
+            setVerifierName('Unknown User');
+          }
+        } catch (err) {
+          console.error('Error fetching verifier name:', err);
+          setVerifierName('Unknown User');
+        }
+      } else {
+        setVerifierName('');
+      }
+    };
+    
+    if (open && document) {
+      fetchVerifierName();
+    }
+  }, [document, open]);
+
   if (!document) return null;
   
   const getStatusIcon = () => {
@@ -108,7 +141,7 @@ const DocumentDetailsModal = ({ document, open, onOpenChange }: DocumentDetailsM
             {document.verified_by && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Verified By</p>
-                <p className="text-sm font-mono">{document.verified_by}</p>
+                <p className="text-sm">{verifierName || 'Loading...'}</p>
               </div>
             )}
           </div>
