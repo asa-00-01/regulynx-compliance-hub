@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { ComplianceCaseDetails, CaseAction } from '@/types/case';
 import { User } from '@/types';
@@ -20,7 +21,7 @@ export const useCaseActions = (
         case_id: caseId,
         action_by: currentUser?.id,
         action_by_name: currentUser?.name,
-        action_type: 'note_added',
+        action_type: 'commented',
         description: note,
       };
 
@@ -73,20 +74,18 @@ export const useCaseActions = (
   ) => {
     try {
       // Map application status to database status with proper typing
-      let dbStatus: 'open' | 'closed' | 'escalated' | 'investigating' | 'resolved';
+      let dbStatus: 'open' | 'closed' | 'resolved' | 'in_progress';
       switch (newStatus) {
         case 'under_review':
         case 'pending_info':
-          dbStatus = 'investigating';
+        case 'escalated':
+          dbStatus = 'in_progress';
           break;
         case 'closed':
           dbStatus = 'resolved';
           break;
         case 'open':
           dbStatus = 'open';
-          break;
-        case 'escalated':
-          dbStatus = 'escalated';
           break;
         default:
           dbStatus = 'open';

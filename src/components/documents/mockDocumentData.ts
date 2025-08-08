@@ -1,3 +1,4 @@
+
 import { Document, DocumentStatus, DocumentType } from '@/types/supabase';
 import { mockDocumentsCollection } from '@/mocks/centralizedMockData';
 
@@ -19,7 +20,7 @@ export const generateMockDocument = (
   const id = randomId();
   const userId = 'mock-user-id';
   const uploadDate = randomPastDate();
-  const typeNames = { passport: 'Passport', id: 'ID Card', license: 'Driver\'s License' };
+  const typeNames = { passport: 'Passport', drivers_license: 'Driver\'s License', utility_bill: 'Utility Bill', bank_statement: 'Bank Statement', other: 'Other Document' };
   
   const extractedData: Record<string, any> = {
     name: type === 'passport' ? 'Jane Smith' : 'John Doe',
@@ -72,7 +73,7 @@ export const generateMockDocuments = (count = 5): Document[] => {
   // Fallback to generated documents
   const documents: Document[] = [];
   const statuses: DocumentStatus[] = ['pending', 'verified', 'rejected'];
-  const types: DocumentType[] = ['passport', 'id', 'license'];
+  const types: DocumentType[] = ['passport', 'drivers_license', 'utility_bill'];
   
   for (let i = 0; i < count; i++) {
     const status = statuses[Math.floor(Math.random() * statuses.length)];

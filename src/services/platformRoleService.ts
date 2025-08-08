@@ -1,53 +1,80 @@
 
-import { SupabasePlatformRoleService } from './supabasePlatformRoleService';
+import { supabase } from '@/integrations/supabase/client';
+import { PlatformRole, CustomerRole } from '@/types/platform-roles';
 
-// Use the real Supabase service for platform role management
-export class PlatformRoleService {
-  static async listCustomers() {
-    return SupabasePlatformRoleService.getCustomers();
-  }
+export const platformRoleService = {
+  async assignPlatformRole(userId: string, role: PlatformRole) {
+    const { data, error } = await supabase
+      .from('platform_roles')
+      .insert({ user_id: userId, role })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
 
-  static async getCustomers() {
-    return SupabasePlatformRoleService.getCustomers();
-  }
+  async removePlatformRole(userId: string, role: PlatformRole) {
+    const { error } = await supabase
+      .from('platform_roles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('role', role);
+    
+    if (error) throw error;
+  },
 
-  static async getCustomer(customerId: string) {
-    return SupabasePlatformRoleService.getCustomer(customerId);
-  }
+  async assignCustomerRole(userId: string, customerId: string, role: CustomerRole) {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .insert({ 
+        user_id: userId, 
+        customer_id: customerId, 
+        role 
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
 
-  static async getCustomerUsers(customerId: string) {
-    return SupabasePlatformRoleService.getCustomerUsers(customerId);
-  }
+  async removeCustomerRole(userId: string, customerId: string, role: CustomerRole) {
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('customer_id', customerId)
+      .eq('role', role);
+    
+    if (error) throw error;
+  },
 
-  static async createCustomer(customerData: any) {
-    return SupabasePlatformRoleService.createCustomer(customerData);
-  }
+  async getUserPlatformRoles(userId: string) {
+    const { data, error } = await supabase
+      .from('platform_roles')
+      .select('role')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data?.map(r => r.role) || [];
+  },
 
-  static async updateCustomer(customerId: string, updates: any) {
-    return SupabasePlatformRoleService.updateCustomer(customerId, updates);
-  }
+  async getUserCustomerRoles(userId: string) {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role, customer_id')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data || [];
+  },
 
-  static async assignPlatformRole(userId: string, role: any) {
-    return SupabasePlatformRoleService.assignPlatformRole(userId, role);
+  async checkPlatformRole(userId: string, role: PlatformRole) {
+    const { data, error } = await supabase
+      .rpc('has_platform_role', { _user_id: userId, _role: role });
+    
+    if (error) throw error;
+    return data;
   }
-
-  static async removePlatformRole(userId: string, role: any) {
-    return SupabasePlatformRoleService.removePlatformRole(userId, role);
-  }
-
-  static async getUserPlatformRoles(userId: string) {
-    return SupabasePlatformRoleService.getUserPlatformRoles(userId);
-  }
-
-  static async assignCustomerRole(userId: string, customerId: string, role: any) {
-    return SupabasePlatformRoleService.assignCustomerRole(userId, customerId, role);
-  }
-
-  static async removeCustomerRole(userId: string, customerId: string, role: any) {
-    return SupabasePlatformRoleService.removeCustomerRole(userId, customerId, role);
-  }
-
-  static async getUserCustomerRoles(userId: string, customerId?: string) {
-    return SupabasePlatformRoleService.getUserCustomerRoles(userId, customerId);
-  }
-}
+};

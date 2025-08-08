@@ -1,3 +1,4 @@
+
 import { ComplianceCaseDetails, CaseAction, CaseFilters } from '@/types/case';
 import { CaseServiceOperations } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +21,7 @@ const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails =>
   description: c.description,
   assignedTo: c.assigned_to || undefined,
   assignedToName: c.assigned_to_name || undefined,
-  priority: c.priority,
+  priority: c.priority as 'low' | 'medium' | 'high' | 'critical',
   source: c.source as 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment',
   relatedTransactions: c.related_transactions || [],
   relatedAlerts: c.related_alerts || [],
@@ -42,10 +43,9 @@ const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' |
   switch (supabaseType) {
     case 'created':
     case 'updated':
-    case 'note_added':
+    case 'commented':
       return 'note';
     case 'closed':
-    case 'escalated':
     case 'resolved':
       return 'status_change';
     case 'assigned':
@@ -56,8 +56,8 @@ const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' |
 };
 
 // Valid database status values based on schema
-const VALID_DB_STATUSES = ['open', 'closed', 'escalated', 'investigating', 'resolved'] as const;
-const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'transaction', 'document', 'pep'] as const;
+const VALID_DB_STATUSES = ['open', 'closed', 'resolved', 'in_progress'] as const;
+const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'fraud', 'other'] as const;
 
 export const complianceCaseService: CaseServiceOperations = {
   async fetchCases(filters: CaseFilters): Promise<ComplianceCaseDetails[]> {
@@ -67,8 +67,10 @@ export const complianceCaseService: CaseServiceOperations = {
       // Map application statuses to database statuses with proper typing
       const dbStatuses = filters.status.map(status => {
         switch (status) {
-          case 'under_review': return 'investigating';
-          case 'pending_info': return 'investigating'; 
+          case 'under_review': return 'in_progress';
+          case 'pending_info': return 'in_progress'; 
+          case 'escalated': return 'in_progress';
+          case 'closed': return 'resolved';
           default: return status;
         }
       }).filter(status => VALID_DB_STATUSES.includes(status as any)) as (typeof VALID_DB_STATUSES[number])[];
@@ -79,8 +81,16 @@ export const complianceCaseService: CaseServiceOperations = {
     }
     
     if (filters.type && filters.type.length > 0) {
-      // Only use valid database types with proper typing
-      const dbTypes = filters.type.filter(type => VALID_DB_TYPES.includes(type as any)) as (typeof VALID_DB_TYPES[number])[];
+      // Map application types to database types
+      const dbTypes = filters.type.map(type => {
+        switch (type) {
+          case 'transaction': return 'fraud';
+          case 'pep': return 'other';
+          case 'document': return 'other';
+          default: return type;
+        }
+      }).filter(type => VALID_DB_TYPES.includes(type as any)) as (typeof VALID_DB_TYPES[number])[];
+      
       if (dbTypes.length > 0) {
         query = query.in('type', dbTypes);
       }

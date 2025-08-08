@@ -2,7 +2,7 @@
 export interface Document {
   id: string;
   userId: string;
-  type: 'passport' | 'id' | 'license';
+  type: 'passport' | 'drivers_license' | 'utility_bill' | 'bank_statement' | 'other';
   fileName: string;
   uploadDate: string;
   status: 'pending' | 'verified' | 'rejected' | 'information_requested';
@@ -25,7 +25,12 @@ export interface Document {
   };
 }
 
-export type { PlatformRole, CustomerRole, Customer, PlatformRoleAssignment, CustomerRoleAssignment, ExtendedUserProfile } from './platform-roles';
+export type { 
+  PlatformRole, 
+  CustomerRole, 
+  Customer, 
+  ExtendedUserProfile 
+} from './platform-roles';
 
 // Legacy role type for backward compatibility
 export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
