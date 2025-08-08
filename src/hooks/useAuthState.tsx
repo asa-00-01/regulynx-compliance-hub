@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { ExtendedUser } from '@/types/auth';
+import { ExtendedUser, UserRole } from '@/types/auth';
 import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
 
 export const useAuthState = () => {
@@ -17,8 +17,23 @@ export const useAuthState = () => {
     try {
       const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(session.user.id);
       if (extendedProfile) {
-        setUser(extendedProfile);
-        console.log('✅ User profile refreshed with roles:', extendedProfile.platform_roles);
+        // Convert ExtendedUserProfile to ExtendedUser
+        const convertedUser: ExtendedUser = {
+          id: extendedProfile.id,
+          email: extendedProfile.email,
+          name: extendedProfile.name,
+          role: extendedProfile.role as UserRole,
+          riskScore: extendedProfile.risk_score || 0,
+          status: extendedProfile.status,
+          avatarUrl: extendedProfile.avatar_url,
+          customer_id: extendedProfile.customer_id,
+          platform_roles: extendedProfile.platform_roles,
+          customer_roles: extendedProfile.customer_roles,
+          customer: extendedProfile.customer,
+          isPlatformOwner: extendedProfile.isPlatformOwner
+        };
+        setUser(convertedUser);
+        console.log('✅ User profile refreshed with roles:', convertedUser.platform_roles);
       }
     } catch (error) {
       console.error('Failed to refresh user profile:', error);
@@ -41,12 +56,27 @@ export const useAuthState = () => {
           // Get extended user profile with roles
           const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(currentSession.user.id);
           if (extendedProfile && mounted) {
-            setUser(extendedProfile);
-            console.log('✅ Extended user profile loaded:', {
+            // Convert ExtendedUserProfile to ExtendedUser
+            const convertedUser: ExtendedUser = {
+              id: extendedProfile.id,
               email: extendedProfile.email,
-              platformRoles: extendedProfile.platform_roles,
-              customerRoles: extendedProfile.customer_roles,
+              name: extendedProfile.name,
+              role: extendedProfile.role as UserRole,
+              riskScore: extendedProfile.risk_score || 0,
+              status: extendedProfile.status,
+              avatarUrl: extendedProfile.avatar_url,
+              customer_id: extendedProfile.customer_id,
+              platform_roles: extendedProfile.platform_roles,
+              customer_roles: extendedProfile.customer_roles,
+              customer: extendedProfile.customer,
               isPlatformOwner: extendedProfile.isPlatformOwner
+            };
+            setUser(convertedUser);
+            console.log('✅ Extended user profile loaded:', {
+              email: convertedUser.email,
+              platformRoles: convertedUser.platform_roles,
+              customerRoles: convertedUser.customer_roles,
+              isPlatformOwner: convertedUser.isPlatformOwner
             });
           }
         } catch (error) {
