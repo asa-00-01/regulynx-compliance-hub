@@ -13,18 +13,9 @@ export class RealDataService {
     
     try {
       // In a real implementation, this would call external news APIs
-      // For now, we'll simulate a database call with Supabase
-      const { data, error } = await supabase
-        .from('news_items')
-        .select('*')
-        .limit(10);
-      
-      if (error) {
-        console.warn('News API not configured, falling back to empty array:', error.message);
-        return [];
-      }
-      
-      return data || [];
+      // For now, we'll simulate a database call but return empty since tables don't exist
+      console.warn('News API not configured, falling back to empty array');
+      return [];
     } catch (error) {
       console.warn('News service unavailable, returning empty array:', error);
       return [];
@@ -35,42 +26,47 @@ export class RealDataService {
     console.log('🌐 Fetching RSS feeds from real API...');
     
     try {
-      const { data, error } = await supabase
-        .from('rss_feeds')
-        .select('*')
-        .limit(10);
-      
-      if (error) {
-        console.warn('RSS API not configured, falling back to empty array:', error.message);
-        return [];
-      }
-      
-      return data || [];
+      // In a real implementation, this would call external RSS APIs
+      console.warn('RSS API not configured, falling back to empty array');
+      return [];
     } catch (error) {
       console.warn('RSS service unavailable, returning empty array:', error);
       return [];
     }
   }
 
-  // KYC Users - In production, these would connect to real databases
+  // KYC Users - Map from existing organization_customers table
   static async getKYCUsers(filters?: any): Promise<KYCUser[]> {
     console.log('🌐 Fetching KYC users from database...');
     
     try {
-      let query = supabase.from('kyc_users').select('*');
+      let query = supabase.from('organization_customers').select('*');
       
       if (filters?.status) {
-        query = query.eq('status', filters.status);
+        query = query.eq('kyc_status', filters.status);
       }
       
       const { data, error } = await query.limit(100);
       
       if (error) {
-        console.warn('KYC database not configured, falling back to empty array:', error.message);
+        console.warn('KYC database error, falling back to empty array:', error.message);
         return [];
       }
       
-      return data || [];
+      // Transform organization_customers data to KYCUser format
+      const kycUsers: KYCUser[] = (data || []).map(customer => ({
+        id: customer.id,
+        fullName: customer.full_name,
+        email: customer.email || '',
+        dateOfBirth: customer.date_of_birth ? customer.date_of_birth.toString() : '',
+        identityNumber: customer.identity_number || '',
+        phoneNumber: customer.phone_number,
+        address: customer.address,
+        createdAt: customer.created_at,
+        updatedAt: customer.updated_at
+      }));
+      
+      return kycUsers;
     } catch (error) {
       console.warn('KYC service unavailable, returning empty array:', error);
       return [];
@@ -81,8 +77,9 @@ export class RealDataService {
     console.log('🌐 Fetching KYC verifications from database...');
     
     try {
+      // Map from organization_customers to create verification records
       const { data, error } = await supabase
-        .from('kyc_verifications')
+        .from('organization_customers')
         .select('*')
         .limit(100);
       
@@ -91,14 +88,24 @@ export class RealDataService {
         return [];
       }
       
-      return data || [];
+      // Transform to KYCVerification format
+      const verifications: KYCVerification[] = (data || []).map(customer => ({
+        userId: customer.id,
+        status: customer.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested',
+        verifiedBy: customer.created_by || undefined,
+        verifiedAt: customer.updated_at,
+        rejectionReason: undefined,
+        notes: undefined
+      }));
+      
+      return verifications;
     } catch (error) {
       console.warn('KYC verifications service unavailable, returning empty array:', error);
       return [];
     }
   }
 
-  // AML Transactions - In production, these would connect to real transaction databases
+  // AML Transactions - Use existing aml_transactions table
   static async getAMLTransactions(filters?: any): Promise<AMLTransaction[]> {
     console.log('🌐 Fetching AML transactions from database...');
     
@@ -122,26 +129,43 @@ export class RealDataService {
       const { data, error } = await query.limit(500);
       
       if (error) {
-        console.warn('AML database not configured, falling back to empty array:', error.message);
+        console.warn('AML database error, falling back to empty array:', error.message);
         return [];
       }
       
-      return data || [];
+      // Transform to AMLTransaction format
+      const transactions: AMLTransaction[] = (data || []).map(tx => ({
+        id: tx.id,
+        userId: tx.organization_customer_id,
+        transactionId: tx.external_transaction_id,
+        amount: parseFloat(tx.amount.toString()),
+        currency: tx.currency,
+        fromAccount: tx.from_account,
+        toAccount: tx.to_account,
+        transactionDate: tx.transaction_date,
+        transactionType: tx.transaction_type,
+        description: tx.description || '',
+        status: tx.status as 'pending' | 'approved' | 'flagged' | 'rejected',
+        riskScore: tx.risk_score,
+        flags: Array.isArray(tx.flags) ? tx.flags : []
+      }));
+      
+      return transactions;
     } catch (error) {
       console.warn('AML service unavailable, returning empty array:', error);
       return [];
     }
   }
 
-  // Unified User Data - In production, this would aggregate data from multiple sources
+  // Unified User Data - Aggregate from existing tables
   static async getUnifiedUserData(filters?: any): Promise<typeof unifiedMockData> {
     console.log('🌐 Fetching unified user data from database...');
     
     try {
-      let query = supabase.from('unified_users').select(`
+      let query = supabase.from('organization_customers').select(`
         *,
         documents(*),
-        transactions(*),
+        aml_transactions(*),
         compliance_cases(*)
       `);
       
@@ -167,11 +191,41 @@ export class RealDataService {
       const { data, error } = await query.limit(100);
       
       if (error) {
-        console.warn('Unified database not configured, falling back to empty array:', error.message);
+        console.warn('Unified database error, falling back to empty array:', error.message);
         return [];
       }
       
-      return data || [];
+      // Transform to unified format
+      const unifiedData = (data || []).map(customer => ({
+        id: customer.id,
+        fullName: customer.full_name,
+        email: customer.email || '',
+        dateOfBirth: customer.date_of_birth ? customer.date_of_birth.toString() : '',
+        nationality: customer.nationality || '',
+        identityNumber: customer.identity_number || '',
+        phoneNumber: customer.phone_number || '',
+        address: customer.address || '',
+        countryOfResidence: customer.country_of_residence || '',
+        riskScore: customer.risk_score,
+        isPEP: customer.is_pep,
+        isSanctioned: customer.is_sanctioned,
+        kycStatus: customer.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested',
+        createdAt: customer.created_at,
+        kycFlags: {
+          userId: customer.id,
+          is_registered: true,
+          is_email_confirmed: !!customer.email,
+          is_verified_pep: customer.is_pep,
+          is_sanction_list: customer.is_sanctioned,
+          riskScore: customer.risk_score
+        },
+        documents: (customer as any).documents || [],
+        transactions: (customer as any).aml_transactions || [],
+        complianceCases: (customer as any).compliance_cases || [],
+        notes: []
+      }));
+      
+      return unifiedData;
     } catch (error) {
       console.warn('Unified service unavailable, returning empty array:', error);
       return [];
@@ -183,9 +237,9 @@ export class RealDataService {
     console.log('🔍 Validating real data source connections...');
     
     try {
-      // Test Supabase connection
+      // Test Supabase connection with existing tables
       const { data, error } = await supabase
-        .from('users')
+        .from('organization_customers')
         .select('count')
         .limit(1);
       
