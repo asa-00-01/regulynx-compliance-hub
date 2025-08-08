@@ -1,10 +1,9 @@
+
 import { NewsItem, RSSFeed } from '@/types/news';
-import { ComplianceCaseDetails } from '@/types/case';
 import { KYCUser, KYCVerification } from '@/types/kyc';
 import { AMLTransaction } from '@/types/aml';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
 
-import { BaseMockService } from './base/BaseMockService';
 import { NewsService } from './news/NewsService';
 import { KYCService } from './kyc/KYCService';
 import { AMLService } from './aml/AMLService';
@@ -12,7 +11,7 @@ import { UnifiedDataService } from './unified/UnifiedDataService';
 
 import { logValidationResults } from '@/mocks/validators/dataValidator';
 
-export class MockDataService extends BaseMockService {
+export class MockDataService {
   // News and RSS Feeds
   static async getNewsItems(): Promise<NewsItem[]> {
     return NewsService.getNewsItems();
@@ -41,17 +40,14 @@ export class MockDataService extends BaseMockService {
     return UnifiedDataService.getUnifiedUserData(filters);
   }
 
-  // Generic mock API simulator - kept for backward compatibility
-  static async mockApiCall<T>(data: T, operation: string): Promise<T> {
-    return super.mockApiCall(data, operation);
-  }
-
   // Initialize and validate mock data
   static validateData(): void {
-    if (this.shouldUseMockData()) {
-      console.log('🔍 Validating mock data consistency...');
-      logValidationResults();
-    }
+    console.log('🔍 Validating mock data consistency...');
+    logValidationResults();
+  }
+
+  static shouldUseMockData(): boolean {
+    return process.env.NODE_ENV === 'development';
   }
 }
 

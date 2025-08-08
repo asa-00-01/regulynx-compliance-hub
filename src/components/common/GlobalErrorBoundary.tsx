@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { auditLogger } from '@/services/auditLogger';
 import config from '@/config/environment';

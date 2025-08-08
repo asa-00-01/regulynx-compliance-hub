@@ -1,4 +1,5 @@
 
-// Re-export from the refactored compliance context modules
-export { ComplianceProvider, useCompliance } from './compliance';
-export type { UnifiedUserData, ComplianceState, ComplianceAction } from './compliance';
+// Direct re-export from the refactored compliance context modules
+export { ComplianceProvider } from './compliance/ComplianceProvider';
+export { useCompliance } from './compliance/useCompliance';
+export type { UnifiedUserData, ComplianceState, ComplianceAction } from './compliance/types';
