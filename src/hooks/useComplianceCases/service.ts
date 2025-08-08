@@ -1,4 +1,3 @@
-
 import { ComplianceCaseDetails, CaseAction, CaseFilters } from '@/types/case';
 import { CaseServiceOperations } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,14 +64,14 @@ export const complianceCaseService: CaseServiceOperations = {
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
-      // Map application statuses to database statuses
+      // Map application statuses to database statuses with proper typing
       const dbStatuses = filters.status.map(status => {
         switch (status) {
           case 'under_review': return 'investigating';
-          case 'pending_info': return 'investigating'; // Map to available status
+          case 'pending_info': return 'investigating'; 
           default: return status;
         }
-      }).filter(status => VALID_DB_STATUSES.includes(status as any));
+      }).filter(status => VALID_DB_STATUSES.includes(status as any)) as (typeof VALID_DB_STATUSES[number])[];
       
       if (dbStatuses.length > 0) {
         query = query.in('status', dbStatuses);
@@ -80,8 +79,8 @@ export const complianceCaseService: CaseServiceOperations = {
     }
     
     if (filters.type && filters.type.length > 0) {
-      // Only use valid database types
-      const dbTypes = filters.type.filter(type => VALID_DB_TYPES.includes(type as any));
+      // Only use valid database types with proper typing
+      const dbTypes = filters.type.filter(type => VALID_DB_TYPES.includes(type as any)) as (typeof VALID_DB_TYPES[number])[];
       if (dbTypes.length > 0) {
         query = query.in('type', dbTypes);
       }

@@ -24,6 +24,7 @@ export interface PatternMatch {
   amount: number;
   currency: string;
   timestamp: string;
+  createdAt: string; // Add createdAt property
 }
 
 export interface Pattern {
@@ -32,4 +33,5 @@ export interface Pattern {
   description: string;
   matchCount: number;
   category: 'structuring' | 'high_risk_corridor' | 'time_pattern' | 'other';
+  createdAt: string; // Add createdAt property
 }

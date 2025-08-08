@@ -72,8 +72,8 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
-      // Map application status to database status
-      let dbStatus: string = newStatus;
+      // Map application status to database status with proper typing
+      let dbStatus: 'open' | 'closed' | 'escalated' | 'investigating' | 'resolved';
       switch (newStatus) {
         case 'under_review':
         case 'pending_info':
@@ -82,8 +82,14 @@ export const useCaseActions = (
         case 'closed':
           dbStatus = 'resolved';
           break;
+        case 'open':
+          dbStatus = 'open';
+          break;
+        case 'escalated':
+          dbStatus = 'escalated';
+          break;
         default:
-          dbStatus = newStatus;
+          dbStatus = 'open';
       }
       
       const { error: updateError } = await supabase
