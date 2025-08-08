@@ -1,48 +1,112 @@
 
 import { ComplianceState, ComplianceAction } from './types';
 
+/**
+ * Compliance state reducer managing user data, selections, cases, and global filters.
+ * Handles all state transitions for the compliance context.
+ */
 export const complianceReducer = (
-  state: ComplianceState,
-  action: ComplianceAction
+  currentState: ComplianceState,
+  dispatchedAction: ComplianceAction
 ): ComplianceState => {
-  switch (action.type) {
+  switch (dispatchedAction.type) {
     case 'SET_USERS':
-      console.log('Reducer: Setting users:', action.payload.length);
-      return {
-        ...state,
-        users: action.payload
-      };
+      return handleSetUsers(currentState, dispatchedAction.payload);
+    
     case 'UPDATE_USER_DATA':
-      const existingUserIndex = state.users.findIndex(user => user.id === action.payload.id);
-      if (existingUserIndex >= 0) {
-        const updatedUsers = [...state.users];
-        updatedUsers[existingUserIndex] = action.payload;
-        return {
-          ...state,
-          users: updatedUsers
-        };
-      } else {
-        return {
-          ...state,
-          users: [...state.users, action.payload]
-        };
-      }
+      return handleUpdateUserData(currentState, dispatchedAction.payload);
+    
     case 'SET_SELECTED_USER':
-      return {
-        ...state,
-        selectedUserId: action.payload
-      };
+      return handleSetSelectedUser(currentState, dispatchedAction.payload);
+    
     case 'SET_SELECTED_CASE':
-      return {
-        ...state,
-        selectedCase: action.payload
-      };
+      return handleSetSelectedCase(currentState, dispatchedAction.payload);
+    
     case 'SET_GLOBAL_FILTERS':
-      return {
-        ...state,
-        globalFilters: action.payload
-      };
+      return handleSetGlobalFilters(currentState, dispatchedAction.payload);
+    
     default:
-      return state;
+      return currentState;
   }
 };
+
+/**
+ * Handles setting the complete users list
+ */
+function handleSetUsers(currentState: ComplianceState, usersList: any[]): ComplianceState {
+  console.log('Reducer: Setting users:', usersList.length);
+  return {
+    ...currentState,
+    users: usersList
+  };
+}
+
+/**
+ * Handles updating or adding individual user data
+ */
+function handleUpdateUserData(currentState: ComplianceState, updatedUserData: any): ComplianceState {
+  const existingUserIndex = currentState.users.findIndex(user => user.id === updatedUserData.id);
+  
+  if (existingUserIndex >= 0) {
+    return updateExistingUser(currentState, existingUserIndex, updatedUserData);
+  } else {
+    return addNewUser(currentState, updatedUserData);
+  }
+}
+
+/**
+ * Updates existing user in the users list
+ */
+function updateExistingUser(
+  currentState: ComplianceState, 
+  userIndex: number, 
+  updatedUserData: any
+): ComplianceState {
+  const updatedUsersList = [...currentState.users];
+  updatedUsersList[userIndex] = updatedUserData;
+  
+  return {
+    ...currentState,
+    users: updatedUsersList
+  };
+}
+
+/**
+ * Adds new user to the users list
+ */
+function addNewUser(currentState: ComplianceState, newUserData: any): ComplianceState {
+  return {
+    ...currentState,
+    users: [...currentState.users, newUserData]
+  };
+}
+
+/**
+ * Handles setting the selected user ID
+ */
+function handleSetSelectedUser(currentState: ComplianceState, selectedUserId: string | null): ComplianceState {
+  return {
+    ...currentState,
+    selectedUserId: selectedUserId
+  };
+}
+
+/**
+ * Handles setting the selected case
+ */
+function handleSetSelectedCase(currentState: ComplianceState, selectedCaseData: any): ComplianceState {
+  return {
+    ...currentState,
+    selectedCase: selectedCaseData
+  };
+}
+
+/**
+ * Handles setting global filter configuration
+ */
+function handleSetGlobalFilters(currentState: ComplianceState, globalFilterSettings: any): ComplianceState {
+  return {
+    ...currentState,
+    globalFilters: globalFilterSettings
+  };
+}

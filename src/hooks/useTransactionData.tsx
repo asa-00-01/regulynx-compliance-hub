@@ -10,26 +10,30 @@ import { useAlertManagement } from './useAlertManagement';
 // Re-export types for backward compatibility
 export type { DateRange, TransactionFilters } from './types/transactionTypes';
 
+/**
+ * Manages transaction data, filtering, and alert operations.
+ * Provides access to filtered transactions, metrics, and alert management functionality.
+ */
 export function useTransactionData() {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactionData.transactions);
-  const [filters, setFilters] = useState<TransactionFilters>({
+  const [transactionsList, setTransactionsList] = useState<Transaction[]>(mockTransactionData.transactions);
+  const [currentFilters, setCurrentFilters] = useState<TransactionFilters>({
     dateRange: '30days',
     onlyFlagged: false
   });
-  const [loading, setLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   // Apply filters to transactions
-  const filteredTransactions = useMemo(() => {
-    return applyTransactionFilters(transactions, filters);
-  }, [transactions, filters]);
+  const filteredTransactionsList = useMemo(() => {
+    return applyTransactionFilters(transactionsList, currentFilters);
+  }, [transactionsList, currentFilters]);
 
   // Get metrics for dashboard
-  const metrics = useTransactionMetrics(transactions);
+  const transactionMetrics = useTransactionMetrics(transactionsList);
 
   // Alert management
   const {
-    alerts,
-    setAlerts,
+    alerts: transactionAlerts,
+    setAlerts: setTransactionAlerts,
     updateAlertStatus,
     addAlertNote,
     createCaseFromAlert,
@@ -37,13 +41,13 @@ export function useTransactionData() {
   } = useAlertManagement(mockTransactionData.alerts);
 
   return {
-    transactions,
-    filteredTransactions,
-    alerts,
-    filters,
-    setFilters,
-    loading,
-    metrics,
+    transactions: transactionsList,
+    filteredTransactions: filteredTransactionsList,
+    alerts: transactionAlerts,
+    filters: currentFilters,
+    setFilters: setCurrentFilters,
+    loading: isDataLoading,
+    metrics: transactionMetrics,
     updateAlertStatus,
     addAlertNote,
     createCaseFromAlert,

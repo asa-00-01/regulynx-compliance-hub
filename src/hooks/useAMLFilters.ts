@@ -12,84 +12,109 @@ interface AMLFilters {
   onlyFlagged: boolean;
 }
 
-export const useAMLFilters = (transactions: AMLTransaction[]) => {
+/**
+ * Manages AML transaction filtering logic including search parameters and filter application.
+ * Provides filtered transaction results based on various criteria.
+ */
+export const useAMLFilters = (transactionsList: AMLTransaction[]) => {
   const [searchParams] = useSearchParams();
-  const userIdFromParams = searchParams.get('userId');
+  const userIdFromSearchParams = searchParams.get('userId');
   
-  const [filters, setFilters] = useState<AMLFilters>({
+  const [activeFilters, setActiveFilters] = useState<AMLFilters>({
     dateRange: '30days',
     riskLevel: 'all',
     status: 'all',
     amountRange: 'all',
-    userId: userIdFromParams || '',
+    userId: userIdFromSearchParams || '',
     onlyFlagged: false
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+
+  /**
+   * Applies user ID filter to transactions
+   */
+  const filterByUserId = (transaction: AMLTransaction): boolean => {
+    if (!activeFilters.userId) return true;
+    return transaction.senderUserId === activeFilters.userId;
+  };
+
+  /**
+   * Applies search term filter to transactions
+   */
+  const filterBySearchTerm = (transaction: AMLTransaction): boolean => {
+    if (!currentSearchTerm) return true;
+    
+    const searchTermLowerCase = currentSearchTerm.toLowerCase();
+    const matchesTransactionId = transaction.id.toLowerCase().includes(searchTermLowerCase);
+    const matchesSenderName = transaction.senderName.toLowerCase().includes(searchTermLowerCase);
+    const matchesReceiverName = transaction.receiverName?.toLowerCase().includes(searchTermLowerCase);
+    
+    return matchesTransactionId || matchesSenderName || matchesReceiverName;
+  };
+
+  /**
+   * Applies risk level filter to transactions
+   */
+  const filterByRiskLevel = (transaction: AMLTransaction): boolean => {
+    if (activeFilters.riskLevel === 'all') return true;
+    
+    const transactionRiskScore = transaction.riskScore;
+    
+    switch (activeFilters.riskLevel) {
+      case 'low':
+        return transactionRiskScore < 30;
+      case 'medium':
+        return transactionRiskScore >= 30 && transactionRiskScore < 70;
+      case 'high':
+        return transactionRiskScore >= 70;
+      default:
+        return true;
+    }
+  };
+
+  /**
+   * Applies status filter to transactions
+   */
+  const filterByStatus = (transaction: AMLTransaction): boolean => {
+    return activeFilters.status === 'all' || transaction.status === activeFilters.status;
+  };
+
+  /**
+   * Applies amount range filter to transactions
+   */
+  const filterByAmountRange = (transaction: AMLTransaction): boolean => {
+    if (activeFilters.amountRange === 'all') return true;
+    
+    const transactionAmount = transaction.senderAmount;
+    
+    switch (activeFilters.amountRange) {
+      case 'small':
+        return transactionAmount < 1000;
+      case 'medium':
+        return transactionAmount >= 1000 && transactionAmount < 10000;
+      case 'large':
+        return transactionAmount >= 10000;
+      default:
+        return true;
+    }
+  };
 
   // Filter transactions based on current filters
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(transaction => {
-      // User filter
-      if (filters.userId && transaction.senderUserId !== filters.userId) {
-        return false;
-      }
-      
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          transaction.id.toLowerCase().includes(searchLower) ||
-          transaction.senderName.toLowerCase().includes(searchLower) ||
-          transaction.receiverName?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
-      
-      // Risk level filter
-      if (filters.riskLevel !== 'all') {
-        const riskScore = transaction.riskScore;
-        switch (filters.riskLevel) {
-          case 'low':
-            if (riskScore >= 30) return false;
-            break;
-          case 'medium':
-            if (riskScore < 30 || riskScore >= 70) return false;
-            break;
-          case 'high':
-            if (riskScore < 70) return false;
-            break;
-        }
-      }
-      
-      // Status filter
-      if (filters.status !== 'all' && transaction.status !== filters.status) {
-        return false;
-      }
-      
-      // Amount range filter
-      if (filters.amountRange !== 'all') {
-        const amount = transaction.senderAmount;
-        switch (filters.amountRange) {
-          case 'small':
-            if (amount >= 1000) return false;
-            break;
-          case 'medium':
-            if (amount < 1000 || amount >= 10000) return false;
-            break;
-          case 'large':
-            if (amount < 10000) return false;
-            break;
-        }
-      }
-      
-      return true;
+  const filteredTransactionsList = useMemo(() => {
+    return transactionsList.filter(transaction => {
+      return filterByUserId(transaction) &&
+             filterBySearchTerm(transaction) &&
+             filterByRiskLevel(transaction) &&
+             filterByStatus(transaction) &&
+             filterByAmountRange(transaction);
     });
-  }, [transactions, filters, searchTerm]);
+  }, [transactionsList, activeFilters, currentSearchTerm]);
 
   return {
-    filters,
-    searchTerm,
-    filteredTransactions,
-    setFilters,
-    setSearchTerm,
+    filters: activeFilters,
+    searchTerm: currentSearchTerm,
+    filteredTransactions: filteredTransactionsList,
+    setFilters: setActiveFilters,
+    setSearchTerm: setCurrentSearchTerm,
   };
 };

@@ -1,26 +1,61 @@
 
 import { config } from '@/config/environment';
 
-// Simulated API delay for realistic development experience
-const MOCK_DELAY = 500; // milliseconds
+// Configuration constants
+const DEFAULT_MOCK_DELAY = 500; // milliseconds
+const MAX_RISK_SCORE = 100;
 
-export const simulateDelay = (ms: number = MOCK_DELAY): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+/**
+ * Simulates API delay for realistic development experience
+ */
+export const simulateDelay = (delayInMilliseconds: number = DEFAULT_MOCK_DELAY): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
 };
 
+/**
+ * Abstract base class for all mock services providing common functionality
+ * for data operations, logging, and configuration management.
+ */
 export abstract class BaseMockService {
+  // Static configuration methods
+  
+  /**
+   * Determines if mock data should be used based on configuration
+   */
   public static shouldUseMockData(): boolean {
     return config.features.useMockData;
   }
 
-  protected static logDataOperation(operation: string, entityType: string, count?: number): void {
-    const emoji = this.getOperationEmoji(operation);
-    const countText = count !== undefined ? ` (${count} items)` : '';
-    console.log(`${emoji} ${operation} ${entityType}${countText} from mock service`);
+  /**
+   * Checks if the service is currently in mock mode
+   */
+  static isMockMode(): boolean {
+    return this.shouldUseMockData();
   }
 
-  private static getOperationEmoji(operation: string): string {
-    const emojiMap: Record<string, string> = {
+  /**
+   * Provides instruction for toggling mock mode (requires restart)
+   */
+  static toggleMockMode(): void {
+    console.log('Mock mode toggle requested - restart app with VITE_USE_MOCK_DATA environment variable');
+  }
+
+  // Protected utility methods
+
+  /**
+   * Logs data operations with appropriate emoji and formatting
+   */
+  protected static logDataOperation(operationType: string, entityTypeName: string, itemCount?: number): void {
+    const operationEmoji = this.getOperationEmoji(operationType);
+    const itemCountText = itemCount !== undefined ? ` (${itemCount} items)` : '';
+    console.log(`${operationEmoji} ${operationType} ${entityTypeName}${itemCountText} from mock service`);
+  }
+
+  /**
+   * Returns appropriate emoji for different operation types
+   */
+  private static getOperationEmoji(operationType: string): string {
+    const emojiMappings: Record<string, string> = {
       'Fetching': '📊',
       'Creating': '✨',
       'Updating': '🔄',
@@ -28,26 +63,25 @@ export abstract class BaseMockService {
       'Validating': '🔍',
       'Loading': '⏳'
     };
-    return emojiMap[operation] || '📝';
+    return emojiMappings[operationType] || '📝';
   }
 
-  protected static async mockApiCall<T>(data: T, operation: string, entityType: string = 'data'): Promise<T> {
+  /**
+   * Performs mock API call with logging and delay simulation
+   */
+  protected static async mockApiCall<T>(
+    mockData: T, 
+    operationType: string, 
+    entityTypeName: string = 'data'
+  ): Promise<T> {
     if (!this.shouldUseMockData()) {
       throw new Error('Mock data is disabled. Use real API service.');
     }
 
-    const count = Array.isArray(data) ? data.length : undefined;
-    this.logDataOperation(operation, entityType, count);
+    const dataItemCount = Array.isArray(mockData) ? mockData.length : undefined;
+    this.logDataOperation(operationType, entityTypeName, dataItemCount);
     
     await simulateDelay();
-    return data;
-  }
-
-  static isMockMode(): boolean {
-    return this.shouldUseMockData();
-  }
-
-  static toggleMockMode(): void {
-    console.log('Mock mode toggle requested - restart app with VITE_USE_MOCK_DATA environment variable');
+    return mockData;
   }
 }

@@ -7,91 +7,86 @@ import { useAMLMetrics } from './useAMLMetrics';
 import { useAMLTransactionActions } from './useAMLTransactionActions';
 import { usePagination } from './usePagination';
 
+/**
+ * Manages AML transaction data including filtering, pagination, metrics calculation, and user actions.
+ * Provides a comprehensive interface for AML monitoring and transaction management.
+ */
 export const useAMLData = () => {
-  const [transactions, setTransactions] = useState<AMLTransaction[]>(mockTransactions);
-  const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  // State management
+  const [amlTransactionsList, setAMLTransactionsList] = useState<AMLTransaction[]>(mockTransactions);
+  const [currentlySelectedTransaction, setCurrentlySelectedTransaction] = useState<AMLTransaction | null>(null);
+  const [detailsModalVisibility, setDetailsModalVisibility] = useState(false);
   
   // Use the new filtering hook
   const {
-    filters,
-    searchTerm,
-    filteredTransactions,
-    setFilters,
-    setSearchTerm,
-  } = useAMLFilters(transactions);
+    filters: activeFilters,
+    searchTerm: currentSearchTerm,
+    filteredTransactions: filteredAMLTransactions,
+    setFilters: updateFilters,
+    setSearchTerm: updateSearchTerm,
+  } = useAMLFilters(amlTransactionsList);
 
   // Use the new metrics hook
-  const metrics = useAMLMetrics(filteredTransactions);
+  const calculatedMetrics = useAMLMetrics(filteredAMLTransactions);
 
-  // Pagination
-  const {
-    currentData: paginatedTransactions,
-    currentPage,
-    totalPages,
-    goToPage,
-    goToNextPage,
-    goToPrevPage,
-    hasNextPage,
-    hasPrevPage,
-    startIndex,
-    endIndex,
-    totalItems,
-  } = usePagination({ data: filteredTransactions, itemsPerPage: 10 });
+  // Pagination management
+  const paginationState = usePagination({ 
+    data: filteredAMLTransactions, 
+    itemsPerPage: 10 
+  });
 
   // Use the new transaction actions hook
-  const {
-    handleFlagTransaction,
-    handleCreateCase,
-    handleCreateSAR,
-    handleViewUserProfile,
-    handleExportTransactions,
-  } = useAMLTransactionActions(setTransactions);
+  const transactionActionHandlers = useAMLTransactionActions(setAMLTransactionsList);
 
-  const handleViewDetails = (transaction: AMLTransaction) => {
-    setSelectedTransaction(transaction);
-    setIsDetailsModalOpen(true);
+  /**
+   * Opens transaction details modal for the specified transaction
+   */
+  const handleViewTransactionDetails = (targetTransaction: AMLTransaction) => {
+    setCurrentlySelectedTransaction(targetTransaction);
+    setDetailsModalVisibility(true);
   };
 
-  // Wrap export handler to pass filtered transactions
-  const wrappedExportHandler = () => {
-    handleExportTransactions(filteredTransactions);
+  /**
+   * Wraps export handler to pass filtered transactions
+   */
+  const handleExportFilteredTransactions = () => {
+    transactionActionHandlers.handleExportTransactions(filteredAMLTransactions);
   };
 
   return {
     // State
-    transactions,
-    filteredTransactions,
-    paginatedTransactions,
-    selectedTransaction,
-    isDetailsModalOpen,
-    filters,
-    searchTerm,
-    metrics,
+    transactions: amlTransactionsList,
+    filteredTransactions: filteredAMLTransactions,
+    paginatedTransactions: paginationState.currentData,
+    selectedTransaction: currentlySelectedTransaction,
+    isDetailsModalOpen: detailsModalVisibility,
+    filters: activeFilters,
+    searchTerm: currentSearchTerm,
+    metrics: calculatedMetrics,
     
     // Setters
-    setIsDetailsModalOpen,
-    setFilters,
-    setSearchTerm,
+    setIsDetailsModalOpen: setDetailsModalVisibility,
+    setFilters: updateFilters,
+    setSearchTerm: updateSearchTerm,
     
     // Handlers
-    handleViewDetails,
-    handleFlagTransaction,
-    handleCreateCase,
-    handleCreateSAR,
-    handleViewUserProfile,
-    handleExportTransactions: wrappedExportHandler,
+    handleViewDetails: handleViewTransactionDetails,
+    handleFlagTransaction: transactionActionHandlers.handleFlagTransaction,
+    handleCreateCase: transactionActionHandlers.handleCreateCase,
+    handleCreateSAR: transactionActionHandlers.handleCreateSAR,
+    handleViewUserProfile: transactionActionHandlers.handleViewUserProfile,
+    handleExportTransactions: handleExportFilteredTransactions,
 
     // Pagination
-    currentPage,
-    totalPages,
-    goToPage,
-    goToNextPage,
-    goToPrevPage,
-    hasNextPage,
-    hasPrevPage,
-    startIndex,
-    endIndex,
-    totalItems,
+    currentPage: paginationState.currentPage,
+    totalPages: paginationState.totalPages,
+    goToPage: paginationState.goToPage,
+    goToNextPage: paginationState.goToNextPage,
+    goToPrevPage: paginationState.goToPrevPage,
+    hasNextPage: paginationState.hasNextPage,
+    hasPrevPage: paginationState.hasPrevPage,
+    startIndex: paginationState.startIndex,
+    endIndex: paginationState.endIndex,
+    totalItems: paginationState.totalItems,
   };
 };

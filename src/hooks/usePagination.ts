@@ -1,57 +1,101 @@
 
 import { useState, useMemo } from 'react';
 
-export const usePagination = <T,>({ data, itemsPerPage = 10 }: { data: T[], itemsPerPage?: number }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+interface PaginationProps<T> {
+  data: T[];
+  itemsPerPage?: number;
+}
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+interface PaginationResult<T> {
+  currentData: T[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  startIndex: number;
+  endIndex: number;
+  goToPage: (page: number) => void;
+  goToNextPage: () => void;
+  goToPrevPage: () => void;
+  goToFirstPage: () => void;
+  goToLastPage: () => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
 
-  const currentData = useMemo(() => {
-    return data.slice(startIndex, endIndex);
-  }, [data, startIndex, endIndex]);
+/**
+ * Provides pagination functionality for any array of data.
+ * Handles page navigation, boundary checks, and automatic reset when data changes.
+ */
+export const usePagination = <T,>({ 
+  data: dataList, 
+  itemsPerPage: itemsPerPageLimit = 10 
+}: PaginationProps<T>): PaginationResult<T> => {
+  const [currentPageNumber, setCurrentPageNumber] = useState(1);
 
-  const goToPage = (page: number) => {
-    const validPage = Math.max(1, Math.min(page, totalPages || 1));
-    setCurrentPage(validPage);
+  const totalPagesCount = Math.ceil(dataList.length / itemsPerPageLimit);
+  const startingIndex = (currentPageNumber - 1) * itemsPerPageLimit;
+  const endingIndex = startingIndex + itemsPerPageLimit;
+
+  const currentPageData = useMemo(() => {
+    return dataList.slice(startingIndex, endingIndex);
+  }, [dataList, startingIndex, endingIndex]);
+
+  /**
+   * Navigates to a specific page with boundary validation
+   */
+  const navigateToPage = (targetPageNumber: number) => {
+    const validPageNumber = Math.max(1, Math.min(targetPageNumber, totalPagesCount || 1));
+    setCurrentPageNumber(validPageNumber);
   };
 
-  const goToNextPage = () => {
-    goToPage(currentPage + 1);
+  /**
+   * Navigates to the next page if available
+   */
+  const navigateToNextPage = () => {
+    navigateToPage(currentPageNumber + 1);
   };
 
-  const goToPrevPage = () => {
-    goToPage(currentPage - 1);
+  /**
+   * Navigates to the previous page if available
+   */
+  const navigateToPreviousPage = () => {
+    navigateToPage(currentPageNumber - 1);
   };
 
-  const goToFirstPage = () => {
-    goToPage(1);
+  /**
+   * Navigates to the first page
+   */
+  const navigateToFirstPage = () => {
+    navigateToPage(1);
   };
 
-  const goToLastPage = () => {
-    goToPage(totalPages);
+  /**
+   * Navigates to the last page
+   */
+  const navigateToLastPage = () => {
+    navigateToPage(totalPagesCount);
   };
 
   // Reset to first page when data changes
   useMemo(() => {
-    setCurrentPage(1);
-  }, [data.length]);
+    setCurrentPageNumber(1);
+  }, [dataList.length]);
 
   return {
-    currentData,
-    currentPage,
-    totalPages,
-    totalItems: data.length,
-    itemsPerPage,
-    startIndex: data.length > 0 ? startIndex + 1 : 0,
-    endIndex: Math.min(endIndex, data.length),
-    goToPage,
-    goToNextPage,
-    goToPrevPage,
-    goToFirstPage,
-    goToLastPage,
-    hasNextPage: currentPage < totalPages,
-    hasPrevPage: currentPage > 1,
+    currentData: currentPageData,
+    currentPage: currentPageNumber,
+    totalPages: totalPagesCount,
+    totalItems: dataList.length,
+    itemsPerPage: itemsPerPageLimit,
+    startIndex: dataList.length > 0 ? startingIndex + 1 : 0,
+    endIndex: Math.min(endingIndex, dataList.length),
+    goToPage: navigateToPage,
+    goToNextPage: navigateToNextPage,
+    goToPrevPage: navigateToPreviousPage,
+    goToFirstPage: navigateToFirstPage,
+    goToLastPage: navigateToLastPage,
+    hasNextPage: currentPageNumber < totalPagesCount,
+    hasPrevPage: currentPageNumber > 1,
   };
 };
