@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      aml_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_id: string
+          description: string | null
+          external_transaction_id: string
+          flags: Json | null
+          from_account: string
+          id: string
+          organization_customer_id: string
+          risk_score: number
+          status: string
+          to_account: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          customer_id: string
+          description?: string | null
+          external_transaction_id: string
+          flags?: Json | null
+          from_account: string
+          id?: string
+          organization_customer_id: string
+          risk_score?: number
+          status?: string
+          to_account: string
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          description?: string | null
+          external_transaction_id?: string
+          flags?: Json | null
+          from_account?: string
+          id?: string
+          organization_customer_id?: string
+          risk_score?: number
+          status?: string
+          to_account?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aml_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aml_transactions_organization_customer_id_fkey"
+            columns: ["organization_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organization_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -83,9 +155,11 @@ export type Database = {
           assigned_to_name: string | null
           created_at: string
           created_by: string | null
+          customer_id: string | null
           description: string
           documents: string[] | null
           id: string
+          organization_customer_id: string | null
           priority: string
           related_alerts: string[] | null
           related_transactions: string[] | null
@@ -103,9 +177,11 @@ export type Database = {
           assigned_to_name?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           description: string
           documents?: string[] | null
           id?: string
+          organization_customer_id?: string | null
           priority: string
           related_alerts?: string[] | null
           related_transactions?: string[] | null
@@ -123,9 +199,11 @@ export type Database = {
           assigned_to_name?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           description?: string
           documents?: string[] | null
           id?: string
+          organization_customer_id?: string | null
           priority?: string
           related_alerts?: string[] | null
           related_transactions?: string[] | null
@@ -138,7 +216,22 @@ export type Database = {
           user_id?: string | null
           user_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "compliance_cases_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_organization_customer_id_fkey"
+            columns: ["organization_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organization_customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -212,10 +305,12 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          customer_id: string | null
           extracted_data: Json | null
           file_name: string
           file_path: string
           id: string
+          organization_customer_id: string | null
           status: string
           type: string
           updated_at: string
@@ -226,10 +321,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           extracted_data?: Json | null
           file_name: string
           file_path: string
           id?: string
+          organization_customer_id?: string | null
           status: string
           type: string
           updated_at?: string
@@ -240,10 +337,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           extracted_data?: Json | null
           file_name?: string
           file_path?: string
           id?: string
+          organization_customer_id?: string | null
           status?: string
           type?: string
           updated_at?: string
@@ -252,7 +351,22 @@ export type Database = {
           verification_date?: string | null
           verified_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_organization_customer_id_fkey"
+            columns: ["organization_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organization_customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       external_customer_mappings: {
         Row: {
@@ -397,6 +511,84 @@ export type Database = {
           webhook_url?: string | null
         }
         Relationships: []
+      }
+      organization_customers: {
+        Row: {
+          address: string | null
+          country_of_residence: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          date_of_birth: string | null
+          email: string | null
+          external_customer_id: string | null
+          full_name: string
+          id: string
+          identity_number: string | null
+          is_pep: boolean
+          is_sanctioned: boolean
+          kyc_status: string
+          nationality: string | null
+          phone_number: string | null
+          risk_score: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          country_of_residence?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          date_of_birth?: string | null
+          email?: string | null
+          external_customer_id?: string | null
+          full_name: string
+          id?: string
+          identity_number?: string | null
+          is_pep?: boolean
+          is_sanctioned?: boolean
+          kyc_status?: string
+          nationality?: string | null
+          phone_number?: string | null
+          risk_score?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          country_of_residence?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          date_of_birth?: string | null
+          email?: string | null
+          external_customer_id?: string | null
+          full_name?: string
+          id?: string
+          identity_number?: string | null
+          is_pep?: boolean
+          is_sanctioned?: boolean
+          kyc_status?: string
+          nationality?: string | null
+          phone_number?: string | null
+          risk_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_customers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pattern_matches: {
         Row: {
