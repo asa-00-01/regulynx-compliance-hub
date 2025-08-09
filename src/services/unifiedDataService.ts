@@ -2,6 +2,7 @@
 import { NewsItem, RSSFeed } from '@/types/news';
 import { KYCUser, KYCVerification } from '@/types/kyc';
 import { AMLTransaction } from '@/types/aml';
+import { Transaction } from '@/types/transaction';
 import { MockDataService } from './mockDataService';
 import { RealDataService } from './realDataService';
 import { config } from '@/config/environment';
@@ -71,6 +72,21 @@ export class UnifiedDataService {
       return MockDataService.getAMLTransactions(filters);
     } else {
       return RealDataService.getAMLTransactions(filters);
+    }
+  }
+
+  // Regular Transactions
+  static async getTransactions(filters?: any): Promise<Transaction[]> {
+    this.logDataSource('Fetching transactions');
+    
+    if (this.useMockData) {
+      // Import mock transaction data
+      const { mockTransactionData } = await import('@/components/transactions/mockTransactionData');
+      return mockTransactionData.transactions;
+    } else {
+      // For now, return empty array since real transaction service isn't implemented
+      console.warn('Real transaction service not yet implemented, returning empty array');
+      return [];
     }
   }
 

@@ -1,11 +1,12 @@
 
-import { useState } from 'react';
-import { mockTransactions } from '@/components/aml/mockTransactionData';
+import { useState, useEffect } from 'react';
 import { AMLTransaction } from '@/types/aml';
 import { useAMLFilters } from './useAMLFilters';
 import { useAMLMetrics } from './useAMLMetrics';
 import { useAMLTransactionActions } from './useAMLTransactionActions';
 import { usePagination } from './usePagination';
+import { UnifiedDataService } from '@/services/unifiedDataService';
+import { config } from '@/config/environment';
 
 /**
  * Manages AML transaction data including filtering, pagination, metrics calculation, and user actions.
@@ -13,11 +14,33 @@ import { usePagination } from './usePagination';
  */
 export const useAMLData = () => {
   // State management
-  const [amlTransactionsList, setAMLTransactionsList] = useState<AMLTransaction[]>(mockTransactions);
+  const [amlTransactionsList, setAMLTransactionsList] = useState<AMLTransaction[]>([]);
   const [currentlySelectedTransaction, setCurrentlySelectedTransaction] = useState<AMLTransaction | null>(null);
   const [detailsModalVisibility, setDetailsModalVisibility] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+
+  // Load AML data when component mounts or mock mode changes
+  useEffect(() => {
+    const loadAMLData = async () => {
+      setIsDataLoading(true);
+      try {
+        console.log(`🔄 Loading AML data via ${UnifiedDataService.getCurrentDataSource()}...`);
+        
+        const amlData = await UnifiedDataService.getAMLTransactions();
+        setAMLTransactionsList(amlData);
+        
+      } catch (error) {
+        console.error('Error loading AML data:', error);
+        setAMLTransactionsList([]);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    loadAMLData();
+  }, [config.features.useMockData]); // Re-load when mock mode changes
   
-  // Use the new filtering hook
+  // Use the filtering hook
   const {
     filters: activeFilters,
     searchTerm: currentSearchTerm,
@@ -26,7 +49,7 @@ export const useAMLData = () => {
     setSearchTerm: updateSearchTerm,
   } = useAMLFilters(amlTransactionsList);
 
-  // Use the new metrics hook
+  // Use the metrics hook
   const calculatedMetrics = useAMLMetrics(filteredAMLTransactions);
 
   // Pagination management
@@ -35,7 +58,7 @@ export const useAMLData = () => {
     itemsPerPage: 10 
   });
 
-  // Use the new transaction actions hook
+  // Use the transaction actions hook
   const transactionActionHandlers = useAMLTransactionActions(setAMLTransactionsList);
 
   /**
@@ -63,6 +86,7 @@ export const useAMLData = () => {
     filters: activeFilters,
     searchTerm: currentSearchTerm,
     metrics: calculatedMetrics,
+    loading: isDataLoading,
     
     // Setters
     setIsDetailsModalOpen: setDetailsModalVisibility,
@@ -88,5 +112,9 @@ export const useAMLData = () => {
     startIndex: paginationState.startIndex,
     endIndex: paginationState.endIndex,
     totalItems: paginationState.totalItems,
+
+    // Data source info
+    dataSource: UnifiedDataService.getCurrentDataSource(),
+    isMockMode: config.features.useMockData,
   };
 };
