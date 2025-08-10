@@ -1,43 +1,21 @@
 
-import { TransactionCurrency, TransactionMethod } from './transaction';
-
 export interface AMLTransaction {
   id: string;
   senderUserId: string;
+  receiverUserId: string;
   senderName: string;
-  receiverUserId?: string;
-  receiverName?: string;
+  receiverName: string;
   senderAmount: number;
-  senderCurrency: TransactionCurrency;
-  receiverAmount?: number;
-  receiverCurrency?: TransactionCurrency;
+  senderCurrency: string;
+  receiverAmount: number;
+  receiverCurrency: string;
+  method: string;
+  status: string;
+  timestamp: string;
   senderCountryCode: string;
   receiverCountryCode: string;
-  timestamp: string;
-  status: 'completed' | 'pending' | 'failed' | 'flagged';
-  reasonForSending: string;
-  method: TransactionMethod;
+  riskScore: number;
   isSuspect: boolean;
-  riskScore: number; // 0-100
-  notes?: string[];
+  flagged?: boolean;
+  reasonForSending: string;
 }
-
-export interface CountryRisk {
-  countryCode: string;
-  countryName: string;
-  riskLevel: 'high' | 'medium' | 'low';
-}
-
-export const HIGH_RISK_COUNTRIES: CountryRisk[] = [
-  { countryCode: 'AF', countryName: 'Afghanistan', riskLevel: 'high' },
-  { countryCode: 'IR', countryName: 'Iran', riskLevel: 'high' },
-  { countryCode: 'KP', countryName: 'North Korea', riskLevel: 'high' },
-  { countryCode: 'RU', countryName: 'Russia', riskLevel: 'high' },
-  { countryCode: 'SY', countryName: 'Syria', riskLevel: 'high' },
-  { countryCode: 'VE', countryName: 'Venezuela', riskLevel: 'high' },
-  { countryCode: 'BY', countryName: 'Belarus', riskLevel: 'high' },
-  { countryCode: 'MM', countryName: 'Myanmar', riskLevel: 'high' },
-  { countryCode: 'CU', countryName: 'Cuba', riskLevel: 'medium' },
-  { countryCode: 'SO', countryName: 'Somalia', riskLevel: 'medium' },
-  { countryCode: 'YE', countryName: 'Yemen', riskLevel: 'medium' }
-];

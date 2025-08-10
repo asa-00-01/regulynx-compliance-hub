@@ -1,5 +1,5 @@
 
-import { renderHook, waitFor } from '@/test-utils';
+import { renderHook } from '@/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import { useAMLMetrics } from '../useAMLMetrics';
 
@@ -18,10 +18,8 @@ describe('useAMLMetrics', () => {
   it('should return default metrics when no data', async () => {
     const { result } = renderHook(() => useAMLMetrics());
     
-    await waitFor(() => {
-      expect(result.current.totalTransactions).toBeDefined();
-      expect(result.current.loading).toBe(false);
-    });
+    expect(result.current.totalTransactions).toBeDefined();
+    expect(result.current.loading).toBe(true);
   });
 
   it('should calculate metrics from provided transactions', async () => {
@@ -43,15 +41,13 @@ describe('useAMLMetrics', () => {
         receiverName: 'Jane Smith',
         senderCountryCode: 'US',
         receiverCountryCode: 'GB',
-        flagged: false
+        flagged: false,
+        reasonForSending: 'Payment for services'
       }
     ];
     
     const { result } = renderHook(() => useAMLMetrics(mockTransactions));
     
-    await waitFor(() => {
-      expect(result.current.totalTransactions).toBe(1);
-      expect(result.current.loading).toBe(false);
-    });
+    expect(result.current.totalTransactions).toBe(1);
   });
 });

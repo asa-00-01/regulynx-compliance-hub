@@ -19,10 +19,24 @@ export interface RiskMatch {
   match_data?: any;
 }
 
+export interface RiskFactor {
+  name: string;
+  value: number;
+  weight: number;
+}
+
 export interface RiskAssessmentResult {
+  id?: string;
+  customer_id?: string;
   total_risk_score: number;
-  matched_rules: RiskMatch[];
+  score: number;
+  level: 'low' | 'medium' | 'high' | 'critical';
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  factors?: RiskFactor[];
+  matched_rules: string[];
   rule_categories: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface RiskMatchDisplay {

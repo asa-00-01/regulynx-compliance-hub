@@ -21,10 +21,22 @@ export const useRiskScoring = (entity?: AMLTransaction | UnifiedUserData) => {
 
       if ('senderAmount' in entity) {
         // It's a transaction
-        assessment = await riskEvaluationService.evaluateTransactionRisk(entity.id, entity);
+        const result = await riskEvaluationService.evaluateTransactionRisk(entity.id, entity);
+        assessment = {
+          ...result,
+          total_risk_score: result.total_risk_score || result.score,
+          matched_rules: result.matched_rules || [],
+          rule_categories: result.rule_categories || []
+        };
       } else {
         // It's a user
-        assessment = await riskEvaluationService.evaluateCustomerRisk(entity.id, entity);
+        const result = await riskEvaluationService.evaluateCustomerRisk(entity.id, entity);
+        assessment = {
+          ...result,
+          total_risk_score: result.total_risk_score || result.score,
+          matched_rules: result.matched_rules || [],
+          rule_categories: result.rule_categories || []
+        };
       }
 
       setRiskAssessment(assessment);
