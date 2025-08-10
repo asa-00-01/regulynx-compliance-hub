@@ -62,8 +62,42 @@ const Sidebar = () => {
 
   const hasAccess = (item: any) => {
     if (!item.roles) return true;
-    return item.roles.includes(user?.role);
+    if (!user?.role) return false;
+    
+    // Map legacy roles to new role system
+    const userRole = user.role;
+    const mappedRoles = [];
+    
+    // Map customer roles to legacy roles for backward compatibility
+    if (user.customer_roles?.includes('customer_admin')) {
+      mappedRoles.push('admin');
+    }
+    if (user.customer_roles?.includes('customer_compliance')) {
+      mappedRoles.push('complianceOfficer');
+    }
+    if (user.customer_roles?.includes('customer_executive')) {
+      mappedRoles.push('executive');
+    }
+    if (user.customer_roles?.includes('customer_support')) {
+      mappedRoles.push('support');
+    }
+    
+    // Also check the direct role
+    if (userRole === 'admin') mappedRoles.push('admin');
+    if (userRole === 'complianceOfficer') mappedRoles.push('complianceOfficer');
+    if (userRole === 'executive') mappedRoles.push('executive');
+    if (userRole === 'support') mappedRoles.push('support');
+    
+    return item.roles.some((role: string) => mappedRoles.includes(role));
   };
+
+  // Debug logging
+  console.log('🔍 Sidebar Debug:', {
+    user: user,
+    userRole: user?.role,
+    customerRoles: user?.customer_roles,
+    currentPath: location.pathname
+  });
 
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
