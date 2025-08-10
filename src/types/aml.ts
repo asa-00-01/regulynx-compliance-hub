@@ -18,4 +18,19 @@ export interface AMLTransaction {
   isSuspect: boolean;
   flagged?: boolean;
   reasonForSending: string;
+  notes?: string;
 }
+
+export interface HighRiskCountry {
+  countryCode: string;
+  name: string;
+  riskLevel: 'high' | 'medium' | 'low';
+}
+
+export const HIGH_RISK_COUNTRIES: HighRiskCountry[] = [
+  { countryCode: 'AF', name: 'Afghanistan', riskLevel: 'high' },
+  { countryCode: 'IR', name: 'Iran', riskLevel: 'high' },
+  { countryCode: 'KP', name: 'North Korea', riskLevel: 'high' },
+  { countryCode: 'SY', name: 'Syria', riskLevel: 'high' },
+  { countryCode: 'VE', name: 'Venezuela', riskLevel: 'high' },
+];

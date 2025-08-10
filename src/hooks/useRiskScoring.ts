@@ -25,6 +25,7 @@ export const useRiskScoring = (entity?: AMLTransaction | UnifiedUserData) => {
         assessment = {
           ...result,
           total_risk_score: result.total_risk_score || result.score,
+          risk_level: result.level,
           matched_rules: result.matched_rules || [],
           rule_categories: result.rule_categories || []
         };
@@ -34,6 +35,7 @@ export const useRiskScoring = (entity?: AMLTransaction | UnifiedUserData) => {
         assessment = {
           ...result,
           total_risk_score: result.total_risk_score || result.score,
+          risk_level: result.level,
           matched_rules: result.matched_rules || [],
           rule_categories: result.rule_categories || []
         };

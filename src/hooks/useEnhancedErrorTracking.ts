@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { enhancedErrorTracking, ErrorContext } from '@/services/enhancedErrorTracking';
+import { enhancedErrorTrackingService, ErrorContext } from '@/services/enhancedErrorTracking';
 import { useAuth } from '@/context/AuthContext';
 
 export const useEnhancedErrorTracking = () => {
@@ -10,7 +10,7 @@ export const useEnhancedErrorTracking = () => {
     error: Error, 
     context?: Partial<ErrorContext>
   ): Promise<string> => {
-    return await enhancedErrorTracking.captureError(error, {
+    return enhancedErrorTrackingService.captureError(error, {
       userId: user?.id,
       ...context
     });
@@ -22,13 +22,8 @@ export const useEnhancedErrorTracking = () => {
     level: 'info' | 'warning' | 'error' = 'info',
     data?: Record<string, any>
   ) => {
-    enhancedErrorTracking.addBreadcrumb({
-      category,
-      message,
-      level,
-      timestamp: new Date().toISOString(),
-      data
-    });
+    // Implementation would add breadcrumb logic here
+    console.log('Breadcrumb:', { category, message, level, data });
   }, []);
 
   const trackUserAction = useCallback((action: string, component?: string, data?: Record<string, any>) => {

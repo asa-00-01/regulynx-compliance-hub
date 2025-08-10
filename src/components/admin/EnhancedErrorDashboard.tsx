@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { enhancedErrorTracking, ErrorLog, ErrorAnalytics } from '@/services/enhancedErrorTracking';
+import { enhancedErrorTrackingService, ErrorLog, ErrorAnalytics } from '@/services/enhancedErrorTracking';
 
 const EnhancedErrorDashboard: React.FC = () => {
   const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([]);
@@ -34,8 +34,8 @@ const EnhancedErrorDashboard: React.FC = () => {
   const loadErrorData = async () => {
     setLoading(true);
     try {
-      const logs = await enhancedErrorTracking.getErrorLogs();
-      const errorAnalytics = await enhancedErrorTracking.getErrorAnalytics();
+      const logs = enhancedErrorTrackingService.getErrorLogs();
+      const errorAnalytics = enhancedErrorTrackingService.getErrorAnalytics();
       
       const filteredLogs = filter === 'all' 
         ? logs 
@@ -52,7 +52,7 @@ const EnhancedErrorDashboard: React.FC = () => {
 
   const handleResolveError = async (errorId: string) => {
     try {
-      await enhancedErrorTracking.resolveError(errorId);
+      enhancedErrorTrackingService.resolveError(errorId, 'Admin');
       await loadErrorData();
     } catch (error) {
       console.error('Failed to resolve error:', error);
@@ -61,7 +61,13 @@ const EnhancedErrorDashboard: React.FC = () => {
 
   const handleExportErrors = async () => {
     try {
-      await enhancedErrorTracking.exportErrorLogs();
+      const exportData = enhancedErrorTrackingService.exportErrorLogs();
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'error-logs.json';
+      a.click();
     } catch (error) {
       console.error('Failed to export errors:', error);
     }
@@ -197,10 +203,10 @@ const EnhancedErrorDashboard: React.FC = () => {
                           {error.severity}
                         </Badge>
                         <Badge variant="outline">
-                          {String(error.component || 'Unknown')}
+                          {error.component || 'Unknown'}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(error.timestamp).toLocaleString()}
+                          {error.timestamp.toLocaleString()}
                         </span>
                       </div>
                       
@@ -209,11 +215,11 @@ const EnhancedErrorDashboard: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
-                          <span>{String(error.userId || 'Anonymous')}</span>
+                          <span>{error.userId || 'Anonymous'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          <span>{String(error.userAgent || 'Unknown browser')}</span>
+                          <span>{error.userAgent || 'Unknown browser'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />

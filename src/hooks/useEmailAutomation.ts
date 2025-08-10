@@ -8,7 +8,10 @@ interface EmailTemplate {
   subject: string;
   category: string;
   html_content: string;
+  text_content: string;
   variables: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 interface EmailAutomationHook {

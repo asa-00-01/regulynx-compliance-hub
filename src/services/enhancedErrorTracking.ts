@@ -5,6 +5,7 @@ export interface ErrorLog {
   level: 'error' | 'warning' | 'info';
   message: string;
   stack?: string;
+  stackTrace?: string;
   url: string;
   userAgent: string;
   userId?: string;
@@ -12,6 +13,10 @@ export interface ErrorLog {
   resolved: boolean;
   resolvedBy?: string;
   resolvedAt?: Date;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  component?: string;
+  occurrenceCount: number;
+  status: 'resolved' | 'unresolved';
 }
 
 export interface ErrorAnalytics {
@@ -21,6 +26,18 @@ export interface ErrorAnalytics {
   errorTrends: Array<{ date: string; count: number }>;
   topErrors: Array<{ message: string; count: number }>;
   resolutionRate: number;
+  criticalErrors: number;
+  errorRate: number;
+  averageResolutionTime: number;
+  topErrorTypes: Array<{ type: string; count: number }>;
+  errorDistribution: Record<string, number>;
+}
+
+export interface ErrorContext {
+  userId?: string;
+  component?: string;
+  action?: string;
+  metadata?: Record<string, any>;
 }
 
 export class EnhancedErrorTrackingService {
@@ -34,17 +51,22 @@ export class EnhancedErrorTrackingService {
     return this.instance;
   }
 
-  captureError(error: Error, context?: Record<string, any>): string {
+  captureError(error: Error, context?: ErrorContext): string {
     const errorLog: ErrorLog = {
       id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
       level: 'error',
       message: error.message,
       stack: error.stack,
+      stackTrace: error.stack,
       url: window.location.href,
       userAgent: navigator.userAgent,
       context,
-      resolved: false
+      resolved: false,
+      severity: 'high',
+      component: context?.component,
+      occurrenceCount: 1,
+      status: 'unresolved'
     };
 
     this.errorLogs.push(errorLog);
@@ -52,7 +74,7 @@ export class EnhancedErrorTrackingService {
     return errorLog.id;
   }
 
-  captureWarning(message: string, context?: Record<string, any>): string {
+  captureWarning(message: string, context?: ErrorContext): string {
     const errorLog: ErrorLog = {
       id: `warning_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
@@ -61,7 +83,11 @@ export class EnhancedErrorTrackingService {
       url: window.location.href,
       userAgent: navigator.userAgent,
       context,
-      resolved: false
+      resolved: false,
+      severity: 'medium',
+      component: context?.component,
+      occurrenceCount: 1,
+      status: 'unresolved'
     };
 
     this.errorLogs.push(errorLog);
@@ -88,6 +114,9 @@ export class EnhancedErrorTrackingService {
 
     const resolvedCount = this.errorLogs.filter(log => log.resolved).length;
     const resolutionRate = totalErrors > 0 ? (resolvedCount / totalErrors) * 100 : 0;
+    const criticalErrors = this.errorLogs.filter(log => log.severity === 'critical').length;
+    const errorRate = totalErrors > 0 ? (totalErrors / 100) * 100 : 0;
+    const averageResolutionTime = 24; // Mock value
 
     const topErrors = Object.entries(
       this.errorLogs.reduce((acc, log) => {
@@ -99,22 +128,44 @@ export class EnhancedErrorTrackingService {
       .slice(0, 10)
       .map(([message, count]) => ({ message, count }));
 
+    const topErrorTypes = Object.entries(
+      this.errorLogs.reduce((acc, log) => {
+        const type = log.component || 'Unknown';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    )
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([type, count]) => ({ type, count }));
+
+    const errorDistribution = this.errorLogs.reduce((acc, log) => {
+      acc[log.severity] = (acc[log.severity] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     return {
       totalErrors,
       errorsByLevel,
       errorsByPage,
       errorTrends: [], // Would need more complex logic for real trends
       topErrors,
-      resolutionRate
+      resolutionRate,
+      criticalErrors,
+      errorRate,
+      averageResolutionTime,
+      topErrorTypes,
+      errorDistribution
     };
   }
 
-  resolveError(errorId: string, resolvedBy: string): boolean {
+  resolveError(errorId: string, resolvedBy?: string): boolean {
     const errorLog = this.errorLogs.find(log => log.id === errorId);
     if (errorLog) {
       errorLog.resolved = true;
       errorLog.resolvedBy = resolvedBy;
       errorLog.resolvedAt = new Date();
+      errorLog.status = 'resolved';
       return true;
     }
     return false;

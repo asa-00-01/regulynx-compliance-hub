@@ -1,91 +1,58 @@
 
-import { useState, useEffect } from 'react';
-import { UnifiedUserData } from '@/context/compliance/types';
-import { AMLTransaction } from '@/types/aml';
-import { riskEvaluationService, RiskAssessmentResult } from '@/services/risk';
+import { useState, useCallback } from 'react';
+import { riskEvaluationService } from '@/services/risk';
+import { RiskAssessmentResult } from '@/types/risk';
 
-interface GlobalRiskAssessmentHook {
-  assessments: RiskAssessmentResult[];
+export interface GlobalRiskAssessmentHook {
+  assessment: RiskAssessmentResult | null;
   loading: boolean;
   error: string | null;
-  runGlobalAssessment: () => Promise<void>;
-  assessEntity: (entity: UnifiedUserData | AMLTransaction) => Promise<RiskAssessmentResult | null>;
-  getHighRiskEntities: () => RiskAssessmentResult[];
-  refreshAssessments: () => Promise<void>;
+  runGlobalAssessment: () => Promise<RiskAssessmentResult | null>;
+  clearAssessment: () => void;
 }
 
 export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
-  const [assessments, setAssessments] = useState<RiskAssessmentResult[]>([]);
+  const [assessment, setAssessment] = useState<RiskAssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const runGlobalAssessment = async () => {
+  const runGlobalAssessment = useCallback(async (): Promise<RiskAssessmentResult | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      // Mock global assessment - in real implementation, this would assess all entities
-      const mockAssessments: RiskAssessmentResult[] = [
-        {
-          id: 'assessment_1',
-          customer_id: 'customer_1',
-          score: 85,
-          total_risk_score: 85,
-          level: 'critical',
-          risk_level: 'critical',
-          factors: [
-            { name: 'High Transaction Volume', value: 90, weight: 0.4 },
-            { name: 'Suspicious Pattern', value: 80, weight: 0.6 }
-          ],
-          matched_rules: ['high_volume', 'suspicious_pattern'],
-          rule_categories: ['transaction', 'behavioral'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
-      setAssessments(mockAssessments);
+      // Mock global assessment - would integrate with actual service
+      const result = await riskEvaluationService.evaluateCustomerRisk('global', {});
+      const globalAssessment: RiskAssessmentResult = {
+        ...result,
+        total_risk_score: result.total_risk_score || result.score,
+        risk_level: result.level,
+        matched_rules: result.matched_rules || [],
+        rule_categories: result.rule_categories || []
+      };
+      
+      setAssessment(globalAssessment);
+      return globalAssessment;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to run global assessment');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to run global assessment';
+      setError(errorMessage);
+      console.error('Global risk assessment error:', err);
+      return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const assessEntity = async (entity: UnifiedUserData | AMLTransaction): Promise<RiskAssessmentResult | null> => {
-    try {
-      if ('senderAmount' in entity) {
-        return await riskEvaluationService.evaluateTransactionRisk(entity.id, entity);
-      } else {
-        return await riskEvaluationService.evaluateCustomerRisk(entity.id, entity);
-      }
-    } catch (err) {
-      console.error('Failed to assess entity:', err);
-      return null;
-    }
-  };
-
-  const getHighRiskEntities = (): RiskAssessmentResult[] => {
-    return assessments.filter(assessment => 
-      (assessment.total_risk_score || assessment.score) >= 70
-    );
-  };
-
-  const refreshAssessments = async () => {
-    await runGlobalAssessment();
-  };
-
-  useEffect(() => {
-    runGlobalAssessment();
+  const clearAssessment = useCallback(() => {
+    setAssessment(null);
+    setError(null);
   }, []);
 
   return {
-    assessments,
+    assessment,
     loading,
     error,
     runGlobalAssessment,
-    assessEntity,
-    getHighRiskEntities,
-    refreshAssessments,
+    clearAssessment
   };
 };
