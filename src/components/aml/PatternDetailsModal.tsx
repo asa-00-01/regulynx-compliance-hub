@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Eye, Flag, FileText } from 'lucide-react';
-import { DetectedPattern, AMLTransaction } from '@/types/aml';
+import { DetectedPattern } from '@/types/pattern';
+import { AMLTransaction } from '@/types/aml';
 
 export interface PatternDetailsModalProps {
-  pattern: DetectedPattern;
+  pattern: DetectedPattern | null;
   isOpen: boolean;
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onViewTransaction: (transaction: AMLTransaction) => void;
   onFlagTransaction: (transaction: AMLTransaction) => void;
@@ -20,21 +20,20 @@ export interface PatternDetailsModalProps {
 const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
   pattern,
   isOpen,
-  open,
   onOpenChange,
   onViewTransaction,
   onFlagTransaction,
   onCreateCase
 }) => {
-  const modalOpen = isOpen || open;
+  if (!pattern) return null;
 
   return (
-    <Dialog open={modalOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            Pattern Details: {pattern.type}
+            Pattern Details: {pattern.name}
           </DialogTitle>
         </DialogHeader>
 
@@ -46,22 +45,22 @@ const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Type</label>
-                  <p className="text-sm">{pattern.type}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Category</label>
+                  <p className="text-sm capitalize">{pattern.category}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Risk Score</label>
-                  <Badge variant={pattern.riskScore >= 70 ? 'destructive' : pattern.riskScore >= 40 ? 'secondary' : 'default'}>
-                    {pattern.riskScore}
+                  <label className="text-sm font-medium text-muted-foreground">Severity</label>
+                  <Badge variant={pattern.severity === 'high' ? 'destructive' : pattern.severity === 'medium' ? 'secondary' : 'default'}>
+                    {pattern.severity}
                   </Badge>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Confidence</label>
-                  <p className="text-sm">{pattern.confidence}%</p>
+                  <label className="text-sm font-medium text-muted-foreground">Match Count</label>
+                  <p className="text-sm">{pattern.matchCount}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Transactions</label>
-                  <p className="text-sm">{pattern.transactionIds.length}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Last Detected</label>
+                  <p className="text-sm">{new Date(pattern.lastDetected).toLocaleDateString()}</p>
                 </div>
               </div>
               <div>
@@ -77,17 +76,19 @@ const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {pattern.transactionIds.map((transactionId) => (
-                  <div key={transactionId} className="flex items-center justify-between p-3 border rounded-lg">
+                {pattern.transactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <p className="font-medium">Transaction {transactionId}</p>
-                      <p className="text-sm text-muted-foreground">Click to view details</p>
+                      <p className="font-medium">Transaction {transaction.id.substring(0, 8)}...</p>
+                      <p className="text-sm text-muted-foreground">
+                        {transaction.senderAmount} {transaction.senderCurrency} → {transaction.receiverAmount} {transaction.receiverCurrency}
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onViewTransaction({ id: transactionId } as AMLTransaction)}
+                        onClick={() => onViewTransaction(transaction)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
@@ -95,7 +96,7 @@ const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onFlagTransaction({ id: transactionId } as AMLTransaction)}
+                        onClick={() => onFlagTransaction(transaction)}
                       >
                         <Flag className="h-4 w-4 mr-1" />
                         Flag
@@ -103,7 +104,7 @@ const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onCreateCase({ id: transactionId } as AMLTransaction)}
+                        onClick={() => onCreateCase(transaction)}
                       >
                         <FileText className="h-4 w-4 mr-1" />
                         Case

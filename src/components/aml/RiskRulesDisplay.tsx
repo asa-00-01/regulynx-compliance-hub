@@ -25,12 +25,20 @@ const RiskRulesDisplay: React.FC<RiskRulesDisplayProps> = ({ transaction, user }
     triggeredRuleIds,
   } = useRiskRules({ transaction, user });
 
+  const handleRunAssessment = async () => {
+    if (transaction) {
+      await runRiskAssessment(transaction.id, 'transaction');
+    } else if (user) {
+      await runRiskAssessment(user.id, 'user');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <RiskScoreSummary
         totalRiskScore={totalRiskScore}
         riskMatchesCount={riskMatches.length}
-        onRunAssessment={runRiskAssessment}
+        onRunAssessment={handleRunAssessment}
         loading={loading}
       />
       
@@ -42,7 +50,7 @@ const RiskRulesDisplay: React.FC<RiskRulesDisplayProps> = ({ transaction, user }
 
       <AvailableRules
         rules={allRules}
-        triggeredRuleIds={triggeredRuleIds}
+        triggeredRuleIds={new Set(triggeredRuleIds)}
         category={selectedCategory}
       />
     </div>

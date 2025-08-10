@@ -95,14 +95,16 @@ const PatternDetectionEngine: React.FC = () => {
 
       <PatternStatistics patterns={patterns} />
 
-      <PatternDetailsModal
-        pattern={selectedPattern}
-        open={isPatternDetailsOpen}
-        onOpenChange={setIsPatternDetailsOpen}
-        onViewTransaction={handleViewTransaction}
-        onFlagTransaction={handleFlagTransaction}
-        onCreateCase={handleCreateCase}
-      />
+      {selectedPattern && (
+        <PatternDetailsModal
+          pattern={selectedPattern}
+          isOpen={isPatternDetailsOpen}
+          onOpenChange={setIsPatternDetailsOpen}
+          onViewTransaction={handleViewTransaction}
+          onFlagTransaction={handleFlagTransaction}
+          onCreateCase={handleCreateCase}
+        />
+      )}
 
       <TransactionDetailsModal
         transaction={selectedTransaction}

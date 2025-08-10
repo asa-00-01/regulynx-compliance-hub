@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { riskEvaluationService } from '@/services/risk/riskEvaluationService';
 import { RiskFactor, RiskAssessmentResult } from '@/types/risk';
+import { KYCCustomer, DashboardStatsProps, KYCPaginationResult } from './types';
 
 interface KYCMonitoringData {
   totalUsers: number;
@@ -9,19 +10,6 @@ interface KYCMonitoringData {
   riskAlerts: number;
   averageProcessingTime: number;
   recentRiskAssessments: RiskAssessmentResult[];
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  riskScore: number;
-}
-
-interface PaginationData {
-  currentData: Customer[];
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
 }
 
 export const useKYCMonitoring = () => {
@@ -40,19 +28,44 @@ export const useKYCMonitoring = () => {
   const [countryFilter, setCountryFilter] = useState<string>('all');
   
   // Modal states
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<KYCCustomer | null>(null);
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [runningAssessment, setRunningAssessment] = useState(false);
 
-  // Mock pagination data
-  const [pagination] = useState<PaginationData>({
+  // Mock pagination data with proper type
+  const [pagination] = useState<KYCPaginationResult>({
     currentData: [
-      { id: '1', name: 'John Doe', riskScore: 75 },
-      { id: '2', name: 'Jane Smith', riskScore: 45 },
+      { 
+        id: '1', 
+        name: 'John Doe', 
+        email: 'john@example.com',
+        riskScore: 75, 
+        kycStatus: 'pending',
+        country: 'US',
+        createdAt: new Date().toISOString()
+      },
+      { 
+        id: '2', 
+        name: 'Jane Smith', 
+        email: 'jane@example.com',
+        riskScore: 45, 
+        kycStatus: 'verified',
+        country: 'UK',
+        createdAt: new Date().toISOString()
+      },
     ],
     currentPage: 1,
     totalPages: 1,
-    pageSize: 10
+    pageSize: 10,
+    totalItems: 2,
+    itemsPerPage: 10,
+    startIndex: 0,
+    endIndex: 2,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    nextPage: () => {},
+    previousPage: () => {},
+    goToPage: () => {}
   });
 
   const runRiskAssessment = async () => {
@@ -65,21 +78,33 @@ export const useKYCMonitoring = () => {
     }
   };
 
-  const handleReview = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setActionModalOpen(true);
+  const handleReview = (customerId: string) => {
+    const customer = pagination.currentData.find(c => c.id === customerId);
+    if (customer) {
+      setSelectedCustomer(customer);
+      setActionModalOpen(true);
+    }
   };
 
-  const handleFlag = (customer: Customer) => {
-    console.log('Flagging customer:', customer.name);
+  const handleFlag = (customerId: string) => {
+    const customer = pagination.currentData.find(c => c.id === customerId);
+    if (customer) {
+      console.log('Flagging customer:', customer.name);
+    }
   };
 
-  const handleCreateCase = (customer: Customer) => {
-    console.log('Creating case for customer:', customer.name);
+  const handleCreateCase = (customerId: string) => {
+    const customer = pagination.currentData.find(c => c.id === customerId);
+    if (customer) {
+      console.log('Creating case for customer:', customer.name);
+    }
   };
 
-  const handleViewProfile = (customer: Customer) => {
-    console.log('Viewing profile for customer:', customer.name);
+  const handleViewProfile = (customerId: string) => {
+    const customer = pagination.currentData.find(c => c.id === customerId);
+    if (customer) {
+      console.log('Viewing profile for customer:', customer.name);
+    }
   };
 
   const handlers = {
@@ -89,11 +114,15 @@ export const useKYCMonitoring = () => {
     handleViewProfile
   };
 
-  const stats = {
+  const stats: DashboardStatsProps = {
     totalUsers: data.totalUsers,
     pendingVerifications: data.pendingVerifications,
     riskAlerts: data.riskAlerts,
-    averageProcessingTime: data.averageProcessingTime
+    averageProcessingTime: data.averageProcessingTime,
+    flaggedUsers: 8,
+    pendingReviews: 15,
+    highRiskUsers: 12,
+    recentAlerts: 5
   };
 
   useEffect(() => {
@@ -114,10 +143,10 @@ export const useKYCMonitoring = () => {
           
           const assessmentResult: RiskAssessmentResult = {
             ...evaluation,
-            total_risk_score: evaluation.total_risk_score || evaluation.score,
-            risk_level: evaluation.risk_level || evaluation.level,
-            matched_rules: evaluation.matched_rules || [],
-            rule_categories: evaluation.rule_categories || []
+            total_risk_score: evaluation.score,
+            risk_level: evaluation.level,
+            matched_rules: [],
+            rule_categories: []
           };
 
           mockAssessments.push(assessmentResult);
