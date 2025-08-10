@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings, Database, Key, Send, FileText } from 'lucide-react';
+import { Plus, Settings, Database, Key, Send, FileText, Rocket, Activity, Cog } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useIntegrationManagement } from '@/hooks/useIntegrationManagement';
@@ -13,6 +13,9 @@ import APIKeyManagement from './APIKeyManagement';
 import CustomerMappingView from './CustomerMappingView';
 import WebhookMonitor from './WebhookMonitor';
 import APIDocumentation from './APIDocumentation';
+import ReleaseManagement from './ReleaseManagement';
+import EnhancedMonitoring from './EnhancedMonitoring';
+import ConfigurationManagement from './ConfigurationManagement';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const IntegrationDashboard = () => {
@@ -86,7 +89,7 @@ const IntegrationDashboard = () => {
       <IntegrationStats stats={stats} />
 
       <Tabs defaultValue="configs" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="configs">
             <Settings className="mr-2 h-4 w-4" />
             Configurations
@@ -94,6 +97,10 @@ const IntegrationDashboard = () => {
           <TabsTrigger value="monitoring">
             <Database className="mr-2 h-4 w-4" />
             Data Monitoring
+          </TabsTrigger>
+          <TabsTrigger value="enhanced-monitoring">
+            <Activity className="mr-2 h-4 w-4" />
+            Enhanced Monitoring
           </TabsTrigger>
           <TabsTrigger value="keys">
             <Key className="mr-2 h-4 w-4" />
@@ -105,6 +112,14 @@ const IntegrationDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="mappings">
             Customer Mappings
+          </TabsTrigger>
+          <TabsTrigger value="releases">
+            <Rocket className="mr-2 h-4 w-4" />
+            Releases
+          </TabsTrigger>
+          <TabsTrigger value="config-management">
+            <Cog className="mr-2 h-4 w-4" />
+            Configuration
           </TabsTrigger>
           <TabsTrigger value="docs">
             <FileText className="mr-2 h-4 w-4" />
@@ -158,6 +173,10 @@ const IntegrationDashboard = () => {
           />
         </TabsContent>
 
+        <TabsContent value="enhanced-monitoring" className="space-y-4">
+          <EnhancedMonitoring />
+        </TabsContent>
+
         <TabsContent value="keys" className="space-y-4">
           <APIKeyManagement
             apiKeys={apiKeys}
@@ -180,6 +199,14 @@ const IntegrationDashboard = () => {
             onClientSelect={setSelectedClientId}
             integrationConfigs={integrationConfigs}
           />
+        </TabsContent>
+
+        <TabsContent value="releases" className="space-y-4">
+          <ReleaseManagement />
+        </TabsContent>
+
+        <TabsContent value="config-management" className="space-y-4">
+          <ConfigurationManagement />
         </TabsContent>
 
         <TabsContent value="docs" className="space-y-4">
