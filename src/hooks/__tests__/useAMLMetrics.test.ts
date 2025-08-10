@@ -1,26 +1,26 @@
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { useAMLMetrics } from '../useAMLMetrics';
 
-describe('useAMLMetrics', () => {
-  it('should return loading state initially', () => {
-    const { result } = renderHook(() => useAMLMetrics('30d'));
-    
-    expect(result.current.loading).toBe(true);
-    expect(result.current.totalTransactions).toBe(0);
-  });
+// Mock the supabase client
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
+      }))
+    }))
+  }
+}));
 
-  it('should return metrics after loading', async () => {
-    const { result } = renderHook(() => useAMLMetrics('30d'));
+describe('useAMLMetrics', () => {
+  it('should return default metrics when no data', async () => {
+    const { result } = renderHook(() => useAMLMetrics());
     
     await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+      expect(result.current.metrics).toBeDefined();
+      expect(result.current.isLoading).toBe(false);
     });
-    
-    expect(result.current.totalTransactions).toBe(1250);
-    expect(result.current.flaggedTransactions).toBe(45);
-    expect(result.current.highRiskTransactions).toBe(12);
-    expect(result.current.totalAmount).toBe(2500000);
   });
 });

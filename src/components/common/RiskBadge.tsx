@@ -5,48 +5,66 @@ import { cn } from '@/lib/utils';
 
 export interface RiskBadgeProps {
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  showText?: boolean;
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
-const RiskBadge: React.FC<RiskBadgeProps> = ({ riskLevel, className }) => {
-  const getVariant = (level: string) => {
+const RiskBadge: React.FC<RiskBadgeProps> = ({ 
+  riskLevel, 
+  showText = true, 
+  size = 'md',
+  className 
+}) => {
+  const getRiskColor = (level: string) => {
     switch (level) {
-      case 'critical':
-        return 'destructive';
-      case 'high':
-        return 'destructive';
-      case 'medium':
-        return 'default';
       case 'low':
-        return 'secondary';
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+      case 'critical':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
       default:
-        return 'default';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
-  const getColorClass = (level: string) => {
-    switch (level) {
-      case 'critical':
-        return 'bg-red-100 text-red-800';
-      case 'high':
-        return 'bg-orange-100 text-orange-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
+  const getSizeClasses = (size: string) => {
+    switch (size) {
+      case 'sm':
+        return 'px-2 py-0.5 text-xs';
+      case 'lg':
+        return 'px-4 py-1 text-base';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'px-3 py-1 text-sm';
     }
   };
+
+  const riskText = showText ? riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) : '';
 
   return (
     <Badge 
-      variant={getVariant(riskLevel)} 
-      className={cn(getColorClass(riskLevel), className)}
+      variant="outline" 
+      className={cn(
+        getRiskColor(riskLevel),
+        getSizeClasses(size),
+        'font-medium border-0',
+        className
+      )}
     >
-      {riskLevel.toUpperCase()}
+      {riskText}
     </Badge>
   );
 };
 
 export default RiskBadge;
+
+// Helper function to convert risk score to risk level
+export const getRiskLevelFromScore = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
+  if (score >= 80) return 'critical';
+  if (score >= 60) return 'high';
+  if (score >= 40) return 'medium';
+  return 'low';
+};

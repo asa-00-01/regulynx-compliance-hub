@@ -6,21 +6,26 @@ export interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
-  htmlContent: string;
-  textContent?: string;
-  type: 'transactional' | 'lifecycle' | 'compliance' | 'alert';
+  html_content: string;
+  text_content: string;
   variables: string[];
+  category: 'compliance' | 'kyc' | 'system' | 'marketing';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EmailJob {
   id: string;
-  templateId: string;
-  recipient: string;
+  template_id: string;
+  recipient_email: string;
+  recipient_name?: string;
   variables: Record<string, any>;
-  scheduledFor?: Date;
   status: 'pending' | 'sent' | 'failed' | 'cancelled';
-  sentAt?: Date;
-  errorMessage?: string;
+  scheduled_for?: string;
+  sent_at?: string;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 class EmailAutomationService {
@@ -33,89 +38,58 @@ class EmailAutomationService {
   private initializeDefaultTemplates() {
     const defaultTemplates: EmailTemplate[] = [
       {
-        id: 'welcome',
-        name: 'Welcome Email',
-        subject: 'Welcome to Regulynx - {{user_name}}',
-        htmlContent: `
-          <h1>Welcome to Regulynx, {{user_name}}!</h1>
-          <p>Thank you for joining our compliance platform. Here's what you can do next:</p>
-          <ul>
-            <li>Complete your profile setup</li>
-            <li>Explore the dashboard</li>
-            <li>Set up your notification preferences</li>
-          </ul>
-          <p><a href="{{dashboard_url}}">Get Started</a></p>
+        id: 'kyc_approval_required',
+        name: 'KYC Approval Required',
+        subject: 'KYC Documentation Review Required',
+        html_content: `
+          <h2>KYC Review Required</h2>
+          <p>Hello {{customer_name}},</p>
+          <p>Your KYC documentation requires review. Please log in to your account to complete the process.</p>
+          <p>Case ID: {{case_id}}</p>
+          <p>Due Date: {{due_date}}</p>
         `,
-        type: 'lifecycle',
-        variables: ['user_name', 'dashboard_url']
+        text_content: 'KYC Review Required for {{customer_name}}. Case ID: {{case_id}}',
+        variables: ['customer_name', 'case_id', 'due_date'],
+        category: 'kyc',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
-        id: 'password_reset',
-        name: 'Password Reset',
-        subject: 'Reset Your Regulynx Password',
-        htmlContent: `
-          <h1>Password Reset Request</h1>
-          <p>You requested a password reset for your Regulynx account.</p>
-          <p><a href="{{reset_url}}">Reset Your Password</a></p>
-          <p>This link will expire in 24 hours.</p>
-          <p>If you didn't request this, please ignore this email.</p>
+        id: 'compliance_case_created',
+        name: 'Compliance Case Created',
+        subject: 'New Compliance Case: {{case_id}}',
+        html_content: `
+          <h2>New Compliance Case</h2>
+          <p>A new compliance case has been created:</p>
+          <ul>
+            <li>Case ID: {{case_id}}</li>
+            <li>Customer: {{customer_name}}</li>
+            <li>Priority: {{priority}}</li>
+            <li>Assigned to: {{assigned_to}}</li>
+          </ul>
         `,
-        type: 'transactional',
-        variables: ['reset_url']
+        text_content: 'New compliance case {{case_id}} for {{customer_name}}',
+        variables: ['case_id', 'customer_name', 'priority', 'assigned_to'],
+        category: 'compliance',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
-        id: 'case_assigned',
-        name: 'Case Assignment',
-        subject: 'New Case Assigned: {{case_id}}',
-        htmlContent: `
-          <h1>New Case Assigned</h1>
-          <p>A new compliance case has been assigned to you:</p>
-          <ul>
-            <li><strong>Case ID:</strong> {{case_id}}</li>
-            <li><strong>Priority:</strong> {{priority}}</li>
-            <li><strong>Due Date:</strong> {{due_date}}</li>
-          </ul>
-          <p><a href="{{case_url}}">View Case Details</a></p>
+        id: 'system_alert',
+        name: 'System Alert',
+        subject: 'System Alert: {{alert_type}}',
+        html_content: `
+          <h2>System Alert</h2>
+          <p>Alert Type: {{alert_type}}</p>
+          <p>Severity: {{severity}}</p>
+          <p>Message: {{message}}</p>
+          <p>Time: {{timestamp}}</p>
         `,
-        type: 'compliance',
-        variables: ['case_id', 'priority', 'due_date', 'case_url']
-      },
-      {
-        id: 'high_risk_alert',
-        name: 'High Risk Alert',
-        subject: 'URGENT: High Risk Transaction Detected',
-        htmlContent: `
-          <h1 style="color: #dc2626;">High Risk Alert</h1>
-          <p>A high-risk transaction has been detected and requires immediate attention:</p>
-          <ul>
-            <li><strong>Transaction ID:</strong> {{transaction_id}}</li>
-            <li><strong>Amount:</strong> {{amount}}</li>
-            <li><strong>Risk Score:</strong> {{risk_score}}</li>
-            <li><strong>Customer:</strong> {{customer_name}}</li>
-          </ul>
-          <p><a href="{{transaction_url}}">Review Transaction</a></p>
-        `,
-        type: 'alert',
-        variables: ['transaction_id', 'amount', 'risk_score', 'customer_name', 'transaction_url']
-      },
-      {
-        id: 'weekly_summary',
-        name: 'Weekly Compliance Summary',
-        subject: 'Weekly Compliance Report - {{week_ending}}',
-        htmlContent: `
-          <h1>Weekly Compliance Summary</h1>
-          <p>Here's your compliance summary for the week ending {{week_ending}}:</p>
-          <h2>Key Metrics</h2>
-          <ul>
-            <li>Cases Processed: {{cases_processed}}</li>
-            <li>High Risk Transactions: {{high_risk_count}}</li>
-            <li>Pending Reviews: {{pending_reviews}}</li>
-            <li>Compliance Score: {{compliance_score}}%</li>
-          </ul>
-          <p><a href="{{dashboard_url}}">View Full Report</a></p>
-        `,
-        type: 'lifecycle',
-        variables: ['week_ending', 'cases_processed', 'high_risk_count', 'pending_reviews', 'compliance_score', 'dashboard_url']
+        text_content: 'System Alert: {{alert_type}} - {{message}}',
+        variables: ['alert_type', 'severity', 'message', 'timestamp'],
+        category: 'system',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
     ];
 
@@ -124,28 +98,85 @@ class EmailAutomationService {
     });
   }
 
-  async sendEmail(templateId: string, recipient: string, variables: Record<string, any>): Promise<string> {
+  async sendEmail(
+    templateId: string,
+    recipientEmail: string,
+    variables: Record<string, any>,
+    options?: {
+      recipientName?: string;
+      scheduleFor?: Date;
+    }
+  ): Promise<string> {
+    const template = this.templates.get(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
+    }
+
+    const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const emailJob: EmailJob = {
+      id: jobId,
+      template_id: templateId,
+      recipient_email: recipientEmail,
+      recipient_name: options?.recipientName,
+      variables,
+      status: options?.scheduleFor ? 'pending' : 'pending',
+      scheduled_for: options?.scheduleFor?.toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
     try {
-      const template = this.templates.get(templateId);
-      if (!template) {
-        throw new Error(`Template ${templateId} not found`);
+      // Store job in local storage for now (in production, use proper database)
+      const stored = localStorage.getItem('email_jobs');
+      const jobs = stored ? JSON.parse(stored) : [];
+      jobs.push(emailJob);
+      localStorage.setItem('email_jobs', JSON.stringify(jobs));
+
+      // Process email immediately if not scheduled
+      if (!options?.scheduleFor) {
+        await this.processEmailJob(emailJob);
       }
 
-      // Create email job
-      const emailJob: EmailJob = {
-        id: crypto.randomUUID(),
-        templateId,
-        recipient,
-        variables,
-        status: 'pending'
-      };
+      await auditLogger.logUserAction('email_scheduled', 'email', jobId, {
+        template_id: templateId,
+        recipient: recipientEmail,
+        scheduled_for: options?.scheduleFor?.toISOString()
+      });
 
-      // Call Supabase Edge Function to send email
+      return jobId;
+    } catch (error) {
+      console.error('Failed to schedule email:', error);
+      throw error;
+    }
+  }
+
+  private async processEmailJob(job: EmailJob): Promise<void> {
+    try {
+      const template = this.templates.get(job.template_id);
+      if (!template) {
+        throw new Error(`Template ${job.template_id} not found`);
+      }
+
+      // Replace variables in content
+      let htmlContent = template.html_content;
+      let textContent = template.text_content;
+      let subject = template.subject;
+
+      Object.entries(job.variables).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`;
+        htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), String(value));
+        textContent = textContent.replace(new RegExp(placeholder, 'g'), String(value));
+        subject = subject.replace(new RegExp(placeholder, 'g'), String(value));
+      });
+
+      // Call Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
-          template: template,
-          recipient,
-          variables
+          to: job.recipient_email,
+          subject,
+          html: htmlContent,
+          text: textContent
         }
       });
 
@@ -153,132 +184,144 @@ class EmailAutomationService {
         throw error;
       }
 
-      // Log successful email
-      await auditLogger.logUserAction('email_sent', 'email', emailJob.id, {
-        templateId,
-        recipient,
-        type: template.type
+      // Update job status
+      await this.updateJobStatus(job.id, 'sent', undefined, new Date().toISOString());
+
+      await auditLogger.logUserAction('email_sent', 'email', job.id, {
+        template_id: job.template_id,
+        recipient: job.recipient_email
       });
 
-      return emailJob.id;
     } catch (error) {
-      console.error('Failed to send email:', error);
+      console.error('Failed to process email job:', error);
+      await this.updateJobStatus(job.id, 'failed', error instanceof Error ? error.message : 'Unknown error');
       
       await auditLogger.logError(
-        error instanceof Error ? error : new Error('Email sending failed'),
+        error instanceof Error ? error : new Error('Email processing failed'),
         'email_automation',
-        { templateId, recipient }
+        { job_id: job.id }
       );
+    }
+  }
+
+  private async updateJobStatus(
+    jobId: string, 
+    status: EmailJob['status'], 
+    errorMessage?: string,
+    sentAt?: string
+  ): Promise<void> {
+    try {
+      const stored = localStorage.getItem('email_jobs');
+      const jobs: EmailJob[] = stored ? JSON.parse(stored) : [];
       
-      throw error;
+      const jobIndex = jobs.findIndex(j => j.id === jobId);
+      if (jobIndex >= 0) {
+        jobs[jobIndex].status = status;
+        jobs[jobIndex].updated_at = new Date().toISOString();
+        if (errorMessage) jobs[jobIndex].error_message = errorMessage;
+        if (sentAt) jobs[jobIndex].sent_at = sentAt;
+        
+        localStorage.setItem('email_jobs', JSON.stringify(jobs));
+      }
+    } catch (error) {
+      console.error('Failed to update job status:', error);
     }
   }
 
-  async scheduleEmail(templateId: string, recipient: string, variables: Record<string, any>, scheduledFor: Date): Promise<string> {
-    const emailJob: EmailJob = {
-      id: crypto.randomUUID(),
-      templateId,
-      recipient,
-      variables,
-      scheduledFor,
-      status: 'pending'
-    };
+  async getEmailJobs(filter?: {
+    status?: EmailJob['status'];
+    template_id?: string;
+    limit?: number;
+  }): Promise<EmailJob[]> {
+    try {
+      const stored = localStorage.getItem('email_jobs');
+      let jobs: EmailJob[] = stored ? JSON.parse(stored) : [];
 
-    // Store scheduled job in database
-    const { error } = await supabase.from('email_jobs').insert({
-      id: emailJob.id,
-      template_id: emailJob.templateId,
-      recipient: emailJob.recipient,
-      variables: emailJob.variables,
-      scheduled_for: emailJob.scheduledFor?.toISOString(),
-      status: emailJob.status
-    });
+      if (filter?.status) {
+        jobs = jobs.filter(job => job.status === filter.status);
+      }
+      if (filter?.template_id) {
+        jobs = jobs.filter(job => job.template_id === filter.template_id);
+      }
 
-    if (error) {
-      throw error;
+      return jobs.slice(0, filter?.limit || 100);
+    } catch {
+      return [];
     }
-
-    await auditLogger.logUserAction('email_scheduled', 'email', emailJob.id, {
-      templateId,
-      recipient,
-      scheduledFor: scheduledFor.toISOString()
-    });
-
-    return emailJob.id;
   }
 
-  // Lifecycle emails
-  async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
-    await this.sendEmail('welcome', userEmail, {
-      user_name: userName,
-      dashboard_url: `${window.location.origin}/dashboard`
-    });
-  }
-
-  async sendPasswordResetEmail(userEmail: string, resetUrl: string): Promise<void> {
-    await this.sendEmail('password_reset', userEmail, {
-      reset_url: resetUrl
-    });
-  }
-
-  // Compliance emails
-  async sendCaseAssignmentEmail(userEmail: string, caseData: any): Promise<void> {
-    await this.sendEmail('case_assigned', userEmail, {
-      case_id: caseData.id,
-      priority: caseData.priority,
-      due_date: new Date(caseData.dueDate).toLocaleDateString(),
-      case_url: `${window.location.origin}/cases/${caseData.id}`
-    });
-  }
-
-  async sendHighRiskAlert(userEmail: string, transactionData: any): Promise<void> {
-    await this.sendEmail('high_risk_alert', userEmail, {
-      transaction_id: transactionData.id,
-      amount: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(transactionData.amount),
-      risk_score: transactionData.riskScore,
-      customer_name: transactionData.customerName,
-      transaction_url: `${window.location.origin}/transactions/${transactionData.id}`
-    });
-  }
-
-  // Weekly summary
-  async sendWeeklySummary(userEmail: string, summaryData: any): Promise<void> {
-    const weekEnding = new Date();
-    weekEnding.setDate(weekEnding.getDate() - weekEnding.getDay());
-
-    await this.sendEmail('weekly_summary', userEmail, {
-      week_ending: weekEnding.toLocaleDateString(),
-      cases_processed: summaryData.casesProcessed,
-      high_risk_count: summaryData.highRiskCount,
-      pending_reviews: summaryData.pendingReviews,
-      compliance_score: summaryData.complianceScore,
-      dashboard_url: `${window.location.origin}/dashboard`
-    });
-  }
-
-  getTemplate(templateId: string): EmailTemplate | undefined {
-    return this.templates.get(templateId);
-  }
-
-  getAllTemplates(): EmailTemplate[] {
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
     return Array.from(this.templates.values());
   }
 
-  async getEmailHistory(limit: number = 50): Promise<any[]> {
+  async createTemplate(template: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<string> {
+    const id = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newTemplate: EmailTemplate = {
+      ...template,
+      id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    this.templates.set(id, newTemplate);
+    
+    await auditLogger.logUserAction('email_template_created', 'email_template', id, {
+      name: template.name,
+      category: template.category
+    });
+
+    return id;
+  }
+
+  async updateTemplate(id: string, updates: Partial<EmailTemplate>): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) {
+      return false;
+    }
+
+    const updatedTemplate = {
+      ...template,
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    this.templates.set(id, updatedTemplate);
+
+    await auditLogger.logUserAction('email_template_updated', 'email_template', id, updates);
+
+    return true;
+  }
+
+  async deleteTemplate(id: string): Promise<boolean> {
+    const success = this.templates.delete(id);
+    
+    if (success) {
+      await auditLogger.logUserAction('email_template_deleted', 'email_template', id);
+    }
+    
+    return success;
+  }
+
+  // Process scheduled emails (would be called by a cron job in production)
+  async processScheduledEmails(): Promise<void> {
     try {
-      const { data, error } = await supabase
-        .from('email_jobs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      const stored = localStorage.getItem('email_jobs');
+      const jobs: EmailJob[] = stored ? JSON.parse(stored) : [];
       
-      if (error) throw error;
-      return data || [];
+      const now = new Date();
+      const jobsToProcess = jobs.filter(job => 
+        job.status === 'pending' && 
+        job.scheduled_for && 
+        new Date(job.scheduled_for) <= now
+      );
+
+      for (const job of jobsToProcess) {
+        await this.processEmailJob(job);
+      }
     } catch (error) {
-      console.error('Failed to fetch email history:', error);
-      return [];
+      console.error('Failed to process scheduled emails:', error);
     }
   }
 }
 
-export const emailAutomation = new EmailAutomationService();
+export const emailAutomationService = new EmailAutomationService();

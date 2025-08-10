@@ -1,28 +1,26 @@
 
-import React from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import React, { ReactElement } from 'react';
+import { render, RenderOptions, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 
-const createTestQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
+// Create a custom render function that includes providers
+const createTestQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
     },
-  });
+  },
+});
 
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  queryClient?: QueryClient;
-}
-
-const AllTheProviders = ({ children, queryClient = createTestQueryClient() }: { children: React.ReactNode; queryClient?: QueryClient }) => {
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = createTestQueryClient();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="light" storageKey="test-theme">
           {children}
         </ThemeProvider>
       </BrowserRouter>
@@ -31,9 +29,13 @@ const AllTheProviders = ({ children, queryClient = createTestQueryClient() }: { 
 };
 
 const customRender = (
-  ui: React.ReactElement,
-  { queryClient, ...options }: CustomRenderOptions = {}
-) => render(ui, { wrapper: (props) => <AllTheProviders {...props} queryClient={queryClient} />, ...options });
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) => render(ui, { wrapper: AllTheProviders, ...options });
 
+// Re-export everything
 export * from '@testing-library/react';
+export { screen, waitFor };
+
+// Override render export
 export { customRender as render };
