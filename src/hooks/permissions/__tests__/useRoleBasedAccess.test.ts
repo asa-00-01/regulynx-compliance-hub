@@ -1,12 +1,12 @@
 
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import { useRoleBasedAccess } from '../useRoleBasedAccess';
 
 // Mock the auth context
-vi.mock('@/context/AuthContext', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: { role: 'admin' }
+    user: { id: 'user1', role: 'platform_admin' }
   })
 }));
 
@@ -14,25 +14,18 @@ describe('useRoleBasedAccess', () => {
   it('should return admin permissions correctly', () => {
     const { result } = renderHook(() => useRoleBasedAccess());
     
-    expect(result.current.isAdmin).toBe(true);
-    expect(result.current.hasCustomerPermission('cases:read')).toBe(true);
-    expect(result.current.hasCustomerPermission('cases:write')).toBe(true);
-    expect(result.current.hasCustomerPermission('users:read')).toBe(true);
-    expect(result.current.hasPlatformPermission('admin:read')).toBe(true);
+    expect(result.current.hasPermission('platform:admin')).toBe(true);
+    expect(result.current.hasPermission('user:create')).toBe(true);
+    expect(result.current.hasPermission('user:update')).toBe(true);
+    expect(result.current.hasPermission('user:delete')).toBe(true);
+    expect(result.current.hasPermission('case:create')).toBe(true);
   });
 
-  it('should handle route access correctly', () => {
+  it('should handle permissions correctly', () => {
     const { result } = renderHook(() => useRoleBasedAccess());
     
-    expect(result.current.canAccessRoute('/admin')).toBe(true);
-    expect(result.current.canAccessRoute('/users')).toBe(true);
-    expect(result.current.canAccessRoute('/cases')).toBe(true);
-  });
-
-  it('should handle action permissions correctly', () => {
-    const { result } = renderHook(() => useRoleBasedAccess());
-    
-    expect(result.current.canPerformAction('create_case')).toBe(true);
-    expect(result.current.canPerformAction('edit_user')).toBe(true);
+    expect(result.current.hasAnyPermission(['platform:admin', 'user:create'])).toBe(true);
+    expect(result.current.hasAllPermissions(['platform:admin', 'user:create'])).toBe(true);
+    expect(result.current.userPermissions.length).toBeGreaterThan(0);
   });
 });

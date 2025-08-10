@@ -1,5 +1,5 @@
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import { useAMLMetrics } from '../useAMLMetrics';
 
@@ -19,8 +19,39 @@ describe('useAMLMetrics', () => {
     const { result } = renderHook(() => useAMLMetrics());
     
     await waitFor(() => {
-      expect(result.current.metrics).toBeDefined();
-      expect(result.current.isLoading).toBe(false);
+      expect(result.current.totalTransactions).toBeDefined();
+      expect(result.current.loading).toBe(false);
+    });
+  });
+
+  it('should calculate metrics from provided transactions', async () => {
+    const mockTransactions = [
+      { 
+        id: '1', 
+        isSuspect: true, 
+        riskScore: 80, 
+        senderAmount: 1000,
+        senderCurrency: 'USD',
+        receiverAmount: 950,
+        receiverCurrency: 'EUR',
+        method: 'bank_transfer',
+        status: 'completed',
+        timestamp: new Date().toISOString(),
+        senderUserId: 'user1',
+        receiverUserId: 'user2',
+        senderName: 'John Doe',
+        receiverName: 'Jane Smith',
+        senderCountryCode: 'US',
+        receiverCountryCode: 'GB',
+        flagged: false
+      }
+    ];
+    
+    const { result } = renderHook(() => useAMLMetrics(mockTransactions));
+    
+    await waitFor(() => {
+      expect(result.current.totalTransactions).toBe(1);
+      expect(result.current.loading).toBe(false);
     });
   });
 });

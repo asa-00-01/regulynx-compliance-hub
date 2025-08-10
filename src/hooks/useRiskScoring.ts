@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from 'react';
-import { evaluateTransactionRisk, evaluateUserRisk, getRiskMatchesForEntity } from '@/services/risk';
+import { useState } from 'react';
 import { AMLTransaction } from '@/types/aml';
 import { UnifiedUserData } from '@/context/compliance/types';
 import { RiskAssessmentResult } from '@/types/risk';
+import { riskEvaluationService } from '@/services/risk';
 
-export function useRiskScoring(entity: AMLTransaction | UnifiedUserData | null) {
+export const useRiskScoring = (entity?: AMLTransaction | UnifiedUserData) => {
   const [riskAssessment, setRiskAssessment] = useState<RiskAssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,75 +17,73 @@ export function useRiskScoring(entity: AMLTransaction | UnifiedUserData | null) 
     setError(null);
 
     try {
-      let result: RiskAssessmentResult;
-      
-      if ('senderUserId' in entity) {
+      let assessment: RiskAssessmentResult;
+
+      if ('senderAmount' in entity) {
         // It's a transaction
-        result = await evaluateTransactionRisk(entity as AMLTransaction);
+        assessment = await riskEvaluationService.evaluateTransactionRisk(entity.id, entity);
       } else {
         // It's a user
-        result = await evaluateUserRisk(entity as UnifiedUserData);
+        assessment = await riskEvaluationService.evaluateCustomerRisk(entity.id, entity);
       }
 
-      setRiskAssessment(result);
+      setRiskAssessment(assessment);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to run risk assessment');
       console.error('Risk assessment error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadExistingMatches = async () => {
-    if (!entity) return;
-
-    setLoading(true);
+  const resetAssessment = () => {
+    setRiskAssessment(null);
     setError(null);
+  };
 
-    try {
-      const entityId = entity.id;
-      const entityType = 'senderUserId' in entity ? 'transaction' : 'user';
-      
-      const matches = await getRiskMatchesForEntity(entityId, entityType);
-      
-      const matchedRules = matches.map(match => ({
-        rule_id: match.rule_id,
-        rule_name: match.rules?.rule_name || match.rule_id,
-        risk_score: match.rules?.risk_score || 0,
-        category: match.rules?.category || 'unknown',
-        description: match.rules?.description || '',
-        match_data: match.match_data,
-      }));
-
-      const totalScore = matchedRules.reduce((sum, rule) => sum + rule.risk_score, 0);
-      const categories = [...new Set(matchedRules.map(r => r.category))];
-
+  const updateRiskScore = (newScore: number) => {
+    if (riskAssessment) {
       setRiskAssessment({
-        total_risk_score: Math.min(totalScore, 100),
-        matched_rules: matchedRules,
-        rule_categories: categories,
+        ...riskAssessment,
+        total_risk_score: newScore,
+        score: newScore
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error loading existing matches:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (entity) {
-      loadExistingMatches();
-    } else {
-      setRiskAssessment(null);
+  const addRiskFactor = (factor: any) => {
+    if (riskAssessment) {
+      const updatedFactors = [...(riskAssessment.factors || []), factor];
+      setRiskAssessment({
+        ...riskAssessment,
+        factors: updatedFactors
+      });
     }
-  }, [entity]);
+  };
+
+  const removeRiskFactor = (factorId: string) => {
+    if (riskAssessment && riskAssessment.factors) {
+      const updatedFactors = riskAssessment.factors.filter(f => f.name !== factorId);
+      setRiskAssessment({
+        ...riskAssessment,
+        factors: updatedFactors
+      });
+    }
+  };
+
+  const getMatchedRuleIds = (): string[] => {
+    return riskAssessment?.matched_rules || [];
+  };
 
   return {
     riskAssessment,
     loading,
     error,
     runAssessment,
-    loadExistingMatches,
+    resetAssessment,
+    updateRiskScore,
+    addRiskFactor,
+    removeRiskFactor,
+    getMatchedRuleIds,
   };
-}
+};

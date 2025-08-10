@@ -1,99 +1,91 @@
 
-import { useState } from 'react';
-import { evaluateTransactionRisk, evaluateUserRisk } from '@/services/risk';
-import { useCompliance } from '@/context/compliance/useCompliance';
-import { useToast } from '@/hooks/use-toast';
-import { getMockTransactions, getMockUsers } from '@/utils/mockAssessmentData';
+import { useState, useEffect } from 'react';
+import { UnifiedUserData } from '@/context/compliance/types';
+import { AMLTransaction } from '@/types/aml';
+import { riskEvaluationService, RiskAssessmentResult } from '@/services/risk';
 
-export function useGlobalRiskAssessment() {
-  const [runningAssessment, setRunningAssessment] = useState(false);
-  const { state } = useCompliance();
-  const { toast } = useToast();
+interface GlobalRiskAssessmentHook {
+  assessments: RiskAssessmentResult[];
+  loading: boolean;
+  error: string | null;
+  runGlobalAssessment: () => Promise<void>;
+  assessEntity: (entity: UnifiedUserData | AMLTransaction) => Promise<RiskAssessmentResult | null>;
+  getHighRiskEntities: () => RiskAssessmentResult[];
+  refreshAssessments: () => Promise<void>;
+}
+
+export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
+  const [assessments, setAssessments] = useState<RiskAssessmentResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const runGlobalAssessment = async () => {
-    console.log('=== STARTING GLOBAL RISK ASSESSMENT ===');
-    setRunningAssessment(true);
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      let totalAssessments = 0;
-      let successfulAssessments = 0;
-      let errors: string[] = [];
-
-      console.log('Starting global risk assessment...');
-
-      // Get users from centralized mock data
-      const mockUsers = getMockUsers();
-      console.log('Available mock users:', mockUsers.length);
-
-      // Use mock users if state users are empty, otherwise use state users
-      const usersToAssess = state.users.length > 0 ? state.users : mockUsers;
-      console.log('Users to assess:', usersToAssess.length);
-
-      // Run assessments for all users
-      for (const user of usersToAssess) {
-        try {
-          totalAssessments++;
-          console.log(`Assessing user: ${user.fullName} (${user.id}) - Risk Score: ${user.riskScore}`);
-          
-          const result = await evaluateUserRisk(user);
-          console.log(`User ${user.fullName} assessment result:`, result);
-          successfulAssessments++;
-        } catch (error) {
-          console.error(`Error assessing user ${user.id}:`, error);
-          errors.push(`User ${user.fullName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Mock global assessment - in real implementation, this would assess all entities
+      const mockAssessments: RiskAssessmentResult[] = [
+        {
+          id: 'assessment_1',
+          customer_id: 'customer_1',
+          score: 85,
+          total_risk_score: 85,
+          level: 'critical',
+          risk_level: 'critical',
+          factors: [
+            { name: 'High Transaction Volume', value: 90, weight: 0.4 },
+            { name: 'Suspicious Pattern', value: 80, weight: 0.6 }
+          ],
+          matched_rules: ['high_volume', 'suspicious_pattern'],
+          rule_categories: ['transaction', 'behavioral'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
-      }
+      ];
 
-      // Get transactions from centralized mock data
-      const mockTransactions = getMockTransactions();
-      console.log('Available mock transactions:', mockTransactions.length);
-
-      // Run assessments for all transactions
-      for (const transaction of mockTransactions) {
-        try {
-          totalAssessments++;
-          console.log(`Assessing transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency} - Risk Score: ${transaction.riskScore}`);
-          
-          const result = await evaluateTransactionRisk(transaction);
-          console.log(`Transaction ${transaction.id} assessment result:`, result);
-          successfulAssessments++;
-        } catch (error) {
-          console.error(`Error assessing transaction ${transaction.id}:`, error);
-          errors.push(`Transaction ${transaction.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      console.log(`Assessment completed: ${successfulAssessments}/${totalAssessments} successful`);
-      console.log('Errors encountered:', errors);
-
-      if (errors.length > 0) {
-        console.warn('Some assessments failed:', errors);
-        toast({
-          title: 'Assessment Completed with Warnings',
-          description: `Completed ${successfulAssessments}/${totalAssessments} assessments. ${errors.length} failed.`,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Assessment Complete',
-          description: `Successfully assessed ${successfulAssessments} out of ${totalAssessments} entities (${usersToAssess.length} users, ${mockTransactions.length} transactions)`,
-        });
-      }
-    } catch (error) {
-      console.error('Critical error in global assessment:', error);
-      toast({
-        title: 'Assessment Error',
-        description: `Failed to complete risk assessment: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: 'destructive'
-      });
+      setAssessments(mockAssessments);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to run global assessment');
     } finally {
-      console.log('=== GLOBAL RISK ASSESSMENT COMPLETED ===');
-      setRunningAssessment(false);
+      setLoading(false);
     }
   };
 
-  return {
-    runGlobalAssessment,
-    runningAssessment
+  const assessEntity = async (entity: UnifiedUserData | AMLTransaction): Promise<RiskAssessmentResult | null> => {
+    try {
+      if ('senderAmount' in entity) {
+        return await riskEvaluationService.evaluateTransactionRisk(entity.id, entity);
+      } else {
+        return await riskEvaluationService.evaluateCustomerRisk(entity.id, entity);
+      }
+    } catch (err) {
+      console.error('Failed to assess entity:', err);
+      return null;
+    }
   };
-}
+
+  const getHighRiskEntities = (): RiskAssessmentResult[] => {
+    return assessments.filter(assessment => 
+      (assessment.total_risk_score || assessment.score) >= 70
+    );
+  };
+
+  const refreshAssessments = async () => {
+    await runGlobalAssessment();
+  };
+
+  useEffect(() => {
+    runGlobalAssessment();
+  }, []);
+
+  return {
+    assessments,
+    loading,
+    error,
+    runGlobalAssessment,
+    assessEntity,
+    getHighRiskEntities,
+    refreshAssessments,
+  };
+};

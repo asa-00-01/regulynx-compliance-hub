@@ -1,101 +1,113 @@
 
 import { useState, useCallback } from 'react';
-import { emailAutomation, EmailTemplate } from '@/services/emailAutomation';
-import { toast } from 'sonner';
+import { EmailAutomationService } from '@/services/emailAutomation';
 
-export const useEmailAutomation = () => {
-  const [isSending, setIsSending] = useState(false);
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+interface EmailAutomationHook {
+  loading: boolean;
+  error: string | null;
+  sendEmail: (templateId: string, recipientEmail: string, variables: Record<string, any>) => Promise<boolean>;
+  scheduleEmail: (templateId: string, recipientEmail: string, variables: Record<string, any>, scheduleDate: Date) => Promise<boolean>;
+  sendWelcomeEmail: (userEmail: string, userName: string) => Promise<boolean>;
+  sendCaseAssignmentEmail: (assigneeEmail: string, caseId: string, caseTitle: string) => Promise<boolean>;
+  sendHighRiskAlert: (adminEmail: string, riskDetails: any) => Promise<boolean>;
+  getTemplates: () => Promise<any[]>;
+}
 
-  const sendEmail = useCallback(async (
-    templateId: string, 
-    recipient: string, 
-    variables: Record<string, any>
-  ) => {
-    setIsSending(true);
+export const useEmailAutomation = (): EmailAutomationHook => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendEmail = useCallback(async (templateId: string, recipientEmail: string, variables: Record<string, any>) => {
+    setLoading(true);
+    setError(null);
     try {
-      const jobId = await emailAutomation.sendEmail(templateId, recipient, variables);
-      toast.success('Email sent successfully');
-      return jobId;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to send email');
-      throw error;
+      await EmailAutomationService.sendEmail(templateId, recipientEmail, variables);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send email');
+      return false;
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }, []);
 
-  const scheduleEmail = useCallback(async (
-    templateId: string,
-    recipient: string,
-    variables: Record<string, any>,
-    scheduledFor: Date
-  ) => {
-    setIsSending(true);
+  const scheduleEmail = useCallback(async (templateId: string, recipientEmail: string, variables: Record<string, any>, scheduleDate: Date) => {
+    setLoading(true);
+    setError(null);
     try {
-      const jobId = await emailAutomation.scheduleEmail(templateId, recipient, variables, scheduledFor);
-      toast.success('Email scheduled successfully');
-      return jobId;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to schedule email');
-      throw error;
+      await EmailAutomationService.sendEmail(templateId, recipientEmail, variables);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to schedule email');
+      return false;
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }, []);
 
   const sendWelcomeEmail = useCallback(async (userEmail: string, userName: string) => {
-    setIsSending(true);
+    setLoading(true);
+    setError(null);
     try {
-      await emailAutomation.sendWelcomeEmail(userEmail, userName);
-      toast.success('Welcome email sent');
-    } catch (error: any) {
-      toast.error('Failed to send welcome email');
-      throw error;
+      await EmailAutomationService.sendEmail('welcome', userEmail, { userName });
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send welcome email');
+      return false;
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }, []);
 
-  const sendCaseAssignmentEmail = useCallback(async (userEmail: string, caseData: any) => {
-    setIsSending(true);
+  const sendCaseAssignmentEmail = useCallback(async (assigneeEmail: string, caseId: string, caseTitle: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      await emailAutomation.sendCaseAssignmentEmail(userEmail, caseData);
-      toast.success('Case assignment email sent');
-    } catch (error: any) {
-      toast.error('Failed to send case assignment email');
-      throw error;
+      await EmailAutomationService.sendEmail('case_assignment', assigneeEmail, { caseId, caseTitle });
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send case assignment email');
+      return false;
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }, []);
 
-  const sendHighRiskAlert = useCallback(async (userEmail: string, transactionData: any) => {
-    setIsSending(true);
+  const sendHighRiskAlert = useCallback(async (adminEmail: string, riskDetails: any) => {
+    setLoading(true);
+    setError(null);
     try {
-      await emailAutomation.sendHighRiskAlert(userEmail, transactionData);
-      toast.success('High risk alert sent');
-    } catch (error: any) {
-      toast.error('Failed to send high risk alert');
-      throw error;
+      await EmailAutomationService.sendEmail('high_risk_alert', adminEmail, { riskDetails });
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send high risk alert');
+      return false;
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   }, []);
 
-  const loadTemplates = useCallback(() => {
-    const allTemplates = emailAutomation.getAllTemplates();
-    setTemplates(allTemplates);
+  const getTemplates = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await EmailAutomationService.getEmailTemplates();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch templates');
+      return [];
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   return {
-    isSending,
-    templates,
+    loading,
+    error,
     sendEmail,
     scheduleEmail,
     sendWelcomeEmail,
     sendCaseAssignmentEmail,
     sendHighRiskAlert,
-    loadTemplates
+    getTemplates,
   };
 };

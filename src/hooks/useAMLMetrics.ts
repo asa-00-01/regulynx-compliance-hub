@@ -27,9 +27,9 @@ export const useAMLMetrics = (transactions?: AMLTransaction[], timeframe: string
         
         if (transactions) {
           // Calculate metrics from provided transactions
-          const flagged = transactions.filter(t => t.flagged).length;
+          const flagged = transactions.filter(t => t.isSuspect || t.flagged).length;
           const highRisk = transactions.filter(t => t.riskScore >= 75).length;
-          const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+          const totalAmount = transactions.reduce((sum, t) => sum + (t.senderAmount || 0), 0);
           
           setMetrics({
             totalTransactions: transactions.length,
