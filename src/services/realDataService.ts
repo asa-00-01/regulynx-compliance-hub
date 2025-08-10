@@ -1,4 +1,3 @@
-
 import { NewsItem, RSSFeed } from '@/types/news';
 import { KYCUser, KYCVerification } from '@/types/kyc';
 import { AMLTransaction } from '@/types/aml';
@@ -155,7 +154,7 @@ export class RealDataService {
         method: 'bank' as const, // Would need additional data for proper method
         isSuspect: tx.status === 'flagged',
         riskScore: tx.risk_score,
-        notes: Array.isArray(tx.flags) ? tx.flags.map(flag => String(flag)) : []
+        notes: Array.isArray(tx.flags) ? tx.flags.map(flag => String(flag)).join(', ') : String(tx.flags || '')
       }));
       
       return transactions;

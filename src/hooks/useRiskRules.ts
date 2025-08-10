@@ -1,136 +1,79 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { getRulesByCategory, getRiskMatchesForEntity, evaluateTransactionRisk, evaluateUserRisk } from '@/services/risk';
-import { AMLTransaction } from '@/types/aml';
-import { UnifiedUserData } from '@/context/compliance/types';
-import { Rule, RiskMatchDisplay } from '@/types/risk';
+import { getRulesByCategory, getRiskMatchesForEntity } from '@/services/risk';
+import { RiskRule, RiskMatchDisplay } from '@/types/risk';
 
-interface RiskRulesHookProps {
-  transaction?: AMLTransaction;
-  user?: UnifiedUserData;
+export interface RiskRulesHook {
+  rules: RiskRule[];
+  matches: RiskMatchDisplay[];
+  loading: boolean;
+  error: string | null;
+  fetchRulesByCategory: (category: string) => Promise<void>;
+  fetchMatches: (entityId: string, entityType: 'user' | 'transaction') => Promise<void>;
+  runRiskAssessment: (entityId: string, entityType: 'user' | 'transaction') => Promise<void>;
 }
 
-/**
- * Manages risk rules evaluation and display for transactions and users.
- * Provides rule matching, assessment execution, and category filtering capabilities.
- */
-export const useRiskRules = ({ transaction, user }: RiskRulesHookProps) => {
-  // State management
-  const [matchedRiskRules, setMatchedRiskRules] = useState<RiskMatchDisplay[]>([]);
-  const [availableRulesList, setAvailableRulesList] = useState<Rule[]>([]);
-  const [activeRuleCategory, setActiveRuleCategory] = useState<string>('all');
-  const [calculatedTotalRiskScore, setCalculatedTotalRiskScore] = useState<number>(0);
-  const [isRiskDataLoading, setIsRiskDataLoading] = useState(false);
+export const useRiskRules = (): RiskRulesHook => {
+  const [rules, setRules] = useState<RiskRule[]>([]);
+  const [matches, setMatches] = useState<RiskMatchDisplay[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const entityIdentifier = transaction?.id || user?.id || '';
-  const entityTypeClassification = transaction ? 'transaction' : 'user';
-
-  /**
-   * Loads existing risk matches for the current entity
-   */
-  const loadExistingRiskData = useCallback(async () => {
-    if (!entityIdentifier) return;
+  const fetchRulesByCategory = useCallback(async (category: string) => {
+    setLoading(true);
+    setError(null);
     
-    setIsRiskDataLoading(true);
     try {
-      const existingRiskMatches = await getRiskMatchesForEntity(entityIdentifier, entityTypeClassification);
-      setMatchedRiskRules(existingRiskMatches);
-      
-      const aggregatedRiskScore = calculateTotalRiskScore(existingRiskMatches);
-      setCalculatedTotalRiskScore(aggregatedRiskScore);
-    } catch (error) {
-      console.error('Error loading risk data:', error);
+      const fetchedRules = await getRulesByCategory(category);
+      setRules(fetchedRules);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch rules');
     } finally {
-      setIsRiskDataLoading(false);
+      setLoading(false);
     }
-  }, [entityIdentifier, entityTypeClassification]);
+  }, []);
 
-  /**
-   * Executes comprehensive risk assessment for the current entity
-   */
-  const executeRiskAssessment = useCallback(async () => {
-    setIsRiskDataLoading(true);
+  const fetchMatches = useCallback(async (entityId: string, entityType: 'user' | 'transaction') => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      let assessmentResult;
+      const riskMatches = await getRiskMatchesForEntity(entityId, entityType);
       
-      if (transaction) {
-        assessmentResult = await evaluateTransactionRisk(transaction);
-      } else if (user) {
-        assessmentResult = await evaluateUserRisk(user);
-      } else {
-        setIsRiskDataLoading(false);
-        return;
-      }
-
-      setCalculatedTotalRiskScore(assessmentResult.total_risk_score);
-      await loadExistingRiskData();
-    } catch (error) {
-      console.error('Error running risk assessment:', error);
-      setIsRiskDataLoading(false);
+      // Transform the data to match RiskMatchDisplay interface
+      const displayMatches: RiskMatchDisplay[] = riskMatches.map(match => ({
+        id: match.rule_id,
+        entity_id: match.match_data.entityId,
+        entity_type: match.match_data.entityType,
+        matched_at: new Date().toISOString(),
+        rules: [{
+          rule_id: match.rule_id,
+          rule_name: match.rule_name,
+          risk_score: match.risk_score,
+          category: match.category,
+          description: match.description
+        }]
+      }));
+      
+      setMatches(displayMatches);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch matches');
+    } finally {
+      setLoading(false);
     }
-  }, [transaction, user, loadExistingRiskData]);
+  }, []);
 
-  // Load risk data when entity changes
-  useEffect(() => {
-    if (entityIdentifier) {
-      loadExistingRiskData();
-    }
-  }, [entityIdentifier, loadExistingRiskData]);
-
-  // Load rules when category filter changes
-  useEffect(() => {
-    const loadRulesByCategory = async () => {
-      try {
-        const categoryRules = await getRulesByCategory(activeRuleCategory);
-        setAvailableRulesList(categoryRules);
-      } catch (error) {
-        console.error('Error loading rules:', error);
-      }
-    };
-    loadRulesByCategory();
-  }, [activeRuleCategory]);
-  
-  const filteredRiskMatches = getFilteredMatches(matchedRiskRules, activeRuleCategory);
-  const triggeredRuleIdentifiers = createTriggeredRuleSet(matchedRiskRules);
+  const runRiskAssessment = useCallback(async (entityId: string, entityType: 'user' | 'transaction') => {
+    await fetchMatches(entityId, entityType);
+  }, [fetchMatches]);
 
   return {
-    loading: isRiskDataLoading,
-    totalRiskScore: calculatedTotalRiskScore,
-    riskMatches: matchedRiskRules,
-    filteredMatches: filteredRiskMatches,
-    allRules: availableRulesList,
-    selectedCategory: activeRuleCategory,
-    setSelectedCategory: setActiveRuleCategory,
-    runRiskAssessment: executeRiskAssessment,
-    triggeredRuleIds: triggeredRuleIdentifiers
+    rules,
+    matches,
+    loading,
+    error,
+    fetchRulesByCategory,
+    fetchMatches,
+    runRiskAssessment
   };
 };
-
-/**
- * Calculates total risk score from risk matches, capped at maximum value
- */
-function calculateTotalRiskScore(riskMatchesList: RiskMatchDisplay[]): number {
-  const MAX_RISK_SCORE = 100;
-  const totalScore = riskMatchesList.reduce(
-    (accumulator: number, riskMatch: RiskMatchDisplay) => 
-      accumulator + (riskMatch.rules?.risk_score || 0), 
-    0
-  );
-  return Math.min(totalScore, MAX_RISK_SCORE);
-}
-
-/**
- * Filters risk matches by category
- */
-function getFilteredMatches(riskMatchesList: RiskMatchDisplay[], categoryFilter: string): RiskMatchDisplay[] {
-  return categoryFilter === 'all' 
-    ? riskMatchesList 
-    : riskMatchesList.filter(riskMatch => riskMatch.rules?.category === categoryFilter);
-}
-
-/**
- * Creates a set of triggered rule IDs for quick lookup
- */
-function createTriggeredRuleSet(riskMatchesList: RiskMatchDisplay[]): Set<string> {
-  return new Set(riskMatchesList.map(riskMatch => riskMatch.rule_id));
-}

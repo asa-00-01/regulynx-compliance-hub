@@ -1,58 +1,61 @@
 
 import { useState, useCallback } from 'react';
-import { riskEvaluationService } from '@/services/risk';
+import { riskEvaluationService } from '@/services/risk/riskEvaluationService';
 import { RiskAssessmentResult } from '@/types/risk';
 
 export interface GlobalRiskAssessmentHook {
-  assessment: RiskAssessmentResult | null;
-  loading: boolean;
+  isAssessing: boolean;
+  runGlobalAssessment: () => Promise<void>;
+  results: RiskAssessmentResult[];
   error: string | null;
-  runGlobalAssessment: () => Promise<RiskAssessmentResult | null>;
-  clearAssessment: () => void;
 }
 
 export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
-  const [assessment, setAssessment] = useState<RiskAssessmentResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isAssessing, setIsAssessing] = useState(false);
+  const [results, setResults] = useState<RiskAssessmentResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const runGlobalAssessment = useCallback(async (): Promise<RiskAssessmentResult | null> => {
-    setLoading(true);
+  const runGlobalAssessment = useCallback(async () => {
+    setIsAssessing(true);
     setError(null);
-
+    
     try {
-      // Mock global assessment - would integrate with actual service
-      const result = await riskEvaluationService.evaluateCustomerRisk('global', {});
-      const globalAssessment: RiskAssessmentResult = {
-        ...result,
-        total_risk_score: result.total_risk_score || result.score,
-        risk_level: result.level,
-        matched_rules: result.matched_rules || [],
-        rule_categories: result.rule_categories || []
-      };
+      // Mock implementation - in real app, this would assess all users/transactions
+      const mockResults: RiskAssessmentResult[] = [
+        {
+          id: '1',
+          score: 75,
+          level: 'high',
+          risk_level: 'high',
+          factors: [],
+          total_risk_score: 75,
+          matched_rules: ['high_volume', 'cross_border'],
+          rule_categories: ['transaction', 'geographic']
+        },
+        {
+          id: '2',
+          score: 45,
+          level: 'medium',
+          risk_level: 'medium',
+          factors: [],
+          total_risk_score: 45,
+          matched_rules: ['unusual_pattern'],
+          rule_categories: ['behavioral']
+        }
+      ];
       
-      setAssessment(globalAssessment);
-      return globalAssessment;
+      setResults(mockResults);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to run global assessment';
-      setError(errorMessage);
-      console.error('Global risk assessment error:', err);
-      return null;
+      setError(err instanceof Error ? err.message : 'Assessment failed');
     } finally {
-      setLoading(false);
+      setIsAssessing(false);
     }
   }, []);
 
-  const clearAssessment = useCallback(() => {
-    setAssessment(null);
-    setError(null);
-  }, []);
-
   return {
-    assessment,
-    loading,
-    error,
+    isAssessing,
     runGlobalAssessment,
-    clearAssessment
+    results,
+    error
   };
 };
