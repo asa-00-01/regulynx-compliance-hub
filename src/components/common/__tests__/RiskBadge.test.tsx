@@ -1,26 +1,26 @@
 
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import RiskBadge from '../RiskBadge';
 
 describe('RiskBadge', () => {
   it('renders low risk badge correctly', () => {
-    const { container } = render(<RiskBadge risk="low" />);
-    expect(container.firstChild).toBeTruthy();
+    render(<RiskBadge riskLevel="low" />);
+    expect(screen.getByText('LOW')).toBeInTheDocument();
   });
 
   it('renders medium risk badge correctly', () => {
-    const { container } = render(<RiskBadge risk="medium" />);
-    expect(container.firstChild).toBeTruthy();
+    render(<RiskBadge riskLevel="medium" />);
+    expect(screen.getByText('MEDIUM')).toBeInTheDocument();
   });
 
   it('renders high risk badge correctly', () => {
-    const { container } = render(<RiskBadge risk="high" />);
-    expect(container.firstChild).toBeTruthy();
+    render(<RiskBadge riskLevel="high" />);
+    expect(screen.getByText('HIGH')).toBeInTheDocument();
   });
 
   it('renders critical risk badge correctly', () => {
-    const { container } = render(<RiskBadge risk="critical" />);
-    expect(container.firstChild).toBeTruthy();
+    render(<RiskBadge riskLevel="critical" />);
+    expect(screen.getByText('CRITICAL')).toBeInTheDocument();
   });
 });

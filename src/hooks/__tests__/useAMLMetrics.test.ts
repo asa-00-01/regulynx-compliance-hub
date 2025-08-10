@@ -1,60 +1,26 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import { useAMLMetrics } from '../useAMLMetrics';
 
-// Mock the supabase client
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        data: [
-          {
-            id: '1',
-            amount: 10000,
-            method: 'wire_transfer',
-            country: ['US'],
-            risk_score: 75,
-            created_at: '2024-01-01'
-          },
-          {
-            id: '2',
-            amount: 5000,
-            method: 'wire_transfer',
-            country: ['CA'],
-            risk_score: 25,
-            created_at: '2024-01-02'
-          },
-          {
-            id: '3',
-            amount: 15000,
-            method: 'wire_transfer',
-            country: ['UK'],
-            risk_score: 85,
-            created_at: '2024-01-03'
-          }
-        ],
-        error: null
-      }))
-    }))
-  }
-}));
-
 describe('useAMLMetrics', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should calculate metrics correctly', async () => {
-    const { result } = renderHook(() => useAMLMetrics());
+  it('should return loading state initially', () => {
+    const { result } = renderHook(() => useAMLMetrics('30d'));
     
     expect(result.current.loading).toBe(true);
-    // Since this is an async hook, we would need to wait for the data to load
-    // For now, just test that the hook renders without errors
+    expect(result.current.totalTransactions).toBe(0);
   });
 
-  it('should handle empty data gracefully', () => {
-    const { result } = renderHook(() => useAMLMetrics());
-    expect(result.current.metrics).toBeDefined();
+  it('should return metrics after loading', async () => {
+    const { result } = renderHook(() => useAMLMetrics('30d'));
+    
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    
+    expect(result.current.totalTransactions).toBe(1250);
+    expect(result.current.flaggedTransactions).toBe(45);
+    expect(result.current.highRiskTransactions).toBe(12);
+    expect(result.current.totalAmount).toBe(2500000);
   });
 });

@@ -1,6 +1,6 @@
 
-import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { useRoleBasedAccess } from '../useRoleBasedAccess';
 
 // Mock the auth context
@@ -11,25 +11,28 @@ vi.mock('@/context/AuthContext', () => ({
 }));
 
 describe('useRoleBasedAccess', () => {
-  it('should allow admin access to all permissions', () => {
+  it('should return admin permissions correctly', () => {
     const { result } = renderHook(() => useRoleBasedAccess());
     
-    expect(result.current.hasPermission('cases:read')).toBe(true);
-    expect(result.current.hasPermission('cases:write')).toBe(true);
-    expect(result.current.hasPermission('users:read')).toBe(true);
+    expect(result.current.isAdmin).toBe(true);
+    expect(result.current.hasCustomerPermission('cases:read')).toBe(true);
+    expect(result.current.hasCustomerPermission('cases:write')).toBe(true);
+    expect(result.current.hasCustomerPermission('users:read')).toBe(true);
+    expect(result.current.hasPlatformPermission('admin:read')).toBe(true);
   });
 
-  it('should check role correctly', () => {
+  it('should handle route access correctly', () => {
     const { result } = renderHook(() => useRoleBasedAccess());
     
-    expect(result.current.hasRole('admin')).toBe(true);
-    expect(result.current.hasRole('complianceOfficer')).toBe(false);
+    expect(result.current.canAccessRoute('/admin')).toBe(true);
+    expect(result.current.canAccessRoute('/users')).toBe(true);
+    expect(result.current.canAccessRoute('/cases')).toBe(true);
   });
 
-  it('should handle invalid permissions gracefully', () => {
+  it('should handle action permissions correctly', () => {
     const { result } = renderHook(() => useRoleBasedAccess());
     
-    // Test with a permission that doesn't exist in the Permission type
-    expect(result.current.hasPermission('cases:read')).toBe(true);
+    expect(result.current.canPerformAction('create_case')).toBe(true);
+    expect(result.current.canPerformAction('edit_user')).toBe(true);
   });
 });

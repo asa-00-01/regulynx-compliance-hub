@@ -1,104 +1,97 @@
 
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types';
-import { usePlatformRoleAccess } from './usePlatformRoleAccess';
 
-type Permission = 
-  | 'document:approve'
-  | 'document:view'
-  | 'case:create'
-  | 'case:assign'
-  | 'case:update'
-  | 'case:view'
-  | 'user:create'
-  | 'user:update'
-  | 'user:delete'
-  | 'user:view'
-  | 'report:generate'
-  | 'report:view'
-  | 'subscription:manage'
-  | 'billing:view'
-  | 'settings:admin';
+export type PlatformPermission = 'admin:read' | 'admin:write' | 'system:manage';
+export type CustomerPermission = 'cases:read' | 'cases:write' | 'users:read' | 'users:write';
+export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
 
-const legacyRolePermissions: Record<UserRole, Permission[]> = {
-  admin: [
-    'document:approve', 'document:view',
-    'case:create', 'case:assign', 'case:update', 'case:view',
-    'user:create', 'user:update', 'user:delete', 'user:view',
-    'report:generate', 'report:view',
-    'subscription:manage', 'billing:view', 'settings:admin'
-  ],
-  complianceOfficer: [
-    'document:approve', 'document:view',
-    'case:create', 'case:assign', 'case:update', 'case:view',
-    'report:generate', 'report:view',
-    'billing:view'
-  ],
-  executive: [
-    'document:view',
-    'case:view',
-    'user:view',
-    'report:view',
-    'billing:view'
-  ],
-  support: [
-    'document:view',
-    'case:view'
-  ]
+export interface RolePermissions {
+  hasPlatformPermission: (permission: PlatformPermission) => boolean;
+  hasCustomerPermission: (permission: CustomerPermission) => boolean;
+  canAccessRoute: (route: string) => boolean;
+  canPerformAction: (action: string) => boolean;
+  isAdmin: boolean;
+  isComplianceOfficer: boolean;
+  isExecutive: boolean;
+  isSupport: boolean;
+  userRole: UserRole;
+  hasPermission: (permission: PlatformPermission | CustomerPermission) => boolean;
+  canRead: (resource: string) => boolean;
+  canWrite: (resource: string) => boolean;
+  canDelete: (resource: string) => boolean;
+}
+
+const rolePermissions: Record<UserRole, (PlatformPermission | CustomerPermission)[]> = {
+  admin: ['admin:read', 'admin:write', 'system:manage', 'cases:read', 'cases:write', 'users:read', 'users:write'],
+  complianceOfficer: ['cases:read', 'cases:write', 'users:read'],
+  executive: ['cases:read', 'users:read'],
+  support: ['cases:read']
 };
 
-export function useRoleBasedAccess() {
+export const useRoleBasedAccess = (): RolePermissions => {
   const { user } = useAuth();
-  const platformAccess = usePlatformRoleAccess();
-  
-  const hasPermission = (permission: Permission): boolean => {
-    if (!user) return false;
-    
-    // Check platform-based permissions first
-    if (platformAccess.isPlatformOwner()) {
-      // Platform owners have elevated permissions
-      if (platformAccess.isPlatformAdmin()) {
-        return true; // Platform admins have all permissions
-      }
-    }
-    
-    // Map new customer roles to legacy permissions
-    const customerRolePermissions = user.customer_roles.some(role => {
-      switch (role) {
-        case 'customer_admin':
-          return legacyRolePermissions.admin.includes(permission);
-        case 'customer_compliance':
-          return legacyRolePermissions.complianceOfficer.includes(permission);
-        case 'customer_executive':
-          return legacyRolePermissions.executive.includes(permission);
-        case 'customer_support':
-          return legacyRolePermissions.support.includes(permission);
-        default:
-          return false;
-      }
-    });
+  const userRole = (user?.role as UserRole) || 'support';
+  const permissions = rolePermissions[userRole] || [];
 
-    if (customerRolePermissions) return true;
-    
-    // Fallback to legacy role system for backward compatibility
-    return legacyRolePermissions[user.role]?.includes(permission) ?? false;
-  };
-  
-  const hasAnyPermission = (permissions: Permission[]): boolean => {
-    return permissions.some(permission => hasPermission(permission));
+  const hasPlatformPermission = (permission: PlatformPermission): boolean => {
+    return permissions.includes(permission);
   };
 
-  const hasAllPermissions = (permissions: Permission[]): boolean => {
-    return permissions.every(permission => hasPermission(permission));
+  const hasCustomerPermission = (permission: CustomerPermission): boolean => {
+    return permissions.includes(permission);
   };
-  
+
+  const hasPermission = (permission: PlatformPermission | CustomerPermission): boolean => {
+    return permissions.includes(permission);
+  };
+
+  const canAccessRoute = (route: string): boolean => {
+    const routePermissions: Record<string, (PlatformPermission | CustomerPermission)[]> = {
+      '/admin': ['admin:read'],
+      '/users': ['users:read'],
+      '/cases': ['cases:read']
+    };
+    
+    const requiredPermissions = routePermissions[route] || [];
+    return requiredPermissions.some(permission => hasPermission(permission));
+  };
+
+  const canPerformAction = (action: string): boolean => {
+    const actionPermissions: Record<string, (PlatformPermission | CustomerPermission)[]> = {
+      'create_case': ['cases:write'],
+      'edit_user': ['users:write'],
+      'delete_case': ['cases:write']
+    };
+    
+    const requiredPermissions = actionPermissions[action] || [];
+    return requiredPermissions.some(permission => hasPermission(permission));
+  };
+
+  const canRead = (resource: string): boolean => {
+    return hasPermission(`${resource}:read` as any);
+  };
+
+  const canWrite = (resource: string): boolean => {
+    return hasPermission(`${resource}:write` as any);
+  };
+
+  const canDelete = (resource: string): boolean => {
+    return hasPermission(`${resource}:write` as any);
+  };
+
   return {
+    hasPlatformPermission,
+    hasCustomerPermission,
     hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    userRole: user?.role || 'support',
-    
-    // Expose platform access methods
-    ...platformAccess
+    canAccessRoute,
+    canPerformAction,
+    canRead,
+    canWrite,
+    canDelete,
+    isAdmin: userRole === 'admin',
+    isComplianceOfficer: userRole === 'complianceOfficer',
+    isExecutive: userRole === 'executive',
+    isSupport: userRole === 'support',
+    userRole
   };
-}
+};
