@@ -5,7 +5,7 @@ export interface KYCCustomer {
   email: string;
   riskScore: number;
   kycStatus: 'verified' | 'pending' | 'rejected' | 'information_requested';
-  lastTransaction?: string;
+  lastTransaction: string; // Made required to match Customer type
   country: string;
   createdAt: string;
 }

@@ -42,7 +42,8 @@ export const useKYCMonitoring = () => {
         riskScore: 75, 
         kycStatus: 'pending',
         country: 'US',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastTransaction: new Date().toISOString()
       },
       { 
         id: '2', 
@@ -51,7 +52,8 @@ export const useKYCMonitoring = () => {
         riskScore: 45, 
         kycStatus: 'verified',
         country: 'UK',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastTransaction: new Date().toISOString()
       },
     ],
     currentPage: 1,

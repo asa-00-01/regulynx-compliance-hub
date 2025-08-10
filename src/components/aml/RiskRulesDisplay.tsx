@@ -8,7 +8,7 @@ import TriggeredRules from './TriggeredRules';
 import AvailableRules from './AvailableRules';
 
 interface RiskRulesDisplayProps {
-  transaction?: AMLTransaction;
+  transaction?: AMLTransactio
   user?: UnifiedUserData;
 }
 
@@ -26,11 +26,7 @@ const RiskRulesDisplay: React.FC<RiskRulesDisplayProps> = ({ transaction, user }
   } = useRiskRules({ transaction, user });
 
   const handleRunAssessment = async () => {
-    if (transaction) {
-      await runRiskAssessment(transaction.id, 'transaction');
-    } else if (user) {
-      await runRiskAssessment(user.id, 'user');
-    }
+    await runRiskAssessment();
   };
 
   return (
@@ -50,7 +46,7 @@ const RiskRulesDisplay: React.FC<RiskRulesDisplayProps> = ({ transaction, user }
 
       <AvailableRules
         rules={allRules}
-        triggeredRuleIds={new Set(triggeredRuleIds)}
+        triggeredRuleIds={triggeredRuleIds}
         category={selectedCategory}
       />
     </div>
