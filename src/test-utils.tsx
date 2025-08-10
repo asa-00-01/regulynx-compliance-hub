@@ -1,14 +1,14 @@
 
-import React, { ReactElement } from 'react';
+import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@/components/common/ThemeProvider';
-import { ToastProvider } from '@/components/common/ToastProvider';
+import ToastProvider from '@/components/common/ToastProvider';
+import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/components/theme-provider';
 
-// Create a custom render function that includes providers
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  const queryClient = new QueryClient({
+const createTestQueryClient = () =>
+  new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
@@ -16,23 +16,36 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  queryClient?: QueryClient;
+}
+
+const AllTheProviders = ({ children, queryClient }: { children: React.ReactNode; queryClient: QueryClient }) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider>
-          <ToastProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ToastProvider />
             {children}
-          </ToastProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 };
 
 const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => render(ui, { wrapper: AllTheProviders, ...options });
+  ui: React.ReactElement,
+  { queryClient = createTestQueryClient(), ...options }: CustomRenderOptions = {}
+) => {
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <AllTheProviders queryClient={queryClient}>{children}</AllTheProviders>
+    ),
+    ...options,
+  });
+};
 
 export * from '@testing-library/react';
 export { customRender as render };
