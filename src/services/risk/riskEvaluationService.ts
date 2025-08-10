@@ -3,19 +3,22 @@ export interface RiskFactor {
   name: string;
   value: number;
   weight: number;
-  description: string;
+  description?: string;
 }
 
 export interface RiskEvaluation {
   id: string;
-  customer_id: string;
-  total_risk_score: number;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  score: number;
+  level: 'low' | 'medium' | 'high' | 'critical';
   factors: RiskFactor[];
-  created_at: string;
-  updated_at: string;
-  matched_rules: string[];
-  rule_categories: string[];
+  userId?: string;
+  customer_id?: string;
+  total_risk_score?: number;
+  risk_level?: 'low' | 'medium' | 'high' | 'critical';
+  created_at?: string;
+  updated_at?: string;
+  matched_rules?: string[];
+  rule_categories?: string[];
 }
 
 export interface RiskAssessmentResult extends RiskEvaluation {}
@@ -43,7 +46,9 @@ class RiskEvaluationService {
     return {
       id: `risk_${Date.now()}`,
       customer_id: customerId,
+      score: Math.round(totalScore),
       total_risk_score: Math.round(totalScore),
+      level: this.getRiskLevel(totalScore),
       risk_level: this.getRiskLevel(totalScore),
       factors: riskFactors,
       created_at: new Date().toISOString(),
@@ -67,3 +72,29 @@ class RiskEvaluationService {
 }
 
 export const riskEvaluationService = new RiskEvaluationService();
+
+// Export individual functions for backward compatibility
+export const evaluateUserRisk = (userId: string, factors: RiskFactor[]) => {
+  const totalScore = factors.reduce((sum, factor) => sum + (factor.value * factor.weight), 0);
+  return {
+    id: `risk_${Date.now()}`,
+    userId,
+    score: Math.round(totalScore),
+    level: totalScore >= 80 ? 'critical' : totalScore >= 60 ? 'high' : totalScore >= 40 ? 'medium' : 'low' as 'low' | 'medium' | 'high' | 'critical',
+    factors
+  };
+};
+
+export const evaluateTransactionRisk = (transactionData: any) => {
+  let score = 0;
+  if (transactionData.amount > 10000) score += 30;
+  if (transactionData.frequency > 10) score += 25;
+  if (transactionData.highRiskCountry) score += 50;
+  
+  return {
+    id: `transaction_risk_${Date.now()}`,
+    score,
+    level: score >= 80 ? 'critical' : score >= 60 ? 'high' : score >= 40 ? 'medium' : 'low' as 'low' | 'medium' | 'high' | 'critical',
+    factors: []
+  };
+};

@@ -325,3 +325,6 @@ class EmailAutomationService {
 }
 
 export const emailAutomationService = new EmailAutomationService();
+
+// Export as emailAutomation for backward compatibility
+export const emailAutomation = emailAutomationService;

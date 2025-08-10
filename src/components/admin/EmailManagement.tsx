@@ -51,12 +51,12 @@ const EmailManagement = () => {
     setVariables(prev => ({ ...prev, [variable]: value }));
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'transactional': return 'bg-blue-100 text-blue-800';
-      case 'lifecycle': return 'bg-green-100 text-green-800';
+  const getTypeColor = (category: string) => {
+    switch (category) {
       case 'compliance': return 'bg-orange-100 text-orange-800';
-      case 'alert': return 'bg-red-100 text-red-800';
+      case 'kyc': return 'bg-green-100 text-green-800';
+      case 'system': return 'bg-blue-100 text-blue-800';
+      case 'marketing': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -159,9 +159,9 @@ const EmailManagement = () => {
                     </div>
                     
                     <div>
-                      <Label className="text-sm font-medium">Type</Label>
-                      <Badge className={getTypeColor(selectedTemplate.type)}>
-                        {selectedTemplate.type}
+                      <Label className="text-sm font-medium">Category</Label>
+                      <Badge className={getTypeColor(selectedTemplate.category)}>
+                        {selectedTemplate.category}
                       </Badge>
                     </div>
 
@@ -169,7 +169,7 @@ const EmailManagement = () => {
                       <Label className="text-sm font-medium">Content Preview</Label>
                       <div 
                         className="border rounded p-3 text-sm bg-gray-50 max-h-64 overflow-y-auto"
-                        dangerouslySetInnerHTML={{ __html: selectedTemplate.htmlContent }}
+                        dangerouslySetInnerHTML={{ __html: selectedTemplate.html_content }}
                       />
                     </div>
                   </div>
@@ -195,8 +195,8 @@ const EmailManagement = () => {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">{template.name}</CardTitle>
-                        <Badge className={getTypeColor(template.type)}>
-                          {template.type}
+                        <Badge className={getTypeColor(template.category)}>
+                          {template.category}
                         </Badge>
                       </div>
                     </CardHeader>

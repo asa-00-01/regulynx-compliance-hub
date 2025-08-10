@@ -1,6 +1,6 @@
 
 import React, { ReactElement } from 'react';
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react';
+import { render, RenderOptions, screen as rtlScreen, waitFor as rtlWaitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -35,7 +35,10 @@ const customRender = (
 
 // Re-export everything
 export * from '@testing-library/react';
-export { screen, waitFor };
+
+// Ensure screen and waitFor are properly exported
+export const screen = rtlScreen;
+export const waitFor = rtlWaitFor;
 
 // Override render export
 export { customRender as render };

@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export interface RiskBadgeProps {
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  score?: number;
   showText?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -12,10 +13,14 @@ export interface RiskBadgeProps {
 
 const RiskBadge: React.FC<RiskBadgeProps> = ({ 
   riskLevel, 
+  score,
   showText = true, 
   size = 'md',
   className 
 }) => {
+  // Convert score to riskLevel if score is provided
+  const computedRiskLevel = riskLevel || (score !== undefined ? getRiskLevelFromScore(score) : 'low');
+
   const getRiskColor = (level: string) => {
     switch (level) {
       case 'low':
@@ -42,19 +47,21 @@ const RiskBadge: React.FC<RiskBadgeProps> = ({
     }
   };
 
-  const riskText = showText ? riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) : '';
+  const displayText = showText 
+    ? `${score !== undefined ? score : ''} ${score !== undefined ? '- ' : ''}${computedRiskLevel.charAt(0).toUpperCase() + computedRiskLevel.slice(1)}${score !== undefined ? ' Risk' : ''}`
+    : (score !== undefined ? score.toString() : '');
 
   return (
     <Badge 
       variant="outline" 
       className={cn(
-        getRiskColor(riskLevel),
+        getRiskColor(computedRiskLevel),
         getSizeClasses(size),
         'font-medium border-0',
         className
       )}
     >
-      {riskText}
+      {displayText}
     </Badge>
   );
 };
@@ -63,8 +70,8 @@ export default RiskBadge;
 
 // Helper function to convert risk score to risk level
 export const getRiskLevelFromScore = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
-  if (score >= 80) return 'critical';
-  if (score >= 60) return 'high';
-  if (score >= 40) return 'medium';
+  if (score >= 75) return 'critical';
+  if (score >= 50) return 'high';
+  if (score >= 25) return 'medium';
   return 'low';
 };

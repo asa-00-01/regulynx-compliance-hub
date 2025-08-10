@@ -1,97 +1,107 @@
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
-export type PlatformPermission = 'admin:read' | 'admin:write' | 'system:manage';
-export type CustomerPermission = 'cases:read' | 'cases:write' | 'users:read' | 'users:write';
-export type UserRole = 'admin' | 'complianceOfficer' | 'executive' | 'support';
+export type PlatformPermission = 
+  | 'platform:admin'
+  | 'platform:support'
+  | 'system:monitor'
+  | 'user:create'
+  | 'user:update'
+  | 'user:delete'
+  | 'document:approve'
+  | 'case:create'
+  | 'case:update'
+  | 'case:assign'
+  | 'report:generate'
+  | 'billing:view'
+  | 'subscription:manage'
+  | 'settings:admin';
+
+export type CustomerPermission = 
+  | 'customer:admin'
+  | 'customer:compliance'
+  | 'customer:executive'
+  | 'customer:support';
 
 export interface RolePermissions {
-  hasPlatformPermission: (permission: PlatformPermission) => boolean;
-  hasCustomerPermission: (permission: CustomerPermission) => boolean;
-  canAccessRoute: (route: string) => boolean;
-  canPerformAction: (action: string) => boolean;
-  isAdmin: boolean;
-  isComplianceOfficer: boolean;
-  isExecutive: boolean;
-  isSupport: boolean;
-  userRole: UserRole;
   hasPermission: (permission: PlatformPermission | CustomerPermission) => boolean;
-  canRead: (resource: string) => boolean;
-  canWrite: (resource: string) => boolean;
-  canDelete: (resource: string) => boolean;
+  hasAnyPermission: (permissions: (PlatformPermission | CustomerPermission)[]) => boolean;
+  hasAllPermissions: (permissions: (PlatformPermission | CustomerPermission)[]) => boolean;
+  userPermissions: (PlatformPermission | CustomerPermission)[];
 }
 
-const rolePermissions: Record<UserRole, (PlatformPermission | CustomerPermission)[]> = {
-  admin: ['admin:read', 'admin:write', 'system:manage', 'cases:read', 'cases:write', 'users:read', 'users:write'],
-  complianceOfficer: ['cases:read', 'cases:write', 'users:read'],
-  executive: ['cases:read', 'users:read'],
-  support: ['cases:read']
-};
-
-export const useRoleBasedAccess = (): RolePermissions => {
+export function useRoleBasedAccess(): RolePermissions {
   const { user } = useAuth();
-  const userRole = (user?.role as UserRole) || 'support';
-  const permissions = rolePermissions[userRole] || [];
 
-  const hasPlatformPermission = (permission: PlatformPermission): boolean => {
-    return permissions.includes(permission);
+  const getUserPermissions = (): (PlatformPermission | CustomerPermission)[] => {
+    if (!user) return [];
+    
+    // Mock permissions based on user role
+    const role = user.role || 'customer:support';
+    
+    switch (role) {
+      case 'platform_admin':
+        return [
+          'platform:admin',
+          'platform:support',
+          'system:monitor',
+          'user:create',
+          'user:update',
+          'user:delete',
+          'document:approve',
+          'case:create',
+          'case:update', 
+          'case:assign',
+          'report:generate',
+          'billing:view',
+          'subscription:manage',
+          'settings:admin'
+        ];
+      case 'customer_admin':
+        return [
+          'customer:admin',
+          'user:create',
+          'user:update',
+          'user:delete',
+          'document:approve',
+          'case:create',
+          'case:update',
+          'case:assign',
+          'report:generate',
+          'settings:admin'
+        ];
+      case 'customer_compliance':
+        return [
+          'customer:compliance',
+          'document:approve',
+          'case:create',
+          'case:update',
+          'case:assign',
+          'report:generate'
+        ];
+      default:
+        return ['customer:support'];
+    }
   };
 
-  const hasCustomerPermission = (permission: CustomerPermission): boolean => {
-    return permissions.includes(permission);
-  };
+  const userPermissions = getUserPermissions();
 
   const hasPermission = (permission: PlatformPermission | CustomerPermission): boolean => {
-    return permissions.includes(permission);
+    return userPermissions.includes(permission);
   };
 
-  const canAccessRoute = (route: string): boolean => {
-    const routePermissions: Record<string, (PlatformPermission | CustomerPermission)[]> = {
-      '/admin': ['admin:read'],
-      '/users': ['users:read'],
-      '/cases': ['cases:read']
-    };
-    
-    const requiredPermissions = routePermissions[route] || [];
-    return requiredPermissions.some(permission => hasPermission(permission));
+  const hasAnyPermission = (permissions: (PlatformPermission | CustomerPermission)[]): boolean => {
+    return permissions.some(permission => userPermissions.includes(permission));
   };
 
-  const canPerformAction = (action: string): boolean => {
-    const actionPermissions: Record<string, (PlatformPermission | CustomerPermission)[]> = {
-      'create_case': ['cases:write'],
-      'edit_user': ['users:write'],
-      'delete_case': ['cases:write']
-    };
-    
-    const requiredPermissions = actionPermissions[action] || [];
-    return requiredPermissions.some(permission => hasPermission(permission));
-  };
-
-  const canRead = (resource: string): boolean => {
-    return hasPermission(`${resource}:read` as any);
-  };
-
-  const canWrite = (resource: string): boolean => {
-    return hasPermission(`${resource}:write` as any);
-  };
-
-  const canDelete = (resource: string): boolean => {
-    return hasPermission(`${resource}:write` as any);
+  const hasAllPermissions = (permissions: (PlatformPermission | CustomerPermission)[]): boolean => {
+    return permissions.every(permission => userPermissions.includes(permission));
   };
 
   return {
-    hasPlatformPermission,
-    hasCustomerPermission,
     hasPermission,
-    canAccessRoute,
-    canPerformAction,
-    canRead,
-    canWrite,
-    canDelete,
-    isAdmin: userRole === 'admin',
-    isComplianceOfficer: userRole === 'complianceOfficer',
-    isExecutive: userRole === 'executive',
-    isSupport: userRole === 'support',
-    userRole
+    hasAnyPermission,
+    hasAllPermissions,
+    userPermissions,
   };
-};
+}
