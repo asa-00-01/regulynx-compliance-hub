@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
+import Sidebar from './Sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -30,7 +31,14 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
     );
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
+    </div>
+  );
 };
 
 export default DashboardLayout;
