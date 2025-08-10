@@ -10,6 +10,7 @@ import { DetectedPattern, AMLTransaction } from '@/types/aml';
 export interface PatternDetailsModalProps {
   pattern: DetectedPattern;
   isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   onViewTransaction: (transaction: AMLTransaction) => void;
   onFlagTransaction: (transaction: AMLTransaction) => void;
@@ -19,13 +20,16 @@ export interface PatternDetailsModalProps {
 const PatternDetailsModal: React.FC<PatternDetailsModalProps> = ({
   pattern,
   isOpen,
+  open,
   onOpenChange,
   onViewTransaction,
   onFlagTransaction,
   onCreateCase
 }) => {
+  const modalOpen = isOpen || open;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={modalOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

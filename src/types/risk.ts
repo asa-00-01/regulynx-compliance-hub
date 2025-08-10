@@ -10,6 +10,17 @@ export interface Rule {
   is_active: boolean;
 }
 
+export interface RiskRule {
+  id: string;
+  rule_id: string;
+  rule_name: string;
+  description: string;
+  condition: any;
+  risk_score: number;
+  category: string;
+  is_active: boolean;
+}
+
 export interface RiskMatch {
   rule_id: string;
   rule_name: string;

@@ -34,3 +34,18 @@ export const HIGH_RISK_COUNTRIES: HighRiskCountry[] = [
   { countryCode: 'SY', name: 'Syria', riskLevel: 'high' },
   { countryCode: 'VE', name: 'Venezuela', riskLevel: 'high' },
 ];
+
+export interface DetectedPattern {
+  id: string;
+  type: string;
+  name: string;
+  description: string;
+  riskScore: number;
+  confidence: number;
+  transactionIds: string[];
+  category: 'structuring' | 'high_risk_corridor' | 'time_pattern' | 'velocity';
+  severity: 'low' | 'medium' | 'high';
+  matchCount: number;
+  lastDetected: string;
+  transactions: AMLTransaction[];
+}

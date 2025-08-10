@@ -1,18 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { emailAutomationService } from '@/services/emailAutomation';
-
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  category: string;
-  html_content: string;
-  text_content: string;
-  variables: string[];
-  created_at: string;
-  updated_at: string;
-}
+import { emailAutomationService, EmailTemplate } from '@/services/emailAutomation';
 
 interface EmailAutomationHook {
   loading: boolean;
@@ -24,7 +12,7 @@ interface EmailAutomationHook {
   sendWelcomeEmail: (userEmail: string, userName: string) => Promise<boolean>;
   sendCaseAssignmentEmail: (assigneeEmail: string, caseId: string, caseTitle: string) => Promise<boolean>;
   sendHighRiskAlert: (adminEmail: string, riskDetails: any) => Promise<boolean>;
-  getTemplates: () => Promise<any[]>;
+  getTemplates: () => Promise<EmailTemplate[]>;
   loadTemplates: () => Promise<void>;
 }
 

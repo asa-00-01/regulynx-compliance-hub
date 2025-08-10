@@ -11,6 +11,19 @@ interface KYCMonitoringData {
   recentRiskAssessments: RiskAssessmentResult[];
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  riskScore: number;
+}
+
+interface PaginationData {
+  currentData: Customer[];
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+}
+
 export const useKYCMonitoring = () => {
   const [data, setData] = useState<KYCMonitoringData>({
     totalUsers: 0,
@@ -20,6 +33,68 @@ export const useKYCMonitoring = () => {
     recentRiskAssessments: []
   });
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [kycFilter, setKYCFilter] = useState<string>('all');
+  const [riskFilter, setRiskFilter] = useState<string>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
+  
+  // Modal states
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [runningAssessment, setRunningAssessment] = useState(false);
+
+  // Mock pagination data
+  const [pagination] = useState<PaginationData>({
+    currentData: [
+      { id: '1', name: 'John Doe', riskScore: 75 },
+      { id: '2', name: 'Jane Smith', riskScore: 45 },
+    ],
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: 10
+  });
+
+  const runRiskAssessment = async () => {
+    setRunningAssessment(true);
+    try {
+      // Mock assessment
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } finally {
+      setRunningAssessment(false);
+    }
+  };
+
+  const handleReview = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setActionModalOpen(true);
+  };
+
+  const handleFlag = (customer: Customer) => {
+    console.log('Flagging customer:', customer.name);
+  };
+
+  const handleCreateCase = (customer: Customer) => {
+    console.log('Creating case for customer:', customer.name);
+  };
+
+  const handleViewProfile = (customer: Customer) => {
+    console.log('Viewing profile for customer:', customer.name);
+  };
+
+  const handlers = {
+    handleReview,
+    handleFlag,
+    handleCreateCase,
+    handleViewProfile
+  };
+
+  const stats = {
+    totalUsers: data.totalUsers,
+    pendingVerifications: data.pendingVerifications,
+    riskAlerts: data.riskAlerts,
+    averageProcessingTime: data.averageProcessingTime
+  };
 
   useEffect(() => {
     const fetchKYCData = async () => {
@@ -35,7 +110,7 @@ export const useKYCMonitoring = () => {
           ];
 
           // Use the service to evaluate customer risk with proper parameters
-          const evaluation = await riskEvaluationService.evaluateCustomerRisk(`customer_${i}`);
+          const evaluation = await riskEvaluationService.evaluateCustomerRisk(`customer_${i}`, {});
           
           const assessmentResult: RiskAssessmentResult = {
             ...evaluation,
@@ -65,5 +140,23 @@ export const useKYCMonitoring = () => {
     fetchKYCData();
   }, []);
 
-  return { data, loading };
+  return { 
+    data, 
+    loading,
+    kycFilter,
+    setKYCFilter,
+    riskFilter,
+    setRiskFilter,
+    countryFilter,
+    setCountryFilter,
+    selectedCustomer,
+    setSelectedCustomer,
+    actionModalOpen,
+    setActionModalOpen,
+    runningAssessment,
+    runRiskAssessment,
+    pagination,
+    stats,
+    handlers
+  };
 };

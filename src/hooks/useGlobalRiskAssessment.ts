@@ -5,6 +5,7 @@ import { RiskAssessmentResult } from '@/types/risk';
 
 export interface GlobalRiskAssessmentHook {
   isAssessing: boolean;
+  runningAssessment: boolean;
   runGlobalAssessment: () => Promise<void>;
   results: RiskAssessmentResult[];
   error: string | null;
@@ -16,6 +17,7 @@ export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
   const [error, setError] = useState<string | null>(null);
 
   const runGlobalAssessment = useCallback(async () => {
+    console.log('=== useGlobalRiskAssessment runGlobalAssessment called ===');
     setIsAssessing(true);
     setError(null);
     
@@ -45,6 +47,7 @@ export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
       ];
       
       setResults(mockResults);
+      console.log('=== Global assessment completed with results:', mockResults.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Assessment failed');
     } finally {
@@ -54,6 +57,7 @@ export const useGlobalRiskAssessment = (): GlobalRiskAssessmentHook => {
 
   return {
     isAssessing,
+    runningAssessment: isAssessing, // Alias for backward compatibility
     runGlobalAssessment,
     results,
     error
