@@ -1,9 +1,13 @@
 
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import LoadingScreen from './LoadingScreen';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import DashboardShell from '@/components/layout/DashboardShell';
+
+// Import platform app
+import PlatformApp from '@/pages/PlatformApp';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -29,14 +33,14 @@ import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
 import DeveloperTools from '@/pages/DeveloperTools';
-import PlatformManagement from '@/pages/PlatformManagement';
 import Pricing from '@/pages/Pricing';
 import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
 
 const AppRoutes = () => {
-  const { loading, authLoaded } = useAuth();
+  const { loading, authLoaded, user } = useAuth();
+  const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
 
   // Show loading screen while auth is being determined
   if (loading || !authLoaded) {
@@ -45,6 +49,9 @@ const AppRoutes = () => {
   }
 
   console.log('✅ AppRoutes - Auth loaded, rendering routes');
+
+  // Check if user should be redirected to platform app
+  const shouldUsePlatformApp = user && (isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support'));
 
   return (
     <Routes>
@@ -56,11 +63,21 @@ const AppRoutes = () => {
       <Route path="/subscription-success" element={<SubscriptionSuccess />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Protected routes - all wrapped in DashboardShell */}
+      {/* Platform App Routes - Only for platform users */}
+      {shouldUsePlatformApp && (
+        <Route path="/platform/*" element={
+          <ProtectedRoute>
+            <PlatformApp />
+          </ProtectedRoute>
+        } />
+      )}
+
+      {/* Customer App Routes - Protected routes wrapped in DashboardShell */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardShell>
-            <Dashboard />
+            {/* Redirect platform users to platform app */}
+            {shouldUsePlatformApp ? <Navigate to="/platform/dashboard" replace /> : <Dashboard />}
           </DashboardShell>
         </ProtectedRoute>
       } />
@@ -216,14 +233,8 @@ const AppRoutes = () => {
           </DashboardShell>
         </ProtectedRoute>
       } />
-      
-      <Route path="/platform-management" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <PlatformManagement />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
+
+      {/* Remove platform-management from customer app since it's now in platform app */}
 
       {/* Catch all - 404 */}
       <Route path="*" element={<NotFound />} />
