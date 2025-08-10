@@ -65,9 +65,14 @@ export const useKYCMonitoring = () => {
     endIndex: 2,
     hasNextPage: false,
     hasPreviousPage: false,
+    hasPrevPage: false,
     nextPage: () => {},
     previousPage: () => {},
-    goToPage: () => {}
+    goToPage: () => {},
+    goToNextPage: () => {},
+    goToPrevPage: () => {},
+    goToFirstPage: () => {},
+    goToLastPage: () => {}
   });
 
   const runRiskAssessment = async () => {

@@ -8,7 +8,7 @@ import TriggeredRules from './TriggeredRules';
 import AvailableRules from './AvailableRules';
 
 interface RiskRulesDisplayProps {
-  transaction?: AMLTransactio
+  transaction?: AMLTransaction;
   user?: UnifiedUserData;
 }
 
@@ -46,7 +46,7 @@ const RiskRulesDisplay: React.FC<RiskRulesDisplayProps> = ({ transaction, user }
 
       <AvailableRules
         rules={allRules}
-        triggeredRuleIds={triggeredRuleIds}
+        triggeredRuleIds={new Set(triggeredRuleIds)}
         category={selectedCategory}
       />
     </div>
