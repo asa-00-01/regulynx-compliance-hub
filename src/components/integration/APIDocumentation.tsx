@@ -22,6 +22,265 @@ const APIDocumentation = () => {
     }
   };
 
+  const downloadOpenAPISpec = () => {
+    const openAPISpec = {
+      openapi: '3.0.0',
+      info: {
+        title: 'Compliance System API',
+        version: '1.0.0',
+        description: 'API for compliance data ingestion and risk assessment'
+      },
+      servers: [
+        {
+          url: 'https://api.compliance.your-domain.com/v1',
+          description: 'Production server'
+        },
+        {
+          url: 'https://sandbox-api.compliance.your-domain.com/v1',
+          description: 'Sandbox server'
+        }
+      ],
+      paths: {
+        '/data-ingestion': {
+          post: {
+            summary: 'Submit data for compliance processing',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      client_id: { type: 'string' },
+                      data_type: { type: 'string', enum: ['customer', 'transaction', 'document'] },
+                      records: {
+                        type: 'array',
+                        items: { type: 'object' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            responses: {
+              '200': {
+                description: 'Data processed successfully',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        success: { type: 'boolean' },
+                        batch_id: { type: 'string' },
+                        processed: { type: 'number' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '/risk-assessment/{entity_id}': {
+          get: {
+            summary: 'Get risk assessment for entity',
+            parameters: [
+              {
+                name: 'entity_id',
+                in: 'path',
+                required: true,
+                schema: { type: 'string' }
+              }
+            ],
+            responses: {
+              '200': {
+                description: 'Risk assessment data',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        entity_id: { type: 'string' },
+                        risk_assessment: { type: 'object' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      components: {
+        securitySchemes: {
+          BearerAuth: {
+            type: 'http',
+            scheme: 'bearer'
+          }
+        }
+      },
+      security: [
+        { BearerAuth: [] }
+      ]
+    };
+
+    const blob = new Blob([JSON.stringify(openAPISpec, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'compliance-api-openapi-spec.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('OpenAPI specification downloaded');
+  };
+
+  const downloadPostmanCollection = () => {
+    const postmanCollection = {
+      info: {
+        name: 'Compliance System API',
+        description: 'Complete API collection for compliance system integration',
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+      },
+      variable: [
+        {
+          key: 'baseUrl',
+          value: 'https://api.compliance.your-domain.com/v1',
+          type: 'string'
+        },
+        {
+          key: 'apiToken',
+          value: 'YOUR_API_TOKEN',
+          type: 'string'
+        }
+      ],
+      auth: {
+        type: 'bearer',
+        bearer: [
+          {
+            key: 'token',
+            value: '{{apiToken}}',
+            type: 'string'
+          }
+        ]
+      },
+      item: [
+        {
+          name: 'Data Ingestion',
+          item: [
+            {
+              name: 'Submit Customer Data',
+              request: {
+                method: 'POST',
+                header: [
+                  {
+                    key: 'Content-Type',
+                    value: 'application/json'
+                  }
+                ],
+                body: {
+                  mode: 'raw',
+                  raw: JSON.stringify({
+                    client_id: 'your-client-id',
+                    data_type: 'customer',
+                    records: [
+                      {
+                        external_id: 'cust_001',
+                        full_name: 'John Doe',
+                        email: 'john.doe@example.com',
+                        date_of_birth: '1990-01-15',
+                        nationality: 'US'
+                      }
+                    ]
+                  }, null, 2)
+                },
+                url: {
+                  raw: '{{baseUrl}}/data-ingestion',
+                  host: ['{{baseUrl}}'],
+                  path: ['data-ingestion']
+                }
+              }
+            }
+          ]
+        },
+        {
+          name: 'Risk Assessment',
+          item: [
+            {
+              name: 'Get Customer Risk Assessment',
+              request: {
+                method: 'GET',
+                header: [],
+                url: {
+                  raw: '{{baseUrl}}/risk-assessment/cust_001?entity_type=customer&include_history=true',
+                  host: ['{{baseUrl}}'],
+                  path: ['risk-assessment', 'cust_001'],
+                  query: [
+                    {
+                      key: 'entity_type',
+                      value: 'customer'
+                    },
+                    {
+                      key: 'include_history',
+                      value: 'true'
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          name: 'Compliance Cases',
+          item: [
+            {
+              name: 'Get Cases',
+              request: {
+                method: 'GET',
+                header: [],
+                url: {
+                  raw: '{{baseUrl}}/cases?status=open&priority=high&page=1&limit=50',
+                  host: ['{{baseUrl}}'],
+                  path: ['cases'],
+                  query: [
+                    {
+                      key: 'status',
+                      value: 'open'
+                    },
+                    {
+                      key: 'priority',
+                      value: 'high'
+                    },
+                    {
+                      key: 'page',
+                      value: '1'
+                    },
+                    {
+                      key: 'limit',
+                      value: '50'
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    const blob = new Blob([JSON.stringify(postmanCollection, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'compliance-api-postman-collection.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Postman collection downloaded');
+  };
+
   const CodeBlock = ({ code, language = 'json', id }: { code: string; language?: string; id: string }) => (
     <div className="relative">
       <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto border">
@@ -48,11 +307,11 @@ const APIDocumentation = () => {
               Compliance System API Documentation
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={downloadOpenAPISpec}>
                 <Download className="h-4 w-4 mr-2" />
                 Download OpenAPI Spec
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={downloadPostmanCollection}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Postman Collection
               </Button>
