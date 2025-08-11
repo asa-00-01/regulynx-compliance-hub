@@ -19,8 +19,6 @@ import {
   Newspaper,
   Zap,
   Code,
-  Building2,
-  CreditCard,
   UserCheck,
   DollarSign,
   Activity,
@@ -50,8 +48,6 @@ const secondaryNavigation = [
   { name: 'News', href: '/news', icon: Newspaper },
   { name: 'Optimization', href: '/optimization', icon: Gauge },
   { name: 'Developer Tools', href: '/developer-tools', icon: Code },
-  { name: 'Platform Management', href: '/platform-management', icon: Building2 },
-  { name: 'Pricing', href: '/pricing', icon: CreditCard },
 ];
 
 const Sidebar = () => {
@@ -87,6 +83,11 @@ const Sidebar = () => {
     if (userRole === 'complianceOfficer') mappedRoles.push('complianceOfficer');
     if (userRole === 'executive') mappedRoles.push('executive');
     if (userRole === 'support') mappedRoles.push('support');
+    
+    // For non-platform users, always allow basic access if no mapped roles
+    if (mappedRoles.length === 0) {
+      mappedRoles.push('support'); // Default access level
+    }
     
     return item.roles.some((role: string) => mappedRoles.includes(role));
   };

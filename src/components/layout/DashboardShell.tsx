@@ -11,14 +11,15 @@ interface DashboardShellProps {
 const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
   const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
   
-  // Redirect platform users to platform app
+  // This should not happen due to routing logic, but double-check
   const shouldUsePlatformApp = isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support');
   
   if (shouldUsePlatformApp) {
+    console.log('🔄 DashboardShell - Redirecting platform user to platform app');
     return <Navigate to="/platform/dashboard" replace />;
   }
 
-  // This shell is now specifically for customer users
+  // This shell is specifically for customer users only
   return (
     <DashboardLayout>
       {children}

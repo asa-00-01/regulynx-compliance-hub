@@ -66,7 +66,7 @@ export function usePlatformRoleAccess() {
   const { user } = useAuth();
   
   const hasPlatformPermission = (permission: PlatformPermission): boolean => {
-    if (!user || !user.platform_roles.length) return false;
+    if (!user || !user.platform_roles?.length) return false;
     
     return user.platform_roles.some(role => 
       platformRolePermissions[role]?.includes(permission) ?? false
@@ -74,7 +74,7 @@ export function usePlatformRoleAccess() {
   };
 
   const hasCustomerPermission = (permission: CustomerPermission): boolean => {
-    if (!user || !user.customer_roles.length) return false;
+    if (!user || !user.customer_roles?.length) return false;
     
     return user.customer_roles.some(role => 
       customerRolePermissions[role]?.includes(permission) ?? false
@@ -86,11 +86,11 @@ export function usePlatformRoleAccess() {
   };
 
   const isPlatformAdmin = (): boolean => {
-    return user?.platform_roles.includes('platform_admin') ?? false;
+    return user?.platform_roles?.includes('platform_admin') ?? false;
   };
 
   const isCustomerAdmin = (): boolean => {
-    return user?.customer_roles.includes('customer_admin') ?? false;
+    return user?.customer_roles?.includes('customer_admin') ?? false;
   };
 
   const canManageCustomers = (): boolean => {

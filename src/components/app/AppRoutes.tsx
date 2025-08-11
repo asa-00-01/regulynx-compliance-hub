@@ -53,6 +53,14 @@ const AppRoutes = () => {
   // Check if user should be redirected to platform app
   const shouldUsePlatformApp = user && (isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support'));
 
+  console.log('🔍 AppRoutes - Platform check:', {
+    user: user?.email,
+    isPlatformOwner: isPlatformOwner(),
+    isPlatformAdmin: isPlatformAdmin(),
+    hasPlatformPermission: hasPlatformPermission('platform:support'),
+    shouldUsePlatformApp
+  });
+
   return (
     <Routes>
       {/* Public routes */}
@@ -64,177 +72,204 @@ const AppRoutes = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Platform App Routes - Only for platform users */}
-      {shouldUsePlatformApp && (
-        <Route path="/platform/*" element={
-          <ProtectedRoute>
-            <PlatformApp />
-          </ProtectedRoute>
-        } />
+      {shouldUsePlatformApp ? (
+        <>
+          {/* Redirect platform users from customer routes to platform */}
+          <Route path="/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/compliance" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/compliance-cases" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/compliance-cases/:id" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/user-case/:userId" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/kyc-verification" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/transactions" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/documents" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/aml-monitoring" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/risk-analysis" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/sar-center" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/integration" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/analytics" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/audit-logs" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/users" element={<Navigate to="/platform/users" replace />} />
+          <Route path="/profile" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/ai-agent" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/news" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/optimization" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/developer-tools" element={<Navigate to="/platform/developer-tools" replace />} />
+          
+          {/* Platform App Routes */}
+          <Route path="/platform/*" element={
+            <ProtectedRoute>
+              <PlatformApp />
+            </ProtectedRoute>
+          } />
+        </>
+      ) : (
+        /* Customer App Routes - Protected routes wrapped in DashboardShell */
+        <>
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Dashboard />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/compliance" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Compliance />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/compliance-cases" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <ComplianceCases />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/compliance-cases/:id" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <CaseDetails />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/user-case/:userId" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <UserCase />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/kyc-verification" element={
+            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+              <DashboardShell>
+                <KYCVerification />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/transactions" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Transactions />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/documents" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Documents />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/aml-monitoring" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <AMLMonitoring />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/risk-analysis" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <RiskAnalysis />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/sar-center" element={
+            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
+              <DashboardShell>
+                <SARCenter />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/integration" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Integration />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Analytics />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/audit-logs" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <AuditLogs />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/users" element={
+            <ProtectedRoute requiredRoles={['admin']}>
+              <DashboardShell>
+                <Users />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Profile />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/ai-agent" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <AIAgent />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/news" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <News />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/optimization" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <Optimization />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/developer-tools" element={
+            <ProtectedRoute>
+              <DashboardShell>
+                <DeveloperTools />
+              </DashboardShell>
+            </ProtectedRoute>
+          } />
+
+          {/* Redirect to unauthorized if platform routes are accessed by non-platform users */}
+          <Route path="/platform/*" element={<Navigate to="/unauthorized" replace />} />
+        </>
       )}
-
-      {/* Customer App Routes - Protected routes wrapped in DashboardShell */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            {/* Redirect platform users to platform app */}
-            {shouldUsePlatformApp ? <Navigate to="/platform/dashboard" replace /> : <Dashboard />}
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/compliance" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Compliance />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/compliance-cases" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <ComplianceCases />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/compliance-cases/:id" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <CaseDetails />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/user-case/:userId" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <UserCase />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/kyc-verification" element={
-        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-          <DashboardShell>
-            <KYCVerification />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/transactions" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Transactions />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/documents" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Documents />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/aml-monitoring" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <AMLMonitoring />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/risk-analysis" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <RiskAnalysis />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/sar-center" element={
-        <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-          <DashboardShell>
-            <SARCenter />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/integration" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Integration />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Analytics />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/audit-logs" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <AuditLogs />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/users" element={
-        <ProtectedRoute requiredRoles={['admin']}>
-          <DashboardShell>
-            <Users />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Profile />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/ai-agent" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <AIAgent />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/news" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <News />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/optimization" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <Optimization />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/developer-tools" element={
-        <ProtectedRoute>
-          <DashboardShell>
-            <DeveloperTools />
-          </DashboardShell>
-        </ProtectedRoute>
-      } />
-
-      {/* Remove platform-management from customer app since it's now in platform app */}
 
       {/* Catch all - 404 */}
       <Route path="*" element={<NotFound />} />
