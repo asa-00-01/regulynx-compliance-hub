@@ -7,9 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import RefreshProfileButton from '@/components/platform/RefreshProfileButton';
 
 const Integration = () => {
-  const { canManageCustomers, isPlatformAdmin } = usePlatformRoleAccess();
+  const { isPlatformAdmin, isPlatformOwner } = usePlatformRoleAccess();
 
-  if (!canManageCustomers && !isPlatformAdmin) {
+  if (!isPlatformAdmin() && !isPlatformOwner()) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
