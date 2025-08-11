@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
+import { Navigate } from 'react-router-dom';
 import DashboardLayout from './DashboardLayout';
 
 interface DashboardShellProps {
@@ -7,8 +9,16 @@ interface DashboardShellProps {
 }
 
 const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
-  // This shell is now specifically for customer users only
-  // Platform users are routed to PlatformApp before reaching here
+  const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
+  
+  // Redirect platform users to platform app
+  const shouldUsePlatformApp = isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support');
+  
+  if (shouldUsePlatformApp) {
+    return <Navigate to="/platform/dashboard" replace />;
+  }
+
+  // This shell is now specifically for customer users
   return (
     <DashboardLayout>
       {children}
