@@ -37,7 +37,7 @@ const DashboardLayout = ({ children, requiredRoles = [] }: DashboardLayoutProps)
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
       </div>

@@ -3,8 +3,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -92,21 +90,13 @@ const Sidebar = () => {
     return item.roles.some((role: string) => mappedRoles.includes(role));
   };
 
-  // Debug logging
-  console.log('🔍 Sidebar Debug:', {
-    user: user,
-    userRole: user?.role,
-    customerRoles: user?.customer_roles,
-    currentPath: location.pathname
-  });
-
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-      <div className="flex h-16 shrink-0 items-center px-6">
+      <div className="flex h-16 shrink-0 items-center px-6 border-b border-gray-200">
         <h1 className="text-xl font-bold text-gray-900">Regulynx</h1>
       </div>
       
-      <ScrollArea className="flex-1 px-3">
+      <div className="flex-1 px-3 py-4 overflow-y-auto">
         <nav className="flex flex-col space-y-1">
           {navigation.filter(hasAccess).map((item) => {
             const Icon = item.icon;
@@ -128,7 +118,7 @@ const Sidebar = () => {
             );
           })}
           
-          <Separator className="my-4" />
+          <div className="my-4 border-t border-gray-200" />
           
           {secondaryNavigation.map((item) => {
             const Icon = item.icon;
@@ -150,7 +140,7 @@ const Sidebar = () => {
             );
           })}
           
-          <Separator className="my-4" />
+          <div className="my-4 border-t border-gray-200" />
           
           <Button
             asChild
@@ -166,7 +156,7 @@ const Sidebar = () => {
             </Link>
           </Button>
         </nav>
-      </ScrollArea>
+      </div>
     </div>
   );
 };
