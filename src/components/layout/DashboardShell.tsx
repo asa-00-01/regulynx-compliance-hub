@@ -86,6 +86,25 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
     { name: 'Developer Tools', href: '/developer-tools', icon: Code },
   ];
 
+  // Helper function to get user role display name
+  const getUserRoleDisplay = () => {
+    if (!user) return 'User';
+    
+    // Check customer_roles array first
+    if (user.customer_roles?.includes('customer_admin')) return 'Admin';
+    if (user.customer_roles?.includes('customer_compliance')) return 'Compliance Officer';
+    if (user.customer_roles?.includes('customer_executive')) return 'Executive';
+    if (user.customer_roles?.includes('customer_support')) return 'Support';
+    
+    // Fallback to legacy role mapping
+    if (user.role === 'admin') return 'Admin';
+    if (user.role === 'complianceOfficer') return 'Compliance Officer';
+    if (user.role === 'executive') return 'Executive';
+    if (user.role === 'support') return 'Support';
+    
+    return 'User';
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -134,9 +153,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
                     {user?.name || user?.email}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {user?.role === 'customer_admin' ? 'Admin' : 
-                     user?.role === 'customer_compliance' ? 'Compliance Officer' :
-                     user?.role === 'customer_executive' ? 'Executive' : 'Support'}
+                    {getUserRoleDisplay()}
                   </p>
                 </div>
               </div>
