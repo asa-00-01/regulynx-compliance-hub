@@ -51,15 +51,22 @@ const AppRoutes = () => {
 
   console.log('✅ AppRoutes - Auth loaded, rendering routes');
 
-  // Check if user should be redirected to platform app
-  const shouldUsePlatformApp = user && (isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support'));
+  // Determine if user is platform management or customer
+  const isPlatformUser = user && (isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support'));
+  const isCustomerUser = user && !isPlatformUser && (
+    user.customer_roles?.length > 0 || 
+    user.customer_id ||
+    ['admin', 'complianceOfficer', 'executive', 'support'].includes(user.role)
+  );
 
-  console.log('🔍 AppRoutes - Platform check:', {
+  console.log('🔍 AppRoutes - User type determination:', {
     user: user?.email,
-    isPlatformOwner: isPlatformOwner(),
-    isPlatformAdmin: isPlatformAdmin(),
-    hasPlatformPermission: hasPlatformPermission('platform:support'),
-    shouldUsePlatformApp
+    isPlatformUser,
+    isCustomerUser,
+    platformRoles: user?.platform_roles,
+    customerRoles: user?.customer_roles,
+    customerId: user?.customer_id,
+    legacyRole: user?.role
   });
 
   return (
@@ -73,7 +80,7 @@ const AppRoutes = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Platform Management Routes - Only for platform users */}
-      {shouldUsePlatformApp ? (
+      {isPlatformUser ? (
         <>
           {/* Redirect customer routes to platform for platform users */}
           <Route path="/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
@@ -97,7 +104,7 @@ const AppRoutes = () => {
           <Route path="/optimization" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/developer-tools" element={<Navigate to="/platform/developer-tools" replace />} />
           
-          {/* Platform Management Routes using ManagementLayout */}
+          {/* Platform Management Routes */}
           <Route path="/platform/*" element={
             <ProtectedRoute>
               <ManagementLayout>
@@ -106,8 +113,8 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } />
         </>
-      ) : (
-        /* Customer Routes using CustomerLayout */
+      ) : isCustomerUser ? (
+        /* Customer/Subscriber Routes - Only for customer users */
         <>
           <Route path="/dashboard" element={
             <ProtectedRoute>
@@ -269,8 +276,15 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } />
 
-          {/* Redirect to unauthorized if platform routes are accessed by non-platform users */}
+          {/* Block platform routes for customer users */}
           <Route path="/platform/*" element={<Navigate to="/unauthorized" replace />} />
+        </>
+      ) : (
+        /* Unauthenticated or unrecognized users */
+        <>
+          <Route path="/dashboard" element={<Navigate to="/auth" replace />} />
+          <Route path="/platform/*" element={<Navigate to="/auth" replace />} />
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         </>
       )}
 

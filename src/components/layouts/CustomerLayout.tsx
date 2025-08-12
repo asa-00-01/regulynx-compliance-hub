@@ -63,6 +63,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     );
   }
 
+  // Customer-specific navigation (compliance focused)
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Compliance', href: '/compliance', icon: Shield },
@@ -84,18 +85,18 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     { name: 'Developer Tools', href: '/developer-tools', icon: Code },
   ];
 
-  // Helper function to get user role display name
+  // Helper function to get user role display name for customer users
   const getUserRoleDisplay = () => {
     if (!user) return 'User';
     
     // Check customer_roles array first
-    if (user.customer_roles?.includes('customer_admin')) return 'Admin';
+    if (user.customer_roles?.includes('customer_admin')) return 'Administrator';
     if (user.customer_roles?.includes('customer_compliance')) return 'Compliance Officer';
     if (user.customer_roles?.includes('customer_executive')) return 'Executive';
     if (user.customer_roles?.includes('customer_support')) return 'Support';
     
     // Fallback to legacy role mapping
-    if (user.role === 'admin') return 'Admin';
+    if (user.role === 'admin') return 'Administrator';
     if (user.role === 'complianceOfficer') return 'Compliance Officer';
     if (user.role === 'executive') return 'Executive';
     if (user.role === 'support') return 'Support';
@@ -109,14 +110,18 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
         <Sidebar>
           <SidebarHeader className="border-b border-border">
             <div className="p-2">
-              <h1 className="text-xl font-bold text-foreground" data-testid="customer-header">Compliance Platform</h1>
-              <p className="text-sm text-muted-foreground">Customer Dashboard</p>
+              <h1 className="text-xl font-bold text-foreground" data-testid="customer-header">
+                Compliance Hub
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {user?.customer?.name || 'Customer Portal'}
+              </p>
             </div>
           </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel>Compliance Tools</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navigation.map((item) => {
@@ -173,7 +178,10 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <SidebarTrigger />
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">Compliance Platform</h2>
+              <h2 className="text-lg font-semibold">Compliance Dashboard</h2>
+              <p className="text-xs text-muted-foreground">
+                {user?.customer?.name || 'Customer Portal'}
+              </p>
             </div>
           </header>
 
