@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,105 +20,32 @@ import {
   FileText,
   TrendingUp
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
-import { useSARData } from '@/hooks/useSARData';
-import SARList from '@/components/sar/SARList';
-import { SAR } from '@/types/sar';
-import { useToast } from '@/hooks/use-toast';
 
 const SARCenter = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [riskLevelFilter, setRiskLevelFilter] = useState('all');
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [sortOrder, setSortOrder] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
-  
-  const location = useLocation();
-  const { toast } = useToast();
-  const { sars, loading, createSAR } = useSARData();
 
-  // Handle creating SAR from case data
-  useEffect(() => {
-    if (location.state?.createSAR && location.state?.caseData) {
-      const caseData = location.state.caseData;
-      const userData = location.state.userData;
-      
-      // Pre-populate SAR creation with case data
-      handleCreateSARFromCase(caseData, userData);
-    }
-  }, [location.state]);
+  const sarData = [
+    { id: 1, caseId: 'SAR-2023-001', subject: 'John Doe', dateFiled: '2023-01-15', status: 'pending', riskLevel: 'high', description: 'Suspicious transaction patterns.' },
+    { id: 2, caseId: 'SAR-2023-002', subject: 'Jane Smith', dateFiled: '2023-02-20', status: 'reviewed', riskLevel: 'medium', description: 'Unexplained large deposit.' },
+    { id: 3, caseId: 'SAR-2023-003', subject: 'Robert Jones', dateFiled: '2023-03-10', status: 'closed', riskLevel: 'low', description: 'Multiple transactions below reporting threshold.' },
+  ];
 
-  const handleCreateSARFromCase = (caseData: any, userData: any) => {
-    const newSarData: Omit<SAR, 'id'> = {
-      userId: userData?.id || caseData.userId || '',
-      userName: userData?.fullName || caseData.userName || 'Unknown User',
-      dateSubmitted: new Date().toISOString(),
-      dateOfActivity: new Date().toISOString(),
-      status: 'draft',
-      summary: `SAR created from compliance case: ${caseData.description || 'Case investigation'}`,
-      transactions: caseData.relatedTransactions || [],
-      documents: caseData.documents || [],
-      notes: [`Created from compliance case ${caseData.id}`, `Case type: ${caseData.type}`, `Risk score: ${caseData.riskScore}`]
-    };
-
-    createSAR(newSarData);
-    
-    toast({
-      title: 'SAR Draft Created',
-      description: 'A new SAR draft has been created from the case data',
-    });
-  };
-
-  const handleCreateNewSAR = () => {
-    // Create a blank SAR draft
-    const newSarData: Omit<SAR, 'id'> = {
-      userId: '',
-      userName: '',
-      dateSubmitted: new Date().toISOString(),
-      dateOfActivity: new Date().toISOString(),
-      status: 'draft',
-      summary: '',
-      transactions: [],
-      documents: [],
-      notes: []
-    };
-
-    createSAR(newSarData);
-    
-    toast({
-      title: 'New SAR Draft',
-      description: 'A new SAR draft has been created',
-    });
-  };
-
-  const handleViewSAR = (id: string) => {
-    // Navigate to SAR details view
-    toast({
-      title: 'SAR Details',
-      description: `Viewing SAR ${id}`,
-    });
-  };
-
-  const handleEditDraft = (sar: SAR) => {
-    // Navigate to SAR edit mode
-    toast({
-      title: 'Edit SAR Draft',
-      description: `Editing SAR ${sar.id}`,
-    });
-  };
-
-  const filteredSARData = sars.filter(sar => {
-    const searchMatch = sar.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                       sar.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       sar.summary.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredSARData = sarData.filter(sar => {
+    const searchMatch = sar.subject.toLowerCase().includes(searchTerm.toLowerCase()) || sar.caseId.toLowerCase().includes(searchTerm.toLowerCase());
     const statusMatch = statusFilter === 'all' || sar.status === statusFilter;
-    return searchMatch && statusMatch;
+    const riskMatch = riskLevelFilter === 'all' || sar.riskLevel === riskLevelFilter;
+    return searchMatch && statusMatch && riskMatch;
   });
 
   const sortedSARData = [...filteredSARData].sort((a, b) => {
-    const dateA = new Date(a.dateSubmitted).getTime();
-    const dateB = new Date(b.dateSubmitted).getTime();
+    const dateA = new Date(a.dateFiled).getTime();
+    const dateB = new Date(b.dateFiled).getTime();
 
     if (sortOrder === 'date') {
       return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
@@ -141,7 +68,7 @@ const SARCenter = () => {
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
-          <Button onClick={handleCreateNewSAR}>
+          <Button>
             <Plus className="h-4 w-4 mr-2" />
             Create New SAR
           </Button>
@@ -156,42 +83,38 @@ const SARCenter = () => {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sars.length}</div>
+            <div className="text-2xl font-bold">{sarData.length}</div>
             <p className="text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4 mr-2 inline-block" />
-              Active reports in system
+              12% increase from last month
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Draft SARs</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {sars.filter(sar => sar.status === 'draft').length}
-            </div>
+            <div className="text-2xl font-bold text-yellow-600">{sarData.filter(sar => sar.status === 'pending').length}</div>
             <p className="text-sm text-muted-foreground">
               <AlertTriangle className="h-4 w-4 mr-2 inline-block" />
-              Pending completion
+              3 new reports today
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Submitted SARs</CardTitle>
+            <CardTitle className="text-sm font-medium">Resolved SARs</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {sars.filter(sar => sar.status === 'submitted').length}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{sarData.filter(sar => sar.status === 'closed').length}</div>
             <p className="text-sm text-muted-foreground">
               <CheckCircle className="h-4 w-4 mr-2 inline-block" />
-              Filed with authorities
+              All reports closed within SLA
             </p>
           </CardContent>
         </Card>
@@ -202,9 +125,9 @@ const SARCenter = () => {
         <div className="flex items-center justify-between">
           <TabsList className="grid w-full max-w-md grid-cols-4">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="draft">Draft</TabsTrigger>
-            <TabsTrigger value="submitted">Submitted</TabsTrigger>
-            <TabsTrigger value="filed">Filed</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-2">
@@ -223,10 +146,20 @@ const SARCenter = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="submitted">Submitted</SelectItem>
-                <SelectItem value="filed">Filed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="reviewed">Reviewed</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={riskLevelFilter} onValueChange={setRiskLevelFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Risk Level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Risk Levels</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline">
@@ -237,13 +170,32 @@ const SARCenter = () => {
         </div>
 
         <TabsContent value={activeTab} className="space-y-4">
-          <SARList
-            sars={sortedSARData}
-            onViewSAR={handleViewSAR}
-            onCreateNewSAR={handleCreateNewSAR}
-            onEditDraft={handleEditDraft}
-            loading={loading}
-          />
+          <div className="grid grid-cols-1 gap-4">
+            {sortedSARData.map(sar => (
+              <Card key={sar.id}>
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    {sar.subject}
+                    <Badge variant="secondary">{sar.riskLevel}</Badge>
+                  </CardTitle>
+                  <CardDescription>Case ID: {sar.caseId}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p>{sar.description}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-muted-foreground">Date Filed: {sar.dateFiled}</p>
+                    <Badge variant="outline">{sar.status}</Badge>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

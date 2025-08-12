@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +6,6 @@ import { Eye, Edit, UserCheck, FileText, AlertTriangle, Check } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useCompliance } from '@/context/ComplianceContext';
-import CaseDetailsModal from './CaseDetailsModal';
-import CaseEditModal from './CaseEditModal';
 
 interface CaseActionButtonsProps {
   caseItem: ComplianceCaseDetails;
@@ -20,8 +17,6 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   onCaseUpdated 
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setSelectedUser, getUserById, state } = useCompliance();
@@ -31,20 +26,19 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   console.log('CaseActionButtons - User IDs:', state.users.map(u => u.id));
 
   const handleViewCase = () => {
-    setShowDetailsModal(true);
+    toast({
+      title: 'Case Details',
+      description: `Viewing details for case ${caseItem.id}`,
+    });
   };
 
   const handleEditCase = () => {
-    setShowEditModal(true);
-  };
-
-  const handleCaseSaved = (updatedCase: ComplianceCaseDetails) => {
-    // In a real app, this would update the case in the database
-    toast({
-      title: 'Case Updated',
-      description: `Case ${updatedCase.id} has been updated successfully`,
+    navigate('/compliance-cases', {
+      state: {
+        editCase: true,
+        caseData: caseItem
+      }
     });
-    onCaseUpdated?.();
   };
 
   const handleViewUserProfile = () => {
@@ -134,11 +128,7 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
     navigate('/sar-center', {
       state: {
         createSAR: true,
-        caseData: caseItem,
-        userData: {
-          id: caseItem.userId,
-          fullName: caseItem.userName
-        }
+        caseData: caseItem
       }
     });
     
@@ -181,115 +171,99 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   };
 
   return (
-    <>
-      <div className="flex gap-2 flex-wrap">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleViewCase}
-          disabled={loading === 'view'}
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          View Details
-        </Button>
+    <div className="flex gap-2 flex-wrap">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleViewCase}
+        disabled={loading === 'view'}
+      >
+        <Eye className="h-4 w-4 mr-1" />
+        View Details
+      </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleEditCase}
-          disabled={loading === 'edit'}
-        >
-          <Edit className="h-4 w-4 mr-1" />
-          Edit
-        </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleEditCase}
+        disabled={loading === 'edit'}
+      >
+        <Edit className="h-4 w-4 mr-1" />
+        Edit
+      </Button>
 
-        {caseItem.userId && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewUserProfile}
-              disabled={loading === 'profile'}
-            >
-              <UserCheck className="h-4 w-4 mr-1" />
-              User Profile
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewDocuments}
-              disabled={loading === 'documents'}
-              className="text-blue-600 hover:text-blue-700"
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              Documents
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewTransactions}
-              disabled={loading === 'transactions'}
-              className="text-purple-600 hover:text-purple-700"
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              Transactions
-            </Button>
-          </>
-        )}
-
-        {caseItem.status === 'open' && (
+      {caseItem.userId && (
+        <>
           <Button
             variant="outline"
             size="sm"
-            onClick={handleEscalateCase}
-            disabled={loading === 'escalate'}
-            className="text-orange-600 hover:text-orange-700"
+            onClick={handleViewUserProfile}
+            disabled={loading === 'profile'}
           >
-            <AlertTriangle className="h-4 w-4 mr-1" />
-            Escalate
+            <UserCheck className="h-4 w-4 mr-1" />
+            User Profile
           </Button>
-        )}
 
-        {(caseItem.status === 'open' || caseItem.status === 'under_review') && (
           <Button
             variant="outline"
             size="sm"
-            onClick={handleCloseCase}
-            disabled={loading === 'close'}
-            className="text-green-600 hover:text-green-700"
+            onClick={handleViewDocuments}
+            disabled={loading === 'documents'}
+            className="text-blue-600 hover:text-blue-700"
           >
-            <Check className="h-4 w-4 mr-1" />
-            Close Case
+            <FileText className="h-4 w-4 mr-1" />
+            Documents
           </Button>
-        )}
 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewTransactions}
+            disabled={loading === 'transactions'}
+            className="text-purple-600 hover:text-purple-700"
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Transactions
+          </Button>
+        </>
+      )}
+
+      {caseItem.status === 'open' && (
         <Button
           variant="outline"
           size="sm"
-          onClick={handleCreateSAR}
-          disabled={loading === 'sar'}
+          onClick={handleEscalateCase}
+          disabled={loading === 'escalate'}
+          className="text-orange-600 hover:text-orange-700"
         >
-          <FileText className="h-4 w-4 mr-1" />
-          Create SAR
+          <AlertTriangle className="h-4 w-4 mr-1" />
+          Escalate
         </Button>
-      </div>
+      )}
 
-      {/* Modals */}
-      <CaseDetailsModal
-        caseItem={caseItem}
-        open={showDetailsModal}
-        onOpenChange={setShowDetailsModal}
-      />
+      {(caseItem.status === 'open' || caseItem.status === 'under_review') && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCloseCase}
+          disabled={loading === 'close'}
+          className="text-green-600 hover:text-green-700"
+        >
+          <Check className="h-4 w-4 mr-1" />
+          Close Case
+        </Button>
+      )}
 
-      <CaseEditModal
-        caseItem={caseItem}
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        onSave={handleCaseSaved}
-      />
-    </>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleCreateSAR}
+        disabled={loading === 'sar'}
+      >
+        <FileText className="h-4 w-4 mr-1" />
+        Create SAR
+      </Button>
+    </div>
   );
 };
 
