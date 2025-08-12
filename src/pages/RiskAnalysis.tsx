@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,7 @@ import {
   DollarSign,
   Calendar
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
 
 const RiskAnalysis = () => {
   const [riskLevelFilter, setRiskLevelFilter] = useState('all');
@@ -171,7 +172,7 @@ const RiskAnalysis = () => {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <RechartsPieChart width={400} height={300}>
-              <RechartsPieChart
+              <Pie
                 data={pieChartData}
                 cx="50%"
                 cy="50%"
@@ -184,7 +185,7 @@ const RiskAnalysis = () => {
                 {pieChartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
-              </RechartsPieChart>
+              </Pie>
               <Tooltip />
             </RechartsPieChart>
           </ResponsiveContainer>
