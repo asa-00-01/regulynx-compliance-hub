@@ -1,224 +1,202 @@
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileWarning, Plus, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import SARList from '@/components/sar/SARList';
-import SARForm from '@/components/sar/SARForm';
-import SARDetailsModal from '@/components/sar/SARDetailsModal';
-import GoAMLReporting from '@/components/sar/GoAMLReporting';
-import { useSARData } from '@/hooks/useSARData';
-import { useTranslation } from 'react-i18next';
-import { SAR } from '@/types/sar';
-import { SARFormData, transformSARToFormData } from '@/utils/sarFormHelpers';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Shield, 
+  AlertTriangle, 
+  Search,
+  Filter,
+  Download,
+  Plus,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Eye,
+  FileText
+} from 'lucide-react';
 
 const SARCenter = () => {
-  const [activeTab, setActiveTab] = useState('reports');
-  const [showNewSARForm, setShowNewSARForm] = useState(false);
-  const [editingSAR, setEditingSAR] = useState<SAR | null>(null);
-  const [selectedSAR, setSelectedSAR] = useState<SAR | null>(null);
-  const [showSARDetails, setShowSARDetails] = useState(false);
-  const { t } = useTranslation();
-  
-  const {
-    sars = [],
-    loading,
-    createSAR,
-    updateSAR,
-    deleteSAR
-  } = useSARData();
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [riskLevelFilter, setRiskLevelFilter] = useState('all');
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [sortOrder, setSortOrder] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
 
-  const handleCreateSAR = async (sarData: SARFormData) => {
-    try {
-      console.log('Creating SAR with form data:', sarData);
-      
-      // Transform SARFormData to the format expected by createSAR
-      const newSAR: Omit<SAR, 'id'> = {
-        userId: sarData.userId,
-        userName: sarData.userName,
-        dateSubmitted: new Date().toISOString(),
-        dateOfActivity: sarData.dateOfActivity,
-        status: sarData.status,
-        summary: sarData.summary,
-        transactions: sarData.transactions || [], // Ensure transactions are included
-        notes: sarData.notes || [],
-      };
-      
-      console.log('Transformed SAR data for creation:', newSAR);
-      
-      await createSAR(newSAR);
-      setShowNewSARForm(false);
-      setEditingSAR(null);
-    } catch (error) {
-      console.error('Error creating SAR:', error);
+  const sarData = [
+    { id: 1, caseId: 'SAR-2023-001', subject: 'John Doe', dateFiled: '2023-01-15', status: 'pending', riskLevel: 'high', description: 'Suspicious transaction patterns.' },
+    { id: 2, caseId: 'SAR-2023-002', subject: 'Jane Smith', dateFiled: '2023-02-20', status: 'reviewed', riskLevel: 'medium', description: 'Unexplained large deposit.' },
+    { id: 3, caseId: 'SAR-2023-003', subject: 'Robert Jones', dateFiled: '2023-03-10', status: 'closed', riskLevel: 'low', description: 'Multiple transactions below reporting threshold.' },
+  ];
+
+  const filteredSARData = sarData.filter(sar => {
+    const searchMatch = sar.subject.toLowerCase().includes(searchTerm.toLowerCase()) || sar.caseId.toLowerCase().includes(searchTerm.toLowerCase());
+    const statusMatch = statusFilter === 'all' || sar.status === statusFilter;
+    const riskMatch = riskLevelFilter === 'all' || sar.riskLevel === riskLevelFilter;
+    return searchMatch && statusMatch && riskMatch;
+  });
+
+  const sortedSARData = [...filteredSARData].sort((a, b) => {
+    const dateA = new Date(a.dateFiled).getTime();
+    const dateB = new Date(b.dateFiled).getTime();
+
+    if (sortOrder === 'date') {
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
     }
-  };
 
-  const handleUpdateSAR = async (sarData: SARFormData) => {
-    if (!editingSAR) return;
-    
-    try {
-      console.log('Updating SAR with form data:', sarData);
-      
-      await updateSAR({ 
-        id: editingSAR.id, 
-        updates: {
-          ...sarData,
-          transactions: sarData.transactions || [] // Ensure transactions are included
-        }
-      });
-      setEditingSAR(null);
-      setShowNewSARForm(false);
-    } catch (error) {
-      console.error('Error updating SAR:', error);
-    }
-  };
-
-  const handleEditDraft = (sar: SAR) => {
-    setEditingSAR(sar);
-    setShowNewSARForm(true);
-  };
-
-  const handleCancelForm = () => {
-    setShowNewSARForm(false);
-    setEditingSAR(null);
-  };
-
-  const handleViewSAR = (id: string) => {
-    const sar = sars.find(s => s.id === id);
-    if (sar) {
-      setSelectedSAR(sar);
-      setShowSARDetails(true);
-    }
-  };
-
-  const handleCreateNewSAR = () => {
-    setEditingSAR(null);
-    setShowNewSARForm(true);
-  };
+    return 0;
+  });
 
   return (
-    <DashboardLayout requiredRoles={['complianceOfficer', 'admin']}>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('navigation.sarCenter')}</h1>
-            <p className="text-muted-foreground">
-              Suspicious Activity Report management and regulatory compliance center.
-            </p>
-          </div>
-          <Button onClick={handleCreateNewSAR}>
+    <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">SAR (Suspicious Activity Report) Center</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage and review suspicious activity reports.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
+          <Button>
             <Plus className="h-4 w-4 mr-2" />
-            New SAR Report
+            Create New SAR
           </Button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total SARs</CardTitle>
-              <FileWarning className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{sars?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                +12% from last month
-              </p>
-            </CardContent>
-          </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total SARs</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sarData.length}</div>
+            <p className="text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4 mr-2 inline-block" />
+              12% increase from last month
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-              <FileWarning className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {sars?.filter(sar => sar.status === 'draft').length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting submission
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <Clock className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{sarData.filter(sar => sar.status === 'pending').length}</div>
+            <p className="text-sm text-muted-foreground">
+              <AlertTriangle className="h-4 w-4 mr-2 inline-block" />
+              3 new reports today
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Filed This Month</CardTitle>
-              <FileWarning className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {sars?.filter(sar => sar.status === 'submitted').length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Successfully submitted
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Resolved SARs</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{sarData.filter(sar => sar.status === 'closed').length}</div>
+            <p className="text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4 mr-2 inline-block" />
+              All reports closed within SLA
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="reports">SAR Reports</TabsTrigger>
-            <TabsTrigger value="goaml">GoAML Reporting</TabsTrigger>
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <div className="flex items-center justify-between">
+          <TabsList className="grid w-full max-w-md grid-cols-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="reports" className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search SAR reports..."
-                  className="pl-8"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="reviewed">Reviewed</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={riskLevelFilter} onValueChange={setRiskLevelFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Risk Level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Risk Levels</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
+        </div>
 
-            {showNewSARForm ? (
-              <Card>
+        <TabsContent value={activeTab} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {sortedSARData.map(sar => (
+              <Card key={sar.id}>
                 <CardHeader>
-                  <CardTitle>
-                    {editingSAR ? 'Edit SAR Draft' : 'New SAR Report'}
+                  <CardTitle className="flex justify-between items-center">
+                    {sar.subject}
+                    <Badge variant="secondary">{sar.riskLevel}</Badge>
                   </CardTitle>
+                  <CardDescription>Case ID: {sar.caseId}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <SARForm 
-                    onSubmit={editingSAR ? handleUpdateSAR : handleCreateSAR}
-                    onCancel={handleCancelForm}
-                    initialData={editingSAR ? transformSARToFormData(editingSAR) : undefined}
-                  />
+                <CardContent className="space-y-2">
+                  <p>{sar.description}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-muted-foreground">Date Filed: {sar.dateFiled}</p>
+                    <Badge variant="outline">{sar.status}</Badge>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            ) : (
-              <SARList 
-                sars={sars}
-                onViewSAR={handleViewSAR}
-                onCreateNewSAR={handleCreateNewSAR}
-                onEditDraft={handleEditDraft}
-                loading={loading}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="goaml" className="space-y-4">
-            <GoAMLReporting sars={sars || []} />
-          </TabsContent>
-        </Tabs>
-
-        <SARDetailsModal
-          sar={selectedSAR}
-          open={showSARDetails}
-          onOpenChange={setShowSARDetails}
-        />
-      </div>
-    </DashboardLayout>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
