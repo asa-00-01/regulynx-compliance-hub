@@ -1,6 +1,4 @@
-
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
 import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
@@ -98,120 +96,118 @@ const Dashboard = () => {
   const totalAlerts = metrics?.activeAlerts || 0;
 
   return (
-    <DashboardLayout>
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">
-            {t('dashboard.welcome')}, {user?.name}
-          </h2>
-        </div>
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t('dashboard.welcome')}, {user?.name}
+        </h2>
+      </div>
 
-        {/* Main Metrics Grid - 2 rows of 4 cards each */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <DashboardMetricsCard 
-            title="Pending Documents"
-            value={metrics?.pendingDocuments || 0}
-            change="+3"
-            changeType="increase"
-            icon={FileText}
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="KYC Reviews"
-            value={metrics?.pendingKycReviews || 0}
-            change="-2"
-            changeType="decrease"
-            icon={Users}
-            changeDirection="positive-down"
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="Active Alerts"
-            value={totalAlerts}
-            change="+5"
-            changeType="increase"
-            icon={AlertTriangle}
-            valueColor="text-red-600"
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="Risk Score Trend"
-            value={metrics?.riskScoreTrend?.[metrics.riskScoreTrend.length - 1] || 0}
-            change="-3.2"
-            changeType="decrease"
-            icon={Shield}
-            changeDirection="positive-down"
-            valueColor="text-orange-600"
-            loading={loading}
-          />
-        </div>
+      {/* Main Metrics Grid - 2 rows of 4 cards each */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <DashboardMetricsCard 
+          title="Pending Documents"
+          value={metrics?.pendingDocuments || 0}
+          change="+3"
+          changeType="increase"
+          icon={FileText}
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="KYC Reviews"
+          value={metrics?.pendingKycReviews || 0}
+          change="-2"
+          changeType="decrease"
+          icon={Users}
+          changeDirection="positive-down"
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="Active Alerts"
+          value={totalAlerts}
+          change="+5"
+          changeType="increase"
+          icon={AlertTriangle}
+          valueColor="text-red-600"
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="Risk Score Trend"
+          value={metrics?.riskScoreTrend?.[metrics.riskScoreTrend.length - 1] || 0}
+          change="-3.2"
+          changeType="decrease"
+          icon={Shield}
+          changeDirection="positive-down"
+          valueColor="text-orange-600"
+          loading={loading}
+        />
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <DashboardMetricsCard 
-            title="Active Users"
-            value={activeUsers}
-            change="+12%"
-            changeType="increase"
-            icon={Activity}
-            changeDirection="positive-up"
-            valueColor="text-green-600"
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="System Uptime"
-            value={`${systemUptime}%`}
-            icon={CheckCircle}
-            valueColor="text-green-600"
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="Avg Processing Time"
-            value={`${avgProcessingTime}s`}
-            change="-0.2s"
-            changeType="decrease"
-            icon={Clock}
-            changeDirection="positive-down"
-            loading={loading}
-          />
-          
-          <DashboardMetricsCard 
-            title="Compliance Rate"
-            value="97.8%"
-            change="+1.2%"
-            changeType="increase"
-            icon={TrendingUp}
-            changeDirection="positive-up"
-            valueColor="text-green-600"
-            loading={loading}
-          />
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <DashboardMetricsCard 
+          title="Active Users"
+          value={activeUsers}
+          change="+12%"
+          changeType="increase"
+          icon={Activity}
+          changeDirection="positive-up"
+          valueColor="text-green-600"
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="System Uptime"
+          value={`${systemUptime}%`}
+          icon={CheckCircle}
+          valueColor="text-green-600"
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="Avg Processing Time"
+          value={`${avgProcessingTime}s`}
+          change="-0.2s"
+          changeType="decrease"
+          icon={Clock}
+          changeDirection="positive-down"
+          loading={loading}
+        />
+        
+        <DashboardMetricsCard 
+          title="Compliance Rate"
+          value="97.8%"
+          change="+1.2%"
+          changeType="increase"
+          icon={TrendingUp}
+          changeDirection="positive-up"
+          valueColor="text-green-600"
+          loading={loading}
+        />
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <div className="col-span-4">
-            <RiskScoreChart data={mockRiskScoreData} loading={loading} />
-          </div>
-          <div className="col-span-3">
-            <RiskDistributionChart data={mockRiskDistributionData} loading={loading} />
-          </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-4">
+          <RiskScoreChart data={mockRiskScoreData} loading={loading} />
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <div className="col-span-4">
-            <RecentDocumentsTable documents={mockDocuments} loading={loading} />
-          </div>
-          <div className="col-span-3 space-y-4">
-            <ComplianceCasesCard complianceCases={mockComplianceCases} loading={loading} />
-            <PerformanceOverviewCard />
-            <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
-          </div>
+        <div className="col-span-3">
+          <RiskDistributionChart data={mockRiskDistributionData} loading={loading} />
         </div>
       </div>
-    </DashboardLayout>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-4">
+          <RecentDocumentsTable documents={mockDocuments} loading={loading} />
+        </div>
+        <div className="col-span-3 space-y-4">
+          <ComplianceCasesCard complianceCases={mockComplianceCases} loading={loading} />
+          <PerformanceOverviewCard />
+          <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
+        </div>
+      </div>
+    </div>
   );
 };
 
