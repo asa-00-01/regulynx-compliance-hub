@@ -1,244 +1,148 @@
 
-import React, { useEffect, useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useDocumentsData } from '@/components/documents/useDocumentsData';
-import DocumentStats from '@/components/documents/DocumentStats';
-import DocumentsGrid from '@/components/documents/DocumentsGrid';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Filter, Download, Plus } from 'lucide-react';
 import DocumentVerificationView from '@/components/documents/DocumentVerificationView';
-import DocumentDetailsModal from '@/components/documents/DocumentDetailsModal';
-import DocumentOverview from '@/components/documents/DocumentOverview';
-import AdvancedDocumentFilters from '@/components/documents/AdvancedDocumentFilters';
-import DocumentBulkActions from '@/components/documents/DocumentBulkActions';
-import DocumentAnalytics from '@/components/documents/DocumentAnalytics';
-import { useAdvancedDocumentFilters } from '@/hooks/useAdvancedDocumentFilters';
+import DocumentsGrid from '@/components/documents/DocumentsGrid';
+import DocumentStats from '@/components/documents/DocumentStats';
+import { useDocuments } from '@/hooks/useDocuments';
+import { Document, DocumentStatus } from '@/types/supabase';
 import { useSearchParams } from 'react-router-dom';
-import { useCompliance, ComplianceProvider } from '@/context/ComplianceContext';
-import UserCard from '@/components/user/UserCard';
-import { BarChart3, Filter, FileText, Download } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const DocumentsContent = () => {
+const Documents = () => {
+  const [activeTab, setActiveTab] = useState<DocumentStatus | 'all'>('all');
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
-  const { getUserById, state } = useCompliance();
-  const [userIdFilter, setUserIdFilter] = useState<string | undefined>(undefined);
-  const [activeMainTab, setActiveMainTab] = useState('documents');
-
-  // Debug log to see compliance state
-  console.log('Documents page - compliance state users:', state.users);
+  const { t } = useTranslation();
 
   const {
     documents,
     loading,
-    activeTab,
-    setActiveTab,
     stats,
-    fetchDocuments,
-    selectedDocument,
-    setSelectedDocument,
-    showDetailsModal,
-    setShowDetailsModal,
-    documentForReview,
-    setDocumentForReview,
-  } = useDocumentsData();
+    refetch
+  } = useDocuments(userId);
 
-  // Filter documents by user ID
-  const filteredDocuments = userIdFilter
-    ? documents.filter(doc => doc.user_id === userIdFilter)
-    : documents;
+  const filteredDocuments = documents.filter(doc => {
+    if (activeTab === 'all') return true;
+    return doc.status === activeTab;
+  });
 
-  const {
-    filters,
-    filteredDocuments: advancedFilteredDocuments,
-    activeFiltersCount,
-    selectedDocuments,
-    updateFilter,
-    resetFilters,
-    toggleDocumentSelection,
-    toggleAllDocuments,
-    clearSelection,
-    handleBulkAction,
-    exportData
-  } = useAdvancedDocumentFilters({ documents: filteredDocuments });
-
-  // Set user filter if provided in URL
-  useEffect(() => {
-    if (userId) {
-      setUserIdFilter(userId);
-    }
-  }, [userId]);
-
-  const handleViewDocument = (doc: any) => {
-    setSelectedDocument(doc);
-    setShowDetailsModal(true);
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as DocumentStatus | 'all');
   };
 
-  const handleReviewDocument = (doc: any) => {
-    setDocumentForReview(doc);
+  const handleViewDocument = (document: Document) => {
+    setSelectedDocument(document);
+  };
+
+  const handleReviewDocument = (document: Document) => {
+    setSelectedDocument(document);
   };
 
   const handleVerificationComplete = () => {
-    setDocumentForReview(null);
-    fetchDocuments();
+    setSelectedDocument(null);
+    refetch();
   };
 
-  const userDetails = userId ? getUserById(userId) : null;
-  const displayDocuments = activeMainTab === 'advanced' ? advancedFilteredDocuments : filteredDocuments;
+  const handleUploadComplete = () => {
+    refetch();
+  };
+
+  if (selectedDocument) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t('navigation.documents')}</h1>
+            <p className="text-muted-foreground">
+              {t('documents.verificationDesc')}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedDocument(null)}
+          >
+            {t('common.back')}
+          </Button>
+        </div>
+        
+        <DocumentVerificationView
+          document={selectedDocument}
+          onVerificationComplete={handleVerificationComplete}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Document Management</h1>
-        <p className="text-muted-foreground">
-          Upload, verify and manage KYC documents with advanced filtering and bulk actions
-          {userDetails && ` - Viewing documents for ${userDetails.fullName}`}
-        </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('navigation.documents')}</h1>
+          <p className="text-muted-foreground mt-2">
+            {t('documents.description')}
+            {userId && ` ${t('documents.forSelectedCustomer')}`}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            {t('common.export')}
+          </Button>
+        </div>
       </div>
 
-      {/* Show user card if filtering by user */}
-      {userId && userDetails && (
-        <div className="mb-4 max-w-md">
-          <UserCard userId={userId} />
-        </div>
-      )}
-
-      {/* Document Overview */}
-      <DocumentOverview documents={displayDocuments} />
-
-      {/* Statistics Cards */}
+      {/* Document Statistics */}
       <DocumentStats stats={stats} />
 
-      {/* Main Tabs */}
-      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="documents" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Document Management
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Advanced Filtering
-            {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-1">{activeFiltersCount}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="documents" className="space-y-4">
-          {/* Document Upload and List Grid */}
-          <DocumentsGrid
-            documents={displayDocuments}
-            loading={loading}
-            activeTab={activeTab}
-            onTabChange={(value) => setActiveTab(value as typeof activeTab)}
-            onUploadComplete={fetchDocuments}
-            onViewDocument={handleViewDocument}
-            onReviewDocument={handleReviewDocument}
-          />
-
-          {/* Document Review Section */}
-          {documentForReview && (
-            <Card>
-              <CardContent className="pt-6">
-                <DocumentVerificationView 
-                  document={documentForReview} 
-                  onVerificationComplete={handleVerificationComplete} 
-                />
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="advanced" className="space-y-4">
-          <AdvancedDocumentFilters
-            searchTerm={filters.searchTerm}
-            setSearchTerm={(term) => updateFilter('searchTerm', term)}
-            statusFilter={filters.statusFilter}
-            setStatusFilter={(status) => updateFilter('statusFilter', status)}
-            typeFilter={filters.typeFilter}
-            setTypeFilter={(type) => updateFilter('typeFilter', type)}
-            customerFilter={filters.customerFilter}
-            setCustomerFilter={(customer) => updateFilter('customerFilter', customer)}
-            dateRange={filters.dateRange}
-            setDateRange={(range) => updateFilter('dateRange', range)}
-            onApplyFilters={() => {}}
-            onResetFilters={resetFilters}
-            onExportData={exportData}
-            activeFiltersCount={activeFiltersCount}
-            totalDocuments={filteredDocuments.length}
-            filteredDocuments={advancedFilteredDocuments.length}
-          />
-
-          {selectedDocuments.length > 0 && (
-            <DocumentBulkActions
-              selectedDocuments={selectedDocuments}
-              documents={advancedFilteredDocuments}
-              onClearSelection={clearSelection}
-              onBulkAction={handleBulkAction}
+      {/* Search and Filters */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('documents.searchPlaceholder')}
+              className="pl-10 w-64"
             />
-          )}
+          </div>
+          
+          <Select defaultValue="all">
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder={t('documents.type')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('documents.allTypes')}</SelectItem>
+              <SelectItem value="passport">{t('documents.passport')}</SelectItem>
+              <SelectItem value="drivers_license">{t('documents.driversLicense')}</SelectItem>
+              <SelectItem value="utility_bill">{t('documents.utilityBill')}</SelectItem>
+              <SelectItem value="bank_statement">{t('documents.bankStatement')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Filtered Results</h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleAllDocuments}
-                  >
-                    {selectedDocuments.length === advancedFilteredDocuments.length ? 'Deselect All' : 'Select All'}
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={exportData}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </div>
+        <Button variant="outline">
+          <Filter className="h-4 w-4 mr-2" />
+          {t('common.filters')}
+        </Button>
+      </div>
 
-              <DocumentsGrid
-                documents={advancedFilteredDocuments}
-                loading={loading}
-                activeTab={activeTab}
-                onTabChange={(value) => setActiveTab(value as typeof activeTab)}
-                onUploadComplete={fetchDocuments}
-                onViewDocument={handleViewDocument}
-                onReviewDocument={handleReviewDocument}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <DocumentAnalytics documents={displayDocuments} />
-        </TabsContent>
-      </Tabs>
-
-      {/* Document Details Modal */}
-      <DocumentDetailsModal 
-        document={selectedDocument} 
-        open={showDetailsModal} 
-        onOpenChange={setShowDetailsModal} 
+      {/* Documents Grid */}
+      <DocumentsGrid
+        documents={filteredDocuments}
+        loading={loading}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onUploadComplete={handleUploadComplete}
+        onViewDocument={handleViewDocument}
+        onReviewDocument={handleReviewDocument}
       />
     </div>
-  );
-};
-
-const Documents = () => {
-  return (
-    <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'support']}>
-      <ComplianceProvider>
-        <DocumentsContent />
-      </ComplianceProvider>
-    </DashboardLayout>
   );
 };
 
