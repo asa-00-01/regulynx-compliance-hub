@@ -2,7 +2,6 @@
 import React from 'react';
 import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import { Navigate } from 'react-router-dom';
-import DashboardLayout from './DashboardLayout';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -19,12 +18,8 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
     return <Navigate to="/platform/dashboard" replace />;
   }
 
-  // This shell is specifically for customer users only
-  return (
-    <DashboardLayout>
-      {children}
-    </DashboardLayout>
-  );
+  // This shell is specifically for customer users only - just render children without additional layout
+  return <>{children}</>;
 };
 
 export default DashboardShell;

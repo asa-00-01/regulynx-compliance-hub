@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useComplianceCases } from '@/hooks/useComplianceCases';
 import { useAuth } from '@/context/AuthContext';
 import CasesList from '@/components/cases/CasesList';
@@ -75,7 +74,7 @@ const ComplianceCases = () => {
   }, [location.state, cases, selectCase]);
   
   return (
-    <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
+    <div className="h-full p-6">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -140,7 +139,7 @@ const ComplianceCases = () => {
         currentUser={compatibleUser}
         initialData={initialCaseData}
       />
-    </DashboardLayout>
+    </div>
   );
 };
 
