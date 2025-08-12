@@ -5,22 +5,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { ExtendedUser, UserRole } from '@/types/auth';
 import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
 
+// Global singleton to prevent multiple listeners
+let globalAuthListener: any = null;
+let globalInitialized = false;
+
 export const useAuthState = () => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authLoaded, setAuthLoaded] = useState(false);
   
-  // Use refs to prevent infinite loops
   const profileFetchTimeoutRef = useRef<NodeJS.Timeout>();
-  const isInitializedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   const refreshUserProfile = useCallback(async () => {
-    if (!session?.user) return;
+    if (!session?.user || !isMountedRef.current) return;
     
     try {
       const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(session.user.id);
-      if (extendedProfile) {
+      if (extendedProfile && isMountedRef.current) {
         const convertedUser: ExtendedUser = {
           id: extendedProfile.id,
           email: extendedProfile.email,
@@ -43,17 +46,20 @@ export const useAuthState = () => {
     }
   }, [session?.user?.id]);
 
-  // Stable auth handler that doesn't recreate on every render
+  // Stable auth handler that manages state
   const handleAuthChange = useCallback(async (event: string, currentSession: Session | null) => {
+    if (!isMountedRef.current) return;
+    
     console.log('🔐 Auth state change:', event, currentSession?.user?.email);
     
-    // Prevent multiple initial session events
-    if (event === 'INITIAL_SESSION' && isInitializedRef.current) {
+    // Prevent multiple initial session events globally
+    if (event === 'INITIAL_SESSION' && globalInitialized) {
+      console.log('🔐 Ignoring duplicate INITIAL_SESSION');
       return;
     }
     
     if (event === 'INITIAL_SESSION') {
-      isInitializedRef.current = true;
+      globalInitialized = true;
     }
 
     // Clear any existing timeout
@@ -63,16 +69,20 @@ export const useAuthState = () => {
     }
 
     // Immediately update session and loading state
-    setSession(currentSession);
-    setLoading(false);
-    setAuthLoaded(true);
+    if (isMountedRef.current) {
+      setSession(currentSession);
+      setLoading(false);
+      setAuthLoaded(true);
+    }
     
-    if (currentSession?.user) {
+    if (currentSession?.user && isMountedRef.current) {
       // Defer profile fetching to prevent auth state deadlock
       profileFetchTimeoutRef.current = setTimeout(async () => {
+        if (!isMountedRef.current) return;
+        
         try {
           const extendedProfile = await SupabasePlatformRoleService.getExtendedUserProfile(currentSession.user.id);
-          if (extendedProfile) {
+          if (extendedProfile && isMountedRef.current) {
             const convertedUser: ExtendedUser = {
               id: extendedProfile.id,
               email: extendedProfile.email,
@@ -91,49 +101,58 @@ export const useAuthState = () => {
           }
         } catch (error) {
           console.error('❌ Failed to load extended user profile:', error);
-          // Create fallback user data
-          setUser({
-            id: currentSession.user.id,
-            email: currentSession.user.email || '',
-            name: currentSession.user.user_metadata?.name || currentSession.user.email || '',
-            role: 'support',
-            riskScore: 0,
-            status: 'pending',
-            platform_roles: [],
-            customer_roles: [],
-            isPlatformOwner: false
-          } as ExtendedUser);
+          if (isMountedRef.current) {
+            // Create fallback user data
+            setUser({
+              id: currentSession.user.id,
+              email: currentSession.user.email || '',
+              name: currentSession.user.user_metadata?.name || currentSession.user.email || '',
+              role: 'support',
+              riskScore: 0,
+              status: 'pending',
+              platform_roles: [],
+              customer_roles: [],
+              isPlatformOwner: false
+            } as ExtendedUser);
+          }
         }
       }, 100);
-    } else {
+    } else if (isMountedRef.current) {
       setUser(null);
     }
   }, []); // Empty dependency array - this function should never recreate
 
   useEffect(() => {
-    let mounted = true;
+    isMountedRef.current = true;
 
-    // Set up the auth state listener with stable callback
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Set up the auth state listener only if one doesn't exist globally
+    if (!globalAuthListener) {
+      console.log('🔐 Setting up global auth listener');
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+      globalAuthListener = subscription;
+    }
 
-    // Get initial session only once
+    // Get initial session only if not already initialized
     const getInitialSession = async () => {
-      if (isInitializedRef.current) return;
+      if (globalInitialized) {
+        console.log('🔐 Auth already initialized, skipping initial session check');
+        return;
+      }
       
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('❌ Error getting initial session:', error);
         }
-        if (mounted && initialSession) {
+        if (isMountedRef.current && initialSession) {
           handleAuthChange('INITIAL_SESSION', initialSession);
-        } else if (mounted && !initialSession) {
+        } else if (isMountedRef.current && !initialSession) {
           setLoading(false);
           setAuthLoaded(true);
         }
       } catch (error) {
         console.error('❌ Failed to get initial session:', error);
-        if (mounted) {
+        if (isMountedRef.current) {
           setLoading(false);
           setAuthLoaded(true);
         }
@@ -143,13 +162,26 @@ export const useAuthState = () => {
     getInitialSession();
 
     return () => {
-      mounted = false;
+      isMountedRef.current = false;
       if (profileFetchTimeoutRef.current) {
         clearTimeout(profileFetchTimeoutRef.current);
       }
-      subscription.unsubscribe();
+      // Don't unsubscribe the global listener here as other components might need it
     };
   }, []); // Empty dependency array - effect should only run once
+
+  // Cleanup global listener when the app unmounts (not just this hook)
+  useEffect(() => {
+    return () => {
+      // This will only run when the component unmounts permanently
+      if (globalAuthListener && !isMountedRef.current) {
+        console.log('🔐 Cleaning up global auth listener');
+        globalAuthListener.unsubscribe();
+        globalAuthListener = null;
+        globalInitialized = false;
+      }
+    };
+  }, []);
 
   return { 
     user, 
