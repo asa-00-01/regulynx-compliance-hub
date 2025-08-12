@@ -1,57 +1,31 @@
 
-import React, { Suspense, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/context/AuthContext";
+import { ComplianceProvider } from "@/context/ComplianceContext";
 import AppRoutes from "@/components/app/AppRoutes";
-import { AppProviders } from "@/components/app/AppProviders";
-import LoadingScreen from "@/components/app/LoadingScreen";
-import AppInitializer from "@/components/app/AppInitializer";
-import GlobalErrorBoundary from "@/components/common/GlobalErrorBoundary";
-import EnhancedErrorTrackingService from "@/components/common/EnhancedErrorTrackingService";
-import { auditLogger } from "@/services/auditLogger";
 
-const App = () => {
-  useEffect(() => {
-    // Initialize application logging
-    auditLogger.logSystemEvent('application_start', {
-      url: window.location.href,
-      user_agent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-      app_version: '1.0.0'
-    });
+const queryClient = new QueryClient();
 
-    // Log when user leaves the page
-    const handleBeforeUnload = () => {
-      auditLogger.logSystemEvent('application_exit', {
-        url: window.location.href,
-        session_duration: Date.now() - performance.timeOrigin
-      });
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-
+function App() {
   return (
-    <GlobalErrorBoundary>
-      <AppProviders>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <TooltipProvider>
-          <EnhancedErrorTrackingService context="app_providers">
-            <Suspense fallback={<LoadingScreen />}>
-              <AppInitializer />
+          <AuthProvider>
+            <ComplianceProvider>
               <AppRoutes />
-            </Suspense>
-          </EnhancedErrorTrackingService>
-          <Toaster />
-          <Sonner />
+              <Toaster />
+              <Sonner />
+            </ComplianceProvider>
+          </AuthProvider>
         </TooltipProvider>
-      </AppProviders>
-    </GlobalErrorBoundary>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;

@@ -185,8 +185,8 @@ export const initializeMockData = (): UnifiedUserData[] => {
       kycStatus: user.kycStatus
     };
     
-    const userCases = generateCasesForUser(userProfile);
-    user.complianceCases = userCases;
+    // Mock case generation - this will be replaced with actual implementation
+    user.complianceCases = [];
   });
 
   console.log(`Generated ${users.length} users with compliance cases`);
