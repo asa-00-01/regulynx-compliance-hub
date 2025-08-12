@@ -47,8 +47,8 @@ const AuditLogs = () => {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
+  const getCategoryIcon = (entity: string) => {
+    switch (entity) {
       case 'authentication': return User;
       case 'authorization': return Shield;
       case 'data_access': return Database;
@@ -57,14 +57,15 @@ const AuditLogs = () => {
     }
   };
 
-  const getSeverityBadgeVariant = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      case 'low': return 'default';
-      default: return 'outline';
+  const getSeverityBadgeVariant = (action: string) => {
+    // Since we don't have severity in the database, we'll determine it based on action
+    if (action.includes('failed') || action.includes('error')) {
+      return 'destructive';
     }
+    if (action.includes('login') || action.includes('auth')) {
+      return 'secondary';
+    }
+    return 'default';
   };
 
   const handleExportLogs = () => {
@@ -171,19 +172,6 @@ const AuditLogs = () => {
             </SelectContent>
           </Select>
 
-          <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder={t('auditLogs.severity')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('auditLogs.allSeverities')}</SelectItem>
-              <SelectItem value="critical">{t('auditLogs.critical')}</SelectItem>
-              <SelectItem value="high">{t('auditLogs.high')}</SelectItem>
-              <SelectItem value="medium">{t('auditLogs.medium')}</SelectItem>
-              <SelectItem value="low">{t('auditLogs.low')}</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder={t('auditLogs.dateRange')} />
@@ -224,26 +212,26 @@ const AuditLogs = () => {
                   <div>{t('auditLogs.category')}</div>
                   <div>{t('auditLogs.action')}</div>
                   <div>{t('auditLogs.user')}</div>
-                  <div>{t('auditLogs.severity')}</div>
+                  <div>{t('auditLogs.status')}</div>
                   <div>{t('common.actions')}</div>
                 </div>
                 <div className="divide-y">
                   {logs.map((log) => {
-                    const CategoryIcon = getCategoryIcon(log.category);
+                    const CategoryIcon = getCategoryIcon(log.entity);
                     return (
                       <div key={log.id} className="grid grid-cols-6 p-4 items-center hover:bg-muted/30">
                         <div className="text-sm">
-                          {new Date(log.timestamp).toLocaleString()}
+                          {new Date(log.created_at).toLocaleString()}
                         </div>
                         <div className="flex items-center gap-2">
                           <CategoryIcon className="h-4 w-4" />
-                          <span className="capitalize">{log.category.replace('_', ' ')}</span>
+                          <span className="capitalize">{log.entity.replace('_', ' ')}</span>
                         </div>
                         <div className="font-medium">{log.action}</div>
-                        <div>{log.user_email || log.user_id || 'System'}</div>
+                        <div>{log.user_id || 'System'}</div>
                         <div>
-                          <Badge variant={getSeverityBadgeVariant(log.severity)}>
-                            {log.severity}
+                          <Badge variant={getSeverityBadgeVariant(log.action)}>
+                            {log.action.includes('failed') ? 'Failed' : 'Success'}
                           </Badge>
                         </div>
                         <div>
