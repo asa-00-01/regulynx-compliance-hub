@@ -51,28 +51,30 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <Sidebar>
-          <SidebarHeader className="border-b border-border">
-            <div className="p-2">
-              <h1 className="text-xl font-bold text-foreground">Platform Console</h1>
+      <div className="min-h-screen flex w-full bg-background">
+        <Sidebar className="border-r border-border">
+          <SidebarHeader className="border-b border-border p-4">
+            <div className="space-y-1">
+              <h1 className="text-lg font-semibold text-foreground">Platform Console</h1>
               <p className="text-sm text-muted-foreground">SaaS Management</p>
             </div>
           </SidebarHeader>
 
-          <SidebarContent>
+          <SidebarContent className="px-2 py-4">
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
+              <SidebarGroupLabel className="px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Navigation
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="mt-2">
+                <SidebarMenu className="space-y-1">
                   {navigation.map((item) => {
                     const isActive = location.pathname === item.href;
                     return (
                       <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild isActive={isActive}>
-                          <Link to={item.href}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.name}</span>
+                        <SidebarMenuButton asChild isActive={isActive} className="w-full">
+                          <Link to={item.href} className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <item.icon className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{item.name}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -83,12 +85,12 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
             </SidebarGroup>
           </SidebarContent>
 
-          <SidebarFooter className="border-t border-border">
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Avatar className="h-8 w-8">
+          <SidebarFooter className="border-t border-border p-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage src={user?.avatarUrl} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-xs">
                     {user?.name?.charAt(0) || user?.email?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
@@ -103,27 +105,33 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
                 variant="outline"
                 size="sm"
                 onClick={logout}
-                className="w-full justify-start"
+                className="w-full justify-start gap-2 h-8"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
             </div>
           </SidebarFooter>
         </Sidebar>
 
-        <SidebarInset>
+        <SidebarInset className="flex-1">
           {/* Header */}
-          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-            <SidebarTrigger />
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold">Platform Console</h2>
+          <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+            <SidebarTrigger className="-ml-2" />
+            <div className="flex items-center gap-2 flex-1">
+              <div className="h-6 w-px bg-border" />
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-foreground">Platform Console</h2>
+                <p className="text-xs text-muted-foreground">SaaS Management Dashboard</p>
+              </div>
             </div>
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-6">
-            {children}
+          <main className="flex-1 p-6">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
