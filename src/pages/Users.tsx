@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
@@ -67,39 +66,37 @@ const Users = () => {
     : users;
 
   return (
-    <DashboardLayout requiredRoles={['admin']}>
-      <div className="space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t('users.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('users.description')}
-          </p>
-        </div>
-
-        <UserSearch 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onAddUser={handleAddUser}
-        />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('users.userListTitle')}</CardTitle>
-            <CardDescription>
-              {t('users.userListDescription')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UsersTable 
-              users={filteredUsers}
-              onDeleteUser={handleUserDelete}
-              onEditUser={handleEditUser}
-            />
-          </CardContent>
-        </Card>
-
-        <AuditLog />
+    <div className="space-y-6">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">{t('users.title')}</h1>
+        <p className="text-muted-foreground">
+          {t('users.description')}
+        </p>
       </div>
+
+      <UserSearch 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onAddUser={handleAddUser}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('users.userListTitle')}</CardTitle>
+          <CardDescription>
+            {t('users.userListDescription')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UsersTable 
+            users={filteredUsers}
+            onDeleteUser={handleUserDelete}
+            onEditUser={handleEditUser}
+          />
+        </CardContent>
+      </Card>
+
+      <AuditLog />
 
       <EditUserDialog
         user={editingUser}
@@ -107,7 +104,7 @@ const Users = () => {
         onClose={() => setEditingUser(null)}
         onUpdateUser={handleUpdateUser}
       />
-    </DashboardLayout>
+    </div>
   );
 };
 

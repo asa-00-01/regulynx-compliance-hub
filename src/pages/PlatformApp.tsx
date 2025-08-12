@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import LoadingScreen from '@/components/app/LoadingScreen';
-import PlatformLayout from '@/components/platform/PlatformLayout';
 import PlatformDashboard from '@/components/platform/PlatformDashboard';
 import PlatformManagement from '@/pages/PlatformManagement';
 import PlatformUserManagement from '@/components/platform/PlatformUserManagement';
@@ -27,20 +26,19 @@ const PlatformApp: React.FC = () => {
     return <Unauthorized />;
   }
 
+  // Note: PlatformLayout is now handled by ManagementLayout wrapper
   return (
-    <PlatformLayout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/platform/dashboard" replace />} />
-        <Route path="/dashboard" element={<PlatformDashboard />} />
-        <Route path="/management" element={<PlatformManagement />} />
-        <Route path="/users" element={<PlatformUserManagement />} />
-        <Route path="/system-health" element={<PlatformSystemHealth />} />
-        <Route path="/billing" element={<PlatformBilling />} />
-        <Route path="/settings" element={<PlatformSettings />} />
-        <Route path="/developer-tools" element={<DeveloperTools />} />
-        <Route path="*" element={<Navigate to="/platform/dashboard" replace />} />
-      </Routes>
-    </PlatformLayout>
+    <Routes>
+      <Route path="/" element={<Navigate to="/platform/dashboard" replace />} />
+      <Route path="/dashboard" element={<PlatformDashboard />} />
+      <Route path="/management" element={<PlatformManagement />} />
+      <Route path="/users" element={<PlatformUserManagement />} />
+      <Route path="/system-health" element={<PlatformSystemHealth />} />
+      <Route path="/billing" element={<PlatformBilling />} />
+      <Route path="/settings" element={<PlatformSettings />} />
+      <Route path="/developer-tools" element={<DeveloperTools />} />
+      <Route path="*" element={<Navigate to="/platform/dashboard" replace />} />
+    </Routes>
   );
 };
 

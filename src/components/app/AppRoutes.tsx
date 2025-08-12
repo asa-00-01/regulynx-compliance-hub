@@ -4,7 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import LoadingScreen from './LoadingScreen';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
-import DashboardShell from '@/components/layout/DashboardShell';
+import CustomerLayout from '@/components/layouts/CustomerLayout';
+import ManagementLayout from '@/components/layouts/ManagementLayout';
 
 // Import platform app
 import PlatformApp from '@/pages/PlatformApp';
@@ -71,10 +72,10 @@ const AppRoutes = () => {
       <Route path="/subscription-success" element={<SubscriptionSuccess />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Platform App Routes - Only for platform users */}
+      {/* Platform Management Routes - Only for platform users */}
       {shouldUsePlatformApp ? (
         <>
-          {/* Redirect platform users from customer routes to platform */}
+          {/* Redirect customer routes to platform for platform users */}
           <Route path="/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/compliance" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/compliance-cases" element={<Navigate to="/platform/dashboard" replace />} />
@@ -96,173 +97,175 @@ const AppRoutes = () => {
           <Route path="/optimization" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/developer-tools" element={<Navigate to="/platform/developer-tools" replace />} />
           
-          {/* Platform App Routes */}
+          {/* Platform Management Routes using ManagementLayout */}
           <Route path="/platform/*" element={
             <ProtectedRoute>
-              <PlatformApp />
+              <ManagementLayout>
+                <PlatformApp />
+              </ManagementLayout>
             </ProtectedRoute>
           } />
         </>
       ) : (
-        /* Customer App Routes - Protected routes wrapped in DashboardShell */
+        /* Customer Routes using CustomerLayout */
         <>
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Dashboard />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/compliance" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Compliance />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/compliance-cases" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <ComplianceCases />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/compliance-cases/:id" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <CaseDetails />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/user-case/:userId" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <UserCase />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/kyc-verification" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin', 'complianceOfficer'] as const}>
+              <CustomerLayout requiredRoles={['admin', 'complianceOfficer'] as const}>
                 <KYCVerification />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/transactions" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Transactions />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/documents" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Documents />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/aml-monitoring" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <AMLMonitoring />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/risk-analysis" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <RiskAnalysis />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/sar-center" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin', 'complianceOfficer'] as const}>
+              <CustomerLayout requiredRoles={['admin', 'complianceOfficer'] as const}>
                 <SARCenter />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/integration" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Integration />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/analytics" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Analytics />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/audit-logs" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <AuditLogs />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/users" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin'] as const}>
+              <CustomerLayout requiredRoles={['admin'] as const}>
                 <Users />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/profile" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Profile />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/ai-agent" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <AIAgent />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/news" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <News />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/optimization" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <Optimization />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
           
           <Route path="/developer-tools" element={
             <ProtectedRoute>
-              <DashboardShell>
+              <CustomerLayout>
                 <DeveloperTools />
-              </DashboardShell>
+              </CustomerLayout>
             </ProtectedRoute>
           } />
 
