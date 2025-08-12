@@ -9,41 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
+import { useDataExport } from '@/hooks/useDataExport';
 
 const UserPreferences = () => {
   const { t, i18n } = useTranslation();
   const { user, updateUserProfile } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { settings: notifications, updateSetting, isLoading: notificationsLoading } = useNotificationSettings();
+  const { exportAsJson, exportAsCsv, exportAsPdf, isExporting } = useDataExport();
   
-  const [notifications, setNotifications] = useState({
-    email: true,
-    browser: true,
-    weekly: false,
-    newCase: true,
-    riskAlerts: true,
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (user?.preferences) {
-      if (user.preferences.notifications) {
-        setNotifications(user.preferences.notifications);
-      }
-      if (user.preferences.theme) {
-        setTheme(user.preferences.theme);
-      }
-      if (user.preferences.language) {
-        i18n.changeLanguage(user.preferences.language);
-      }
-    }
-  }, [user, setTheme, i18n]);
-
-  const handleNotificationChange = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   const handleLanguageChange = (value: string) => {
     i18n.changeLanguage(value);
+    toast.success(`Language changed to ${value === 'en' ? 'English' : 'Svenska'}`);
+  };
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    toast.success(`Theme changed to ${value}`);
   };
 
   const savePreferences = async () => {
@@ -63,20 +48,6 @@ const UserPreferences = () => {
     }
   };
 
-  const exportDataAsJson = () => {
-    if (!user) return;
-    const dataStr = JSON.stringify(user, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = 'user_profile_data.json';
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    toast.success('User data exported as JSON.');
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -94,7 +65,8 @@ const UserPreferences = () => {
               <Switch 
                 id="email-notifications" 
                 checked={notifications.email}
-                onCheckedChange={() => handleNotificationChange('email')}
+                onCheckedChange={(checked) => updateSetting('email', checked)}
+                disabled={notificationsLoading}
               />
             </div>
             
@@ -106,7 +78,8 @@ const UserPreferences = () => {
               <Switch 
                 id="browser-notifications" 
                 checked={notifications.browser}
-                onCheckedChange={() => handleNotificationChange('browser')}
+                onCheckedChange={(checked) => updateSetting('browser', checked)}
+                disabled={notificationsLoading}
               />
             </div>
             
@@ -118,7 +91,8 @@ const UserPreferences = () => {
               <Switch 
                 id="weekly-notifications" 
                 checked={notifications.weekly}
-                onCheckedChange={() => handleNotificationChange('weekly')}
+                onCheckedChange={(checked) => updateSetting('weekly', checked)}
+                disabled={notificationsLoading}
               />
             </div>
             
@@ -130,7 +104,8 @@ const UserPreferences = () => {
               <Switch 
                 id="new-case" 
                 checked={notifications.newCase}
-                onCheckedChange={() => handleNotificationChange('newCase')}
+                onCheckedChange={(checked) => updateSetting('newCase', checked)}
+                disabled={notificationsLoading}
               />
             </div>
             
@@ -142,7 +117,8 @@ const UserPreferences = () => {
               <Switch 
                 id="risk-alerts" 
                 checked={notifications.riskAlerts}
-                onCheckedChange={() => handleNotificationChange('riskAlerts')}
+                onCheckedChange={(checked) => updateSetting('riskAlerts', checked)}
+                disabled={notificationsLoading}
               />
             </div>
           </div>
@@ -158,7 +134,7 @@ const UserPreferences = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="theme">{t('profile.theme')}</Label>
-              <Select value={theme} onValueChange={setTheme}>
+              <Select value={theme} onValueChange={handleThemeChange}>
                 <SelectTrigger id="theme">
                   <SelectValue placeholder={t('common.selectTheme')} />
                 </SelectTrigger>
@@ -201,9 +177,27 @@ const UserPreferences = () => {
             {t('profile.exportDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={exportDataAsJson}>{t('profile.exportJson')}</Button>
-            <Button variant="outline" disabled>{t('profile.exportCsv')}</Button>
-            <Button variant="outline" disabled>{t('profile.exportPdf')}</Button>
+            <Button 
+              variant="outline" 
+              onClick={exportAsJson}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exporting...' : t('profile.exportJson')}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportAsCsv}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exporting...' : t('profile.exportCsv')}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportAsPdf}
+              disabled={isExporting}
+            >
+              {t('profile.exportPdf')}
+            </Button>
           </div>
         </CardContent>
       </Card>
