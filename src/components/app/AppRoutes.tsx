@@ -1,11 +1,14 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { isSubscriberRole, isManagementRole, getUserArea } from '@/lib/auth/roles';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import LoadingScreen from './LoadingScreen';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
 import ManagementLayout from '@/components/layouts/ManagementLayout';
+
+// Import platform app
+import PlatformApp from '@/pages/PlatformApp';
 
 // Import all page components
 import Index from '@/pages/Index';
@@ -36,15 +39,9 @@ import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
 
-// Import platform components
-import PlatformDashboard from '@/components/platform/PlatformDashboard';
-import PlatformUserManagement from '@/components/platform/PlatformUserManagement';
-import PlatformSystemHealth from '@/components/platform/PlatformSystemHealth';
-import PlatformBilling from '@/components/platform/PlatformBilling';
-import PlatformSettings from '@/components/platform/PlatformSettings';
-
 const AppRoutes = () => {
   const { loading, authLoaded, user } = useAuth();
+  const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
 
   // Show loading screen while auth is being determined
   if (loading || !authLoaded) {
@@ -54,17 +51,15 @@ const AppRoutes = () => {
 
   console.log('✅ AppRoutes - Auth loaded, rendering routes');
 
-  // Determine user area based on role
-  const userArea = getUserArea(user?.role as any);
-  const isSubscriber = user && isSubscriberRole(user.role as any);
-  const isManagement = user && isManagementRole(user.role as any);
+  // Check if user should be redirected to platform app
+  const shouldUsePlatformApp = user && (isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support'));
 
-  console.log('🔍 AppRoutes - Role check:', {
+  console.log('🔍 AppRoutes - Platform check:', {
     user: user?.email,
-    role: user?.role,
-    userArea,
-    isSubscriber,
-    isManagement
+    isPlatformOwner: isPlatformOwner(),
+    isPlatformAdmin: isPlatformAdmin(),
+    hasPlatformPermission: hasPlatformPermission('platform:support'),
+    shouldUsePlatformApp
   });
 
   return (
@@ -77,59 +72,10 @@ const AppRoutes = () => {
       <Route path="/subscription-success" element={<SubscriptionSuccess />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Management Area Routes - Only for platform roles */}
-      {isManagement ? (
+      {/* Platform Management Routes - Only for platform users */}
+      {shouldUsePlatformApp ? (
         <>
-          {/* Platform Management Routes */}
-          <Route path="/platform/dashboard" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <PlatformDashboard />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/platform/users" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <PlatformUserManagement />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/platform/system-health" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <PlatformSystemHealth />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/platform/billing" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <PlatformBilling />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/platform/settings" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <PlatformSettings />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/platform/developer-tools" element={
-            <ProtectedRoute>
-              <ManagementLayout>
-                <DeveloperTools />
-              </ManagementLayout>
-            </ProtectedRoute>
-          } />
-
-          {/* Redirect subscriber routes to platform for management users */}
+          {/* Redirect customer routes to platform for platform users */}
           <Route path="/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/compliance" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/compliance-cases" element={<Navigate to="/platform/dashboard" replace />} />
@@ -150,9 +96,18 @@ const AppRoutes = () => {
           <Route path="/news" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/optimization" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/developer-tools" element={<Navigate to="/platform/developer-tools" replace />} />
+          
+          {/* Platform Management Routes using ManagementLayout */}
+          <Route path="/platform/*" element={
+            <ProtectedRoute>
+              <ManagementLayout>
+                <PlatformApp />
+              </ManagementLayout>
+            </ProtectedRoute>
+          } />
         </>
-      ) : isSubscriber ? (
-        /* Subscriber Area Routes - Only for customer roles */
+      ) : (
+        /* Customer Routes using CustomerLayout */
         <>
           <Route path="/dashboard" element={
             <ProtectedRoute>
@@ -314,30 +269,8 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } />
 
-          {/* Redirect to unauthorized if platform routes are accessed by subscribers */}
+          {/* Redirect to unauthorized if platform routes are accessed by non-platform users */}
           <Route path="/platform/*" element={<Navigate to="/unauthorized" replace />} />
-        </>
-      ) : (
-        /* Unauthenticated users - redirect to auth */
-        <>
-          <Route path="/dashboard" element={<Navigate to="/auth" replace />} />
-          <Route path="/platform/*" element={<Navigate to="/auth" replace />} />
-          <Route path="/compliance*" element={<Navigate to="/auth" replace />} />
-          <Route path="/kyc-verification" element={<Navigate to="/auth" replace />} />
-          <Route path="/transactions" element={<Navigate to="/auth" replace />} />
-          <Route path="/documents" element={<Navigate to="/auth" replace />} />
-          <Route path="/aml-monitoring" element={<Navigate to="/auth" replace />} />
-          <Route path="/risk-analysis" element={<Navigate to="/auth" replace />} />
-          <Route path="/sar-center" element={<Navigate to="/auth" replace />} />
-          <Route path="/integration" element={<Navigate to="/auth" replace />} />
-          <Route path="/analytics" element={<Navigate to="/auth" replace />} />
-          <Route path="/audit-logs" element={<Navigate to="/auth" replace />} />
-          <Route path="/users" element={<Navigate to="/auth" replace />} />
-          <Route path="/profile" element={<Navigate to="/auth" replace />} />
-          <Route path="/ai-agent" element={<Navigate to="/auth" replace />} />
-          <Route path="/news" element={<Navigate to="/auth" replace />} />
-          <Route path="/optimization" element={<Navigate to="/auth" replace />} />
-          <Route path="/developer-tools" element={<Navigate to="/auth" replace />} />
         </>
       )}
 

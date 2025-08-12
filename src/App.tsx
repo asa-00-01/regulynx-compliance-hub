@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
-import { ComplianceProvider } from "@/context/compliance/ComplianceProvider";
+import { ComplianceProvider } from "@/context/ComplianceContext";
 import AppRoutes from "@/components/app/AppRoutes";
 import '@/i18n/config';
 

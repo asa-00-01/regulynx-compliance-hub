@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { isSubscriberRole } from '@/lib/auth/roles';
 import { UserRole } from '@/types';
 import {
   SidebarProvider,
@@ -51,18 +50,6 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 }) => {
   const { user, logout, canAccess } = useAuth();
   const location = useLocation();
-
-  // Check if user has subscriber role access
-  if (!user || !isSubscriberRole(user.role as any)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access the subscriber area.</p>
-        </div>
-      </div>
-    );
-  }
 
   // Check access if required roles are specified
   if (requiredRoles && !canAccess(requiredRoles as UserRole[])) {
@@ -119,11 +106,11 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <Sidebar data-testid="customer-sidebar">
+        <Sidebar>
           <SidebarHeader className="border-b border-border">
             <div className="p-2">
-              <h1 className="text-xl font-bold text-foreground">Compliance Platform</h1>
-              <p className="text-sm text-muted-foreground">Subscriber Dashboard</p>
+              <h1 className="text-xl font-bold text-foreground" data-testid="customer-header">Compliance Platform</h1>
+              <p className="text-sm text-muted-foreground">Customer Dashboard</p>
             </div>
           </SidebarHeader>
 
@@ -183,10 +170,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 
         <SidebarInset>
           {/* Customer Header */}
-          <header 
-            data-testid="customer-header"
-            className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6"
-          >
+          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <SidebarTrigger />
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Compliance Platform</h2>
