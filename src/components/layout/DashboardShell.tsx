@@ -21,7 +21,8 @@ import {
   Zap,
   Code,
   Settings,
-  LogOut 
+  LogOut,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
