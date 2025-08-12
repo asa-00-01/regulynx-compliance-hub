@@ -66,41 +66,22 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
   }
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Compliance', href: '/compliance', icon: Shield },
-    { name: 'Compliance Cases', href: '/compliance-cases', icon: FileText },
-    { name: 'KYC Verification', href: '/kyc-verification', icon: Shield },
-    { name: 'Transactions', href: '/transactions', icon: CreditCard },
-    { name: 'Documents', href: '/documents', icon: FileText },
-    { name: 'AML Monitoring', href: '/aml-monitoring', icon: AlertTriangle },
-    { name: 'Risk Analysis', href: '/risk-analysis', icon: TrendingUp },
-    { name: 'SAR Center', href: '/sar-center', icon: Database },
-    { name: 'Integration', href: '/integration', icon: Database },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-    { name: 'Audit Logs', href: '/audit-logs', icon: History },
-    { name: 'Users', href: '/users', icon: Users },
-    { name: 'Profile', href: '/profile', icon: User },
-    { name: 'AI Agent', href: '/ai-agent', icon: Bot },
-    { name: 'News', href: '/news', icon: Newspaper },
-    { name: 'Optimization', href: '/optimization', icon: Zap },
-    { name: 'Developer Tools', href: '/developer-tools', icon: Code },
+    { name: 'Platform Dashboard', href: '/platform/dashboard', icon: LayoutDashboard },
+    { name: 'User Management', href: '/platform/users', icon: Users },
+    { name: 'System Health', href: '/platform/system-health', icon: Activity },
+    { name: 'Billing', href: '/platform/billing', icon: CreditCard },
+    { name: 'Settings', href: '/platform/settings', icon: Settings },
+    { name: 'Developer Tools', href: '/platform/developer-tools', icon: Code },
   ];
 
   // Helper function to get user role display name
   const getUserRoleDisplay = () => {
     if (!user) return 'User';
     
-    // Check customer_roles array first
-    if (user.customer_roles?.includes('customer_admin')) return 'Admin';
-    if (user.customer_roles?.includes('customer_compliance')) return 'Compliance Officer';
-    if (user.customer_roles?.includes('customer_executive')) return 'Executive';
-    if (user.customer_roles?.includes('customer_support')) return 'Support';
-    
-    // Fallback to legacy role mapping
-    if (user.role === 'admin') return 'Admin';
-    if (user.role === 'complianceOfficer') return 'Compliance Officer';
-    if (user.role === 'executive') return 'Executive';
-    if (user.role === 'support') return 'Support';
+    // Check platform roles
+    if (user.isPlatformOwner) return 'Platform Owner';
+    if (user.platform_roles?.includes('platform_admin')) return 'Platform Admin';
+    if (user.platform_roles?.includes('platform_support')) return 'Platform Support';
     
     return 'User';
   };
@@ -108,17 +89,17 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <Sidebar>
+        <Sidebar data-testid="management-sidebar">
           <SidebarHeader className="border-b border-border">
             <div className="p-2">
               <h1 className="text-xl font-bold text-foreground">Platform Console</h1>
-              <p className="text-sm text-muted-foreground">SaaS Management</p>
+              <p className="text-sm text-muted-foreground">Management Area</p>
             </div>
           </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel>Platform Management</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navigation.map((item) => {
@@ -171,8 +152,11 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
         </Sidebar>
 
         <SidebarInset>
-          {/* Header */}
-          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+          {/* Management Header */}
+          <header 
+            data-testid="shell-header"
+            className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6"
+          >
             <SidebarTrigger />
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Platform Console</h2>
