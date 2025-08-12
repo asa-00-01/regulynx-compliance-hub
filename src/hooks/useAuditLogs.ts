@@ -13,13 +13,12 @@ interface AuditLogFilters {
 
 interface AuditLog {
   id: string;
-  timestamp: string;
-  category: string;
   action: string;
-  user_email?: string;
-  user_id?: string;
-  severity: string;
-  details?: Record<string, any>;
+  entity: string;
+  entity_id: string | null;
+  user_id: string | null;
+  details: any;
+  created_at: string;
 }
 
 interface AuditStats {
@@ -48,22 +47,13 @@ export const useAuditLogs = (filters: AuditLogFilters = {}) => {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      // Build query based on filters
       let query = supabase
         .from('audit_logs')
         .select('*', { count: 'exact' })
-        .order('timestamp', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (filters.search) {
-        query = query.or(`action.ilike.%${filters.search}%,user_email.ilike.%${filters.search}%`);
-      }
-
-      if (filters.category) {
-        query = query.eq('category', filters.category);
-      }
-
-      if (filters.severity) {
-        query = query.eq('severity', filters.severity);
+        query = query.or(`action.ilike.%${filters.search}%,entity.ilike.%${filters.search}%`);
       }
 
       if (filters.dateRange) {
@@ -85,7 +75,7 @@ export const useAuditLogs = (filters: AuditLogFilters = {}) => {
             break;
         }
         
-        query = query.gte('timestamp', startDate.toISOString());
+        query = query.gte('created_at', startDate.toISOString());
       }
 
       if (filters.page && filters.limit) {
@@ -112,37 +102,36 @@ export const useAuditLogs = (filters: AuditLogFilters = {}) => {
 
   const fetchStats = async () => {
     try {
-      // Fetch stats for the last 24 hours
       const yesterday = new Date();
       yesterday.setHours(yesterday.getHours() - 24);
 
       const { data: totalEvents } = await supabase
         .from('audit_logs')
         .select('id', { count: 'exact' })
-        .gte('timestamp', yesterday.toISOString());
+        .gte('created_at', yesterday.toISOString());
 
-      const { data: securityEvents } = await supabase
+      const { data: authEvents } = await supabase
         .from('audit_logs')
         .select('id', { count: 'exact' })
-        .eq('category', 'security')
-        .gte('timestamp', yesterday.toISOString());
+        .eq('entity', 'authentication')
+        .gte('created_at', yesterday.toISOString());
 
-      const { data: dataAccessEvents } = await supabase
+      const { data: dataEvents } = await supabase
         .from('audit_logs')
         .select('id', { count: 'exact' })
-        .eq('category', 'data_access')
-        .gte('timestamp', yesterday.toISOString());
+        .eq('entity', 'data_access')
+        .gte('created_at', yesterday.toISOString());
 
       const { data: failedLogins } = await supabase
         .from('audit_logs')
         .select('id', { count: 'exact' })
         .eq('action', 'login_failed')
-        .gte('timestamp', yesterday.toISOString());
+        .gte('created_at', yesterday.toISOString());
 
       setStats({
         totalEvents: totalEvents?.length || 0,
-        securityEvents: securityEvents?.length || 0,
-        dataAccessEvents: dataAccessEvents?.length || 0,
+        securityEvents: authEvents?.length || 0,
+        dataAccessEvents: dataEvents?.length || 0,
         failedLogins: failedLogins?.length || 0
       });
     } catch (error) {
