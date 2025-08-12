@@ -148,7 +148,7 @@ const AppRoutes = () => {
           
           <Route path="/kyc-verification" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin', 'complianceOfficer']}>
+              <DashboardShell requiredRoles={['admin', 'complianceOfficer'] as const}>
                 <KYCVerification />
               </DashboardShell>
             </ProtectedRoute>
@@ -188,7 +188,7 @@ const AppRoutes = () => {
           
           <Route path="/sar-center" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin', 'complianceOfficer']}>
+              <DashboardShell requiredRoles={['admin', 'complianceOfficer'] as const}>
                 <SARCenter />
               </DashboardShell>
             </ProtectedRoute>
@@ -220,7 +220,7 @@ const AppRoutes = () => {
           
           <Route path="/users" element={
             <ProtectedRoute>
-              <DashboardShell requiredRoles={['admin']}>
+              <DashboardShell requiredRoles={['admin'] as const}>
                 <Users />
               </DashboardShell>
             </ProtectedRoute>
