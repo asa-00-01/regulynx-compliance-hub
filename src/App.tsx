@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { ComplianceProvider } from "@/context/ComplianceContext";
 import AppRoutes from "@/components/app/AppRoutes";
+import '@/i18n/config';
 
 const queryClient = new QueryClient();
 
