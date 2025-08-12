@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/AuthContext';
+import { useRoleBasedAccess } from '@/hooks/permissions/useRoleBasedAccess';
+import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import { 
   LayoutDashboard, 
   Shield, 
@@ -36,8 +38,20 @@ const primaryNavigation = [
 const complianceNavigation = [
   { name: 'Compliance', href: '/compliance', icon: Shield, description: 'Compliance overview' },
   { name: 'Compliance Cases', href: '/compliance-cases', icon: FileText, description: 'Active cases', badge: 5 },
-  { name: 'KYC Verification', href: '/kyc-verification', icon: UserCheck, roles: ['admin', 'complianceOfficer'], description: 'Identity verification' },
-  { name: 'SAR Center', href: '/sar-center', icon: Shield, roles: ['admin', 'complianceOfficer'], description: 'Suspicious activity reports' },
+  { 
+    name: 'KYC Verification', 
+    href: '/kyc-verification', 
+    icon: UserCheck, 
+    description: 'Identity verification',
+    requiredPermissions: ['document:approve', 'customer:compliance', 'customer:admin']
+  },
+  { 
+    name: 'SAR Center', 
+    href: '/sar-center', 
+    icon: Shield, 
+    description: 'Suspicious activity reports',
+    requiredPermissions: ['document:approve', 'customer:compliance', 'customer:admin']
+  },
   { name: 'AML Monitoring', href: '/aml-monitoring', icon: Activity, description: 'Anti-money laundering' },
   { name: 'Risk Analysis', href: '/risk-analysis', icon: AlertTriangle, description: 'Risk assessment', badge: 12 },
 ];
@@ -51,7 +65,13 @@ const dataNavigation = [
 
 const systemNavigation = [
   { name: 'Integration', href: '/integration', icon: Plug, description: 'API & integrations' },
-  { name: 'Users', href: '/users', icon: Users, roles: ['admin'], description: 'User management' },
+  { 
+    name: 'Users', 
+    href: '/users', 
+    icon: Users, 
+    description: 'User management',
+    requiredPermissions: ['user:create', 'user:update', 'customer:admin']
+  },
 ];
 
 const toolsNavigation = [
@@ -64,108 +84,92 @@ const toolsNavigation = [
 const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { hasPermission, hasAnyPermission } = useRoleBasedAccess();
+  const { isPlatformOwner, isPlatformAdmin } = usePlatformRoleAccess();
 
   const isActive = (href: string) => location.pathname === href;
 
   const hasAccess = (item: any) => {
-    if (!item.roles) return true;
-    if (!user?.role) return false;
+    // Platform owners and admins have access to everything
+    if (isPlatformOwner() || isPlatformAdmin()) return true;
     
-    // Map legacy roles to new role system
-    const userRole = user.role;
-    const mappedRoles = [];
+    // If no specific permissions required, allow access
+    if (!item.requiredPermissions) return true;
     
-    // Map customer roles to legacy roles for backward compatibility
-    if (user.customer_roles?.includes('customer_admin')) {
-      mappedRoles.push('admin');
-    }
-    if (user.customer_roles?.includes('customer_compliance')) {
-      mappedRoles.push('complianceOfficer');
-    }
-    if (user.customer_roles?.includes('customer_executive')) {
-      mappedRoles.push('executive');
-    }
-    if (user.customer_roles?.includes('customer_support')) {
-      mappedRoles.push('support');
-    }
-    
-    // Also check the direct role
-    if (userRole === 'admin') mappedRoles.push('admin');
-    if (userRole === 'complianceOfficer') mappedRoles.push('complianceOfficer');
-    if (userRole === 'executive') mappedRoles.push('executive');
-    if (userRole === 'support') mappedRoles.push('support');
-    
-    // For non-platform users, always allow basic access if no mapped roles
-    if (mappedRoles.length === 0) {
-      mappedRoles.push('support'); // Default access level
-    }
-    
-    return item.roles.some((role: string) => mappedRoles.includes(role));
+    // Check if user has any of the required permissions
+    return hasAnyPermission(item.requiredPermissions);
   };
 
-  const NavigationSection = ({ title, items, className = "" }: { title: string; items: any[]; className?: string }) => (
-    <div className={cn("space-y-1", className)}>
-      <div className="px-3 py-2">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {title}
-        </h3>
-      </div>
-      <div className="space-y-1">
-        {items.filter(hasAccess).map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          return (
-            <Button
-              key={item.name}
-              asChild
-              variant="ghost"
-              className={cn(
-                "w-full justify-start h-auto p-0 hover:bg-accent/50 transition-all duration-200",
-                active && "bg-accent text-accent-foreground shadow-sm"
-              )}
-            >
-              <Link to={item.href} className="flex items-center gap-3 px-3 py-3 rounded-md group">
-                <div className={cn(
-                  "p-1.5 rounded-lg transition-colors",
-                  active 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted group-hover:bg-accent-foreground/10"
-                )}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium truncate">{item.name}</span>
-                    <div className="flex items-center gap-1">
-                      {item.isNew && (
-                        <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                          New
-                        </Badge>
-                      )}
-                      {item.badge && (
-                        <Badge variant="destructive" className="h-5 px-1.5 text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
-                      <ChevronRight className={cn(
-                        "h-3 w-3 transition-transform opacity-0 group-hover:opacity-100",
-                        active && "opacity-100"
-                      )} />
-                    </div>
+  const NavigationSection = ({ title, items, className = "" }: { title: string; items: any[]; className?: string }) => {
+    const accessibleItems = items.filter(hasAccess);
+    
+    // Don't render section if no items are accessible
+    if (accessibleItems.length === 0) return null;
+    
+    return (
+      <div className={cn("space-y-1", className)}>
+        <div className="px-3 py-2">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {title}
+          </h3>
+        </div>
+        <div className="space-y-1">
+          {accessibleItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Button
+                key={item.name}
+                asChild
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-auto p-0 hover:bg-accent/50 transition-all duration-200",
+                  active && "bg-accent text-accent-foreground shadow-sm"
+                )}
+              >
+                <Link to={item.href} className="flex items-center gap-3 px-3 py-3 rounded-md group">
+                  <div className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    active 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted group-hover:bg-accent-foreground/10"
+                  )}>
+                    <Icon className="h-4 w-4" />
                   </div>
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            </Button>
-          );
-        })}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium truncate">{item.name}</span>
+                      <div className="flex items-center gap-1">
+                        {item.isNew && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            New
+                          </Badge>
+                        )}
+                        {item.badge && (
+                          <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                            {item.badge}
+                          </Badge>
+                        )}
+                        <ChevronRight className={cn(
+                          "h-3 w-3 transition-transform opacity-0 group-hover:opacity-100",
+                          active && "opacity-100"
+                        )} />
+                      </div>
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              </Button>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex h-full w-72 flex-col bg-card border-r border-border shadow-sm">
