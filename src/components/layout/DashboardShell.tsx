@@ -1,31 +1,174 @@
 
 import React from 'react';
-import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
-import { Navigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  LayoutDashboard,
+  Shield,
+  FileText,
+  CreditCard,
+  Database,
+  AlertTriangle,
+  TrendingUp,
+  BarChart3,
+  History,
+  Users,
+  User,
+  Bot,
+  Newspaper,
+  Zap,
+  Code,
+  Settings,
+  LogOut 
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 import { UserRole } from '@/types';
-import DashboardLayout from './DashboardLayout';
 
 interface DashboardShellProps {
   children: React.ReactNode;
-  requiredRoles?: UserRole[];
+  requiredRoles?: readonly UserRole[];
 }
 
-const DashboardShell: React.FC<DashboardShellProps> = ({ children, requiredRoles }) => {
-  const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
-  
-  // This should not happen due to routing logic, but double-check
-  const shouldUsePlatformApp = isPlatformOwner() || isPlatformAdmin() || hasPlatformPermission('platform:support');
-  
-  if (shouldUsePlatformApp) {
-    console.log('🔄 DashboardShell - Redirecting platform user to platform app');
-    return <Navigate to="/platform/dashboard" replace />;
+const DashboardShell: React.FC<DashboardShellProps> = ({ 
+  children,
+  requiredRoles
+}) => {
+  const { user, logout, canAccess } = useAuth();
+  const location = useLocation();
+
+  // Check access if required roles are specified
+  if (requiredRoles && !canAccess(requiredRoles as UserRole[])) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">You don't have permission to access this page.</p>
+        </div>
+      </div>
+    );
   }
 
-  // For customer users, provide the dashboard layout
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Compliance', href: '/compliance', icon: Shield },
+    { name: 'Compliance Cases', href: '/compliance-cases', icon: FileText },
+    { name: 'KYC Verification', href: '/kyc-verification', icon: Shield },
+    { name: 'Transactions', href: '/transactions', icon: CreditCard },
+    { name: 'Documents', href: '/documents', icon: FileText },
+    { name: 'AML Monitoring', href: '/aml-monitoring', icon: AlertTriangle },
+    { name: 'Risk Analysis', href: '/risk-analysis', icon: TrendingUp },
+    { name: 'SAR Center', href: '/sar-center', icon: Database },
+    { name: 'Integration', href: '/integration', icon: Database },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { name: 'Audit Logs', href: '/audit-logs', icon: History },
+    { name: 'Users', href: '/users', icon: Users },
+    { name: 'Profile', href: '/profile', icon: User },
+    { name: 'AI Agent', href: '/ai-agent', icon: Bot },
+    { name: 'News', href: '/news', icon: Newspaper },
+    { name: 'Optimization', href: '/optimization', icon: Zap },
+    { name: 'Developer Tools', href: '/developer-tools', icon: Code },
+  ];
+
   return (
-    <DashboardLayout requiredRoles={requiredRoles}>
-      {children}
-    </DashboardLayout>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <Sidebar>
+          <SidebarHeader className="border-b border-border">
+            <div className="p-2">
+              <h1 className="text-xl font-bold text-foreground">Platform Console</h1>
+              <p className="text-sm text-muted-foreground">SaaS Management</p>
+            </div>
+          </SidebarHeader>
+
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navigation.map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <SidebarMenuItem key={item.name}>
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <Link to={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <SidebarFooter className="border-t border-border">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.avatarUrl} />
+                  <AvatarFallback>
+                    {user?.name?.charAt(0) || user?.email?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user?.name || user?.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {user?.role === 'customer_admin' ? 'Admin' : 
+                     user?.role === 'customer_compliance' ? 'Compliance Officer' :
+                     user?.role === 'customer_executive' ? 'Executive' : 'Support'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="w-full justify-start"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+
+        <SidebarInset>
+          {/* Header */}
+          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+            <SidebarTrigger />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold">Platform Console</h2>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto p-6">
+            {children}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
