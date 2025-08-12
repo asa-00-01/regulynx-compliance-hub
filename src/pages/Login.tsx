@@ -21,13 +21,13 @@ const Login = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - only run once when auth is loaded
   useEffect(() => {
     if (authLoaded && isAuthenticated) {
       console.log('✅ User already authenticated, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
-  }, [authLoaded, isAuthenticated, navigate]);
+  }, [authLoaded, isAuthenticated]); // Removed navigate from dependencies to prevent loops
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
