@@ -1,13 +1,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { ExtendedUser, UserRole } from '@/types/auth';
 import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
-
-// Global singleton to prevent multiple listeners
-let globalAuthListener: any = null;
-let globalInitialized = false;
+import { authManager } from '@/services/authManager';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
@@ -46,22 +42,12 @@ export const useAuthState = () => {
     }
   }, [session?.user?.id]);
 
-  // Stable auth handler that manages state
-  const handleAuthChange = useCallback(async (event: string, currentSession: Session | null) => {
+  // Handle auth changes from the singleton manager
+  const handleAuthChange = useCallback(async (currentSession: Session | null, currentUser: User | null) => {
     if (!isMountedRef.current) return;
     
-    console.log('🔐 Auth state change:', event, currentSession?.user?.email);
+    console.log('🔐 useAuthState received auth change:', currentUser?.email);
     
-    // Prevent multiple initial session events globally
-    if (event === 'INITIAL_SESSION' && globalInitialized) {
-      console.log('🔐 Ignoring duplicate INITIAL_SESSION');
-      return;
-    }
-    
-    if (event === 'INITIAL_SESSION') {
-      globalInitialized = true;
-    }
-
     // Clear any existing timeout
     if (profileFetchTimeoutRef.current) {
       clearTimeout(profileFetchTimeoutRef.current);
@@ -120,68 +106,27 @@ export const useAuthState = () => {
     } else if (isMountedRef.current) {
       setUser(null);
     }
-  }, []); // Empty dependency array - this function should never recreate
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
 
-    // Set up the auth state listener only if one doesn't exist globally
-    if (!globalAuthListener) {
-      console.log('🔐 Setting up global auth listener');
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-      globalAuthListener = subscription;
-    }
+    // Initialize the singleton auth manager and subscribe to changes
+    authManager.initialize().then(() => {
+      console.log('🔐 useAuthState subscribing to auth manager');
+    });
 
-    // Get initial session only if not already initialized
-    const getInitialSession = async () => {
-      if (globalInitialized) {
-        console.log('🔐 Auth already initialized, skipping initial session check');
-        return;
-      }
-      
-      try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('❌ Error getting initial session:', error);
-        }
-        if (isMountedRef.current && initialSession) {
-          handleAuthChange('INITIAL_SESSION', initialSession);
-        } else if (isMountedRef.current && !initialSession) {
-          setLoading(false);
-          setAuthLoaded(true);
-        }
-      } catch (error) {
-        console.error('❌ Failed to get initial session:', error);
-        if (isMountedRef.current) {
-          setLoading(false);
-          setAuthLoaded(true);
-        }
-      }
-    };
-
-    getInitialSession();
+    const unsubscribe = authManager.subscribe(handleAuthChange);
 
     return () => {
       isMountedRef.current = false;
       if (profileFetchTimeoutRef.current) {
         clearTimeout(profileFetchTimeoutRef.current);
       }
-      // Don't unsubscribe the global listener here as other components might need it
+      unsubscribe();
+      console.log('🔐 useAuthState unsubscribed from auth manager');
     };
-  }, []); // Empty dependency array - effect should only run once
-
-  // Cleanup global listener when the app unmounts (not just this hook)
-  useEffect(() => {
-    return () => {
-      // This will only run when the component unmounts permanently
-      if (globalAuthListener && !isMountedRef.current) {
-        console.log('🔐 Cleaning up global auth listener');
-        globalAuthListener.unsubscribe();
-        globalAuthListener = null;
-        globalInitialized = false;
-      }
-    };
-  }, []);
+  }, []); // Empty dependency array is safe now since we're using a singleton
 
   return { 
     user, 
