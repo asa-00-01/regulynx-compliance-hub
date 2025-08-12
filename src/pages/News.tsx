@@ -1,14 +1,9 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import NewsAndRSSFeeds from '@/components/news/NewsAndRSSFeeds';
 
 const News = () => {
-  return (
-    <DashboardLayout>
-      <NewsAndRSSFeeds />
-    </DashboardLayout>
-  );
+  return <NewsAndRSSFeeds />;
 };
 
 export default News;

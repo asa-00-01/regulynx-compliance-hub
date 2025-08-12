@@ -147,8 +147,8 @@ const AppRoutes = () => {
           } />
           
           <Route path="/kyc-verification" element={
-            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-              <DashboardShell>
+            <ProtectedRoute>
+              <DashboardShell requiredRoles={['admin', 'complianceOfficer']}>
                 <KYCVerification />
               </DashboardShell>
             </ProtectedRoute>
@@ -187,8 +187,8 @@ const AppRoutes = () => {
           } />
           
           <Route path="/sar-center" element={
-            <ProtectedRoute requiredRoles={['admin', 'complianceOfficer']}>
-              <DashboardShell>
+            <ProtectedRoute>
+              <DashboardShell requiredRoles={['admin', 'complianceOfficer']}>
                 <SARCenter />
               </DashboardShell>
             </ProtectedRoute>
@@ -219,8 +219,8 @@ const AppRoutes = () => {
           } />
           
           <Route path="/users" element={
-            <ProtectedRoute requiredRoles={['admin']}>
-              <DashboardShell>
+            <ProtectedRoute>
+              <DashboardShell requiredRoles={['admin']}>
                 <Users />
               </DashboardShell>
             </ProtectedRoute>
