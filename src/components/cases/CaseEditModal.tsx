@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ComplianceCaseDetails } from '@/types/case';
+import { ComplianceCaseDetails, CasePriority } from '@/types/case';
 import { useToast } from '@/hooks/use-toast';
 import { Edit } from 'lucide-react';
 
@@ -112,7 +112,7 @@ const CaseEditModal: React.FC<CaseEditModalProps> = ({
               <Label htmlFor="priority">Priority</Label>
               <Select
                 value={formData.priority || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+                onValueChange={(value: CasePriority) => setFormData(prev => ({ ...prev, priority: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
@@ -130,7 +130,7 @@ const CaseEditModal: React.FC<CaseEditModalProps> = ({
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as any }))}
+                onValueChange={(value: ComplianceCaseDetails['status']) => setFormData(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -139,7 +139,7 @@ const CaseEditModal: React.FC<CaseEditModalProps> = ({
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="under_review">Under Review</SelectItem>
                   <SelectItem value="escalated">Escalated</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="pending_info">Pending Info</SelectItem>
                   <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
               </Select>

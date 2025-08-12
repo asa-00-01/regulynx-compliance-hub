@@ -41,8 +41,8 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
         return 'bg-yellow-100 text-yellow-800';
       case 'escalated':
         return 'bg-red-100 text-red-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
+      case 'pending_info':
+        return 'bg-orange-100 text-orange-800';
       case 'closed':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -52,6 +52,8 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
+      case 'critical':
+        return 'bg-red-100 text-red-800';
       case 'high':
         return 'bg-red-100 text-red-800';
       case 'medium':
@@ -91,7 +93,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <div>
                     <Badge className={getStatusColor(caseItem.status)}>
-                      {caseItem.status}
+                      {caseItem.status.replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
@@ -153,7 +155,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Created</label>
                   <p className="text-sm">{format(new Date(caseItem.createdAt), 'PPp')}</p>
@@ -162,12 +164,6 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
                   <p className="text-sm">{format(new Date(caseItem.updatedAt), 'PPp')}</p>
                 </div>
-                {caseItem.resolvedAt && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Resolved</label>
-                    <p className="text-sm">{format(new Date(caseItem.resolvedAt), 'PPp')}</p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
