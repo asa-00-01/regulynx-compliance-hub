@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Search, 
@@ -31,23 +30,26 @@ const AuditLogs = () => {
   const itemsPerPage = 20;
   const { t } = useTranslation();
 
-  const {
-    logs,
-    loading,
-    stats,
-    totalCount
-  } = useAuditLogs({
-    search: searchTerm,
+  // Memoize filters to prevent unnecessary re-renders
+  const filters = useMemo(() => ({
+    search: searchTerm || undefined,
     category: categoryFilter === 'all' ? undefined : categoryFilter,
     severity: severityFilter === 'all' ? undefined : severityFilter,
     dateRange,
     page: currentPage,
     limit: itemsPerPage
-  });
+  }), [searchTerm, categoryFilter, severityFilter, dateRange, currentPage]);
+
+  const {
+    logs,
+    loading,
+    stats,
+    totalCount
+  } = useAuditLogs(filters);
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  const getCategoryIcon = (entity: string) => {
+  const getCategoryIcon = useCallback((entity: string) => {
     switch (entity) {
       case 'authentication': return User;
       case 'authorization': return Shield;
@@ -55,10 +57,9 @@ const AuditLogs = () => {
       case 'security': return AlertTriangle;
       default: return Clock;
     }
-  };
+  }, []);
 
-  const getSeverityBadgeVariant = (action: string) => {
-    // Since we don't have severity in the database, we'll determine it based on action
+  const getSeverityBadgeVariant = useCallback((action: string) => {
     if (action.includes('failed') || action.includes('error')) {
       return 'destructive';
     }
@@ -66,12 +67,24 @@ const AuditLogs = () => {
       return 'secondary';
     }
     return 'default';
-  };
+  }, []);
 
-  const handleExportLogs = () => {
-    // Implementation for exporting audit logs
+  const handleExportLogs = useCallback(() => {
     console.log('Exporting audit logs...');
-  };
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  }, []);
+
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  }, [totalPages]);
 
   return (
     <div className="space-y-6">
@@ -153,7 +166,7 @@ const AuditLogs = () => {
             <Input
               placeholder={t('auditLogs.searchPlaceholder')}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 w-64"
             />
           </div>
@@ -255,7 +268,7 @@ const AuditLogs = () => {
                     variant="outline" 
                     size="sm"
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
+                    onClick={handlePreviousPage}
                   >
                     {t('common.previous')}
                   </Button>
@@ -263,7 +276,7 @@ const AuditLogs = () => {
                     variant="outline" 
                     size="sm"
                     disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(currentPage + 1)}
+                    onClick={handleNextPage}
                   >
                     {t('common.next')}
                   </Button>
