@@ -2,11 +2,12 @@
 import React from 'react';
 import { usePlatformRoleAccess } from '@/hooks/permissions/usePlatformRoleAccess';
 import { Navigate } from 'react-router-dom';
+import { UserRole } from '@/types';
 import DashboardLayout from './DashboardLayout';
 
 interface DashboardShellProps {
   children: React.ReactNode;
-  requiredRoles?: string[];
+  requiredRoles?: UserRole[];
 }
 
 const DashboardShell: React.FC<DashboardShellProps> = ({ children, requiredRoles }) => {
