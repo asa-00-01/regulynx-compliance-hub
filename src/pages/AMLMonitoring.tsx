@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TransactionDetailsModal from '@/components/aml/TransactionDetailsModal';
 import PatternDetectionEngine from '@/components/aml/PatternDetectionEngine';
@@ -57,74 +56,72 @@ const AMLMonitoring = () => {
   }, [location.state, filteredTransactions, handleViewDetails]);
 
   return (
-    <DashboardLayout requiredRoles={['complianceOfficer', 'admin', 'executive']}>
-      <div className="space-y-6 w-full">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t('navigation.amlMonitoring')}</h1>
-          <p className="text-muted-foreground">
-            {t('amlMonitoring.description')}
-          </p>
-        </div>
-
-        {/* Metrics Cards */}
-        <AMLMetricsCards
-          totalTransactions={metrics.totalTransactions}
-          flaggedTransactions={metrics.flaggedTransactions}
-          highRiskTransactions={metrics.highRiskTransactions}
-          totalAmount={metrics.totalAmount}
-        />
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 w-full">
-          <TabsList>
-            <TabsTrigger value="overview">{t('amlMonitoring.tabOverview')}</TabsTrigger>
-            <TabsTrigger value="patterns">{t('aml.patternDetection')}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4">
-            {/* Search */}
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={t('amlMonitoring.searchPlaceholder')}
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Filters and Export */}
-            <AMLFiltersSection
-              filters={filters}
-              onFilterChange={setFilters}
-              filteredTransactionsCount={filteredTransactions.length}
-              onExport={handleExportTransactions}
-            />
-
-            {/* Transactions Table */}
-            <AMLTransactionTableSection
-              transactions={paginatedTransactions}
-              onViewTransaction={handleViewDetails}
-              onFlagTransaction={handleFlagTransaction}
-              onCreateCase={handleCreateCase}
-            />
-          </TabsContent>
-
-          <TabsContent value="patterns" className="space-y-4">
-            <PatternDetectionEngine />
-          </TabsContent>
-        </Tabs>
-
-        {/* Transaction Details Modal */}
-        <TransactionDetailsModal
-          transaction={selectedTransaction}
-          open={isDetailsModalOpen}
-          onOpenChange={setIsDetailsModalOpen}
-          onFlag={handleFlagTransaction}
-          onCreateCase={handleCreateCase}
-        />
+    <div className="space-y-6 w-full">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">{t('navigation.amlMonitoring')}</h1>
+        <p className="text-muted-foreground">
+          {t('amlMonitoring.description')}
+        </p>
       </div>
-    </DashboardLayout>
+
+      {/* Metrics Cards */}
+      <AMLMetricsCards
+        totalTransactions={metrics.totalTransactions}
+        flaggedTransactions={metrics.flaggedTransactions}
+        highRiskTransactions={metrics.highRiskTransactions}
+        totalAmount={metrics.totalAmount}
+      />
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 w-full">
+        <TabsList>
+          <TabsTrigger value="overview">{t('amlMonitoring.tabOverview')}</TabsTrigger>
+          <TabsTrigger value="patterns">{t('aml.patternDetection')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          {/* Search */}
+          <div className="relative max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t('amlMonitoring.searchPlaceholder')}
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Filters and Export */}
+          <AMLFiltersSection
+            filters={filters}
+            onFilterChange={setFilters}
+            filteredTransactionsCount={filteredTransactions.length}
+            onExport={handleExportTransactions}
+          />
+
+          {/* Transactions Table */}
+          <AMLTransactionTableSection
+            transactions={paginatedTransactions}
+            onViewTransaction={handleViewDetails}
+            onFlagTransaction={handleFlagTransaction}
+            onCreateCase={handleCreateCase}
+          />
+        </TabsContent>
+
+        <TabsContent value="patterns" className="space-y-4">
+          <PatternDetectionEngine />
+        </TabsContent>
+      </Tabs>
+
+      {/* Transaction Details Modal */}
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+        onFlag={handleFlagTransaction}
+        onCreateCase={handleCreateCase}
+      />
+    </div>
   );
 };
 
