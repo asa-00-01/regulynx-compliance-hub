@@ -15,6 +15,7 @@ import { useAdvancedKYCFilters } from '@/hooks/useAdvancedKYCFilters';
 import KYCUserCard from './KYCUserCard';
 import KYCUserDetailsModal from './KYCUserDetailsModal';
 import KYCBulkActionsToolbar from './KYCBulkActionsToolbar';
+import { config } from '@/config/environment';
 
 const EnhancedKYCVerificationPage = () => {
   const { state } = useCompliance();
@@ -58,8 +59,8 @@ const EnhancedKYCVerificationPage = () => {
     setShowUserModal(true);
   };
 
-  // Show loading state if no users are loaded yet
-  if (state.users.length === 0) {
+  // Show loading state only in mock mode while mock users initialize
+  if (config.features.useMockData && state.users.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">

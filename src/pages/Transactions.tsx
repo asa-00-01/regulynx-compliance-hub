@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,9 @@ import {
   Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { config } from '@/config/environment';
+import type { Transaction } from '@/types/transaction';
+import { mockTransactionData } from '@/components/transactions/mockTransactionData';
 import { useTranslation } from 'react-i18next';
 
 const Transactions = () => {
@@ -30,53 +33,22 @@ const Transactions = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // Mock transaction data
-  const transactions = [
-    {
-      id: 'TXN-001',
-      userId: 'user-123',
-      userName: 'John Doe',
-      amount: 15000,
-      currency: 'USD',
-      type: 'deposit',
-      status: 'completed',
-      date: '2023-12-15T10:30:00Z',
-      description: 'Wire transfer deposit',
-      riskScore: 85,
-      flagged: true
-    },
-    {
-      id: 'TXN-002',
-      userId: 'user-456',
-      userName: 'Jane Smith',
-      amount: 2500,
-      currency: 'USD',
-      type: 'withdrawal',
-      status: 'pending',
-      date: '2023-12-15T09:15:00Z',
-      description: 'ACH withdrawal',
-      riskScore: 25,
-      flagged: false
-    },
-    {
-      id: 'TXN-003',
-      userId: 'user-789',
-      userName: 'Robert Johnson',
-      amount: 50000,
-      currency: 'USD',
-      type: 'deposit',
-      status: 'under_review',
-      date: '2023-12-14T16:45:00Z',
-      description: 'Large cash deposit',
-      riskScore: 95,
-      flagged: true
+  // Source transactions based on mock flag
+  const transactions: Transaction[] = useMemo(() => {
+    if (config.features.useMockData) {
+      return (mockTransactionData?.transactions ?? []) as Transaction[];
     }
-  ];
+    return [] as Transaction[];
+  }, []);
 
-  const filteredTransactions = transactions.filter(transaction => {
+  const filteredTransactions = transactions.filter((transaction) => {
     const searchMatch = transaction.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const statusMatch = statusFilter === 'all' || transaction.status === statusFilter;
+    const statusMatch =
+      statusFilter === 'all' ||
+      (statusFilter === 'under_review' && transaction.flagged) ||
+      (statusFilter === 'completed' && !transaction.flagged) ||
+      (statusFilter !== 'under_review' && statusFilter !== 'completed');
     const amountMatch = amountFilter === 'all' || 
                        (amountFilter === 'high' && transaction.amount >= 10000) ||
                        (amountFilter === 'medium' && transaction.amount >= 1000 && transaction.amount < 10000) ||
@@ -85,18 +57,11 @@ const Transactions = () => {
     return searchMatch && statusMatch && amountMatch;
   });
 
-  const handleViewTransaction = (transaction: any) => {
+  const handleViewTransaction = (transaction: Transaction) => {
     navigate('/aml-monitoring', { state: { transactionId: transaction.id } });
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'completed': return 'default';
-      case 'pending': return 'secondary';
-      case 'under_review': return 'destructive';
-      default: return 'outline';
-    }
-  };
+  const getStatusBadgeVariant = (isFlagged: boolean) => (isFlagged ? 'destructive' : 'default');
 
   const getRiskBadgeVariant = (score: number) => {
     if (score >= 80) return 'destructive';
@@ -257,10 +222,10 @@ const Transactions = () => {
                   <div className="font-medium">
                     ${transaction.amount.toLocaleString()} {transaction.currency}
                   </div>
-                  <div className="capitalize">{transaction.type}</div>
+                  <div className="capitalize">{transaction.method}</div>
                   <div>
-                    <Badge variant={getStatusBadgeVariant(transaction.status)}>
-                      {transaction.status.replace('_', ' ')}
+                    <Badge variant={getStatusBadgeVariant(transaction.flagged)}>
+                      {transaction.flagged ? t('transactions.flagged') : t('transactions.completed')}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2">

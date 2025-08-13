@@ -162,6 +162,22 @@ export class SupabasePlatformRoleService {
     }
   }
 
+  static async inviteOrAssignPlatformUser(email: string, role: PlatformRole): Promise<{ userId: string }> {
+    // First attempt to find profile; if exists, assign role
+    const existing = await this.findProfileByEmail(email);
+    if (existing) {
+      await this.assignPlatformRole(existing.id, role);
+      return { userId: existing.id };
+    }
+
+    // Otherwise, call Edge Function to create/invite and assign role with service key
+    const { data, error } = await supabase.functions.invoke('invite-platform-user', {
+      body: { email, role }
+    });
+    if (error) throw error;
+    return { userId: data.userId as string };
+  }
+
   static async removePlatformRole(userId: string, role: PlatformRole): Promise<void> {
     const { error } = await supabase
       .from('platform_roles')

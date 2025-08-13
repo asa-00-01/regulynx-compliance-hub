@@ -60,12 +60,8 @@ const PlatformUserManagement: React.FC = () => {
         return;
       }
       setLoading(true);
-      const profile = await SupabasePlatformRoleService.findProfileByEmail(inviteEmail);
-      if (!profile) {
-        toast({ title: 'User not found', description: 'No profile exists with that email' });
-        return;
-      }
-      await SupabasePlatformRoleService.assignPlatformRole(profile.id, assignRole);
+      // Invite or assign role if the user exists
+      await SupabasePlatformRoleService.inviteOrAssignPlatformUser(inviteEmail, assignRole);
       await loadUsers();
       setAddOpen(false);
       setInviteEmail('');

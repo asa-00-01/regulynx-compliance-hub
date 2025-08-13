@@ -94,7 +94,7 @@ const AppRoutes = () => {
           <Route path="/aml-monitoring" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/risk-analysis" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/sar-center" element={<Navigate to="/platform/dashboard" replace />} />
-          <Route path="/integration" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="/integration" element={<Navigate to="/platform/integration" replace />} />
           <Route path="/analytics" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/audit-logs" element={<Navigate to="/platform/dashboard" replace />} />
           <Route path="/users" element={<Navigate to="/platform/users" replace />} />
@@ -204,13 +204,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } />
           
-          <Route path="/integration" element={
-            <ProtectedRoute>
-              <CustomerLayout>
-                <Integration />
-              </CustomerLayout>
-            </ProtectedRoute>
-          } />
+          {/* Integration moved to Platform Console */}
           
           <Route path="/analytics" element={
             <ProtectedRoute>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { config } from '@/config/environment';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
 import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
@@ -27,20 +28,20 @@ const Dashboard = () => {
   const { t } = useTranslation();
   const { metrics, loading } = useDashboardData();
 
-  // Mock data for components that need it
-  const mockRiskScoreData = Array.from({ length: 30 }, (_, i) => ({
+  // Mock data for components that need it (only when mock mode is enabled)
+  const mockRiskScoreData = config.features.useMockData ? Array.from({ length: 30 }, (_, i) => ({
     date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
     score: Math.floor(Math.random() * 20) + 70
-  }));
+  })) : [];
 
-  const mockRiskDistributionData = [
+  const mockRiskDistributionData = config.features.useMockData ? [
     { name: 'Low Risk', value: 45, color: '#10B981' },
     { name: 'Medium Risk', value: 30, color: '#F59E0B' },
     { name: 'High Risk', value: 20, color: '#EF4444' },
     { name: 'Critical Risk', value: 5, color: '#DC2626' }
-  ];
+  ] : [];
 
-  const mockDocuments = [
+  const mockDocuments = config.features.useMockData ? [
     {
       id: '1',
       userId: 'user1',
@@ -57,9 +58,9 @@ const Dashboard = () => {
       uploadDate: new Date(Date.now() - 86400000).toISOString(),
       status: 'verified' as const,
     }
-  ];
+  ] : [];
 
-  const mockComplianceCases: ComplianceCaseDetails[] = [
+  const mockComplianceCases: ComplianceCaseDetails[] = config.features.useMockData ? [
     {
       id: '1',
       userId: 'user1',
@@ -79,15 +80,15 @@ const Dashboard = () => {
       relatedAlerts: [],
       documents: []
     }
-  ];
+  ] : [];
 
-  const mockComplianceMetrics = {
+  const mockComplianceMetrics = config.features.useMockData ? {
     totalTransactions: 12543,
     flaggedTransactions: 234,
     verifiedUsers: 8901,
     sanctionedUsers: 12,
     pepUsers: 45
-  };
+  } : undefined as unknown as typeof metrics;
 
   // Calculate additional metrics for the new cards
   const activeUsers = 1247;

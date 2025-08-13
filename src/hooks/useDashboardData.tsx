@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { DashboardMetrics, Document } from '@/types';
 import { DocumentStatus } from '@/types/supabase';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
+import { config } from '@/config/environment';
 
 export const useDashboardData = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -12,6 +13,19 @@ export const useDashboardData = () => {
   useEffect(() => {
     // Simulate API call delay
     const timer = setTimeout(() => {
+      if (!config.features.useMockData) {
+        setMetrics({
+          pendingDocuments: 0,
+          pendingKycReviews: 0,
+          activeAlerts: 0,
+          riskScoreTrend: [],
+          complianceCasesByType: { kyc: 0, aml: 0, sanctions: 0 }
+        });
+        setRecentDocuments([]);
+        setLoading(false);
+        return;
+      }
+
       // Use centralized mock data
       const allDocuments = unifiedMockData.flatMap(user => user.documents);
       
@@ -74,7 +88,7 @@ export const useDashboardData = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [config.features.useMockData]);
 
   return { metrics, recentDocuments, loading };
 };

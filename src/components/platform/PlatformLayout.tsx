@@ -12,7 +12,8 @@ import {
   Settings, 
   Code,
   LayoutDashboard,
-  LogOut 
+  LogOut,
+  Plug
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -44,6 +45,7 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
     { name: 'Customer Management', href: '/platform/management', icon: Building2 },
     { name: 'User Management', href: '/platform/users', icon: Users },
     { name: 'System Health', href: '/platform/system-health', icon: Activity },
+    { name: 'Integration', href: '/platform/integration', icon: Plug },
     { name: 'Billing & Revenue', href: '/platform/billing', icon: CreditCard },
     { name: 'Developer Tools', href: '/platform/developer-tools', icon: Code },
     { name: 'Platform Settings', href: '/platform/settings', icon: Settings },
