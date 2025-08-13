@@ -18,7 +18,7 @@ interface ComplianceMetrics {
 }
 
 interface ComplianceSummaryProps {
-  metrics: ComplianceMetrics;
+  metrics?: ComplianceMetrics;
   loading?: boolean;
 }
 
@@ -46,6 +46,18 @@ const ComplianceSummaryCard = ({ metrics, loading = false }: ComplianceSummaryPr
     );
   }
 
+  const safeMetrics: ComplianceMetrics = metrics ?? {
+    totalTransactions: 0,
+    flaggedTransactions: 0,
+    verifiedUsers: 0,
+    sanctionedUsers: 0,
+    pepUsers: 0,
+  };
+
+  const flaggedPct = safeMetrics.totalTransactions > 0
+    ? ((safeMetrics.flaggedTransactions / safeMetrics.totalTransactions) * 100).toFixed(1)
+    : '0.0';
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -60,7 +72,7 @@ const ComplianceSummaryCard = ({ metrics, loading = false }: ComplianceSummaryPr
               </div>
               <div className="ml-3 font-medium text-sm">Total Transactions</div>
             </div>
-            <div className="text-lg font-bold">{metrics.totalTransactions.toLocaleString()}</div>
+            <div className="text-lg font-bold">{safeMetrics.totalTransactions.toLocaleString()}</div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -71,9 +83,9 @@ const ComplianceSummaryCard = ({ metrics, loading = false }: ComplianceSummaryPr
               <div className="ml-3 font-medium text-sm">Flagged Transactions</div>
             </div>
             <div className="flex items-center">
-              <div className="text-lg font-bold">{metrics.flaggedTransactions.toLocaleString()}</div>
+              <div className="text-lg font-bold">{safeMetrics.flaggedTransactions.toLocaleString()}</div>
               <div className="ml-2 text-xs bg-red-100 text-red-700 rounded px-1.5 py-0.5">
-                {((metrics.flaggedTransactions / metrics.totalTransactions) * 100).toFixed(1)}%
+                {flaggedPct}%
               </div>
             </div>
           </div>
@@ -85,7 +97,7 @@ const ComplianceSummaryCard = ({ metrics, loading = false }: ComplianceSummaryPr
               </div>
               <div className="ml-3 font-medium text-sm">Verified Users</div>
             </div>
-            <div className="text-lg font-bold">{metrics.verifiedUsers.toLocaleString()}</div>
+            <div className="text-lg font-bold">{safeMetrics.verifiedUsers.toLocaleString()}</div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -96,9 +108,9 @@ const ComplianceSummaryCard = ({ metrics, loading = false }: ComplianceSummaryPr
               <div className="ml-3 font-medium text-sm">Sanctioned/PEP Users</div>
             </div>
             <div className="text-lg font-bold">
-              {(metrics.sanctionedUsers + metrics.pepUsers).toLocaleString()}
+              {(safeMetrics.sanctionedUsers + safeMetrics.pepUsers).toLocaleString()}
               <span className="ml-2 text-xs text-muted-foreground">
-                ({metrics.sanctionedUsers} / {metrics.pepUsers})
+                ({safeMetrics.sanctionedUsers} / {safeMetrics.pepUsers})
               </span>
             </div>
           </div>

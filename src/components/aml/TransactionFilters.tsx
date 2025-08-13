@@ -16,6 +16,7 @@ interface TransactionFiltersProps {
     method: string;
     riskLevel: string;
     country: string;
+    status: string;
     searchTerm: string;
   };
   onFilterChange: (filters: any) => void;
@@ -39,7 +40,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         <h3 className="font-medium">Transaction Filters</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* Search */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Search</label>
@@ -130,6 +131,27 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Status Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Status</label>
+          <Select
+            value={filters.status || 'all'}
+            onValueChange={(value) => updateFilter('status', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending Review</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="flagged">Flagged</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="under_investigation">Under Investigation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Date Range Filter */}
@@ -208,6 +230,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             method: '',
             riskLevel: '',
             country: '',
+            status: '',
             searchTerm: '',
           })}
         >

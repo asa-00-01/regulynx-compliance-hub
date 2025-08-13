@@ -64,7 +64,7 @@ const dataNavigation = [
 ];
 
 const systemNavigation = [
-  { name: 'Integration', href: '/integration', icon: Plug, description: 'API & integrations' },
+  { name: 'Integration', href: '/platform/integration', icon: Plug, description: 'API & integrations' },
   { 
     name: 'Users', 
     href: '/users', 

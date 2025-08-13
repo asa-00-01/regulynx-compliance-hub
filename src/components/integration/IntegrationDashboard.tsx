@@ -36,6 +36,7 @@ const IntegrationDashboard = () => {
     updateIntegrationConfig,
     createAPIKey,
     refreshData,
+    revokeAPIKey,
   } = useIntegrationManagement();
 
   const handleCreateConfig = () => {
@@ -130,7 +131,10 @@ const IntegrationDashboard = () => {
         <TabsContent value="configs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Integration Configurations</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Integration Configurations</CardTitle>
+                <Button variant="outline" size="sm" onClick={refreshData}>Refresh</Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -184,6 +188,10 @@ const IntegrationDashboard = () => {
             onClientSelect={setSelectedClientId}
             integrationConfigs={integrationConfigs}
             onCreateAPIKey={createAPIKey}
+            onRevokeAPIKey={async (keyId) => {
+              await revokeAPIKey(keyId);
+              await refreshData();
+            }}
           />
         </TabsContent>
 

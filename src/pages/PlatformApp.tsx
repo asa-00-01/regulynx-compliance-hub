@@ -10,6 +10,7 @@ import PlatformUserManagement from '@/components/platform/PlatformUserManagement
 import PlatformSystemHealth from '@/components/platform/PlatformSystemHealth';
 import PlatformBilling from '@/components/platform/PlatformBilling';
 import PlatformSettings from '@/components/platform/PlatformSettings';
+import Integration from '@/pages/Integration';
 import DeveloperTools from '@/pages/DeveloperTools';
 import Unauthorized from '@/pages/Unauthorized';
 
@@ -36,6 +37,7 @@ const PlatformApp: React.FC = () => {
       <Route path="/system-health" element={<PlatformSystemHealth />} />
       <Route path="/billing" element={<PlatformBilling />} />
       <Route path="/settings" element={<PlatformSettings />} />
+      <Route path="/integration" element={<Integration />} />
       <Route path="/developer-tools" element={<DeveloperTools />} />
       <Route path="*" element={<Navigate to="/platform/dashboard" replace />} />
     </Routes>

@@ -96,21 +96,30 @@ export const useKYCMonitoring = () => {
   const handleFlag = (customerId: string) => {
     const customer = pagination.currentData.find(c => c.id === customerId);
     if (customer) {
+      // In a real implementation, this would call an API to flag the customer
       console.log('Flagging customer:', customer.name);
+      // Update the customer's risk score or status
+      // This could trigger a notification to compliance officers
     }
   };
 
   const handleCreateCase = (customerId: string) => {
     const customer = pagination.currentData.find(c => c.id === customerId);
     if (customer) {
+      // In a real implementation, this would navigate to case creation with pre-filled data
       console.log('Creating case for customer:', customer.name);
+      // Navigate to case creation page with customer data
+      // window.location.href = `/compliance-cases?create=true&customerId=${customerId}`;
     }
   };
 
   const handleViewProfile = (customerId: string) => {
     const customer = pagination.currentData.find(c => c.id === customerId);
     if (customer) {
+      // In a real implementation, this would navigate to the customer's profile page
       console.log('Viewing profile for customer:', customer.name);
+      // Navigate to customer profile page
+      // window.location.href = `/customers/${customerId}`;
     }
   };
 

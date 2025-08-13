@@ -70,6 +70,15 @@ export class SupabasePlatformRoleService {
     };
   }
 
+  static async deleteCustomer(customerId: string): Promise<void> {
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', customerId);
+
+    if (error) throw error;
+  }
+
   // User management
   static async getCustomerUsers(customerId: string): Promise<ExtendedUserProfile[]> {
     const { data, error } = await supabase
@@ -113,6 +122,33 @@ export class SupabasePlatformRoleService {
   }
 
   // Platform role management
+  static async getPlatformUsers(): Promise<ExtendedUserProfile[]> {
+    // Get distinct user ids that have any platform role
+    const { data: roleRows, error: rolesError } = await supabase
+      .from('platform_roles')
+      .select('user_id')
+      .order('user_id');
+
+    if (rolesError) throw rolesError;
+    const userIds = Array.from(new Set((roleRows || []).map(r => r.user_id as string)));
+
+    if (userIds.length === 0) return [];
+
+    const profiles = await Promise.all(userIds.map((id) => this.getExtendedUserProfile(id)));
+    return profiles.filter((p): p is ExtendedUserProfile => Boolean(p));
+  }
+
+  static async findProfileByEmail(email: string): Promise<ExtendedUserProfile | null> {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('email', email)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!profile) return null;
+    return this.getExtendedUserProfile(profile.id);
+  }
   static async assignPlatformRole(userId: string, role: PlatformRole): Promise<void> {
     const { error } = await supabase
       .from('platform_roles')
@@ -124,6 +160,22 @@ export class SupabasePlatformRoleService {
     if (error && error.code !== '23505') { // Ignore duplicate key errors
       throw error;
     }
+  }
+
+  static async inviteOrAssignPlatformUser(email: string, role: PlatformRole): Promise<{ userId: string }> {
+    // First attempt to find profile; if exists, assign role
+    const existing = await this.findProfileByEmail(email);
+    if (existing) {
+      await this.assignPlatformRole(existing.id, role);
+      return { userId: existing.id };
+    }
+
+    // Otherwise, call Edge Function to create/invite and assign role with service key
+    const { data, error } = await supabase.functions.invoke('invite-platform-user', {
+      body: { email, role }
+    });
+    if (error) throw error;
+    return { userId: data.userId as string };
   }
 
   static async removePlatformRole(userId: string, role: PlatformRole): Promise<void> {

@@ -32,11 +32,11 @@ To build the Docker image, use the `docker build` command. You can pass environm
 
 **Example Production Build Command:**
 ```bash
-docker build -t your-app-name . \
+docker build -t regulynx . \
   --build-arg VITE_ENVIRONMENT="production" \
-  --build-arg VITE_APP_NAME="My Compliance App" \
-  --build-arg VITE_APP_DOMAIN="app.example.com" \
-  --build-arg VITE_SUPPORT_EMAIL="support@example.com" \
+  --build-arg VITE_APP_NAME="Regulynx Compliance Hub" \
+  --build-arg VITE_APP_DOMAIN="regulynx.nordmandi.com" \
+  --build-arg VITE_SUPPORT_EMAIL="support@regulynx.com" \
   --build-arg VITE_SUPABASE_URL="https://<your-project-ref>.supabase.co" \
   --build-arg VITE_SUPABASE_ANON_KEY="<your-supabase-anon-key>" \
   --build-arg VITE_LOG_LEVEL="error" \

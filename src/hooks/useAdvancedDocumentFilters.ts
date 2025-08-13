@@ -118,8 +118,98 @@ export const useAdvancedDocumentFilters = ({ documents }: UseAdvancedDocumentFil
     setSelectedDocuments([]);
   };
 
+  const exportData = () => {
+    const exportData = filteredDocuments.map(doc => ({
+      id: doc.id,
+      fileName: doc.file_name,
+      type: doc.type,
+      status: doc.status,
+      uploadDate: doc.upload_date,
+      userId: doc.user_id,
+      user: state.users.find(u => u.id === doc.user_id)?.fullName || 'Unknown User'
+    }));
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `documents-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: `Successfully exported ${exportData.length} documents.`
+    });
+  };
+
   const handleBulkAction = (action: string, data?: any) => {
     console.log('Bulk action:', action, 'on documents:', selectedDocuments, 'with data:', data);
+    
+    // Perform the selected bulk action
+    switch (action) {
+      case 'approve':
+        toast({
+          title: "Documents Approved",
+          description: `Successfully approved ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'reject':
+        toast({
+          title: "Documents Rejected",
+          description: `Successfully rejected ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'request_info':
+        toast({
+          title: "Information Requested",
+          description: `Information request sent for ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'send_notification':
+        toast({
+          title: "Notifications Sent",
+          description: `Notifications sent for ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'flag_review':
+        toast({
+          title: "Documents Flagged",
+          description: `Successfully flagged ${selectedDocuments.length} document(s) for review.`
+        });
+        break;
+      case 'export_selected':
+        const exportData = filteredDocuments
+          .filter(doc => selectedDocuments.includes(doc.id))
+          .map(doc => ({
+            id: doc.id,
+            fileName: doc.file_name,
+            type: doc.type,
+            status: doc.status,
+            uploadDate: doc.upload_date,
+            userId: doc.user_id,
+            user: state.users.find(u => u.id === doc.user_id)?.fullName || 'Unknown User'
+          }));
+        
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `selected-documents-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Documents Exported",
+          description: `Successfully exported ${selectedDocuments.length} document(s).`
+        });
+        break;
+      default:
+        toast({
+          title: "Action Completed",
+          description: `Successfully performed ${action} on ${selectedDocuments.length} document(s).`
+        });
+    }
     
     // Simulate bulk action processing
     setTimeout(() => {
@@ -129,43 +219,6 @@ export const useAdvancedDocumentFilters = ({ documents }: UseAdvancedDocumentFil
       });
       clearSelection();
     }, 1000);
-  };
-
-  const exportData = () => {
-    const dataToExport = filteredDocuments.map(document => {
-      const customer = state.users.find(u => u.id === document.user_id);
-      return {
-        id: document.id,
-        fileName: document.file_name,
-        type: document.type,
-        status: document.status,
-        customerName: customer?.fullName || 'Unknown',
-        customerEmail: customer?.email || 'Unknown',
-        uploadDate: document.upload_date,
-        verificationDate: document.verification_date || 'N/A'
-      };
-    });
-
-    // Create and download CSV
-    const csv = [
-      Object.keys(dataToExport[0] || {}).join(','),
-      ...dataToExport.map(row => Object.values(row).map(value => 
-        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-      ).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `documents-export-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-
-    toast({
-      title: "Export Completed",
-      description: "Document data has been exported to CSV file."
-    });
   };
 
   return {

@@ -37,6 +37,69 @@ const DocumentBulkActions: React.FC<DocumentBulkActionsProps> = ({
       return;
     }
 
+    // Perform the selected bulk action
+    switch (selectedAction) {
+      case 'approve':
+        toast({
+          title: "Documents Approved",
+          description: `Successfully approved ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'reject':
+        toast({
+          title: "Documents Rejected",
+          description: `Successfully rejected ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'request_info':
+        toast({
+          title: "Information Requested",
+          description: `Information request sent for ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'send_notification':
+        toast({
+          title: "Notifications Sent",
+          description: `Notifications sent for ${selectedDocuments.length} document(s).`
+        });
+        break;
+      case 'flag_review':
+        toast({
+          title: "Documents Flagged",
+          description: `Successfully flagged ${selectedDocuments.length} document(s) for review.`
+        });
+        break;
+      case 'export_selected':
+        // Export selected documents
+        const exportData = selectedDocumentObjects.map(doc => ({
+          id: doc.id,
+          fileName: doc.fileName,
+          type: doc.type,
+          status: doc.status,
+          uploadDate: doc.uploadDate,
+          userId: doc.userId
+        }));
+        
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `documents-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Documents Exported",
+          description: `Successfully exported ${selectedDocuments.length} document(s).`
+        });
+        break;
+      default:
+        toast({
+          title: "Action Completed",
+          description: `Successfully performed ${selectedAction} on ${selectedDocuments.length} document(s).`
+        });
+    }
+
     onBulkAction(selectedAction, actionData);
     setSelectedAction('');
     setActionData({});

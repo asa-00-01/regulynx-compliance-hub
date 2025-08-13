@@ -82,6 +82,9 @@ Regulynx is a modern, enterprise-grade compliance management system that combine
 - **Regulatory Reports**: Automated SAR, CTR, and other regulatory submissions
 
 #### Case Management System
+#### Platform Administration
+- Platform User Management: Add/edit platform users and assign platform roles (`platform_admin`, `platform_support`)
+- Customer Directory: Centralized customer listing with settings and user visibility
 - **Case Lifecycle Management**: From creation to resolution tracking
 - **Assignment & Escalation**: Intelligent case routing and escalation workflows
 - **Collaboration Tools**: Team collaboration features with secure communication
@@ -190,6 +193,12 @@ Regulynx follows a modern, scalable architecture pattern designed for enterprise
 - **Edge Functions**: Serverless functions for custom business logic
 - **Authentication**: Built-in user management with multiple providers
 - **Storage**: Secure file storage with automatic optimization
+
+##### Database Views & Functions
+- `user_with_customer` view: Joins `profiles`, `user_roles`, and `customers` to expose customer metadata with profiles
+- `get_current_user_with_customer()` function: Returns the authenticated user's profile and associated customer info
+- Profiles columns: `customer_name`, `customer_domain` for denormalized access
+- Unique constraint on `user_roles`: `(user_id, customer_id, role)`
 
 #### Security Layer
 - **Content Security Policy (CSP)**: XSS and injection attack prevention
@@ -405,6 +414,12 @@ VITE_SESSION_TIMEOUT="3600000"
 ```
 
 #### 3. Access the Application
+- #### 4. Database setup (Supabase CLI)
+
+```bash
+supabase migration up
+```
+
 
 - **Local Development**: http://localhost:8080
 - **Default Credentials**: Use mock authentication in development mode

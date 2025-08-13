@@ -4,6 +4,7 @@ import { mockTransactionData } from '@/components/transactions/mockTransactionDa
 import { mockUsers } from '@/components/users/mockUsersData';
 import { mockDocumentsCollection } from '@/mocks/centralizedMockData';
 import { mockComplianceCases } from '@/mocks/casesData';
+import { config } from '@/config/environment';
 import { Transaction } from '@/types/transaction';
 import { User, Document } from '@/types';
 import { ComplianceCaseDetails as Case } from '@/types/case';
@@ -34,8 +35,14 @@ export const useGlobalSearch = (term: string) => {
     setLoading(true);
     const lowerCaseTerm = term.toLowerCase();
 
-    // In a real app, this would be an API call.
-    // Here we filter mock data with a simulated delay.
+    // Respect feature flag: only use mock data when enabled
+    if (!config.features.useMockData) {
+      setResults({ transactions: [], users: [], documents: [], cases: [] });
+      setLoading(false);
+      return;
+    }
+
+    // In a real app, this would be an API call. Here we filter mock data with a simulated delay.
     const searchPromise = new Promise(resolve => {
         setTimeout(() => {
             const filteredTransactions = mockTransactionData.transactions.filter(t =>

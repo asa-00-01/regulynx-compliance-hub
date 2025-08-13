@@ -1,12 +1,12 @@
 
-import { useState, useMemo, useEffect } from 'react';
-import { Transaction } from '@/types/transaction';
+import { useState, useEffect, useMemo } from 'react';
+import { Transaction, TransactionAlert } from '@/types/transaction';
 import { TransactionFilters } from './types/transactionTypes';
 import { applyTransactionFilters } from './utils/transactionFilters';
 import { useTransactionMetrics } from './useTransactionMetrics';
 import { useAlertManagement } from './useAlertManagement';
 import { UnifiedDataService } from '@/services/unifiedDataService';
-import { config } from '@/config/environment';
+import config from '@/config/environment';
 
 // Re-export types for backward compatibility
 export type { DateRange, TransactionFilters } from './types/transactionTypes';
@@ -17,7 +17,7 @@ export type { DateRange, TransactionFilters } from './types/transactionTypes';
  */
 export function useTransactionData() {
   const [transactionsList, setTransactionsList] = useState<Transaction[]>([]);
-  const [alertsList, setAlertsList] = useState<any[]>([]);
+  const [alertsList, setAlertsList] = useState<TransactionAlert[]>([]);
   const [currentFilters, setCurrentFilters] = useState<TransactionFilters>({
     dateRange: '30days',
     onlyFlagged: false
@@ -75,6 +75,64 @@ export function useTransactionData() {
     dismissAlert
   } = useAlertManagement(alertsList);
 
+  // Alert management functions
+  const acknowledgeAlert = async (alertId: string) => {
+    try {
+      // In a real implementation, this would call an API to acknowledge the alert
+      console.log('Acknowledging alert:', alertId);
+      
+      // Update local state - use 'investigating' status instead of 'acknowledged'
+      setAlertsList(prev => prev.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: 'investigating' as const }
+          : alert
+      ));
+      
+      return true;
+    } catch (error) {
+      console.error('Error acknowledging alert:', error);
+      return false;
+    }
+  };
+
+  const resolveAlert = async (alertId: string, resolution: string) => {
+    try {
+      // In a real implementation, this would call an API to resolve the alert
+      console.log('Resolving alert:', alertId, 'with resolution:', resolution);
+      
+      // Update local state - use 'closed' status instead of 'resolved'
+      setAlertsList(prev => prev.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: 'closed' as const }
+          : alert
+      ));
+      
+      return true;
+    } catch (error) {
+      console.error('Error resolving alert:', error);
+      return false;
+    }
+  };
+
+  const escalateAlert = async (alertId: string, escalationReason: string) => {
+    try {
+      // In a real implementation, this would call an API to escalate the alert
+      console.log('Escalating alert:', alertId, 'with reason:', escalationReason);
+      
+      // Update local state - use 'investigating' status instead of 'escalated'
+      setAlertsList(prev => prev.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: 'investigating' as const }
+          : alert
+      ));
+      
+      return true;
+    } catch (error) {
+      console.error('Error escalating alert:', error);
+      return false;
+    }
+  };
+
   return {
     transactions: transactionsList,
     filteredTransactions: filteredTransactionsList,
@@ -87,6 +145,9 @@ export function useTransactionData() {
     addAlertNote,
     createCaseFromAlert,
     dismissAlert,
+    acknowledgeAlert,
+    resolveAlert,
+    escalateAlert,
     dataSource: UnifiedDataService.getCurrentDataSource(),
     isMockMode: config.features.useMockData,
   };
