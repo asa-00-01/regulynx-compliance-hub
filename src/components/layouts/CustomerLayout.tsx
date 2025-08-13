@@ -111,10 +111,10 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           <SidebarHeader className="border-b border-border">
             <div className="p-2">
               <h1 className="text-xl font-bold text-foreground" data-testid="customer-header">
-                Compliance Hub
+                {user?.customer?.name || 'Customer Organization'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {user?.customer?.name || 'Customer Portal'}
+                Regulynx Compliance Hub
               </p>
             </div>
           </SidebarHeader>
@@ -180,7 +180,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Compliance Dashboard</h2>
               <p className="text-xs text-muted-foreground">
-                {user?.customer?.name || 'Customer Portal'}
+                {user?.customer?.name || 'Customer Organization'}
               </p>
             </div>
           </header>
