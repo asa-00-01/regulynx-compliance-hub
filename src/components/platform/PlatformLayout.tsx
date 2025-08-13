@@ -51,7 +51,7 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background" data-testid="platform-layout">
         <Sidebar className="border-r border-border">
           <SidebarHeader className="border-b border-border p-4">
             <div className="space-y-1">
@@ -116,7 +116,7 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
 
         <SidebarInset className="flex-1">
           {/* Header */}
-          <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+          <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6" data-testid="platform-header">
             <SidebarTrigger className="-ml-2" />
             <div className="flex items-center gap-2 flex-1">
               <div className="h-6 w-px bg-border" />
@@ -128,7 +128,7 @@ const PlatformLayout: React.FC<PlatformLayoutProps> = ({ children }) => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6" data-testid="platform-main">
             <div className="mx-auto max-w-7xl">
               {children}
             </div>

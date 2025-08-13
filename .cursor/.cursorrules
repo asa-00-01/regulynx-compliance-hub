@@ -1,0 +1,192 @@
+# Cursor Development Rules & AI Collaboration Guide — Regulynx Compliance Hub
+
+## 📜 Core Philosophy
+1. **Simplicity & Clarity:** Prefer small, composable changes over large rewrites. Optimize for readability and maintainability.
+2. **Separation of Concerns:** Strictly separate **Customer (Subscriber) area** from **Platform Management** area in code, routing, and UI.
+3. **Security by Default:** Treat compliance data as sensitive. Validate inputs, avoid unsafe DOM operations, and restrict access everywhere.
+4. **Test What Matters:** Write tests for business rules, role access, and core flows before/after changes.
+5. **Iterate with Evidence:** Make incremental changes, measure impact, and document outcomes in status notes/PRs.
+
+---
+
+## 🧭 Project Context
+- **Product:** Regulynx Compliance Hub — a dual‑area compliance platform.
+- **User Groups:**
+  - **Platform Subscribers (Customer side):** `customer_admin`, `customer_compliance`, `customer_support`, `executive`.
+  - **Platform Management (Owner side):** `platform_admin`, `owner`.
+- **Key Domains:** KYC, AML monitoring, Case management, Risk scoring, SAR, Audit logs, Multi‑tenant RBAC.
+- **Tech Stack:** React 18 + TypeScript, Vite, Tailwind, React Router v6, TanStack Query v5, RHF + Zod, shadcn/ui + Radix, Recharts; Supabase (Auth, DB, storage).
+
+**Always read**: `APPLICATION_DEVELOPMENT_INSTRUCTIONS.md` before starting a task.
+
+---
+
+## 🏗️ Architecture Guardrails
+1. **Two Distinct App Areas**
+   - **Customer Area (Subscribers)**
+     - **Layout:** `CustomerLayout` = `Sidebar + Header + <main/>`
+     - **Routes:** `"/dashboard/*"` (and other customer features)
+     - **Allowed roles:** `customer_admin`, `customer_compliance`, `customer_support`, `executive`
+   - **Management Area (Platform)**
+     - **Layout:** `ManagementLayout` wraps pages in `DashboardShell` (shell provides its own header + nav)
+     - **Routes:** `"/platform/*"`
+     - **Allowed roles:** `platform_admin`, `owner`
+2. **Never Mix Layouts:** Page components must not import `Sidebar`, `Header`, or `DashboardShell` directly. Layouts own navigation.
+3. **Shared Components:** Put only truly shared UI into `components/common`. Platform‑specific UI goes in `components/platform`, customer‑specific UI in `components/compliance` or area‑scoped folders.
+4. **Service Layer:** Use domain services under `src/services` with clear interfaces and typed DTOs. Prefer hooks that wrap services (`useAMLTransactions`, `useComplianceUsers`, etc.).
+5. **Feature Flags / Env:** Use `VITE_...` flags; mock data is allowed in development only.
+
+---
+
+## 🔐 Authentication & RBAC (Must‑Follow)
+1. **Centralize Roles**
+   ```ts
+   // src/lib/auth/roles.ts
+   export const SUBSCRIBER_ROLES = ["customer_admin","customer_compliance","customer_support","executive"] as const;
+   export const MANAGEMENT_ROLES = ["platform_admin","owner"] as const;
+   export type Role = typeof SUBSCRIBER_ROLES[number] | typeof MANAGEMENT_ROLES[number];
+   export const isSubscriberRole = (r?: string) => !!r && SUBSCRIBER_ROLES.includes(r as Role);
+   export const isManagementRole = (r?: string) => !!r && MANAGEMENT_ROLES.includes(r as Role);
+   ```
+2. **Protect Routes (React Router)**
+   ```tsx
+   // AppRoutes
+   <Routes>
+     <Route path="/dashboard/*" element={
+       <ProtectedRoute allowedRoles={SUBSCRIBER_ROLES}>
+         <CustomerLayout><CustomerRoutes/></CustomerLayout>
+       </ProtectedRoute>
+     }/>
+     <Route path="/platform/*" element={
+       <ProtectedRoute allowedRoles={MANAGEMENT_ROLES}>
+         <ManagementLayout><PlatformRoutes/></ManagementLayout>
+       </ProtectedRoute>
+     }/>
+   </Routes>
+   ```
+3. **ProtectedRoute Contract**
+   - Redirect unauthenticated → `/login`
+   - Redirect unauthorized → `/unauthorized`
+   - No flashing wrong layout during loading.
+
+**Goal:** A subscriber should **never** see `DashboardShell`. A management user should **never** see `Sidebar + Header`.
+
+---
+
+## 🧩 Layout Contracts
+- `CustomerLayout`: renders `Sidebar`, `Header`, `main` and nothing else.
+- `ManagementLayout`: renders `<DashboardShell>{children}</DashboardShell>` (shell owns header + nav).
+- **Data‑test IDs:** Add `data-testid="customer-header"`, `data-testid="customer-sidebar"`, `data-testid="shell-root"` to enable E2E assertions against cross‑contamination.
+
+---
+
+## 📦 File & Folder Structure (enforced)
+```
+src/
+  components/
+    common/           # Truly shared (Header, Sidebar for customer lives in common/Sidebar; shell is platform/*)
+    compliance/       # Customer-side features
+    platform/         # Management-side features (DashboardShell, admin UIs)
+    layouts/
+      CustomerLayout/
+      ManagementLayout/
+    ui/               # shadcn/ui wrappers
+  pages/              # Route components (thin; content-only, no layout imports)
+  hooks/              # useAMLTransactions, useComplianceUsers, etc.
+  context/            # AuthContext, ComplianceContext
+  services/           # Domain services (AMLService, GoAMLService, AnalyticsService, AuditLogger, etc.)
+  types/              # DTOs and domain types
+  utils/              # Helpers
+  config/             # env, feature flags
+  i18n/               # translations (if used)
+  styles/             # global styles
+```
+**Rule:** Pages must be presentation‑only. Business logic stays in hooks/services.
+
+---
+
+## 🧪 Testing Rules
+1. **Unit:** Components, hooks, and services with Vitest + Testing Library.
+2. **Integration:** Layout + route guards + data hooks.
+3. **E2E Focused Assertions:** 
+   - Subscriber route never contains `data-testid="shell-root"`.
+   - Management route never contains `data-testid="customer-header"`.
+4. **Mocking:** Use MSW for API mocking; TanStack Query configured with test cache.
+5. **Test Organization:** Mirror `src/` structure in `__tests__` folders.
+
+---
+
+## 🛡️ Security & Compliance
+1. **Sanitize & Validate:** Zod schemas on all user inputs; sanitize any HTML (DOMPurify) if rendering.
+2. **Least Privilege:** Use server/edge checks when possible; client checks are additive, not authoritative.
+3. **Sensitive Data:** Nothing sensitive in `localStorage`. Prefer memory or secure cookies via Supabase session.
+4. **Audit Logging:** Use `AuditLogger` for important actions (login, role change, approval/denial, SAR generation).
+5. **Error Boundaries:** Never leak stack traces with sensitive details to users; log via secure channel.
+
+---
+
+## ⚙️ Code Style & Quality
+1. **TypeScript First:** Strict types; no `any` in PRs unless justified.
+2. **React Patterns:**
+   - Functional components + hooks.
+   - Keep components pure; side effects in hooks.
+   - Memoize expensive computations and stable callbacks.
+3. **Styling:** Tailwind with semantic tokens. Avoid raw color literals; prefer `bg-background`, etc.
+4. **Accessibility:** Follow WCAG; use Radix primitives and proper aria attributes.
+5. **Lint & Format:** ESLint + Prettier on commit.
+
+---
+
+## 🔁 Workflow & Prompts (for Cursor & AI)
+1. **Before You Code**
+   - Read `APPLICATION_DEVELOPMENT_INSTRUCTIONS.md`.
+   - Identify the area: **Customer** or **Management**. Confirm allowed roles.
+   - Locate target files; outline the smallest possible change.
+2. **While Coding**
+   - Keep diffs small and isolated to one concern.
+   - Do not introduce cross‑area imports.
+   - Add/update tests in the same PR.
+3. **Commit Messages**
+   - `feat(customer): add SAR filters by risk band`
+   - `fix(platform): enforce role guard in /platform/users`
+   - `refactor(common): extract audit log table columns`
+4. **AI Prompts (examples)**
+   - “Update `ProtectedRoute` so subscribers never see `DashboardShell` and add tests for both areas.”
+   - “Implement `useAMLTransactions` with TanStack Query v5 and typed filters.”
+   - “Add Zod validation for KYC form, show RHF errors, and write unit tests.”
+
+---
+
+## 📈 Performance & DX
+1. **TanStack Query:** Set `staleTime` and sensible cache keys; avoid over‑fetching.
+2. **Code Splitting:** Lazy‑load heavy pages (analytics, charts).
+3. **Recharts:** Keep charts isolated; prefer memoized datasets.
+4. **Dev Tools:** Enable React Query DevTools in development; feature‑flag heavy mock UIs.
+5. **Bundle Care:** Tree‑shake imports from shadcn/ui and lucide‑react.
+
+---
+
+## 🚨 Common Pitfalls (and what to do)
+- **Duplicate nav/header:** Remove layout components from pages; assert with E2E tests.
+- **Unauthorized access:** Re-check role mapping; add route guard tests.
+- **Infinite re-renders:** Check hook deps; memoize callbacks/selectors.
+- **Stale data:** Configure `staleTime` and query keys accurately; invalidate on mutations.
+
+---
+
+## ✅ Definition of Done (per task)
+- Layout & role rules respected (no cross‑area UI).
+- Types safe; lints pass; unit/integration tests added.
+- If user-facing: accessibility and error states covered.
+- Docs/notes updated where relevant (e.g., README, status).
+
+---
+
+## 📂 Quick References
+- **App Doc:** `APPLICATION_DEVELOPMENT_INSTRUCTIONS.md`
+- **Layouts:** `components/layouts/{CustomerLayout,ManagementLayout}`
+- **RBAC:** `lib/auth/roles.ts`, `components/common/ProtectedRoute.tsx`
+- **Services:** `src/services/*`
+- **Testing:** `Vitest`, `Testing Library`, `MSW`
+
+Bra jobbat! Keep the two worlds separate, keep the code clean, and ship small, safe changes.

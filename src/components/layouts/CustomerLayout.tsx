@@ -106,7 +106,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full" data-testid="customer-layout">
         <Sidebar>
           <SidebarHeader className="border-b border-border">
             <div className="p-2">
@@ -186,7 +186,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-6" data-testid="customer-main">
             {children}
           </main>
         </SidebarInset>

@@ -1,15 +1,16 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Customer } from '@/types/platform-roles';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
+import { Customer } from '@/types/platform-roles';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, Save, AlertTriangle } from 'lucide-react';
 
@@ -59,21 +60,42 @@ export function CustomerSettingsDialog({ customer, open, onOpenChange }: Custome
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSettingsChange = (field: string, value: any) => {
+  const handleSettingsChange = (key: string, value: string | boolean | number) => {
     setFormData(prev => ({
       ...prev,
       settings: {
         ...prev.settings,
-        [field]: value
+        [key]: value
       }
     }));
+  };
+
+  const handleDeleteCustomer = async () => {
+    try {
+      setLoading(true);
+      await SupabasePlatformRoleService.deleteCustomer(customer.id);
+      toast({
+        title: "Success",
+        description: "Customer deleted successfully"
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete customer",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -281,11 +303,38 @@ export function CustomerSettingsDialog({ customer, open, onOpenChange }: Custome
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="destructive" disabled>
-                Delete Customer
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    Delete Customer
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{customer.name}"? This action cannot be undone and will:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Remove all customer data and settings</li>
+                        <li>Delete all associated users and their data</li>
+                        <li>Cancel any active subscriptions</li>
+                        <li>Remove access to all compliance features</li>
+                      </ul>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteCustomer}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Customer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <p className="text-xs text-muted-foreground mt-2">
-                Customer deletion is not yet implemented
+                This action will permanently delete the customer and all associated data.
               </p>
             </CardContent>
           </Card>

@@ -9,12 +9,12 @@ These environment variables **MUST** be configured for production deployment:
 
 ```bash
 # App Configuration (Required)
-VITE_APP_NAME="Your Compliance System Name"
+VITE_APP_NAME="Regulynx Compliance Hub"
 VITE_APP_VERSION="1.0.0"
 VITE_ENVIRONMENT="production"
 VITE_APP_DOMAIN="your-domain.com"
 VITE_SUPPORT_EMAIL="support@your-domain.com"
-VITE_COMPANY_NAME="Your Company Name"
+VITE_COMPANY_NAME="Nordmind Interactive"
 
 # Security Configuration (Critical)
 VITE_ENABLE_CSP="true"

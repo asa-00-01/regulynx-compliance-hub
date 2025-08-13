@@ -3,17 +3,28 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, FileText, Users } from 'lucide-react';
 
 const AnalyticsEnabledActions: React.FC = () => {
   const { trackAction, trackCompliance, reportError } = useAnalytics();
+  const navigate = useNavigate();
 
   const handleCreateCase = async () => {
     try {
       trackCompliance('case_creation_started');
       
-      // Simulate case creation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Navigate to case creation page
+      navigate('/compliance-cases', { 
+        state: { 
+          createCase: true,
+          caseData: {
+            type: 'aml_investigation',
+            priority: 'high',
+            source: 'analytics_dashboard'
+          }
+        } 
+      });
       
       trackCompliance('case_creation_completed', {
         case_type: 'aml_investigation',
@@ -37,6 +48,9 @@ const AnalyticsEnabledActions: React.FC = () => {
     trackAction('run_risk_assessment', {
       assessment_type: 'customer_due_diligence',
     });
+    
+    // Navigate to risk analysis page
+    navigate('/risk-analysis');
   };
 
   const handleGenerateReport = () => {
@@ -45,12 +59,19 @@ const AnalyticsEnabledActions: React.FC = () => {
       format: 'pdf',
     });
     trackAction('generate_report');
+    
+    // In a real implementation, this would trigger report generation
+    // For now, navigate to analytics page
+    navigate('/analytics');
   };
 
   const handleViewUserProfiles = () => {
     trackAction('view_user_profiles', {
       filter: 'high_risk',
     });
+    
+    // Navigate to users page with high-risk filter
+    navigate('/users?filter=high_risk');
   };
 
   return (

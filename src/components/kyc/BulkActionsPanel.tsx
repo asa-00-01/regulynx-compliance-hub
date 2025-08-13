@@ -34,6 +34,51 @@ const BulkActionsPanel: React.FC<BulkActionsPanelProps> = ({
       return;
     }
 
+    // Perform the selected bulk action
+    switch (selectedAction) {
+      case 'verify':
+        toast({
+          title: "KYC Verified",
+          description: `Successfully verified KYC for ${selectedUsers.length} user(s).`
+        });
+        break;
+      case 'reject':
+        toast({
+          title: "KYC Rejected",
+          description: `Successfully rejected KYC for ${selectedUsers.length} user(s).`
+        });
+        break;
+      case 'request_info':
+        toast({
+          title: "Information Requested",
+          description: `Information request sent to ${selectedUsers.length} user(s).`
+        });
+        break;
+      case 'send_email':
+        toast({
+          title: "Emails Sent",
+          description: `Emails sent to ${selectedUsers.length} user(s).`
+        });
+        break;
+      case 'flag_review':
+        toast({
+          title: "Users Flagged",
+          description: `Successfully flagged ${selectedUsers.length} user(s) for review.`
+        });
+        break;
+      case 'assign_case':
+        toast({
+          title: "Case Assignment",
+          description: `Successfully assigned ${selectedUsers.length} user(s) to cases.`
+        });
+        break;
+      default:
+        toast({
+          title: "Action Completed",
+          description: `Successfully performed ${selectedAction} on ${selectedUsers.length} user(s).`
+        });
+    }
+
     onBulkAction(selectedAction, actionData);
     setSelectedAction('');
     setActionData({});
