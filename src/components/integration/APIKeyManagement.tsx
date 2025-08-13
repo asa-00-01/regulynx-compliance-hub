@@ -17,6 +17,7 @@ interface APIKeyManagementProps {
   onClientSelect: (clientId: string | null) => void;
   integrationConfigs: IntegrationConfig[];
   onCreateAPIKey: (apiKey: Omit<IntegrationAPIKey, 'id' | 'createdAt'>) => Promise<IntegrationAPIKey>;
+  onRevokeAPIKey?: (keyId: string) => Promise<void>;
 }
 
 const APIKeyManagement = ({ 
@@ -24,7 +25,8 @@ const APIKeyManagement = ({
   selectedClientId, 
   onClientSelect, 
   integrationConfigs, 
-  onCreateAPIKey 
+  onCreateAPIKey,
+  onRevokeAPIKey 
 }: APIKeyManagementProps) => {
   const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false);
   const [revokingKeyId, setRevokingKeyId] = useState<string | null>(null);
@@ -45,9 +47,11 @@ const APIKeyManagement = ({
   const handleRevokeKey = async (keyId: string) => {
     try {
       setRevokingKeyId(keyId);
-      // In a real implementation, you would call an API to revoke the key
-      // For now, we'll just show a success message
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      if (onRevokeAPIKey) {
+        await onRevokeAPIKey(keyId);
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
       
       toast({
         title: 'Success',
