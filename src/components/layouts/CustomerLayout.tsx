@@ -74,7 +74,6 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     { name: 'AML Monitoring', href: '/aml-monitoring', icon: AlertTriangle },
     { name: 'Risk Analysis', href: '/risk-analysis', icon: TrendingUp },
     { name: 'SAR Center', href: '/sar-center', icon: Database },
-    { name: 'Integration', href: '/integration', icon: Database },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Audit Logs', href: '/audit-logs', icon: History },
     { name: 'Users', href: '/users', icon: Users },
