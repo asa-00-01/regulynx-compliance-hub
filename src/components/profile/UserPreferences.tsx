@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme-provider';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useDataExport } from '@/hooks/useDataExport';
 
@@ -27,7 +27,7 @@ const UserPreferences = () => {
   };
 
   const handleThemeChange = (value: string) => {
-    setTheme(value);
+    setTheme(value as 'light' | 'dark' | 'system');
     toast.success(`Theme changed to ${value}`);
   };
 
