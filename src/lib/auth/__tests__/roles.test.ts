@@ -31,7 +31,7 @@ const ownerUser: ExtendedUserProfile = {
   name: 'Owner User',
   role: 'owner',
   customer_roles: [],
-  platform_roles: ['owner'],
+  platform_roles: [], // Owner doesn't need platform_roles array since isPlatformOwner is true
   isPlatformOwner: true,
   risk_score: 0,
   status: 'verified',
