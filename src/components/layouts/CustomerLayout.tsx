@@ -63,6 +63,9 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     );
   }
 
+  // Check if user is compliance officer
+  const isComplianceOfficer = user?.customer_roles?.includes('customer_compliance') || user?.role === 'complianceOfficer';
+
   // Customer-specific navigation (compliance focused)
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -80,8 +83,11 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     { name: 'Profile', href: '/profile', icon: User },
     { name: 'AI Agent', href: '/ai-agent', icon: Bot },
     { name: 'News', href: '/news', icon: Newspaper },
-    { name: 'Optimization', href: '/optimization', icon: Zap },
-    { name: 'Developer Tools', href: '/developer-tools', icon: Code },
+    // Restrict these items from compliance officers
+    ...(isComplianceOfficer ? [] : [
+      { name: 'Optimization', href: '/optimization', icon: Zap },
+      { name: 'Developer Tools', href: '/developer-tools', icon: Code },
+    ]),
   ];
 
   // Helper function to get user role display name for customer users
