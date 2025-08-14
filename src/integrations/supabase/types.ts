@@ -756,6 +756,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "organization_customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "organization_customers_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1201,9 +1208,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_with_customer: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          customer_domain: string | null
+          customer_full_name: string | null
+          customer_id: string | null
+          customer_settings: Json | null
+          email: string | null
+          id: string | null
+          name: string | null
+          risk_score: number | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          status: Database["public"]["Enums"]["user_status"] | null
+          subscription_tier: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_current_user_with_customer: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          email: string
+          role: Database["public"]["Enums"]["user_role"]
+          customer_id: string
+          customer_full_name: string
+          customer_domain: string
+          subscription_tier: string
+        }[]
+      }
       get_user_customer_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["customer_role"][]
