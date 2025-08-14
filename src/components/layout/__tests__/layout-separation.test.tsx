@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,19 +6,17 @@ import AppRoutes from '@/components/app/AppRoutes';
 import { AuthProvider } from '@/context/AuthContext';
 
 // Mock the auth context to simulate different user types
-const mockAuthContext = {
-  user: null,
-  loading: false,
-  authLoaded: true,
-  isAuthenticated: false,
-  login: vi.fn(),
-  logout: vi.fn(),
-  signup: vi.fn(),
-  canAccess: vi.fn(),
-  session: null,
-  updateUserProfile: vi.fn(),
-  refreshUserProfile: vi.fn(),
-};
+vi.mock('@/context/AuthContext', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: vi.fn()
+}));
+
+const mockUseAuth = vi.mocked(vi.fn());
+
+beforeEach(() => {
+  // Reset mocks before each test
+  mockUseAuth.mockReset();
+});
 
 // Create a test wrapper with providers
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -62,8 +60,19 @@ describe('Layout Separation E2E Tests', () => {
           const mockUser = createMockUser(role);
           
           // Mock the auth context to return the subscriber user
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           render(
             <TestWrapper>
@@ -85,8 +94,19 @@ describe('Layout Separation E2E Tests', () => {
         it(`should be redirected to customer dashboard when accessing root`, () => {
           const mockUser = createMockUser(role);
           
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           render(
             <TestWrapper>
@@ -101,8 +121,19 @@ describe('Layout Separation E2E Tests', () => {
         it(`should be denied access to platform routes`, () => {
           const mockUser = createMockUser(role);
           
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           // Navigate to platform route
           window.history.pushState({}, '', '/platform/dashboard');
@@ -131,8 +162,19 @@ describe('Layout Separation E2E Tests', () => {
             isPlatformOwner: role === 'owner',
           });
           
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           render(
             <TestWrapper>
@@ -157,8 +199,19 @@ describe('Layout Separation E2E Tests', () => {
             isPlatformOwner: role === 'owner',
           });
           
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           render(
             <TestWrapper>
@@ -176,8 +229,19 @@ describe('Layout Separation E2E Tests', () => {
             isPlatformOwner: role === 'owner',
           });
           
-          vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-          vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+          mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            authLoaded: true,
+            isAuthenticated: true,
+            login: vi.fn(),
+            logout: vi.fn(),
+            signup: vi.fn(),
+            canAccess: vi.fn(),
+            session: null,
+            updateUserProfile: vi.fn(),
+            refreshUserProfile: vi.fn(),
+          });
 
           // Navigate to customer route
           window.history.pushState({}, '', '/dashboard');
@@ -201,8 +265,19 @@ describe('Layout Separation E2E Tests', () => {
         isPlatformOwner: true,
       });
       
-      vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-      vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+      mockUseAuth.mockReturnValue({
+        user: mockUser,
+        loading: false,
+        authLoaded: true,
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        signup: vi.fn(),
+        canAccess: vi.fn(),
+        session: null,
+        updateUserProfile: vi.fn(),
+        refreshUserProfile: vi.fn(),
+      });
 
       render(
         <TestWrapper>
@@ -224,8 +299,19 @@ describe('Layout Separation E2E Tests', () => {
 
   describe('Unauthenticated Users', () => {
     it('should be redirected to login page', () => {
-      vi.mocked(mockAuthContext.user).mockReturnValue(null);
-      vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(false);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        authLoaded: true,
+        isAuthenticated: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        signup: vi.fn(),
+        canAccess: vi.fn(),
+        session: null,
+        updateUserProfile: vi.fn(),
+        refreshUserProfile: vi.fn(),
+      });
 
       render(
         <TestWrapper>
@@ -238,8 +324,19 @@ describe('Layout Separation E2E Tests', () => {
     });
 
     it('should not see any layout elements', () => {
-      vi.mocked(mockAuthContext.user).mockReturnValue(null);
-      vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(false);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        authLoaded: true,
+        isAuthenticated: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        signup: vi.fn(),
+        canAccess: vi.fn(),
+        session: null,
+        updateUserProfile: vi.fn(),
+        refreshUserProfile: vi.fn(),
+      });
 
       render(
         <TestWrapper>
@@ -257,8 +354,19 @@ describe('Layout Separation E2E Tests', () => {
     it('should be denied access to both areas', () => {
       const mockUser = createMockUser('invalid_role');
       
-      vi.mocked(mockAuthContext.user).mockReturnValue(mockUser);
-      vi.mocked(mockAuthContext.isAuthenticated).mockReturnValue(true);
+      mockUseAuth.mockReturnValue({
+        user: mockUser,
+        loading: false,
+        authLoaded: true,
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        signup: vi.fn(),
+        canAccess: vi.fn(),
+        session: null,
+        updateUserProfile: vi.fn(),
+        refreshUserProfile: vi.fn(),
+      });
 
       render(
         <TestWrapper>

@@ -70,14 +70,14 @@ const DocumentBulkActions: React.FC<DocumentBulkActionsProps> = ({
         });
         break;
       case 'export_selected':
-        // Export selected documents
+        // Export selected documents - use correct property names
         const exportData = selectedDocumentObjects.map(doc => ({
           id: doc.id,
-          fileName: doc.fileName,
+          fileName: doc.file_name, // Use snake_case property
           type: doc.type,
           status: doc.status,
-          uploadDate: doc.uploadDate,
-          userId: doc.userId
+          uploadDate: doc.upload_date, // Use snake_case property
+          userId: doc.user_id // Use snake_case property
         }));
         
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });

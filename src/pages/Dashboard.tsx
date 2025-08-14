@@ -1,212 +1,150 @@
 import React from 'react';
-import { config } from '@/config/environment';
-import { useDashboardData } from '@/hooks/useDashboardData';
-import RecentDocumentsTable from '@/components/dashboard/RecentDocumentsTable';
-import RiskScoreChart from '@/components/dashboard/RiskScoreChart';
-import ComplianceCasesCard from '@/components/dashboard/ComplianceCasesCard';
-import PerformanceOverviewCard from '@/components/dashboard/PerformanceOverviewCard';
-import DashboardMetricsCard from '@/components/dashboard/DashboardMetricsCard';
-import ComplianceSummaryCard from '@/components/dashboard/ComplianceSummaryCard';
-import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from 'react-i18next';
-import { ComplianceCaseDetails } from '@/types/case';
-import { 
-  FileText, 
-  AlertTriangle, 
-  Users, 
-  Shield, 
-  Clock, 
-  CheckCircle,
-  TrendingUp,
-  Activity
-} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useCompliance } from '@/context/ComplianceContext';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { AlertTriangle, Users, FileText, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const Dashboard = () => {
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const { metrics, loading } = useDashboardData();
+// Define ComplianceMetrics type to match what the component expects
+interface ComplianceMetrics {
+  totalTransactions: number;
+  flaggedTransactions: number;
+  verifiedUsers: number;
+  sanctionedUsers: number;
+  pepUsers: number;
+}
 
-  // Mock data for components that need it (only when mock mode is enabled)
-  const mockRiskScoreData = config.features.useMockData ? Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
-    score: Math.floor(Math.random() * 20) + 70
-  })) : [];
+const Dashboard: React.FC = () => {
+  const { state } = useCompliance();
+  const { metrics: dashboardMetrics, recentDocuments, loading } = useDashboardData();
 
-  const mockRiskDistributionData = config.features.useMockData ? [
-    { name: 'Low Risk', value: 45, color: '#10B981' },
-    { name: 'Medium Risk', value: 30, color: '#F59E0B' },
-    { name: 'High Risk', value: 20, color: '#EF4444' },
-    { name: 'Critical Risk', value: 5, color: '#DC2626' }
-  ] : [];
-
-  const mockDocuments = config.features.useMockData ? [
-    {
-      id: '1',
-      userId: 'user1',
-      type: 'passport' as const,
-      fileName: 'passport_john_doe.pdf',
-      uploadDate: new Date().toISOString(),
-      status: 'pending' as const,
-    },
-    {
-      id: '2',
-      userId: 'user2', 
-      type: 'drivers_license' as const,
-      fileName: 'license_jane_smith.pdf',
-      uploadDate: new Date(Date.now() - 86400000).toISOString(),
-      status: 'verified' as const,
+  // Convert DashboardMetrics to ComplianceMetrics format
+  const complianceMetrics: ComplianceMetrics = React.useMemo(() => {
+    if (dashboardMetrics) {
+      // If we have DashboardMetrics, map them to ComplianceMetrics
+      return {
+        totalTransactions: Math.floor(Math.random() * 1000) + 500, // Mock data
+        flaggedTransactions: Math.floor(Math.random() * 50) + 10,
+        verifiedUsers: state.users.filter(u => u.kycStatus === 'verified').length,
+        sanctionedUsers: state.users.filter(u => u.isSanctioned).length,
+        pepUsers: state.users.filter(u => u.isPEP).length,
+      };
     }
-  ] : [];
+    
+    // Default values when no metrics are available
+    return {
+      totalTransactions: 0,
+      flaggedTransactions: 0,
+      verifiedUsers: 0,
+      sanctionedUsers: 0,
+      pepUsers: 0,
+    };
+  }, [dashboardMetrics, state.users]);
 
-  const mockComplianceCases: ComplianceCaseDetails[] = config.features.useMockData ? [
-    {
-      id: '1',
-      userId: 'user1',
-      userName: 'John Doe',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      type: 'kyc' as const,
-      status: 'open' as const,
-      riskScore: 75,
-      description: 'KYC review required',
-      priority: 'medium' as const,
-      source: 'manual' as const,
-      assignedTo: 'admin_001',
-      assignedToName: 'Alex Nordström',
-      createdBy: 'system',
-      relatedTransactions: [],
-      relatedAlerts: [],
-      documents: []
-    }
-  ] : [];
-
-  const mockComplianceMetrics = config.features.useMockData ? {
-    totalTransactions: 12543,
-    flaggedTransactions: 234,
-    verifiedUsers: 8901,
-    sanctionedUsers: 12,
-    pepUsers: 45
-  } : undefined as unknown as typeof metrics;
-
-  // Calculate additional metrics for the new cards
-  const activeUsers = 1247;
-  const systemUptime = 99.9;
-  const avgProcessingTime = 2.3;
-  const totalAlerts = metrics?.activeAlerts || 0;
+  // Loading state
+  if (loading) {
+    return <div>Loading dashboard data...</div>;
+  }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">
-          {t('dashboard.welcome')}, {user?.name}
-        </h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Compliance Dashboard</h1>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Last updated: {new Date().toLocaleTimeString()}
+          </Badge>
+        </div>
       </div>
 
-      {/* Main Metrics Grid - 2 rows of 4 cards each */}
+      {/* Metrics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardMetricsCard 
-          title="Pending Documents"
-          value={metrics?.pendingDocuments || 0}
-          change="+3"
-          changeType="increase"
-          icon={FileText}
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="KYC Reviews"
-          value={metrics?.pendingKycReviews || 0}
-          change="-2"
-          changeType="decrease"
-          icon={Users}
-          changeDirection="positive-down"
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="Active Alerts"
-          value={totalAlerts}
-          change="+5"
-          changeType="increase"
-          icon={AlertTriangle}
-          valueColor="text-red-600"
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="Risk Score Trend"
-          value={metrics?.riskScoreTrend?.[metrics.riskScoreTrend.length - 1] || 0}
-          change="-3.2"
-          changeType="decrease"
-          icon={Shield}
-          changeDirection="positive-down"
-          valueColor="text-orange-600"
-          loading={loading}
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Documents</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics?.pendingDocuments || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              +2 from yesterday
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics?.activeAlerts || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              -1 from yesterday
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{state.users.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {complianceMetrics.verifiedUsers} verified
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Flagged Transactions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{complianceMetrics.flaggedTransactions}</div>
+            <p className="text-xs text-muted-foreground">
+              of {complianceMetrics.totalTransactions} total
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardMetricsCard 
-          title="Active Users"
-          value={activeUsers}
-          change="+12%"
-          changeType="increase"
-          icon={Activity}
-          changeDirection="positive-up"
-          valueColor="text-green-600"
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="System Uptime"
-          value={`${systemUptime}%`}
-          icon={CheckCircle}
-          valueColor="text-green-600"
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="Avg Processing Time"
-          value={`${avgProcessingTime}s`}
-          change="-0.2s"
-          changeType="decrease"
-          icon={Clock}
-          changeDirection="positive-down"
-          loading={loading}
-        />
-        
-        <DashboardMetricsCard 
-          title="Compliance Rate"
-          value="97.8%"
-          change="+1.2%"
-          changeType="increase"
-          icon={TrendingUp}
-          changeDirection="positive-up"
-          valueColor="text-green-600"
-          loading={loading}
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">
-          <RiskScoreChart data={mockRiskScoreData} loading={loading} />
-        </div>
-        <div className="col-span-3">
-          <RiskDistributionChart data={mockRiskDistributionData} loading={loading} />
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">
-          <RecentDocumentsTable documents={mockDocuments} loading={loading} />
-        </div>
-        <div className="col-span-3 space-y-4">
-          <ComplianceCasesCard complianceCases={mockComplianceCases} loading={loading} />
-          <PerformanceOverviewCard />
-          <ComplianceSummaryCard metrics={mockComplianceMetrics} loading={loading} />
-        </div>
+      {/* Recent Documents */}
+      <div className="border rounded-md bg-muted">
+        <CardHeader className="py-4">
+          <CardTitle className="text-lg font-semibold">Recent Documents</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border">
+            {recentDocuments.map((doc) => (
+              <Link to={`/customers/${doc.userId}`} key={doc.id} className="block">
+                <div className="flex items-center px-4 py-3 hover:bg-secondary transition-colors">
+                  <div className="mr-3 rounded-full bg-blue-500 text-white p-2">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="font-medium">{doc.fileName}</div>
+                    <div className="text-sm text-muted-foreground">Uploaded on {new Date(doc.uploadDate).toLocaleDateString()}</div>
+                  </div>
+                  <div>
+                    <Badge variant="outline">{doc.status}</Badge>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {recentDocuments.length === 0 && (
+            <div className="px-4 py-3 text-center text-muted-foreground">
+              No recent documents found.
+            </div>
+          )}
+        </CardContent>
       </div>
     </div>
   );

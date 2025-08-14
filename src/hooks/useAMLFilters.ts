@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AMLTransaction } from '@/types/aml';
@@ -82,7 +81,7 @@ export const useAMLFilters = (transactionsList: AMLTransaction[]) => {
    */
   const filterByCurrency = (transaction: AMLTransaction): boolean => {
     if (!activeFilters.currency) return true;
-    return transaction.currency === activeFilters.currency;
+    return transaction.senderCurrency === activeFilters.currency;
   };
 
   /**
@@ -98,7 +97,7 @@ export const useAMLFilters = (transactionsList: AMLTransaction[]) => {
    */
   const filterByCountry = (transaction: AMLTransaction): boolean => {
     if (!activeFilters.country) return true;
-    return transaction.senderCountry === activeFilters.country || transaction.receiverCountry === activeFilters.country;
+    return transaction.senderCountryCode === activeFilters.country || transaction.receiverCountryCode === activeFilters.country;
   };
 
   /**
