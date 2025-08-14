@@ -1,11 +1,12 @@
+
 import { describe, it, expect } from 'vitest';
 import { 
-  isPlatformUser, 
-  isCustomerUser, 
-  hasCustomerRole, 
-  hasPlatformRole,
-  type PlatformRole,
-  type CustomerRole 
+  isManagementUser, 
+  isSubscriberUser, 
+  isManagementRole, 
+  isSubscriberRole,
+  type ManagementRole,
+  type SubscriberRole 
 } from '../roles';
 import type { ExtendedUserProfile } from '@/types/platform-roles';
 
@@ -18,6 +19,10 @@ const platformAdminUser: ExtendedUserProfile = {
   customer_roles: [],
   platform_roles: ['platform_admin'],
   isPlatformOwner: false,
+  risk_score: 0,
+  status: 'verified',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
 const ownerUser: ExtendedUserProfile = {
@@ -28,6 +33,10 @@ const ownerUser: ExtendedUserProfile = {
   customer_roles: [],
   platform_roles: ['owner'],
   isPlatformOwner: true,
+  risk_score: 0,
+  status: 'verified',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
 const customerAdminUser: ExtendedUserProfile = {
@@ -38,6 +47,10 @@ const customerAdminUser: ExtendedUserProfile = {
   customer_roles: ['customer_admin'],
   platform_roles: [],
   isPlatformOwner: false,
+  risk_score: 0,
+  status: 'verified',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
 const customerComplianceUser: ExtendedUserProfile = {
@@ -48,57 +61,60 @@ const customerComplianceUser: ExtendedUserProfile = {
   customer_roles: ['customer_compliance'],
   platform_roles: [],
   isPlatformOwner: false,
+  risk_score: 0,
+  status: 'verified',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
-describe('Platform Role Functions', () => {
-  describe('hasPlatformRole', () => {
-    it('should return true for users with the specified platform role', () => {
-      // Fix: Use correct platform role types
-      expect(hasPlatformRole(platformAdminUser, 'platform_admin' as PlatformRole)).toBe(true);
-      expect(hasPlatformRole(ownerUser, 'owner' as PlatformRole)).toBe(true);
+describe('Management Role Functions', () => {
+  describe('isManagementRole', () => {
+    it('should return true for management roles', () => {
+      expect(isManagementRole('platform_admin')).toBe(true);
+      expect(isManagementRole('owner')).toBe(true);
     });
 
-    it('should return false for users without the specified platform role', () => {
-      expect(hasPlatformRole(customerAdminUser, 'platform_admin' as PlatformRole)).toBe(false);
-      expect(hasPlatformRole(customerComplianceUser, 'owner' as PlatformRole)).toBe(false);
+    it('should return false for subscriber roles', () => {
+      expect(isManagementRole('customer_admin')).toBe(false);
+      expect(isManagementRole('customer_compliance')).toBe(false);
     });
   });
 
-  describe('isPlatformUser', () => {
+  describe('isManagementUser', () => {
     it('should return true for platform admin and owner users', () => {
-      expect(isPlatformUser(platformAdminUser)).toBe(true);
-      expect(isPlatformUser(ownerUser)).toBe(true);
+      expect(isManagementUser(platformAdminUser)).toBe(true);
+      expect(isManagementUser(ownerUser)).toBe(true);
     });
 
     it('should return false for customer users', () => {
-      expect(isPlatformUser(customerAdminUser)).toBe(false);
-      expect(isPlatformUser(customerComplianceUser)).toBe(false);
+      expect(isManagementUser(customerAdminUser)).toBe(false);
+      expect(isManagementUser(customerComplianceUser)).toBe(false);
     });
   });
 });
 
-describe('Customer Role Functions', () => {
-  describe('hasCustomerRole', () => {
-    it('should return true for users with the specified customer role', () => {
-      expect(hasCustomerRole(customerAdminUser, 'customer_admin' as CustomerRole)).toBe(true);
-      expect(hasCustomerRole(customerComplianceUser, 'customer_compliance' as CustomerRole)).toBe(true);
+describe('Subscriber Role Functions', () => {
+  describe('isSubscriberRole', () => {
+    it('should return true for subscriber roles', () => {
+      expect(isSubscriberRole('customer_admin')).toBe(true);
+      expect(isSubscriberRole('customer_compliance')).toBe(true);
     });
 
-    it('should return false for users without the specified customer role', () => {
-      expect(hasCustomerRole(platformAdminUser, 'customer_admin' as CustomerRole)).toBe(false);
-      expect(hasCustomerRole(ownerUser, 'customer_compliance' as CustomerRole)).toBe(false);
+    it('should return false for management roles', () => {
+      expect(isSubscriberRole('platform_admin')).toBe(false);
+      expect(isSubscriberRole('owner')).toBe(false);
     });
   });
 
-  describe('isCustomerUser', () => {
+  describe('isSubscriberUser', () => {
     it('should return true for customer admin and compliance users', () => {
-      expect(isCustomerUser(customerAdminUser)).toBe(true);
-      expect(isCustomerUser(customerComplianceUser)).toBe(true);
+      expect(isSubscriberUser(customerAdminUser)).toBe(true);
+      expect(isSubscriberUser(customerComplianceUser)).toBe(true);
     });
 
     it('should return false for platform users', () => {
-      expect(isCustomerUser(platformAdminUser)).toBe(false);
-      expect(isCustomerUser(ownerUser)).toBe(false);
+      expect(isSubscriberUser(platformAdminUser)).toBe(false);
+      expect(isSubscriberUser(ownerUser)).toBe(false);
     });
   });
 });
