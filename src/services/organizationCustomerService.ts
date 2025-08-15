@@ -7,7 +7,9 @@ import {
   EnrichedOrganizationCustomer,
   OrganizationCustomerFilters,
   OrganizationCustomerStats,
-  AMLTransaction
+  AMLTransaction,
+  Document,
+  ComplianceCase
 } from '@/types/organization-customers';
 
 export class OrganizationCustomerService {
@@ -79,16 +81,28 @@ export class OrganizationCustomerService {
 
     if (error) throw error;
 
-    // Enrich the data with computed fields
+    // Enrich the data with computed fields and proper type casting
     return (data || []).map(customer => ({
       ...customer,
+      kyc_status: customer.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested',
       transactionCount: customer.aml_transactions?.length || 0,
       lastTransactionDate: customer.aml_transactions?.[0]?.transaction_date,
       complianceCaseCount: customer.compliance_cases?.length || 0,
       documentCount: customer.documents?.length || 0,
-      transactions: customer.aml_transactions as AMLTransaction[],
-      documents: customer.documents,
-      complianceCases: customer.compliance_cases
+      transactions: (customer.aml_transactions || []).map(tx => ({
+        ...tx,
+        flags: Array.isArray(tx.flags) ? tx.flags : []
+      })) as AMLTransaction[],
+      documents: (customer.documents || []).map(doc => ({
+        ...doc,
+        type: doc.type as Document['type'],
+        status: doc.status as Document['status']
+      })) as Document[],
+      complianceCases: (customer.compliance_cases || []).map(case_ => ({
+        ...case_,
+        type: case_.type as ComplianceCase['type'],
+        status: case_.status as ComplianceCase['status']
+      })) as ComplianceCase[]
     }));
   }
 
@@ -110,13 +124,25 @@ export class OrganizationCustomerService {
 
     return {
       ...data,
+      kyc_status: data.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested',
       transactionCount: data.aml_transactions?.length || 0,
       lastTransactionDate: data.aml_transactions?.[0]?.transaction_date,
       complianceCaseCount: data.compliance_cases?.length || 0,
       documentCount: data.documents?.length || 0,
-      transactions: data.aml_transactions as AMLTransaction[],
-      documents: data.documents,
-      complianceCases: data.compliance_cases
+      transactions: (data.aml_transactions || []).map(tx => ({
+        ...tx,
+        flags: Array.isArray(tx.flags) ? tx.flags : []
+      })) as AMLTransaction[],
+      documents: (data.documents || []).map(doc => ({
+        ...doc,
+        type: doc.type as Document['type'],
+        status: doc.status as Document['status']
+      })) as Document[],
+      complianceCases: (data.compliance_cases || []).map(case_ => ({
+        ...case_,
+        type: case_.type as ComplianceCase['type'],
+        status: case_.status as ComplianceCase['status']
+      })) as ComplianceCase[]
     };
   }
 
@@ -131,7 +157,11 @@ export class OrganizationCustomerService {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return {
+      ...data,
+      kyc_status: data.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested'
+    };
   }
 
   // Update an organization customer
@@ -147,7 +177,11 @@ export class OrganizationCustomerService {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return {
+      ...data,
+      kyc_status: data.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested'
+    };
   }
 
   // Delete an organization customer
@@ -201,7 +235,11 @@ export class OrganizationCustomerService {
       .order('transaction_date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(tx => ({
+      ...tx,
+      flags: Array.isArray(tx.flags) ? tx.flags : []
+    })) as AMLTransaction[];
   }
 
   // Update KYC status
@@ -241,6 +279,10 @@ export class OrganizationCustomerService {
       .select();
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(customer => ({
+      ...customer,
+      kyc_status: customer.kyc_status as 'verified' | 'pending' | 'rejected' | 'information_requested'
+    }));
   }
 }
