@@ -1,3 +1,4 @@
+
 import { NewsItem, RSSFeed } from '@/types/news';
 import { KYCUser, KYCVerification } from '@/types/kyc';
 import { AMLTransaction } from '@/types/aml';
@@ -36,7 +37,7 @@ export class RealDataService {
 
   // KYC Users - Map from existing organization_customers table
   static async getKYCUsers(filters?: any): Promise<KYCUser[]> {
-    console.log('🌐 Fetching KYC users from database...');
+    console.log('🌐 Fetching KYC users from organization_customers table...');
     
     try {
       let query = supabase.from('organization_customers').select('*');
@@ -73,7 +74,7 @@ export class RealDataService {
   }
 
   static async getKYCVerifications(): Promise<KYCVerification[]> {
-    console.log('🌐 Fetching KYC verifications from database...');
+    console.log('🌐 Fetching KYC verifications from organization_customers table...');
     
     try {
       // Map from organization_customers to create verification records
@@ -166,7 +167,7 @@ export class RealDataService {
 
   // Unified User Data - Aggregate from existing tables
   static async getUnifiedUserData(filters?: any): Promise<typeof unifiedMockData> {
-    console.log('🌐 Fetching unified user data from database...');
+    console.log('🌐 Fetching unified user data from organization_customers table...');
     
     try {
       let query = supabase.from('organization_customers').select(`
@@ -244,7 +245,7 @@ export class RealDataService {
     console.log('🔍 Validating real data source connections...');
     
     try {
-      // Test Supabase connection with existing tables
+      // Test Supabase connection with organization_customers table
       const { data, error } = await supabase
         .from('organization_customers')
         .select('count')

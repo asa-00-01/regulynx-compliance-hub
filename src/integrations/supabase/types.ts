@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -1240,13 +1240,13 @@ export type Database = {
       get_current_user_with_customer: {
         Args: Record<PropertyKey, never>
         Returns: {
+          customer_domain: string
+          customer_full_name: string
+          customer_id: string
+          email: string
           id: string
           name: string
-          email: string
           role: Database["public"]["Enums"]["user_role"]
-          customer_id: string
-          customer_full_name: string
-          customer_domain: string
           subscription_tier: string
         }[]
       }
@@ -1264,15 +1264,15 @@ export type Database = {
       }
       has_customer_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["customer_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       has_platform_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["platform_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -1282,6 +1282,7 @@ export type Database = {
       }
       log_error: {
         Args: {
+          p_additional_context?: Json
           p_error_id: string
           p_error_message: string
           p_error_stack?: string
@@ -1289,7 +1290,6 @@ export type Database = {
           p_severity?: string
           p_url?: string
           p_user_agent?: string
-          p_additional_context?: Json
         }
         Returns: string
       }
@@ -1304,11 +1304,11 @@ export type Database = {
       validate_environment_config: {
         Args: Record<PropertyKey, never>
         Returns: {
-          validation_type: string
-          status: string
           message: string
           recommendation: string
           severity: string
+          status: string
+          validation_type: string
         }[]
       }
     }

@@ -1,263 +1,249 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Shield, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  FileText,
-  Activity
-} from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { Users, Shield, AlertTriangle, Activity, TrendingUp, FileText, Clock, CheckCircle } from 'lucide-react';
+import { DashboardService, type DashboardMetrics } from '@/services/dashboardService';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardService } from '@/services/dashboardService';
-import AdminOnlyDevTools from '@/components/common/AdminOnlyDevTools';
 
-interface DashboardMetrics {
-  totalUsers: number;
-  verifiedUsers: number;
-  pendingVerifications: number;
-  flaggedTransactions: number;
-  totalTransactions: number;
-  complianceScore: number;
-  riskAlerts: number;
-  documentsProcessed: number;
-}
+const Dashboard = () => {
+  const { data: metrics, isLoading, error } = useQuery({
+    queryKey: ['dashboard-metrics'],
+    queryFn: DashboardService.getDashboardMetrics,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
 
-const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
+  const { data: recentActivity } = useQuery({
+    queryKey: ['recent-activity'],
+    queryFn: () => DashboardService.getRecentActivity(5),
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const { data: riskDistribution } = useQuery({
+    queryKey: ['risk-distribution'],
+    queryFn: DashboardService.getRiskScoreDistribution,
+    refetchInterval: 300000, // Refresh every 5 minutes
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="h-16 w-16 text-destructive mb-4 mx-auto" />
+          <h2 className="text-xl font-semibold mb-2">Error Loading Dashboard</h2>
+          <p className="text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
+  const defaultMetrics: DashboardMetrics = {
     totalUsers: 0,
     verifiedUsers: 0,
     pendingVerifications: 0,
     flaggedTransactions: 0,
     totalTransactions: 0,
-    complianceScore: 0,
-    riskAlerts: 0,
-    documentsProcessed: 0
-  });
+    activeComplianceCases: 0,
+    highRiskCustomers: 0,
+    averageRiskScore: 0
+  };
 
-  const { data: dashboardData, isLoading, isError } = useQuery({
-    queryKey: ['dashboardMetrics'],
-    queryFn: dashboardService.getDashboardMetrics,
-  });
-
-  useEffect(() => {
-    if (dashboardData) {
-      setMetrics(dashboardData);
-    }
-  }, [dashboardData]);
-
-  if (isLoading) {
-    return <div>Loading dashboard data...</div>;
-  }
-
-  if (isError) {
-    return <div>Error loading dashboard data. Please try again later.</div>;
-  }
+  const dashboardMetrics = metrics || defaultMetrics;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Compliance Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name || user?.email}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="capitalize">
-            {user?.role || 'User'}
-          </Badge>
-          {user?.customer?.name && (
-            <Badge variant="secondary">
-              {user.customer.name}
-            </Badge>
-          )}
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Overview of your compliance platform activity
+        </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Transactions
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalTransactions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +20.1% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Flagged Transactions
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{metrics.flaggedTransactions}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingDown className="h-3 w-3 inline mr-1" />
-              -4.3% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Verified Users
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{metrics.verifiedUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +12.5% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Users
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalUsers}</div>
+            <div className="text-2xl font-bold">{dashboardMetrics.totalUsers.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +8.2% from last month
+              Organization customers being monitored
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.verifiedUsers.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              KYC verified customers
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.pendingVerifications.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting KYC verification
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">High Risk</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.highRiskCustomers.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Customers requiring attention
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Secondary Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.totalTransactions.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              AML transactions monitored
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Flagged Transactions</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.flaggedTransactions.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Requiring investigation
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.activeComplianceCases.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Open compliance cases
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Risk Score</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardMetrics.averageRiskScore}</div>
+            <p className="text-xs text-muted-foreground">
+              Across all customers
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Compliance Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">High-risk transaction flagged</p>
-                  <p className="text-xs text-muted-foreground">Transaction ID: TX-2024-001234</p>
-                </div>
-                <Badge variant="destructive">High Risk</Badge>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">KYC document pending review</p>
-                  <p className="text-xs text-muted-foreground">User: john.doe@example.com</p>
-                </div>
-                <Badge variant="secondary">Pending</Badge>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">SAR report submitted</p>
-                  <p className="text-xs text-muted-foreground">Report ID: SAR-2024-0089</p>
-                </div>
-                <Badge variant="default">Completed</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Compliance Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">{metrics.complianceScore}%</div>
-              <p className="text-sm text-muted-foreground mb-4">Overall compliance rating</p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span>KYC Completion</span>
-                  <span>98%</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>AML Monitoring</span>
-                  <span>92%</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Document Review</span>
-                  <span>89%</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Action Items */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Activity className="h-5 w-5 mr-2" />
-            Priority Action Items
-          </CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="flex justify-between items-center">
-                <span>{metrics.flaggedTransactions} high-risk transactions require immediate review</span>
-                <Button size="sm" variant="destructive">Review Now</Button>
-              </AlertDescription>
-            </Alert>
-            
-            <Alert>
-              <FileText className="h-4 w-4" />
-              <AlertDescription className="flex justify-between items-center">
-                <span>{metrics.pendingVerifications} KYC documents pending verification</span>
-                <Button size="sm" variant="secondary">View Queue</Button>
-              </AlertDescription>
-            </Alert>
-            
-            <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription className="flex justify-between items-center">
-                <span>Monthly SAR report due in 5 days</span>
-                <Button size="sm" variant="outline">Generate Report</Button>
-              </AlertDescription>
-            </Alert>
-          </div>
+          {recentActivity && recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivity.map((activity: any) => (
+                <div key={activity.id} className="flex items-center space-x-4 text-sm">
+                  <div className="flex-shrink-0">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate">
+                      <span className="font-medium">
+                        {activity.organization_customers?.full_name || 'Unknown Customer'}
+                      </span>
+                      {' - '}
+                      <span className="capitalize">{activity.type.replace('_', ' ')}</span>
+                    </p>
+                    <p className="text-muted-foreground truncate">{activity.description}</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${activity.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 
+                        activity.status === 'resolved' ? 'bg-green-100 text-green-800' : 
+                        'bg-blue-100 text-blue-800'}`}>
+                      {activity.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No recent activity</p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Admin-only developer tools */}
-      <AdminOnlyDevTools />
+      {/* Risk Distribution */}
+      {riskDistribution && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk Score Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{riskDistribution.low}</div>
+                <p className="text-sm text-muted-foreground">Low Risk</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">{riskDistribution.medium}</div>
+                <p className="text-sm text-muted-foreground">Medium Risk</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{riskDistribution.high}</div>
+                <p className="text-sm text-muted-foreground">High Risk</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{riskDistribution.critical}</div>
+                <p className="text-sm text-muted-foreground">Critical Risk</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
