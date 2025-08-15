@@ -27,20 +27,49 @@ export class OrganizationCustomerService {
           amount,
           transaction_date,
           risk_score,
-          status
+          status,
+          external_transaction_id,
+          from_account,
+          to_account,
+          currency,
+          transaction_type,
+          description,
+          flags,
+          created_at,
+          updated_at
         ),
         documents:documents!organization_customer_id (
           id,
           type,
           status,
-          created_at
+          created_at,
+          file_name,
+          file_path,
+          upload_date,
+          verified_by,
+          verification_date,
+          extracted_data,
+          updated_at,
+          user_id
         ),
         compliance_cases:compliance_cases!organization_customer_id (
           id,
           type,
           status,
           risk_score,
-          created_at
+          created_at,
+          priority,
+          source,
+          user_name,
+          description,
+          assigned_to,
+          assigned_to_name,
+          created_by,
+          updated_at,
+          resolved_at,
+          related_alerts,
+          related_transactions,
+          documents
         )
       `)
       .eq('customer_id', customerId);
@@ -91,7 +120,7 @@ export class OrganizationCustomerService {
       documentCount: customer.documents?.length || 0,
       transactions: (customer.aml_transactions || []).map(tx => ({
         ...tx,
-        flags: Array.isArray(tx.flags) ? tx.flags : []
+        flags: Array.isArray(tx.flags) ? tx.flags : (tx.flags ? [tx.flags] : [])
       })) as AMLTransaction[],
       documents: (customer.documents || []).map(doc => ({
         ...doc,
@@ -101,8 +130,9 @@ export class OrganizationCustomerService {
       complianceCases: (customer.compliance_cases || []).map(case_ => ({
         ...case_,
         type: case_.type as ComplianceCase['type'],
-        status: case_.status as ComplianceCase['status']
-      })) as ComplianceCase[]
+        status: case_.status as ComplianceCase['status'],
+        source: case_.source as ComplianceCase['source']
+      })) as unknown as ComplianceCase[]
     }));
   }
 
@@ -131,7 +161,7 @@ export class OrganizationCustomerService {
       documentCount: data.documents?.length || 0,
       transactions: (data.aml_transactions || []).map(tx => ({
         ...tx,
-        flags: Array.isArray(tx.flags) ? tx.flags : []
+        flags: Array.isArray(tx.flags) ? tx.flags : (tx.flags ? [tx.flags] : [])
       })) as AMLTransaction[],
       documents: (data.documents || []).map(doc => ({
         ...doc,
@@ -141,8 +171,9 @@ export class OrganizationCustomerService {
       complianceCases: (data.compliance_cases || []).map(case_ => ({
         ...case_,
         type: case_.type as ComplianceCase['type'],
-        status: case_.status as ComplianceCase['status']
-      })) as ComplianceCase[]
+        status: case_.status as ComplianceCase['status'],
+        source: case_.source as ComplianceCase['source']
+      })) as unknown as ComplianceCase[]
     };
   }
 
@@ -238,7 +269,7 @@ export class OrganizationCustomerService {
     
     return (data || []).map(tx => ({
       ...tx,
-      flags: Array.isArray(tx.flags) ? tx.flags : []
+      flags: Array.isArray(tx.flags) ? tx.flags : (tx.flags ? [tx.flags] : [])
     })) as AMLTransaction[];
   }
 
