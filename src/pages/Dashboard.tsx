@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,15 +20,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '@/services/dashboardService';
 import AdminOnlyDevTools from '@/components/common/AdminOnlyDevTools';
-import config from '@/config/environment';
-
-interface ComplianceMetrics {
-  totalTransactions: number;
-  flaggedTransactions: number;
-  verifiedUsers: number;
-  sanctionedUsers: number;
-  pepUsers: number;
-}
 
 interface DashboardMetrics {
   totalUsers: number;
@@ -42,12 +34,15 @@ interface DashboardMetrics {
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const [metrics, setMetrics] = useState<ComplianceMetrics>({
-    totalTransactions: 0,
-    flaggedTransactions: 0,
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    totalUsers: 0,
     verifiedUsers: 0,
-    sanctionedUsers: 0,
-    pepUsers: 0
+    pendingVerifications: 0,
+    flaggedTransactions: 0,
+    totalTransactions: 0,
+    complianceScore: 0,
+    riskAlerts: 0,
+    documentsProcessed: 0
   });
 
   const { data: dashboardData, isLoading, isError } = useQuery({
@@ -57,9 +52,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (dashboardData) {
-      // Convert DashboardMetrics to ComplianceMetrics
-      const complianceMetrics = convertToComplianceMetrics(dashboardData);
-      setMetrics(complianceMetrics);
+      setMetrics(dashboardData);
     }
   }, [dashboardData]);
 
@@ -70,16 +63,6 @@ const Dashboard: React.FC = () => {
   if (isError) {
     return <div>Error loading dashboard data. Please try again later.</div>;
   }
-
-  const convertToComplianceMetrics = (data: DashboardMetrics): ComplianceMetrics => {
-    return {
-      totalTransactions: data.totalTransactions,
-      flaggedTransactions: data.flaggedTransactions,
-      verifiedUsers: data.verifiedUsers,
-      sanctionedUsers: 0, // Default value if not provided
-      pepUsers: 0, // Default value if not provided
-    };
-  };
 
   return (
     <div className="space-y-6">
@@ -157,15 +140,15 @@ const Dashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Sanctioned Users
+              Total Users
             </CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{metrics.sanctionedUsers}</div>
+            <div className="text-2xl font-bold">{metrics.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              <Clock className="h-3 w-3 inline mr-1" />
-              Requires attention
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              +8.2% from last month
             </p>
           </CardContent>
         </Card>
@@ -215,7 +198,7 @@ const Dashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">94%</div>
+              <div className="text-4xl font-bold text-green-600 mb-2">{metrics.complianceScore}%</div>
               <p className="text-sm text-muted-foreground mb-4">Overall compliance rating</p>
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
@@ -249,7 +232,7 @@ const Dashboard: React.FC = () => {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="flex justify-between items-center">
-                <span>3 high-risk transactions require immediate review</span>
+                <span>{metrics.flaggedTransactions} high-risk transactions require immediate review</span>
                 <Button size="sm" variant="destructive">Review Now</Button>
               </AlertDescription>
             </Alert>
@@ -257,7 +240,7 @@ const Dashboard: React.FC = () => {
             <Alert>
               <FileText className="h-4 w-4" />
               <AlertDescription className="flex justify-between items-center">
-                <span>12 KYC documents pending verification</span>
+                <span>{metrics.pendingVerifications} KYC documents pending verification</span>
                 <Button size="sm" variant="secondary">View Queue</Button>
               </AlertDescription>
             </Alert>
