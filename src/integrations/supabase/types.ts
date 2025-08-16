@@ -1338,6 +1338,7 @@ export type Database = {
         | "risk_assessment"
       case_status: "open" | "in_progress" | "resolved" | "closed"
       case_type: "kyc" | "aml" | "sanctions" | "fraud" | "other"
+      compliance_case: "aml_alert, kyc_alert, sanctions, fraud, other"
       customer_role:
         | "customer_admin"
         | "customer_compliance"
@@ -1515,6 +1516,7 @@ export const Constants = {
       ],
       case_status: ["open", "in_progress", "resolved", "closed"],
       case_type: ["kyc", "aml", "sanctions", "fraud", "other"],
+      compliance_case: ["aml_alert, kyc_alert, sanctions, fraud, other"],
       customer_role: [
         "customer_admin",
         "customer_compliance",
