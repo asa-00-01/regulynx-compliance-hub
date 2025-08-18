@@ -31,10 +31,11 @@ const Pricing = () => {
   };
 
   const getPlanIcon = (planId: string) => {
-    switch (planId) {
+    switch (planId.toLowerCase()) {
       case 'starter':
         return <Zap className="h-6 w-6 text-blue-500" />;
       case 'professional':
+      case 'pro':
         return <Crown className="h-6 w-6 text-purple-500" />;
       case 'enterprise':
         return <Building className="h-6 w-6 text-orange-500" />;
@@ -48,12 +49,63 @@ const Pricing = () => {
            subscriptionState.subscription_tier?.toLowerCase() === planName.toLowerCase();
   };
 
+  // Debug logging
+  console.log('Pricing page - plans:', plans);
+  console.log('Pricing page - plansLoading:', plansLoading);
+  console.log('Pricing page - subscriptionState:', subscriptionState);
+
+  // Fallback plans if no plans are available
+  const fallbackPlans = [
+    {
+      id: 'fallback-1',
+      plan_id: 'starter',
+      name: 'Starter Plan',
+      description: 'Essential compliance tools for small teams',
+      price_monthly: 29900,
+      price_yearly: 299900,
+      features: ['basic_aml_monitoring', 'kyc_verification', 'basic_reporting'],
+      max_users: 10,
+      max_transactions: 1000,
+      max_cases: 100
+    },
+    {
+      id: 'fallback-2',
+      plan_id: 'pro',
+      name: 'Professional Plan',
+      description: 'Full compliance suite for growing organizations',
+      price_monthly: 99900,
+      price_yearly: 999900,
+      features: ['aml_monitoring', 'kyc_verification', 'sanctions_screening', 'case_management', 'advanced_analytics'],
+      max_users: 50,
+      max_transactions: 10000,
+      max_cases: 1000
+    },
+    {
+      id: 'fallback-3',
+      plan_id: 'enterprise',
+      name: 'Enterprise Plan',
+      description: 'Enterprise-grade compliance platform',
+      price_monthly: 299900,
+      price_yearly: 2999900,
+      features: ['aml_monitoring', 'kyc_verification', 'sanctions_screening', 'case_management', 'advanced_analytics', 'custom_integrations', 'dedicated_support'],
+      max_users: -1,
+      max_transactions: -1,
+      max_cases: -1
+    }
+  ];
+
+  const displayPlans = plans && plans.length > 0 ? plans : fallbackPlans;
+
   if (plansLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse">Loading pricing plans...</div>
       </div>
     );
+  }
+
+  if (!plans || plans.length === 0) {
+    console.log('⚠️ No plans available, using fallback plan');
   }
 
   return (
@@ -85,26 +137,35 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
-          {plans.map((plan) => {
+          {displayPlans.map((plan) => {
             const price = isYearly ? plan.price_yearly : plan.price_monthly;
             const displayPrice = isYearly ? price / 12 : price;
             
             return (
-              <Card 
-                key={plan.id} 
-                className={`relative ${
-                  plan.plan_id === 'professional' 
-                    ? 'border-2 border-purple-500 shadow-xl scale-105' 
-                    : 'border border-gray-200'
-                }`}
-              >
-                {plan.plan_id === 'professional' && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-purple-500 text-white px-4 py-1">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
+                             <Card 
+                 key={plan.id} 
+                 className={`relative ${
+                   plan.plan_id.toLowerCase() === 'professional' || plan.plan_id.toLowerCase() === 'pro'
+                     ? 'border-2 border-purple-500 shadow-xl scale-105' 
+                     : plan.plan_id.toLowerCase() === 'enterprise'
+                     ? 'border-2 border-orange-500 shadow-xl'
+                     : 'border border-gray-200'
+                 }`}
+               >
+                 {(plan.plan_id.toLowerCase() === 'professional' || plan.plan_id.toLowerCase() === 'pro') && (
+                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                     <Badge className="bg-purple-500 text-white px-4 py-1">
+                       Most Popular
+                     </Badge>
+                   </div>
+                 )}
+                 {plan.plan_id.toLowerCase() === 'enterprise' && (
+                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                     <Badge className="bg-orange-500 text-white px-4 py-1">
+                       Enterprise
+                     </Badge>
+                   </div>
+                 )}
 
                 <CardHeader className="text-center">
                   <div className="flex justify-center mb-4">
@@ -169,12 +230,18 @@ const Pricing = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button 
-                    onClick={() => handleSubscribe(plan.plan_id)}
-                    className="w-full"
-                    variant={plan.plan_id === 'professional' ? 'default' : 'outline'}
-                    disabled={isCurrentPlan(plan.name)}
-                  >
+                                     <Button 
+                     onClick={() => handleSubscribe(plan.plan_id)}
+                     className="w-full"
+                     variant={
+                       (plan.plan_id.toLowerCase() === 'professional' || plan.plan_id.toLowerCase() === 'pro') 
+                         ? 'default' 
+                         : plan.plan_id.toLowerCase() === 'enterprise'
+                         ? 'default'
+                         : 'outline'
+                     }
+                     disabled={isCurrentPlan(plan.name)}
+                   >
                     {isCurrentPlan(plan.name) ? 'Current Plan' : `Get ${plan.name}`}
                   </Button>
                 </CardFooter>

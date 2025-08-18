@@ -214,12 +214,28 @@ CREATE TABLE IF NOT EXISTS public.case_event (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 16. Create ai_interactions table for AI Agent
+CREATE TABLE IF NOT EXISTS public.ai_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    response TEXT NOT NULL,
+    tools_used JSONB DEFAULT '[]',
+    confidence DECIMAL(3,2) CHECK (confidence >= 0 AND confidence <= 1),
+    processing_time INTEGER,
+    session_id TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_organisation_customer_external_id ON public.organisation_customer(external_id);
 CREATE INDEX IF NOT EXISTS idx_transaction_org_customer_occurred ON public.transaction(organisation_customer_id, occurred_at);
 CREATE INDEX IF NOT EXISTS idx_compliance_case_org_customer_status_priority ON public.compliance_case(organisation_customer_id, status, priority);
 CREATE INDEX IF NOT EXISTS idx_document_org_customer_type_status ON public.document(organisation_customer_id, type, status);
 CREATE INDEX IF NOT EXISTS idx_kyx_org_customer_active_status ON public.kyx(organisation_customer_id, is_active, status);
+CREATE INDEX IF NOT EXISTS idx_ai_interactions_user_created ON public.ai_interactions(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ai_interactions_session ON public.ai_interactions(session_id);
 
 -- Create triggers for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -239,6 +255,7 @@ CREATE TRIGGER update_kyx_updated_at BEFORE UPDATE ON public.kyx FOR EACH ROW EX
 CREATE TRIGGER update_transaction_updated_at BEFORE UPDATE ON public.transaction FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_document_updated_at BEFORE UPDATE ON public.document FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_compliance_case_updated_at BEFORE UPDATE ON public.compliance_case FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ai_interactions_updated_at BEFORE UPDATE ON public.ai_interactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create constraint to ensure only one active KYX per organisation_customer
 CREATE UNIQUE INDEX IF NOT EXISTS idx_kyx_one_active_per_customer 
@@ -254,7 +271,14 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 2. Create subscription plan
 INSERT INTO public.subscription_plans (id, plan_id, name, description, price_monthly, price_yearly, features, max_users, max_transactions, max_cases, is_active)
-VALUES ('11111111-1111-1111-1111-111111111111', 'PRO', 'Professional Plan', 'Full compliance suite', 99900, 999900, '["aml_monitoring", "kyc_verification", "sanctions_screening", "case_management"]'::jsonb, 50, 10000, 1000, true)
+VALUES ('11111111-1111-1111-1111-111111111111', 'pro', 'Professional Plan', 'Full compliance suite', 99900, 999900, '["aml_monitoring", "kyc_verification", "sanctions_screening", "case_management"]'::jsonb, 50, 10000, 1000, true)
+ON CONFLICT (plan_id) DO NOTHING;
+
+-- Add STARTER and ENTERPRISE plans
+INSERT INTO public.subscription_plans (id, plan_id, name, description, price_monthly, price_yearly, features, max_users, max_transactions, max_cases, is_active)
+VALUES 
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'starter', 'Starter Plan', 'Essential compliance tools for small teams', 29900, 299900, '["basic_aml_monitoring", "kyc_verification", "basic_reporting"]'::jsonb, 10, 1000, 100, true),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'enterprise', 'Enterprise Plan', 'Enterprise-grade compliance platform', 299900, 2999900, '["aml_monitoring", "kyc_verification", "sanctions_screening", "case_management", "advanced_analytics", "custom_integrations", "dedicated_support"]'::jsonb, -1, -1, -1, true)
 ON CONFLICT (plan_id) DO NOTHING;
 
 -- 3. Create platform user
@@ -297,15 +321,15 @@ ON CONFLICT (organisation_customer_id, version) DO NOTHING;
 -- 10. Create transactions
 INSERT INTO public.transaction (id, organisation_customer_id, external_transaction_id, amount, currency, direction, counterparty_name, counterparty_account, occurred_at, risk_score)
 VALUES 
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '77777777-7777-7777-7777-777777777777', 'TXN_001', 2500.00, 'USD', 'in', 'Employer Corp', 'ACC_12345', now() - INTERVAL '5 days', 20),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '77777777-7777-7777-7777-777777777777', 'TXN_002', 850.75, 'USD', 'out', 'Utility Company', 'ACC_67890', now() - INTERVAL '3 days', 10)
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '77777777-7777-7777-7777-777777777777', 'TXN_001', 2500.00, 'USD', 'in', 'Employer Corp', 'ACC_12345', now() - INTERVAL '5 days', 20),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '77777777-7777-7777-7777-777777777777', 'TXN_002', 850.75, 'USD', 'out', 'Utility Company', 'ACC_67890', now() - INTERVAL '3 days', 10)
 ON CONFLICT (id) DO NOTHING;
 
 -- 11. Create documents
 INSERT INTO public.document (id, organisation_customer_id, type, file_name, storage_uri, mime_type, file_size_bytes, status, uploaded_by, verified_by, verified_at)
 VALUES 
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '77777777-7777-7777-7777-777777777777', 'passport', 'alice_passport.pdf', '/documents/alice/passport.pdf', 'application/pdf', 1024000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '2 days'),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', '77777777-7777-7777-7777-777777777777', 'utility_bill', 'alice_utility.pdf', '/documents/alice/utility.pdf', 'application/pdf', 512000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '1 day')
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'passport', 'alice_passport.pdf', '/documents/alice/passport.pdf', 'application/pdf', 1024000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '2 days'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '77777777-7777-7777-7777-777777777777', 'utility_bill', 'alice_utility.pdf', '/documents/alice/utility.pdf', 'application/pdf', 512000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '1 day')
 ON CONFLICT (id) DO NOTHING;
 
 -- 12. Create compliance case
@@ -316,18 +340,25 @@ ON CONFLICT (id) DO NOTHING;
 -- 13. Link case to transactions
 INSERT INTO public.case_transaction (case_id, transaction_id)
 VALUES 
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'dddddddd-dddd-dddd-dddd-dddddddddddd')
 ON CONFLICT (case_id, transaction_id) DO NOTHING;
 
 -- 14. Link case to document
 INSERT INTO public.case_document (case_id, document_id)
-VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee')
 ON CONFLICT (case_id, document_id) DO NOTHING;
 
 -- 15. Create case events
 INSERT INTO public.case_event (id, case_id, event_type, description, created_by)
 VALUES 
-('ffffffff-ffff-ffff-ffff-ffffffffffff', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'created', 'Case opened for routine AML review', '22222222-2222-2222-2222-222222222222'),
-('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'note_added', 'Initial review completed. All documents verified. Transactions appear legitimate.', '22222222-2222-2222-2222-222222222222')
+('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'created', 'Case opened for routine AML review', '22222222-2222-2222-2222-222222222222'),
+('11111111-1111-1111-1111-111111111111', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'note_added', 'Initial review completed. All documents verified. Transactions appear legitimate.', '22222222-2222-2222-2222-222222222222')
+ON CONFLICT (id) DO NOTHING;
+
+-- 16. Create sample AI interactions
+INSERT INTO public.ai_interactions (id, user_id, message, response, tools_used, confidence, processing_time, session_id)
+VALUES 
+('gggggggg-gggg-gggg-gggg-gggggggggggg', '22222222-2222-2222-2222-222222222222', 'What are the AML compliance requirements?', 'Based on our compliance database, I can provide guidance on AML compliance. The key areas to focus on include customer due diligence, transaction monitoring, and suspicious activity reporting. Our system flags transactions above $10,000 and monitors for unusual patterns.', '["RAG System", "Compliance Database", "Regulatory Updates"]'::jsonb, 0.92, 1200, 'session-001'),
+('hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh', '22222222-2222-2222-2222-222222222222', 'How do I verify customer identity?', 'For KYC procedures, you''ll need to verify identity documents, assess risk level, and conduct enhanced due diligence for high-risk customers. Our system supports document verification, risk scoring, and automated compliance checks.', '["KYC Database", "Document Verification", "Risk Assessment"]'::jsonb, 0.89, 950, 'session-001')
 ON CONFLICT (id) DO NOTHING;

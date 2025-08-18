@@ -10,9 +10,10 @@ interface ChatInputProps {
   setInputValue: (value: string) => void;
   onSendMessage: () => void;
   isLoading: boolean;
+  placeholder?: string;
 }
 
-const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading }: ChatInputProps) => {
+const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading, placeholder }: ChatInputProps) => {
   const { t } = useTranslation();
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -29,7 +30,7 @@ const ChatInput = ({ inputValue, setInputValue, onSendMessage, isLoading }: Chat
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={t('aiAgent.placeholder')}
+          placeholder={placeholder || t('aiAgent.placeholder')}
           className="flex-1"
           disabled={isLoading}
         />

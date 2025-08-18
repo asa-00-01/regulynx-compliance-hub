@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileWarning, Eye, Edit, Plus } from 'lucide-react';
+import { FileWarning, Eye, Edit, Plus, Trash2 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { SAR } from '@/types/sar';
 
@@ -12,6 +12,7 @@ interface SARListProps {
   onViewSAR: (id: string) => void;
   onCreateNewSAR: () => void;
   onEditDraft: (sar: SAR) => void;
+  onDeleteSAR?: (sar: SAR) => void;
   loading?: boolean;
 }
 
@@ -20,6 +21,7 @@ const SARList: React.FC<SARListProps> = ({
   onViewSAR,
   onCreateNewSAR,
   onEditDraft,
+  onDeleteSAR,
   loading = false
 }) => {
   const formatDate = (dateString: string) => {
@@ -41,8 +43,10 @@ const SARList: React.FC<SARListProps> = ({
         return 'secondary';
       case 'submitted':
         return 'default';
-      case 'reviewed':
+      case 'filed':
         return 'outline';
+      case 'rejected':
+        return 'destructive';
       default:
         return 'secondary';
     }
@@ -147,6 +151,18 @@ const SARList: React.FC<SARListProps> = ({
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Draft
+                  </Button>
+                )}
+
+                {onDeleteSAR && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteSAR(sar)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
                   </Button>
                 )}
               </div>

@@ -13,11 +13,13 @@ import CaseEditModal from './CaseEditModal';
 interface CaseActionButtonsProps {
   caseItem: ComplianceCaseDetails;
   onCaseUpdated?: () => void;
+  onUpdateStatus?: (caseId: string, newStatus: ComplianceCaseDetails['status'], note?: string) => Promise<boolean>;
 }
 
 const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({ 
   caseItem, 
-  onCaseUpdated 
+  onCaseUpdated,
+  onUpdateStatus
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -104,13 +106,32 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const handleEscalateCase = async () => {
     setLoading('escalate');
     try {
-      // In a real app, this would update the case status in the database
+      if (onUpdateStatus) {
+        // Use the proper update function if available
+        const success = await onUpdateStatus(caseItem.id, 'escalated', 'Case escalated for senior review');
+        if (success) {
+          toast({
+            title: 'Case Escalated',
+            description: `Case ${caseItem.id} has been escalated for senior review`,
+            variant: 'default',
+          });
+        }
+      } else {
+        // Fallback to just showing a toast
+        toast({
+          title: 'Case Escalated',
+          description: `Case ${caseItem.id} has been escalated for senior review`,
+          variant: 'default',
+        });
+        onCaseUpdated?.();
+      }
+    } catch (error) {
+      console.error('Error escalating case:', error);
       toast({
-        title: 'Case Escalated',
-        description: `Case ${caseItem.id} has been escalated for senior review`,
-        variant: 'default',
+        title: 'Error',
+        description: 'Failed to escalate case',
+        variant: 'destructive',
       });
-      onCaseUpdated?.();
     } finally {
       setLoading(null);
     }
@@ -119,12 +140,30 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const handleCloseCase = async () => {
     setLoading('close');
     try {
-      // In a real app, this would update the case status in the database
+      if (onUpdateStatus) {
+        // Use the proper update function if available
+        const success = await onUpdateStatus(caseItem.id, 'closed', 'Case closed');
+        if (success) {
+          toast({
+            title: 'Case Closed',
+            description: `Case ${caseItem.id} has been marked as closed`,
+          });
+        }
+      } else {
+        // Fallback to just showing a toast
+        toast({
+          title: 'Case Closed',
+          description: `Case ${caseItem.id} has been marked as closed`,
+        });
+        onCaseUpdated?.();
+      }
+    } catch (error) {
+      console.error('Error closing case:', error);
       toast({
-        title: 'Case Closed',
-        description: `Case ${caseItem.id} has been marked as closed`,
+        title: 'Error',
+        description: 'Failed to close case',
+        variant: 'destructive',
       });
-      onCaseUpdated?.();
     } finally {
       setLoading(null);
     }

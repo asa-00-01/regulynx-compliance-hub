@@ -28,7 +28,7 @@ const PatternDetectionEngine: React.FC = () => {
 
   const handleViewTransaction = (transaction: AMLTransaction) => {
     setSelectedTransaction(transaction);
-    setIsTransactionDetailsOpen(true);
+    setIsTransactionDetailsOpen(!isTransactionDetailsOpen);
   };
 
   const handleFlagTransaction = (transaction: AMLTransaction) => {

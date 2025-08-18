@@ -7,6 +7,8 @@ import {
   CaseAction as SupabaseCaseAction,
   ComplianceCaseInsert,
 } from '@/types/supabase';
+import { config } from '@/config/environment';
+import { normalizedComplianceCases } from '@/mocks/normalizedMockData';
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
   id: c.id,
@@ -36,7 +38,7 @@ const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
   actionDate: a.action_date,
   actionType: mapSupabaseActionType(a.action_type),
   description: a.description,
-  details: a.details as Record<string, any> | undefined,
+  details: a.details as Record<string, unknown> | undefined,
 });
 
 const mapSupabaseActionType = (supabaseType: string): 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution' => {
@@ -76,8 +78,78 @@ const validateAndConvertUuid = (value: string | undefined): string | null => {
 const VALID_DB_STATUSES = ['open', 'closed', 'resolved', 'in_progress'] as const;
 const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'fraud', 'other'] as const;
 
+// Mock data storage for runtime updates
+const mockDataStore = {
+  cases: [...normalizedComplianceCases]
+};
+
+// Function to update case status in mock data
+export const updateMockCaseStatus = (caseId: string, newStatus: ComplianceCaseDetails['status']) => {
+  const caseIndex = mockDataStore.cases.findIndex(caseItem => caseItem.id === caseId);
+  if (caseIndex !== -1) {
+    mockDataStore.cases[caseIndex] = {
+      ...mockDataStore.cases[caseIndex],
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    };
+    console.log(`🎭 Updated mock case ${caseId} status to ${newStatus}`);
+    return true;
+  }
+  console.warn(`🎭 Case ${caseId} not found in mock data`);
+  return false;
+};
+
+// Function to get current mock data
+export const getMockCasesData = () => [...mockDataStore.cases];
+
 export const complianceCaseService: CaseServiceOperations = {
   async fetchCases(filters: CaseFilters): Promise<ComplianceCaseDetails[]> {
+    // Use mock data if feature flag is enabled
+    if (config.features.useMockData) {
+      console.log('🎭 Using mock compliance cases data');
+      let filteredCases = [...mockDataStore.cases];
+      
+      // Apply filters to mock data
+      if (filters.status && filters.status.length > 0) {
+        filteredCases = filteredCases.filter(caseItem => 
+          filters.status!.includes(caseItem.status as ComplianceCaseDetails['status'])
+        );
+      }
+      
+      if (filters.type && filters.type.length > 0) {
+        filteredCases = filteredCases.filter(caseItem => 
+          filters.type!.includes(caseItem.type as ComplianceCaseDetails['type'])
+        );
+      }
+      
+      if (filters.priority && filters.priority.length > 0) {
+        filteredCases = filteredCases.filter(caseItem => 
+          filters.priority!.includes(caseItem.priority as ComplianceCaseDetails['priority'])
+        );
+      }
+      
+      if (filters.assignedTo) {
+        filteredCases = filteredCases.filter(caseItem => 
+          caseItem.assignedTo === filters.assignedTo
+        );
+      }
+      
+      if (filters.riskScoreMin) {
+        filteredCases = filteredCases.filter(caseItem => 
+          caseItem.riskScore >= filters.riskScoreMin!
+        );
+      }
+      
+      if (filters.riskScoreMax) {
+        filteredCases = filteredCases.filter(caseItem => 
+          caseItem.riskScore <= filters.riskScoreMax!
+        );
+      }
+      
+      return filteredCases;
+    }
+
+    // Use real database
     let query = supabase.from('compliance_cases').select('*');
 
     if (filters.status && filters.status.length > 0) {
@@ -90,7 +162,7 @@ export const complianceCaseService: CaseServiceOperations = {
           case 'closed': return 'resolved';
           default: return status;
         }
-      }).filter(status => VALID_DB_STATUSES.includes(status as any)) as (typeof VALID_DB_STATUSES[number])[];
+      }).filter(status => VALID_DB_STATUSES.includes(status as typeof VALID_DB_STATUSES[number])) as (typeof VALID_DB_STATUSES[number])[];
       
       if (dbStatuses.length > 0) {
         query = query.in('status', dbStatuses);
@@ -106,7 +178,7 @@ export const complianceCaseService: CaseServiceOperations = {
           case 'document': return 'other';
           default: return type;
         }
-      }).filter(type => VALID_DB_TYPES.includes(type as any)) as (typeof VALID_DB_TYPES[number])[];
+      }).filter(type => VALID_DB_TYPES.includes(type as typeof VALID_DB_TYPES[number])) as (typeof VALID_DB_TYPES[number])[];
       
       if (dbTypes.length > 0) {
         query = query.in('type', dbTypes);
@@ -155,7 +227,7 @@ export const complianceCaseService: CaseServiceOperations = {
       assigned_to: validatedAssignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: caseData.source as any,
+      source: caseData.source as 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment',
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,

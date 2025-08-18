@@ -63,6 +63,12 @@ export class SARService {
 
   static async createSAR(sarData: Omit<SAR, 'id'>): Promise<SAR> {
     try {
+      // Validate UUID format for user_id
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!sarData.userId || !uuidRegex.test(sarData.userId)) {
+        throw new Error('Invalid user ID format. User ID must be a valid UUID.');
+      }
+
       const { data, error } = await supabase
         .from('sars')
         .insert({

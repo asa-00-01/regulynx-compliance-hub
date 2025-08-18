@@ -33,6 +33,11 @@ const TransactionDetailsModal = ({
 }: TransactionDetailsModalProps) => {
   if (!transaction) return null;
 
+  const handleClose = () => {
+    console.log('Manual close handler called');
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
@@ -65,6 +70,13 @@ const TransactionDetailsModal = ({
           <TransactionRiskAssessment transaction={transaction} />
 
           <div className="flex justify-end space-x-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="flex items-center gap-2"
+            >
+              Close
+            </Button>
             <Button
               variant="outline"
               onClick={() => onFlag(transaction)}

@@ -1,8 +1,8 @@
 
 import { AMLTransaction } from '@/types/aml';
-import { mockTransactionsCollection } from '@/mocks/centralizedMockData';
+import { mockAMLTransactionsCollection } from '@/mocks/centralizedMockData';
 
-export const mockTransactions: AMLTransaction[] = mockTransactionsCollection;
+export const mockTransactions: AMLTransaction[] = mockAMLTransactionsCollection;
 
 export const mockRiskDistribution = [
   { name: 'Low Risk', value: mockTransactions.filter(t => t.riskScore <= 30).length, color: '#10b981' },
@@ -13,7 +13,7 @@ export const mockRiskDistribution = [
 export const mockComplianceMetrics = {
   totalTransactions: mockTransactions.length,
   flaggedTransactions: mockTransactions.filter(t => t.isSuspect).length,
-  verifiedUsers: mockTransactionsCollection.length,
+  verifiedUsers: mockTransactions.length,
   sanctionedUsers: 2, // From centralized data
   pepUsers: 1 // From centralized data
 };

@@ -97,6 +97,26 @@ export function useSARData() {
   const createSARFromMatch = (match: PatternMatch) => {
     if (!match) return;
 
+    // Validate UUID format for user_id and transaction_id
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!match.userId || !uuidRegex.test(match.userId)) {
+      toast({
+        title: 'Error Creating SAR',
+        description: 'Invalid user ID format in pattern match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!match.transactionId || !uuidRegex.test(match.transactionId)) {
+      toast({
+        title: 'Error Creating SAR',
+        description: 'Invalid transaction ID format in pattern match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const pattern = patterns.find(p => p.id === match.patternId);
 
     const newSar: Omit<SAR, 'id'> = {

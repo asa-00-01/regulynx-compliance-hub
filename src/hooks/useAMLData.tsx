@@ -67,6 +67,20 @@ export const useAMLData = () => {
   const handleViewTransactionDetails = (targetTransaction: AMLTransaction) => {
     setCurrentlySelectedTransaction(targetTransaction);
     setDetailsModalVisibility(true);
+    console.log('targetTransaction', targetTransaction);
+  };
+
+  /**
+   * Handles modal open/close state changes
+   */
+  const handleModalOpenChange = (open: boolean) => {
+    console.log('Modal open change called with:', open);
+    setDetailsModalVisibility(open);
+    if (!open) {
+      // Clear selected transaction when modal closes
+      setCurrentlySelectedTransaction(null);
+      console.log('Modal closed, cleared selected transaction');
+    }
   };
 
   /**
@@ -95,6 +109,7 @@ export const useAMLData = () => {
     
     // Handlers
     handleViewDetails: handleViewTransactionDetails,
+    handleModalOpenChange: handleModalOpenChange,
     handleFlagTransaction: transactionActionHandlers.handleFlagTransaction,
     handleCreateCase: transactionActionHandlers.handleCreateCase,
     handleCreateSAR: transactionActionHandlers.handleCreateSAR,

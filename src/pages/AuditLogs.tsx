@@ -16,19 +16,40 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { useTranslation } from 'react-i18next';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+
+interface AuditLog {
+  id: string;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  user_id: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+  ip_address?: string;
+}
 
 const AuditLogs = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [dateRange, setDateRange] = useState('last_7_days');
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const { t } = useTranslation();
 
   // Memoize filters to prevent unnecessary re-renders
   const filters = useMemo(() => ({
@@ -72,6 +93,16 @@ const AuditLogs = () => {
   const handleExportLogs = useCallback(() => {
     console.log('Exporting audit logs...');
   }, []);
+
+  const handleViewLogDetails = (log: AuditLog) => {
+    setSelectedLog(log);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedLog(null);
+  };
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -238,17 +269,21 @@ const AuditLogs = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <CategoryIcon className="h-4 w-4" />
-                          <span className="capitalize">{log.entity.replace('_', ' ')}</span>
+                          <span className="capitalize">
+                            {typeof log.entity === 'string' ? log.entity.replace('_', ' ') : 'Unknown'}
+                          </span>
                         </div>
-                        <div className="font-medium">{log.action}</div>
+                        <div className="font-medium">
+                          {typeof log.action === 'string' ? log.action : 'Unknown Action'}
+                        </div>
                         <div>{log.user_id || 'System'}</div>
                         <div>
                           <Badge variant={getSeverityBadgeVariant(log.action)}>
-                            {log.action.includes('failed') ? 'Failed' : 'Success'}
+                            {typeof log.action === 'string' && log.action.includes('failed') ? 'Failed' : 'Success'}
                           </Badge>
                         </div>
                         <div>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleViewLogDetails(log)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
@@ -286,6 +321,54 @@ const AuditLogs = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Log Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {typeof selectedLog?.action === 'string' ? selectedLog.action : 'Unknown Action'}
+            </DialogTitle>
+            <DialogDescription>
+              Details for log ID: {selectedLog?.id || 'Unknown'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <h3 className="text-lg font-semibold">Log Information</h3>
+              <div className="space-y-2">
+                <p><strong>ID:</strong> {selectedLog?.id || 'N/A'}</p>
+                <p><strong>Entity:</strong> {typeof selectedLog?.entity === 'string' ? selectedLog.entity : 'N/A'}</p>
+                <p><strong>Action:</strong> {typeof selectedLog?.action === 'string' ? selectedLog.action : 'N/A'}</p>
+                <p><strong>User ID:</strong> {selectedLog?.user_id || 'N/A'}</p>
+                <p><strong>Status:</strong> {
+                  typeof selectedLog?.action === 'string' && selectedLog.action.includes('failed') ? 'Failed' : 'Success'
+                }</p>
+                <p><strong>Timestamp:</strong> {selectedLog?.created_at ? new Date(selectedLog.created_at).toLocaleString() : 'N/A'}</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Additional Details</h3>
+              <div className="space-y-2">
+                <p><strong>IP Address:</strong> {selectedLog?.ip_address || 'N/A'}</p>
+                <div>
+                  <strong>Details:</strong>
+                  {selectedLog?.details ? (
+                    <pre className="mt-2 p-2 bg-muted rounded text-sm overflow-auto max-h-40">
+                      {typeof selectedLog.details === 'object' 
+                        ? JSON.stringify(selectedLog.details, null, 2)
+                        : String(selectedLog.details)
+                      }
+                    </pre>
+                  ) : (
+                    <span className="ml-2">N/A</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

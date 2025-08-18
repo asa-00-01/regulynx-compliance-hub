@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useAuditLogging } from '@/hooks/useAuditLogging';
+import { config } from '@/config/environment';
 
 interface SubscriptionState {
   subscribed: boolean;
@@ -50,48 +51,126 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
 
-  // Mock plans data for now
+  // Fetch plans from database
   useEffect(() => {
-    const mockPlans: PricingPlan[] = [
-      {
-        id: '1',
-        plan_id: 'starter',
-        name: 'Starter',
-        description: 'Perfect for small businesses',
-        price_monthly: 2900,
-        price_yearly: 29000,
-        features: ['Basic compliance monitoring', 'Email support', 'Monthly reports'],
-        max_users: 5,
-        max_transactions: 1000,
-        max_cases: 10
-      },
-      {
-        id: '2',
-        plan_id: 'professional',
-        name: 'Professional',
-        description: 'Ideal for growing companies',
-        price_monthly: 9900,
-        price_yearly: 99000,
-        features: ['Advanced compliance tools', 'Priority support', 'Weekly reports', 'API access'],
-        max_users: 25,
-        max_transactions: 10000,
-        max_cases: 100
-      },
-      {
-        id: '3',
-        plan_id: 'enterprise',
-        name: 'Enterprise',
-        description: 'For large organizations',
-        price_monthly: 29900,
-        price_yearly: 299000,
-        features: ['Full compliance suite', 'Dedicated support', 'Daily reports', 'Custom integrations'],
-        max_users: -1,
-        max_transactions: -1,
-        max_cases: -1
+    const fetchPlans = async () => {
+      try {
+        console.log('🔄 Starting to fetch plans...');
+        console.log('🔧 Config features.useMockData:', config.features.useMockData);
+        setPlansLoading(true);
+        
+        // Always start with mock data as fallback
+        const mockPlans: PricingPlan[] = [
+          {
+            id: '1',
+            plan_id: 'starter',
+            name: 'Starter Plan',
+            description: 'Essential compliance tools for small teams',
+            price_monthly: 29900,
+            price_yearly: 299900,
+            features: ['basic_aml_monitoring', 'kyc_verification', 'basic_reporting'],
+            max_users: 10,
+            max_transactions: 1000,
+            max_cases: 100
+          },
+          {
+            id: '2',
+            plan_id: 'pro',
+            name: 'Professional Plan',
+            description: 'Full compliance suite for growing organizations',
+            price_monthly: 99900,
+            price_yearly: 999900,
+            features: ['aml_monitoring', 'kyc_verification', 'sanctions_screening', 'case_management', 'advanced_analytics'],
+            max_users: 50,
+            max_transactions: 10000,
+            max_cases: 1000
+          },
+          {
+            id: '3',
+            plan_id: 'enterprise',
+            name: 'Enterprise Plan',
+            description: 'Enterprise-grade compliance platform',
+            price_monthly: 299900,
+            price_yearly: 2999900,
+            features: ['aml_monitoring', 'kyc_verification', 'sanctions_screening', 'case_management', 'advanced_analytics', 'custom_integrations', 'dedicated_support'],
+            max_users: -1, // Unlimited
+            max_transactions: -1, // Unlimited
+            max_cases: -1 // Unlimited
+          }
+        ];
+        
+        if (config.features.useMockData) {
+          console.log('🎭 Using mock subscription plans');
+          console.log('✅ Mock plans set:', mockPlans);
+          setPlans(mockPlans);
+        } else {
+          console.log('📊 Fetching subscription plans from database');
+          try {
+            const { data, error } = await supabase
+              .from('subscription_plans')
+              .select('*')
+              .eq('is_active', true)
+              .order('price_monthly', { ascending: true });
+
+            if (error) {
+              console.error('❌ Error fetching plans:', error);
+              console.log('🔄 Using fallback plans:', mockPlans);
+              setPlans(mockPlans);
+            } else {
+              console.log('✅ Plans fetched successfully from database:', data);
+              if (data && data.length > 0) {
+                // Transform database data to match PricingPlan interface
+                const transformedPlans: PricingPlan[] = data.map(plan => ({
+                  id: plan.id,
+                  plan_id: plan.plan_id,
+                  name: plan.name,
+                  description: plan.description,
+                  price_monthly: plan.price_monthly,
+                  price_yearly: plan.price_yearly,
+                  features: Array.isArray(plan.features) ? plan.features : [],
+                  max_users: plan.max_users,
+                  max_transactions: plan.max_transactions,
+                  max_cases: plan.max_cases
+                }));
+                console.log('✅ Transformed plans:', transformedPlans);
+                setPlans(transformedPlans);
+              } else {
+                console.log('📝 No plans found in database, using mock plans');
+                setPlans(mockPlans);
+              }
+            }
+          } catch (dbError) {
+            console.error('❌ Database fetch error:', dbError);
+            console.log('🔄 Using fallback plans due to database error:', mockPlans);
+            setPlans(mockPlans);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error in fetchPlans:', error);
+        // Fallback to mock data
+        const fallbackPlans: PricingPlan[] = [
+          {
+            id: '1',
+            plan_id: 'pro',
+            name: 'Professional Plan',
+            description: 'Full compliance suite',
+            price_monthly: 99900,
+            price_yearly: 999900,
+            features: ['aml_monitoring', 'kyc_verification', 'sanctions_screening', 'case_management'],
+            max_users: 50,
+            max_transactions: 10000,
+            max_cases: 1000
+          }
+        ];
+        console.log('🔄 Using fallback plans due to error:', fallbackPlans);
+        setPlans(fallbackPlans);
+      } finally {
+        console.log('🏁 Plans loading finished');
+        setPlansLoading(false);
       }
-    ];
-    setPlans(mockPlans);
-    setPlansLoading(false);
+    };
+
+    fetchPlans();
   }, []);
 
   const checkSubscription = async () => {

@@ -1,10 +1,11 @@
 
 import { useState, useCallback } from 'react';
-import { ComplianceCaseDetails, CaseAction } from '@/types/case';
+import { ComplianceCaseDetails, CaseAction, CaseActionInsert } from '@/types/case';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CaseActionInsert } from '@/types/supabase';
+import { config } from '@/config/environment';
+import { updateMockCaseStatus } from './service';
 
 // Helper function to validate UUID
 const isValidUuid = (value: string): boolean => {
@@ -79,6 +80,52 @@ export const useCaseActions = (
     note?: string
   ) => {
     try {
+      // Use mock data update if feature flag is enabled
+      if (config.features.useMockData) {
+        console.log('🎭 Using mock data update for case status');
+        const success = updateMockCaseStatus(caseId, newStatus);
+        
+        if (success) {
+          // Create a mock action for the case
+          const newAction: CaseAction = {
+            id: `action-${Date.now()}`,
+            caseId: caseId,
+            actionBy: currentUser?.id || 'system',
+            actionByName: currentUser?.name || 'System',
+            actionDate: new Date().toISOString(),
+            actionType: 'status_change',
+            description: `Case status changed to ${newStatus.replace(/_/g, ' ')}`,
+            details: note ? { note } : undefined,
+          };
+          
+          setCaseActions(prev => {
+            const updated = [...prev, newAction];
+            onCaseActionsUpdated?.(updated);
+            return updated;
+          });
+          
+          // Update the selected case if it matches
+          if (selectedCase?.id === caseId) {
+            const updatedCase = { 
+              ...selectedCase, 
+              status: newStatus, 
+              updatedAt: new Date().toISOString() 
+            };
+            onCaseUpdated?.(updatedCase);
+          }
+          
+          toast({
+            title: 'Status Updated',
+            description: `Case status has been updated to ${newStatus.replace(/_/g, ' ')}.`
+          });
+          
+          return true;
+        }
+        
+        return false;
+      }
+
+      // Use real database update
       // Map application status to database status with proper typing
       let dbStatus: 'open' | 'closed' | 'resolved' | 'in_progress';
       switch (newStatus) {

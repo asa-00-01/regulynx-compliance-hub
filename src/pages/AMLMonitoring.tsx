@@ -25,10 +25,10 @@ const AMLMonitoring = () => {
     filters,
     searchTerm,
     metrics,
-    setIsDetailsModalOpen,
     setFilters,
     setSearchTerm,
     handleViewDetails,
+    handleModalOpenChange,
     handleFlagTransaction,
     handleCreateCase,
     handleExportTransactions,
@@ -117,7 +117,7 @@ const AMLMonitoring = () => {
       <TransactionDetailsModal
         transaction={selectedTransaction}
         open={isDetailsModalOpen}
-        onOpenChange={setIsDetailsModalOpen}
+        onOpenChange={handleModalOpenChange}
         onFlag={handleFlagTransaction}
         onCreateCase={handleCreateCase}
       />

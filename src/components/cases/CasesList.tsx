@@ -20,13 +20,15 @@ interface CasesListProps {
   loading: boolean;
   onSelectCase: (caseItem: ComplianceCaseDetails) => void;
   onCaseUpdated?: () => void;
+  onUpdateStatus?: (caseId: string, newStatus: ComplianceCaseDetails['status'], note?: string) => Promise<boolean>;
 }
 
 const CasesList: React.FC<CasesListProps> = ({ 
   cases, 
   loading, 
   onSelectCase, 
-  onCaseUpdated 
+  onCaseUpdated,
+  onUpdateStatus
 }) => {
   const getCaseTypeIcon = (type: string) => {
     switch (type) {
@@ -167,6 +169,7 @@ const CasesList: React.FC<CasesListProps> = ({
                 <CaseActionButtons 
                   caseItem={caseItem} 
                   onCaseUpdated={onCaseUpdated}
+                  onUpdateStatus={onUpdateStatus}
                 />
               </TableCell>
             </TableRow>

@@ -18,7 +18,14 @@ const ComplianceCases = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
-  const [initialCaseData, setInitialCaseData] = useState<any>(null);
+  const [initialCaseData, setInitialCaseData] = useState<{
+    userId: string;
+    userName: string;
+    description: string;
+    type: 'kyc' | 'aml' | 'sanctions';
+    source: string;
+    riskScore: number;
+  } | null>(null);
   const { t } = useTranslation();
   
   const location = useLocation();
@@ -55,7 +62,15 @@ const ComplianceCases = () => {
     updateCaseStatus,
     assignCase,
     createCase,
+    fetchCases,
   } = useComplianceCases(compatibleUser);
+  
+  // Handle case updates from action buttons
+  const handleCaseUpdated = () => {
+    // Refresh the cases data to reflect any changes
+    console.log('Case updated, refreshing data...');
+    fetchCases();
+  };
   
   // Check for location state actions
   useEffect(() => {
@@ -113,6 +128,8 @@ const ComplianceCases = () => {
                 selectCase(caseItem);
                 setActiveTab('details');
               }}
+              onCaseUpdated={handleCaseUpdated}
+              onUpdateStatus={updateCaseStatus}
             />
           </TabsContent>
           

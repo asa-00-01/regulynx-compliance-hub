@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { ComplianceProvider } from "@/context/ComplianceContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import AppRoutes from "@/components/app/AppRoutes";
 import '@/i18n/config';
 
@@ -17,11 +18,13 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <TooltipProvider>
           <AuthProvider>
-            <ComplianceProvider>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
-            </ComplianceProvider>
+            <SubscriptionProvider>
+              <ComplianceProvider>
+                <AppRoutes />
+                <Toaster />
+                <Sonner />
+              </ComplianceProvider>
+            </SubscriptionProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
