@@ -8,6 +8,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ComplianceProvider } from "@/context/ComplianceContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import AppRoutes from "@/components/app/AppRoutes";
+import DebugModeIndicator from "@/components/common/DebugModeIndicator";
+import MockModeIndicator from "@/components/common/MockModeIndicator";
+import AdminOnlyDevTools from "@/components/common/AdminOnlyDevTools";
 import '@/i18n/config';
 
 const queryClient = new QueryClient();
@@ -23,6 +26,10 @@ function App() {
                 <AppRoutes />
                 <Toaster />
                 <Sonner />
+                {/* Development indicators and tools */}
+                <DebugModeIndicator />
+                <MockModeIndicator />
+                <AdminOnlyDevTools />
               </ComplianceProvider>
             </SubscriptionProvider>
           </AuthProvider>

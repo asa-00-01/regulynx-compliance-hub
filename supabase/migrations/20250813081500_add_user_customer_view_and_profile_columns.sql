@@ -6,9 +6,18 @@ ADD COLUMN IF NOT EXISTS customer_domain text;
 -- Create a view to easily get user with customer data
 CREATE OR REPLACE VIEW public.user_with_customer AS
 SELECT 
-  p.*,
-  c.name as customer_name,
-  c.domain as customer_domain,
+  p.id,
+  p.name,
+  p.email,
+  p.avatar_url,
+  p.customer_id,
+  p.role,
+  p.risk_score,
+  p.status,
+  p.created_at,
+  p.updated_at,
+  c.name as joined_customer_name,
+  c.domain as joined_customer_domain,
   c.subscription_tier,
   c.settings as customer_settings
 FROM public.profiles p
@@ -21,10 +30,10 @@ RETURNS TABLE(
   id uuid,
   name text,
   email text,
-  role user_role,
+  role text,
   customer_id uuid,
-  customer_name text,
-  customer_domain text,
+  joined_customer_name text,
+  joined_customer_domain text,
   subscription_tier text
 )
 LANGUAGE sql
@@ -35,10 +44,10 @@ AS $$
     p.id,
     p.name,
     p.email,
-    p.role,
+    p.role::text,
     ur.customer_id,
-    c.name as customer_name,
-    c.domain as customer_domain,
+    c.name as joined_customer_name,
+    c.domain as joined_customer_domain,
     c.subscription_tier
   FROM public.profiles p
   LEFT JOIN public.user_roles ur ON p.id = ur.user_id

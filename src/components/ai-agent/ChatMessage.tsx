@@ -31,7 +31,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "flex gap-3",
+        "flex gap-3 w-full",
         message.role === 'user' ? 'justify-end' : 'justify-start'
       )}
     >
@@ -42,16 +42,16 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       )}
       
       <div className={cn(
-        "max-w-[80%] space-y-2",
+        "flex-1 max-w-[75%] space-y-2",
         message.role === 'user' ? 'items-end' : 'items-start'
       )}>
         <div className={cn(
-          "rounded-lg px-4 py-2",
+          "rounded-lg px-4 py-2 break-words overflow-hidden",
           message.role === 'user' 
             ? 'bg-primary text-primary-foreground' 
             : 'bg-muted'
         )}>
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
         </div>
         
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -69,14 +69,14 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           {message.tools && message.tools.length > 0 && (
             <>
               <span>•</span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1 max-w-full">
                 {message.tools.slice(0, 3).map((tool, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+                  <Badge key={index} variant="secondary" className="text-xs flex-shrink-0">
                     {tool}
                   </Badge>
                 ))}
                 {message.tools.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">
                     +{message.tools.length - 3}
                   </Badge>
                 )}
@@ -87,13 +87,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 
         {/* Sources for AI responses */}
         {message.role === 'assistant' && message.metadata?.sources && message.metadata.sources.length > 0 && (
-          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <div className="flex items-start gap-2 text-xs text-muted-foreground max-w-full">
             <Database className="w-3 h-3 mt-0.5 flex-shrink-0" />
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0 flex-1">
               <span className="font-medium">Sources:</span>
               <div className="flex flex-wrap gap-1">
                 {message.metadata.sources.map((source, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-xs flex-shrink-0">
                     {source}
                   </Badge>
                 ))}

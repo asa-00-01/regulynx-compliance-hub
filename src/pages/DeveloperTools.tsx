@@ -11,8 +11,10 @@ import {
   CheckCircle,
   Globe,
   HelpCircle,
-  BarChart3
+  BarChart3,
+  ToggleLeft
 } from 'lucide-react';
+import { config } from '@/config/environment';
 import OptimizationCenter from '@/components/common/OptimizationCenter';
 import SystemHealthMonitor from '@/components/common/SystemHealthMonitor';
 import SecurityAuditLog from '@/components/security/SecurityAuditLog';
@@ -23,8 +25,24 @@ import ProductionReadinessChecker from '@/components/common/ProductionReadinessC
 import HelpPanel from '@/components/common/HelpPanel';
 import AnalyticsContent from '@/components/dev/AnalyticsContent';
 import PerformanceContent from '@/components/dev/PerformanceContent';
+import FeatureFlagStatus from '@/components/common/FeatureFlagStatus';
+import FeatureFlagTest from '@/components/common/FeatureFlagTest';
 
 const DeveloperTools: React.FC = () => {
+  // Check if developer tools are enabled
+  if (!config.features.enableDevTools) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <Code className="h-16 w-16 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Developer Tools Disabled</h1>
+          <p className="text-muted-foreground">
+            Developer tools are currently disabled. Enable them in the configuration to access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div 
       id="developer-tools-page"
@@ -128,6 +146,14 @@ const DeveloperTools: React.FC = () => {
           >
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">Configuration</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            id="feature-flags-tab"
+            value="feature-flags" 
+            className="feature-flags-tab-trigger flex items-center gap-2"
+          >
+            <ToggleLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Feature Flags</span>
           </TabsTrigger>
         </TabsList>
 
@@ -316,6 +342,17 @@ const DeveloperTools: React.FC = () => {
               <DeveloperPanel embedded={true} />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent 
+          id="feature-flags-content"
+          value="feature-flags" 
+          className="feature-flags-tab-content space-y-4"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <FeatureFlagStatus showControls={true} />
+            <FeatureFlagTest />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

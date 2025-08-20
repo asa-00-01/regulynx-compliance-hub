@@ -30,7 +30,12 @@ const ChatInterface = () => {
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end"
+      });
+    }, 100); // Small delay to ensure content is rendered
   };
 
   useEffect(() => {
@@ -56,9 +61,9 @@ const ChatInterface = () => {
     <Card className="h-[600px] flex flex-col">
       <ChatHeader />
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Mode indicator */}
-        <div className="px-4 py-2 border-b bg-muted/50">
+        <div className="px-4 py-2 border-b bg-muted/50 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
@@ -114,7 +119,7 @@ const ChatInterface = () => {
         </div>
 
         <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-full">
             {messages.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -145,17 +150,19 @@ const ChatInterface = () => {
           </div>
         </ScrollArea>
 
-        <ChatInput
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          placeholder={
-            isMockMode 
-              ? "Ask about AML, KYC, or compliance (Mock Mode)" 
-              : "Ask me about compliance, regulations, or procedures..."
-          }
-        />
+        <div className="flex-shrink-0">
+          <ChatInput
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            placeholder={
+              isMockMode 
+                ? "Ask about AML, KYC, or compliance (Mock Mode)" 
+                : "Ask me about compliance, regulations, or procedures..."
+            }
+          />
+        </div>
       </CardContent>
     </Card>
   );

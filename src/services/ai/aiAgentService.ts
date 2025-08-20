@@ -1,5 +1,7 @@
 import { config } from '@/config/environment';
 import { supabase } from '@/integrations/supabase/client';
+import { customerAIService } from './customerAIService';
+import { AIConfiguration, CustomerAISettings } from '@/types/ai';
 
 export interface AIMessage {
   id: string;
@@ -24,6 +26,8 @@ export interface AIResponse {
 
 export interface AIContext {
   userId?: string;
+  customerId?: string;
+  configurationId?: string;
   sessionId?: string;
   conversationHistory?: AIMessage[];
   userPreferences?: {
@@ -33,26 +37,14 @@ export interface AIContext {
   };
 }
 
-// Mock data for AI responses
-const mockAIResponses = {
+// Default mock AI responses for fallback
+const defaultMockResponses = {
   compliance: [
     {
       content: "Based on our compliance database, I can provide guidance on that topic. Let me analyze the current regulatory requirements for AML compliance. The key areas to focus on include customer due diligence, transaction monitoring, and suspicious activity reporting.",
       tools: ['RAG System', 'Compliance Database', 'Regulatory Updates'],
       confidence: 0.92,
       sources: ['AML Guidelines 2024', 'FATF Recommendations', 'Local Regulatory Framework']
-    },
-    {
-      content: "I've searched through our AML monitoring system and found relevant patterns. Here's what I can tell you about transaction monitoring: The system should flag transactions above $10,000, unusual patterns, and high-risk jurisdictions.",
-      tools: ['AML Monitoring System', 'Risk Engine', 'Transaction Analysis'],
-      confidence: 0.88,
-      sources: ['Transaction Monitoring Guidelines', 'Risk Assessment Framework', 'Case Studies Database']
-    },
-    {
-      content: "Using our risk assessment tools, I can help evaluate this scenario. The key factors to consider are: customer risk profile, transaction patterns, geographic risk, and product risk. Let me provide a detailed analysis.",
-      tools: ['Risk Engine', 'Customer Profiling', 'Geographic Risk Assessment'],
-      confidence: 0.95,
-      sources: ['Risk Assessment Methodology', 'Customer Due Diligence Guidelines', 'Geographic Risk Database']
     }
   ],
   kyc: [
@@ -61,12 +53,6 @@ const mockAIResponses = {
       tools: ['KYC Database', 'Document Verification', 'Risk Assessment'],
       confidence: 0.89,
       sources: ['KYC Procedures Manual', 'Identity Verification Standards', 'Enhanced Due Diligence Guidelines']
-    },
-    {
-      content: "Drawing from our compliance framework and recent updates, I recommend the following approach for customer verification: Start with basic identity verification, then escalate to enhanced due diligence if risk factors are present.",
-      tools: ['Compliance Framework', 'Identity Verification', 'Risk Escalation'],
-      confidence: 0.91,
-      sources: ['Customer Verification Standards', 'Risk Escalation Procedures', 'Recent Regulatory Updates']
     }
   ],
   general: [
@@ -75,18 +61,12 @@ const mockAIResponses = {
       tools: ['RAG System', 'Compliance Database'],
       confidence: 0.85,
       sources: ['General Compliance Guidelines', 'Platform Documentation']
-    },
-    {
-      content: "I can provide guidance on various compliance topics including transaction monitoring, customer due diligence, suspicious activity reporting, and regulatory requirements. Let me know what specific information you need.",
-      tools: ['Knowledge Base', 'Regulatory Database'],
-      confidence: 0.87,
-      sources: ['Compliance Manual', 'Regulatory Guidelines']
     }
   ]
 };
 
-// Mock tools available to the AI
-const availableTools = [
+// Default tools available to the AI
+const defaultAvailableTools = [
   'RAG System',
   'Compliance Database', 
   'Risk Engine',
@@ -104,8 +84,12 @@ const availableTools = [
   'Regulatory Database'
 ];
 
-// Mock function to generate AI response
-const generateMockAIResponse = (input: string, context?: AIContext): AIResponse => {
+// Mock function to generate AI response based on configuration
+const generateMockAIResponse = (
+  input: string, 
+  context?: AIContext,
+  aiConfiguration?: AIConfiguration
+): AIResponse => {
   const lowerInput = input.toLowerCase();
   let responseCategory = 'general';
   
@@ -116,8 +100,14 @@ const generateMockAIResponse = (input: string, context?: AIContext): AIResponse 
     responseCategory = 'kyc';
   }
   
-  const responses = mockAIResponses[responseCategory as keyof typeof mockAIResponses];
+  // Use customer-specific responses if available, otherwise fall back to defaults
+  const responses = aiConfiguration?.responseCategories?.[responseCategory]?.responses || 
+                   defaultMockResponses[responseCategory as keyof typeof defaultMockResponses];
+  
   const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
+  
+  // Use customer-specific tools if available, otherwise fall back to defaults
+  const availableTools = aiConfiguration?.availableTools || defaultAvailableTools;
   
   // Generate random tools used (2-4 tools)
   const toolCount = Math.floor(Math.random() * 3) + 2;
@@ -148,23 +138,53 @@ const generateMockAIResponse = (input: string, context?: AIContext): AIResponse 
   };
 };
 
-// Real AI service function
-const callRealAIService = async (input: string, context?: AIContext): Promise<AIResponse> => {
+// Real AI service function with customer support
+const callRealAIService = async (
+  input: string, 
+  context?: AIContext,
+  aiConfiguration?: AIConfiguration
+): Promise<AIResponse> => {
   try {
-    console.log('🤖 Calling real AI service...');
+    console.log('🤖 Calling real AI service...', { customerId: context?.customerId });
     
     // Call Supabase Edge Function for AI processing
-    const { data, error } = await supabase.functions.invoke('ai-agent', {
+    const { data, error } = await supabase.functions.invoke('ai-service', {
       body: {
         message: input,
-        context: context || {},
+        context: {
+          ...context,
+          sessionId: context?.sessionId || `session-${Date.now()}`,
+          userPreferences: {
+            language: 'en',
+            expertise: 'intermediate',
+            focus: ['aml', 'kyc', 'sar'],
+            ...context?.userPreferences
+          },
+          // Include customer-specific configuration
+          aiConfiguration: aiConfiguration ? {
+            systemPrompt: aiConfiguration.systemPrompt,
+            availableTools: aiConfiguration.availableTools,
+            settings: aiConfiguration.settings
+          } : undefined
+        },
         timestamp: new Date().toISOString()
       }
     });
 
     if (error) {
       console.error('❌ AI service error:', error);
+      
+      // Check if it's a CORS or function not found error
+      if (error.message.includes('CORS') || error.message.includes('Failed to send a request')) {
+        console.warn('⚠️ Edge Function not available, falling back to mock responses');
+        throw new Error('EDGE_FUNCTION_NOT_AVAILABLE');
+      }
+      
       throw new Error(`AI service error: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('No response data received from AI service');
     }
 
     console.log('✅ AI service response:', data);
@@ -189,6 +209,12 @@ const callRealAIService = async (input: string, context?: AIContext): Promise<AI
     };
   } catch (error) {
     console.error('🚨 AI service call failed:', error);
+    
+    // If it's a specific error indicating the function isn't available, throw a special error
+    if (error instanceof Error && error.message === 'EDGE_FUNCTION_NOT_AVAILABLE') {
+      throw error;
+    }
+    
     throw error;
   }
 };
@@ -197,6 +223,8 @@ const callRealAIService = async (input: string, context?: AIContext): Promise<AI
 export class AIAgentService {
   private static instance: AIAgentService;
   private conversationHistory: AIMessage[] = [];
+  private currentConfiguration: AIConfiguration | null = null;
+  private currentCustomerId: string | null = null;
 
   private constructor() {}
 
@@ -207,8 +235,51 @@ export class AIAgentService {
     return AIAgentService.instance;
   }
 
+  // Initialize AI Agent for a specific customer
+  async initializeForCustomer(customerId: string, configurationId?: string): Promise<boolean> {
+    try {
+      console.log('🔧 Initializing AI Agent for customer:', customerId);
+      
+      this.currentCustomerId = customerId;
+      
+      // Get customer settings
+      const customerSettings = await customerAIService.getCustomerAISettings(customerId);
+      if (!customerSettings) {
+        console.warn('⚠️ No customer settings found, using defaults');
+        // Continue with initialization even without settings
+      }
+
+      // Get AI configuration
+      const configId = configurationId || customerSettings?.defaultConfigurationId;
+      if (configId) {
+        this.currentConfiguration = await customerAIService.getAIConfiguration(configId);
+        if (this.currentConfiguration) {
+          console.log('✅ Loaded AI configuration:', this.currentConfiguration.name);
+        }
+      }
+
+      // Check usage limits
+      const usageLimits = await customerAIService.checkUsageLimits(customerId);
+      if (!usageLimits.canUse) {
+        console.warn('⚠️ Customer has reached AI usage limits');
+        return false;
+      }
+
+      console.log('✅ AI Agent initialized for customer:', customerId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error initializing AI Agent for customer:', error);
+      // Return true to allow the AI to work even if initialization fails
+      return true;
+    }
+  }
+
   async sendMessage(input: string, context?: AIContext): Promise<AIResponse> {
-    console.log('🤖 AI Agent - Processing message:', { input, useMockData: config.features.useMockData });
+    console.log('🤖 AI Agent - Processing message:', { 
+      input, 
+      useMockData: config.features.useMockData,
+      customerId: this.currentCustomerId || context?.customerId 
+    });
     
     // Add user message to history
     const userMessage: AIMessage = {
@@ -226,17 +297,50 @@ export class AIAgentService {
         console.log('🎭 Using mock AI data');
         // Simulate processing delay
         await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-        response = generateMockAIResponse(input, context);
+        response = generateMockAIResponse(input, context, this.currentConfiguration);
       } else {
         console.log('🔗 Using real AI service');
-        response = await callRealAIService(input, {
-          ...context,
-          conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages for context
-        });
+        try {
+          response = await callRealAIService(input, {
+            ...context,
+            customerId: this.currentCustomerId || context?.customerId,
+            configurationId: this.currentConfiguration?.id,
+            conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages for context
+          }, this.currentConfiguration);
+        } catch (serviceError) {
+          // Check if it's the specific error for unavailable Edge Function
+          if (serviceError instanceof Error && serviceError.message === 'EDGE_FUNCTION_NOT_AVAILABLE') {
+            console.log('🔄 Edge Function not available, falling back to mock response');
+            response = generateMockAIResponse(input, context, this.currentConfiguration);
+          } else {
+            // Re-throw other errors
+            throw serviceError;
+          }
+        }
       }
 
       // Add AI response to history
       this.conversationHistory.push(response.message);
+
+      // Log the interaction if customer is set
+      if (this.currentCustomerId && this.currentConfiguration) {
+        try {
+          await customerAIService.logInteraction({
+            customerId: this.currentCustomerId,
+            userId: context?.userId || 'unknown',
+            configurationId: this.currentConfiguration.id,
+            message: input,
+            response: response.message.content,
+            toolsUsed: response.tools,
+            confidence: response.confidence,
+            processingTime: response.processingTime,
+            sessionId: context?.sessionId || `session-${Date.now()}`,
+            metadata: context?.userPreferences || {}
+          });
+        } catch (logError) {
+          console.warn('⚠️ Failed to log AI interaction:', logError);
+        }
+      }
 
       // Log the interaction
       console.log('✅ AI response generated:', {
@@ -253,7 +357,7 @@ export class AIAgentService {
       // Fallback to mock response if real service fails
       if (!config.features.useMockData) {
         console.log('🔄 Falling back to mock response due to service error');
-        return generateMockAIResponse(input, context);
+        return generateMockAIResponse(input, context, this.currentConfiguration);
       }
       
       throw error;
@@ -268,14 +372,24 @@ export class AIAgentService {
     this.conversationHistory = [];
   }
 
-  // Get available tools
+  // Get available tools based on current configuration
   getAvailableTools(): string[] {
-    return [...availableTools];
+    return this.currentConfiguration?.availableTools || defaultAvailableTools;
+  }
+
+  // Get current configuration
+  getCurrentConfiguration(): AIConfiguration | null {
+    return this.currentConfiguration;
+  }
+
+  // Get current customer ID
+  getCurrentCustomerId(): string | null {
+    return this.currentCustomerId;
   }
 
   // Get mock responses for testing
   getMockResponses() {
-    return mockAIResponses;
+    return this.currentConfiguration?.responseCategories || defaultMockResponses;
   }
 }
 

@@ -14,6 +14,13 @@ import Integration from '@/pages/Integration';
 import DeveloperTools from '@/pages/DeveloperTools';
 import Unauthorized from '@/pages/Unauthorized';
 
+// Import new comprehensive console components
+import PlatformConsole from '@/components/platform/PlatformConsole';
+import CustomerManagementConsole from '@/components/platform/CustomerManagementConsole';
+import BillingManagementConsole from '@/components/platform/BillingManagementConsole';
+import SecurityComplianceConsole from '@/components/platform/SecurityComplianceConsole';
+import AnalyticsReportingConsole from '@/components/platform/AnalyticsReportingConsole';
+
 const PlatformApp: React.FC = () => {
   const { loading, authLoaded } = useAuth();
   const { isPlatformOwner, isPlatformAdmin, hasPlatformPermission } = usePlatformRoleAccess();
@@ -31,14 +38,42 @@ const PlatformApp: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/platform/dashboard" replace />} />
-      <Route path="/dashboard" element={<PlatformDashboard />} />
-      <Route path="/management" element={<PlatformManagement />} />
+      
+      {/* Main Platform Console */}
+      <Route path="/dashboard" element={<PlatformConsole />} />
+      
+      {/* Customer Management */}
+      <Route path="/management" element={<CustomerManagementConsole />} />
+      
+      {/* User Management */}
       <Route path="/users" element={<PlatformUserManagement />} />
+      
+      {/* System Health */}
       <Route path="/system-health" element={<PlatformSystemHealth />} />
-      <Route path="/billing" element={<PlatformBilling />} />
+      
+      {/* Billing & Revenue */}
+      <Route path="/billing" element={<BillingManagementConsole />} />
+      
+      {/* Security & Compliance */}
+      <Route path="/security" element={<SecurityComplianceConsole />} />
+      
+      {/* Analytics & Reporting */}
+      <Route path="/analytics" element={<AnalyticsReportingConsole />} />
+      
+      {/* Settings */}
       <Route path="/settings" element={<PlatformSettings />} />
+      
+      {/* Integration */}
       <Route path="/integration" element={<Integration />} />
+      
+      {/* Developer Tools */}
       <Route path="/developer-tools" element={<DeveloperTools />} />
+      
+      {/* Legacy routes for backward compatibility */}
+      <Route path="/legacy-dashboard" element={<PlatformDashboard />} />
+      <Route path="/legacy-management" element={<PlatformManagement />} />
+      <Route path="/legacy-billing" element={<PlatformBilling />} />
+      
       <Route path="*" element={<Navigate to="/platform/dashboard" replace />} />
     </Routes>
   );

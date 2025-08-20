@@ -1,12 +1,6 @@
 
 -- Add triggers for automatic timestamp updates on integration tables
-CREATE TRIGGER update_integration_configs_timestamp
-  BEFORE UPDATE ON integration_configs
-  FOR EACH ROW EXECUTE FUNCTION update_integration_timestamp();
-
-CREATE TRIGGER update_data_ingestion_logs_timestamp
-  BEFORE UPDATE ON data_ingestion_logs
-  FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+-- Note: update_integration_timestamp function will be defined in a later migration
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_integration_configs_client_id ON integration_configs(client_id);
@@ -35,10 +29,7 @@ CREATE TABLE IF NOT EXISTS webhook_notifications (
 -- RLS for webhook notifications
 ALTER TABLE webhook_notifications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Webhook notifications for authorized users"
-  ON webhook_notifications
-  FOR ALL
-  USING (get_user_role(auth.uid()) = ANY(ARRAY['admin'::text, 'complianceOfficer'::text]));
+-- Note: RLS policy will be added in a later migration after get_user_role function is defined
 
 -- Index for webhook notifications
 CREATE INDEX IF NOT EXISTS idx_webhook_notifications_client_id ON webhook_notifications(client_id);

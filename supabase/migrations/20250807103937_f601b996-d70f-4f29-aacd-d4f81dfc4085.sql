@@ -74,21 +74,7 @@ ALTER TABLE public.external_customer_mappings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_transaction_mappings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.integration_api_keys ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies for integration management (admin and compliance officers only)
-CREATE POLICY "Integration management for authorized users" ON public.integration_configs
-  FOR ALL USING (get_user_role(auth.uid()) IN ('admin', 'complianceOfficer'));
-
-CREATE POLICY "Data ingestion logs for authorized users" ON public.data_ingestion_logs
-  FOR ALL USING (get_user_role(auth.uid()) IN ('admin', 'complianceOfficer'));
-
-CREATE POLICY "Customer mappings for authorized users" ON public.external_customer_mappings
-  FOR ALL USING (get_user_role(auth.uid()) IN ('admin', 'complianceOfficer'));
-
-CREATE POLICY "Transaction mappings for authorized users" ON public.external_transaction_mappings
-  FOR ALL USING (get_user_role(auth.uid()) IN ('admin', 'complianceOfficer'));
-
-CREATE POLICY "API keys for authorized users" ON public.integration_api_keys
-  FOR ALL USING (get_user_role(auth.uid()) IN ('admin', 'complianceOfficer'));
+-- Note: RLS policies will be added in a later migration after the get_user_role function is defined
 
 -- Create indexes for performance
 CREATE INDEX idx_integration_configs_client_id ON public.integration_configs(client_id);
@@ -98,14 +84,15 @@ CREATE INDEX idx_external_transaction_mappings_client_external ON public.externa
 CREATE INDEX idx_integration_api_keys_client_id ON public.integration_api_keys(client_id);
 
 -- Create trigger for updating timestamps
-CREATE OR REPLACE FUNCTION update_integration_timestamp()
+CREATE OR REPLACE FUNCTION update_integration_configs_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = now();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_integration_configs_timestamp
+CREATE TRIGGER integration_configs_updated_at
   BEFORE UPDATE ON public.integration_configs
-  FOR EACH ROW EXECUTE FUNCTION update_integration_timestamp();
+  FOR EACH ROW
+  EXECUTE FUNCTION update_integration_configs_updated_at();
