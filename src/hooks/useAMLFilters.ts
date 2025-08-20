@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AMLTransaction } from '@/types/aml';
 
 export interface AMLFilters {
@@ -34,8 +34,9 @@ const defaultFilters: AMLFilters = {
   searchQuery: ''
 };
 
-export const useAMLFilters = () => {
+export const useAMLFilters = (transactions: AMLTransaction[]) => {
   const [filters, setFilters] = useState<AMLFilters>(defaultFilters);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const updateFilters = (newFilters: Partial<AMLFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -43,9 +44,10 @@ export const useAMLFilters = () => {
 
   const clearFilters = () => {
     setFilters(defaultFilters);
+    setSearchTerm('');
   };
 
-  const applyFilters = (transactions: AMLTransaction[]): AMLTransaction[] => {
+  const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
       // Status filter
       if (filters.status.length > 0 && !filters.status.includes(transaction.status)) {
@@ -61,15 +63,15 @@ export const useAMLFilters = () => {
         }
       }
 
-      // Amount range filter
-      if (transaction.amount < filters.amountRange.min || 
-          transaction.amount > filters.amountRange.max) {
+      // Amount range filter - using totalAmount property
+      if (transaction.totalAmount < filters.amountRange.min || 
+          transaction.totalAmount > filters.amountRange.max) {
         return false;
       }
 
-      // Date range filter
+      // Date range filter - using timestamp property
       if (filters.dateRange.start || filters.dateRange.end) {
-        const transactionDate = new Date(transaction.transactionDate);
+        const transactionDate = new Date(transaction.timestamp);
         if (filters.dateRange.start && transactionDate < filters.dateRange.start) {
           return false;
         }
@@ -92,8 +94,8 @@ export const useAMLFilters = () => {
       }
 
       // Search query filter
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
+      if (filters.searchQuery || searchTerm) {
+        const query = (filters.searchQuery || searchTerm).toLowerCase();
         const searchableText = [
           transaction.id,
           transaction.senderName,
@@ -109,12 +111,15 @@ export const useAMLFilters = () => {
 
       return true;
     });
-  };
+  }, [transactions, filters, searchTerm]);
 
   return {
     filters,
+    setFilters: updateFilters,
+    searchTerm,
+    setSearchTerm,
+    filteredTransactions,
     updateFilters,
-    clearFilters,
-    applyFilters
+    clearFilters
   };
 };

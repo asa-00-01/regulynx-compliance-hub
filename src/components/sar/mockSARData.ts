@@ -20,10 +20,10 @@ export const mockUsers = [
   { id: 'user-005', name: 'Fatima Al-Zahra' }
 ];
 
-// Export normalized transaction data for selection
+// Export normalized transaction data for selection - using destinationCountry instead of recipientCountry
 export const mockAvailableTransactions = normalizedTransactions.map(tx => ({
   id: tx.id,
-  description: `${tx.amount.toLocaleString()} ${tx.currency} to ${tx.recipientCountry} on ${new Date(tx.timestamp).toLocaleDateString()}`,
+  description: `${tx.amount.toLocaleString()} ${tx.currency} to ${tx.destinationCountry} on ${new Date(tx.timestamp).toLocaleDateString()}`,
   amount: tx.amount,
   currency: tx.currency,
   date: new Date(tx.timestamp).toISOString().split('T')[0]
