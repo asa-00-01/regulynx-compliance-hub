@@ -1,249 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
+import DashboardService, { DashboardMetrics } from '@/services/dashboardService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Users, Shield, Activity, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import DashboardCharts from '@/components/dashboard/DashboardCharts';
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Shield, AlertTriangle, Activity, TrendingUp, FileText, Clock, CheckCircle } from 'lucide-react';
-import { DashboardService, type DashboardMetrics } from '@/services/dashboardService';
-import { useQuery } from '@tanstack/react-query';
+interface ComplianceMetrics {
+  totalTransactions: number;
+  flaggedTransactions: number;
+  verifiedUsers: number;
+  sanctionedUsers: number;
+  pepUsers: number;
+}
 
-const Dashboard = () => {
-  const { data: metrics, isLoading, error } = useQuery({
-    queryKey: ['dashboard-metrics'],
-    queryFn: DashboardService.getDashboardMetrics,
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: recentActivity } = useQuery({
-    queryKey: ['recent-activity'],
-    queryFn: () => DashboardService.getRecentActivity(5),
-    refetchInterval: 60000, // Refresh every minute
-  });
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        const dashboardMetrics = await DashboardService.getDashboardMetrics();
+        setMetrics(dashboardMetrics);
+      } catch (err: any) {
+        console.error('Failed to load dashboard metrics:', err);
+        setError('Failed to load dashboard data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const { data: riskDistribution } = useQuery({
-    queryKey: ['risk-distribution'],
-    queryFn: DashboardService.getRiskScoreDistribution,
-    refetchInterval: 300000, // Refresh every 5 minutes
-  });
+    loadDashboardData();
+  }, []);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertTriangle className="h-16 w-16 text-destructive mb-4 mx-auto" />
-          <h2 className="text-xl font-semibold mb-2">Error Loading Dashboard</h2>
-          <p className="text-muted-foreground">Please try refreshing the page</p>
-        </div>
-      </div>
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
-  const defaultMetrics: DashboardMetrics = {
-    totalUsers: 0,
-    verifiedUsers: 0,
-    pendingVerifications: 0,
-    flaggedTransactions: 0,
-    totalTransactions: 0,
-    activeComplianceCases: 0,
-    highRiskCustomers: 0,
-    averageRiskScore: 0
+  if (!metrics) {
+    return (
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>No dashboard data available.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  const getRoleBasedWelcome = () => {
+    if (user?.isPlatformOwner) return 'Platform Owner Dashboard';
+    if (user?.customer_roles?.includes('customer_admin')) return 'Admin Dashboard';
+    if (user?.customer_roles?.includes('customer_compliance')) return 'Compliance Dashboard';
+    if (user?.customer_roles?.includes('customer_executive')) return 'Executive Dashboard';
+    return 'Dashboard';
   };
 
-  const dashboardMetrics = metrics || defaultMetrics;
+  const getMetricCards = () => {
+    const baseCards = [
+      {
+        title: 'Total Users',
+        value: metrics.totalUsers,
+        description: 'Registered users in system',
+        icon: Users,
+        color: 'text-blue-600'
+      },
+      {
+        title: 'Verified Users',
+        value: metrics.verifiedUsers,
+        description: 'KYC verified users',
+        icon: CheckCircle,
+        color: 'text-green-600'
+      },
+      {
+        title: 'Pending Verifications',
+        value: metrics.pendingVerifications,
+        description: 'Awaiting verification',
+        icon: Clock,
+        color: 'text-orange-600'
+      }
+    ];
+
+    if (user?.customer_roles?.includes('customer_compliance') || user?.isPlatformOwner) {
+      baseCards.push(
+        {
+          title: 'High Risk Customers',
+          value: metrics.highRiskCustomers,
+          description: 'Customers requiring attention',
+          icon: AlertTriangle,
+          color: 'text-red-600'
+        },
+        {
+          title: 'Active Cases',
+          value: metrics.activeComplianceCases,
+          description: 'Open compliance cases',
+          icon: Shield,
+          color: 'text-purple-600'
+        },
+        {
+          title: 'Flagged Transactions',
+          value: metrics.flaggedTransactions,
+          description: 'Transactions requiring review',
+          icon: Activity,
+          color: 'text-amber-600'
+        }
+      );
+    }
+
+    return baseCards;
+  };
+
+  const metricCards = getMetricCards();
+
+  // Create compliance metrics from dashboard metrics
+  const complianceMetrics: ComplianceMetrics = {
+    totalTransactions: metrics.totalTransactions,
+    flaggedTransactions: metrics.flaggedTransactions,
+    verifiedUsers: metrics.verifiedUsers,
+    sanctionedUsers: 0, // Not available in DashboardMetrics
+    pepUsers: 0 // Not available in DashboardMetrics
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{getRoleBasedWelcome()}</h1>
         <p className="text-muted-foreground">
-          Overview of your compliance platform activity
+          Welcome back, {user?.name || user?.email}
         </p>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Organization customers being monitored
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.verifiedUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              KYC verified customers
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.pendingVerifications.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting KYC verification
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Risk</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.highRiskCustomers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Customers requiring attention
-            </p>
-          </CardContent>
-        </Card>
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {metricCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {card.title}
+                </CardTitle>
+                <Icon className={`h-4 w-4 ${card.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{card.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Secondary Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.totalTransactions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              AML transactions monitored
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Flagged Transactions</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.flaggedTransactions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Requiring investigation
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.activeComplianceCases.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Open compliance cases
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Risk Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardMetrics.averageRiskScore}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all customers
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentActivity && recentActivity.length > 0 ? (
-            <div className="space-y-4">
-              {recentActivity.map((activity: any) => (
-                <div key={activity.id} className="flex items-center space-x-4 text-sm">
-                  <div className="flex-shrink-0">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate">
-                      <span className="font-medium">
-                        {activity.organization_customers?.full_name || 'Unknown Customer'}
-                      </span>
-                      {' - '}
-                      <span className="capitalize">{activity.type.replace('_', ' ')}</span>
-                    </p>
-                    <p className="text-muted-foreground truncate">{activity.description}</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${activity.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 
-                        activity.status === 'resolved' ? 'bg-green-100 text-green-800' : 
-                        'bg-blue-100 text-blue-800'}`}>
-                      {activity.status}
-                    </span>
-                  </div>
+      {/* Risk Overview */}
+      {(user?.customer_roles?.includes('customer_compliance') || user?.isPlatformOwner) && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Risk Score Overview</CardTitle>
+              <CardDescription>
+                Average customer risk score: {metrics.averageRiskScore}%
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">System Risk Level</span>
+                  <Badge variant={metrics.averageRiskScore > 70 ? 'destructive' : 
+                                 metrics.averageRiskScore > 40 ? 'secondary' : 'default'}>
+                    {metrics.averageRiskScore > 70 ? 'High' : 
+                     metrics.averageRiskScore > 40 ? 'Medium' : 'Low'}
+                  </Badge>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No recent activity</p>
-          )}
-        </CardContent>
-      </Card>
+                <Progress value={metrics.averageRiskScore} className="h-2" />
+                <p className="text-xs text-muted-foreground">
+                  {metrics.highRiskCustomers} customers require immediate attention
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Risk Distribution */}
-      {riskDistribution && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Risk Score Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{riskDistribution.low}</div>
-                <p className="text-sm text-muted-foreground">Low Risk</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Compliance Status</CardTitle>
+              <CardDescription>
+                Current compliance monitoring overview
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Active Cases</span>
+                  <span className="text-sm font-medium">{metrics.activeComplianceCases}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Flagged Transactions</span>
+                  <span className="text-sm font-medium">{metrics.flaggedTransactions}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Pending Reviews</span>
+                  <span className="text-sm font-medium">{metrics.pendingVerifications}</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{riskDistribution.medium}</div>
-                <p className="text-sm text-muted-foreground">Medium Risk</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{riskDistribution.high}</div>
-                <p className="text-sm text-muted-foreground">High Risk</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{riskDistribution.critical}</div>
-                <p className="text-sm text-muted-foreground">Critical Risk</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
+
+      {/* Charts Section */}
+      <DashboardCharts metrics={complianceMetrics} />
     </div>
   );
 };

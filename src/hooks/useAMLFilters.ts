@@ -1,152 +1,120 @@
-import { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+
+import { useState } from 'react';
 import { AMLTransaction } from '@/types/aml';
 
-interface AMLFilters {
-  dateRange: { from: Date | null; to: Date | null };
-  amountRange: { min: number | null; max: number | null };
-  currency: string;
-  method: string;
-  riskLevel: string;
-  country: string;
-  status: string;
-  searchTerm: string;
+export interface AMLFilters {
+  status: string[];
+  riskLevels: string[];
+  amountRange: {
+    min: number;
+    max: number;
+  };
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
+  countries: string[];
+  currencies: string[];
+  searchQuery: string;
 }
 
-/**
- * Manages AML transaction filtering logic including search parameters and filter application.
- * Provides filtered transaction results based on various criteria.
- */
-export const useAMLFilters = (transactionsList: AMLTransaction[]) => {
-  const [searchParams] = useSearchParams();
-  const userIdFromSearchParams = searchParams.get('userId');
-  
-  const [activeFilters, setActiveFilters] = useState<AMLFilters>({
-    dateRange: { from: null, to: null },
-    amountRange: { min: null, max: null },
-    currency: '',
-    method: '',
-    riskLevel: '',
-    country: '',
-    status: '',
-    searchTerm: ''
-  });
-  const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+const defaultFilters: AMLFilters = {
+  status: [],
+  riskLevels: [],
+  amountRange: {
+    min: 0,
+    max: 1000000
+  },
+  dateRange: {
+    start: null,
+    end: null
+  },
+  countries: [],
+  currencies: [],
+  searchQuery: ''
+};
 
-  /**
-   * Applies search term filter to transactions
-   */
-  const filterBySearchTerm = (transaction: AMLTransaction): boolean => {
-    const searchTerm = activeFilters.searchTerm || currentSearchTerm;
-    if (!searchTerm) return true;
-    
-    const searchTermLowerCase = searchTerm.toLowerCase();
-    const matchesTransactionId = transaction.id.toLowerCase().includes(searchTermLowerCase);
-    const matchesSenderName = transaction.senderName.toLowerCase().includes(searchTermLowerCase);
-    const matchesReceiverName = transaction.receiverName?.toLowerCase().includes(searchTermLowerCase);
-    
-    return matchesTransactionId || matchesSenderName || matchesReceiverName;
+export const useAMLFilters = () => {
+  const [filters, setFilters] = useState<AMLFilters>(defaultFilters);
+
+  const updateFilters = (newFilters: Partial<AMLFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  /**
-   * Applies risk level filter to transactions
-   */
-  const filterByRiskLevel = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.riskLevel) return true;
-    
-    const transactionRiskScore = transaction.riskScore;
-    
-    switch (activeFilters.riskLevel) {
-      case 'low':
-        return transactionRiskScore < 30;
-      case 'medium':
-        return transactionRiskScore >= 30 && transactionRiskScore < 70;
-      case 'high':
-        return transactionRiskScore >= 70;
-      default:
-        return true;
-    }
+  const clearFilters = () => {
+    setFilters(defaultFilters);
   };
 
-  /**
-   * Applies status filter to transactions
-   */
-  const filterByStatus = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.status) return true;
-    return transaction.status === activeFilters.status;
-  };
+  const applyFilters = (transactions: AMLTransaction[]): AMLTransaction[] => {
+    return transactions.filter(transaction => {
+      // Status filter
+      if (filters.status.length > 0 && !filters.status.includes(transaction.status)) {
+        return false;
+      }
 
-  /**
-   * Applies currency filter to transactions
-   */
-  const filterByCurrency = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.currency) return true;
-    return transaction.senderCurrency === activeFilters.currency;
-  };
+      // Risk level filter
+      if (filters.riskLevels.length > 0) {
+        const riskLevel = transaction.riskScore > 75 ? 'high' : 
+                         transaction.riskScore > 50 ? 'medium' : 'low';
+        if (!filters.riskLevels.includes(riskLevel)) {
+          return false;
+        }
+      }
 
-  /**
-   * Applies method filter to transactions
-   */
-  const filterByMethod = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.method) return true;
-    return transaction.method === activeFilters.method;
-  };
+      // Amount range filter
+      if (transaction.amount < filters.amountRange.min || 
+          transaction.amount > filters.amountRange.max) {
+        return false;
+      }
 
-  /**
-   * Applies country filter to transactions
-   */
-  const filterByCountry = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.country) return true;
-    return transaction.senderCountryCode === activeFilters.country || transaction.receiverCountryCode === activeFilters.country;
-  };
+      // Date range filter
+      if (filters.dateRange.start || filters.dateRange.end) {
+        const transactionDate = new Date(transaction.transactionDate);
+        if (filters.dateRange.start && transactionDate < filters.dateRange.start) {
+          return false;
+        }
+        if (filters.dateRange.end && transactionDate > filters.dateRange.end) {
+          return false;
+        }
+      }
 
-  /**
-   * Applies date range filter to transactions
-   */
-  const filterByDateRange = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.dateRange.from && !activeFilters.dateRange.to) return true;
-    
-    const transactionDate = new Date(transaction.timestamp);
-    
-    if (activeFilters.dateRange.from && transactionDate < activeFilters.dateRange.from) return false;
-    if (activeFilters.dateRange.to && transactionDate > activeFilters.dateRange.to) return false;
-    
-    return true;
-  };
+      // Currency filter
+      if (filters.currencies.length > 0 && 
+          !filters.currencies.includes(transaction.senderCurrency)) {
+        return false;
+      }
 
-  /**
-   * Applies amount range filter to transactions
-   */
-  const filterByAmountRange = (transaction: AMLTransaction): boolean => {
-    if (!activeFilters.amountRange.min && !activeFilters.amountRange.max) return true;
-    
-    const transactionAmount = transaction.senderAmount;
-    
-    if (activeFilters.amountRange.min && transactionAmount < activeFilters.amountRange.min) return false;
-    if (activeFilters.amountRange.max && transactionAmount > activeFilters.amountRange.max) return false;
-    
-    return true;
-  };
+      // Country filter
+      if (filters.countries.length > 0 && 
+          !filters.countries.includes(transaction.senderCountryCode) &&
+          !filters.countries.includes(transaction.receiverCountryCode)) {
+        return false;
+      }
 
-  // Filter transactions based on current filters
-  const filteredTransactionsList = useMemo(() => {
-    return transactionsList.filter(transaction => {
-      return filterBySearchTerm(transaction) &&
-             filterByCurrency(transaction) &&
-             filterByMethod(transaction) &&
-             filterByRiskLevel(transaction) &&
-             filterByCountry(transaction) &&
-             filterByStatus(transaction) &&
-             filterByDateRange(transaction) &&
-             filterByAmountRange(transaction);
+      // Search query filter
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const searchableText = [
+          transaction.id,
+          transaction.senderName,
+          transaction.receiverName,
+          transaction.senderCurrency,
+          transaction.receiverCurrency
+        ].join(' ').toLowerCase();
+        
+        if (!searchableText.includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
     });
-  }, [transactionsList, activeFilters, currentSearchTerm]);
+  };
 
   return {
-    filters: activeFilters,
-    searchTerm: currentSearchTerm,
-    filteredTransactions: filteredTransactionsList,
-    setFilters: setActiveFilters,
-    setSearchTerm: setCurrentSearchTerm,
+    filters,
+    updateFilters,
+    clearFilters,
+    applyFilters
   };
 };
