@@ -1,71 +1,69 @@
 
-import { NewsItem, RSSFeed } from '@/types/news';
-import { KYCUser, KYCVerification } from '@/types/kyc';
 import { AMLTransaction } from '@/types/aml';
-import { unifiedMockData } from '@/mocks/centralizedMockData';
-
-import { NewsService } from './news/NewsService';
-import { KYCService } from './kyc/KYCService';
-import { AMLService } from './aml/AMLService';
-import { UnifiedDataService } from './unified/UnifiedDataService';
-
-import { logValidationResults } from '@/mocks/validators/dataValidator';
+import { UnifiedUserData } from '@/context/compliance/types';
+import { ComplianceCaseDetails } from '@/types/compliance-cases';
 
 export class MockDataService {
-  // News and RSS Feeds
-  static async getNewsItems(): Promise<NewsItem[]> {
-    return NewsService.getNewsItems();
+  static async delay(ms: number = 500): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  static async getRSSFeeds(): Promise<RSSFeed[]> {
-    return NewsService.getRSSFeeds();
+  static async getTransactions(): Promise<AMLTransaction[]> {
+    await this.delay();
+    return [];
   }
 
-  // KYC Users
-  static async getKYCUsers(filters?: any): Promise<KYCUser[]> {
-    return KYCService.getKYCUsers(filters);
+  static async getUsers(): Promise<UnifiedUserData[]> {
+    await this.delay();
+    return [];
   }
 
-  static async getKYCVerifications(): Promise<KYCVerification[]> {
-    return KYCService.getKYCVerifications();
+  static async getCases(): Promise<ComplianceCaseDetails[]> {
+    await this.delay();
+    return [];
   }
 
-  // AML Transactions
-  static async getAMLTransactions(filters?: any): Promise<AMLTransaction[]> {
-    return AMLService.getAMLTransactions(filters);
+  static async getTransactionById(id: string): Promise<AMLTransaction | null> {
+    await this.delay();
+    return null;
   }
 
-  // Unified User Data
-  static async getUnifiedUserData(filters?: any): Promise<typeof unifiedMockData> {
-    return UnifiedDataService.getUnifiedUserData(filters);
+  static async getUserById(id: string): Promise<UnifiedUserData | null> {
+    await this.delay();
+    return null;
   }
 
-  // Initialize and validate mock data
-  static validateData(): void {
-    console.log('🔍 Validating mock data consistency...');
-    try {
-      logValidationResults();
-    } catch (error) {
-      console.warn('Mock data validation encountered issues:', error);
-      console.log('✅ Continuing with available mock data');
-    }
+  static async getCaseById(id: string): Promise<ComplianceCaseDetails | null> {
+    await this.delay();
+    return null;
   }
 
-  static shouldUseMockData(): boolean {
-    return process.env.NODE_ENV === 'development';
+  static async createCase(caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails> {
+    await this.delay(1000);
+    
+    const newCase: ComplianceCaseDetails = {
+      id: Math.random().toString(36).substr(2, 9),
+      type: caseData.type || 'kyc',
+      status: 'open',
+      risk_score: caseData.risk_score || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      priority: caseData.priority || 'medium',
+      source: 'manual',
+      user_name: caseData.user_name || '',
+      description: caseData.description || '',
+      assigned_to: caseData.assigned_to || null,
+      assigned_to_name: caseData.assigned_to_name || null,
+      created_by: caseData.created_by || 'current_user',
+      resolved_at: null,
+      related_alerts: [],
+      related_transactions: [],
+      documents: [],
+      actions: []
+    };
+    
+    return newCase;
   }
-
-  static isMockMode(): boolean {
-    return this.shouldUseMockData();
-  }
-}
-
-// Auto-validate data in development, but don't block the app if validation fails
-if (MockDataService.shouldUseMockData()) {
-  // Use setTimeout to avoid blocking the main thread
-  setTimeout(() => {
-    MockDataService.validateData();
-  }, 100);
 }
 
 export default MockDataService;

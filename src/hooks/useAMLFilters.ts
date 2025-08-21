@@ -28,10 +28,10 @@ export const useAMLFilters = (transactions: AMLTransaction[]) => {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
-      // Search filter
+      // Search filter - using correct property names from AML transaction type
       if (filters.search && !transaction.id?.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !transaction.fromAccount?.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !transaction.toAccount?.toLowerCase().includes(filters.search.toLowerCase())) {
+          !transaction.senderName?.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !transaction.receiverName?.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
 
@@ -45,21 +45,21 @@ export const useAMLFilters = (transactions: AMLTransaction[]) => {
         return false;
       }
 
-      // Amount range filter
-      if (transaction.transactionAmount < filters.amountRange[0] || transaction.transactionAmount > filters.amountRange[1]) {
+      // Amount range filter - using senderAmount as the main amount
+      if (transaction.senderAmount < filters.amountRange[0] || transaction.senderAmount > filters.amountRange[1]) {
         return false;
       }
 
-      // Date range filter
-      if (filters.dateRange.from && new Date(transaction.transactionDate) < filters.dateRange.from) {
+      // Date range filter - using timestamp
+      if (filters.dateRange.from && new Date(transaction.timestamp) < filters.dateRange.from) {
         return false;
       }
-      if (filters.dateRange.to && new Date(transaction.transactionDate) > filters.dateRange.to) {
+      if (filters.dateRange.to && new Date(transaction.timestamp) > filters.dateRange.to) {
         return false;
       }
 
-      // Flags filter
-      if (filters.flags.length > 0 && !filters.flags.some(flag => transaction.suspiciousFlags?.includes(flag))) {
+      // Flags filter - check if transaction is suspicious or flagged
+      if (filters.flags.length > 0 && filters.flags.includes('suspicious') && !transaction.isSuspect) {
         return false;
       }
 

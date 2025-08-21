@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { ComplianceCaseDetails, CaseAction, CaseFilters, CaseSummary } from '@/types/compliance-cases';
 import { useCaseActions } from '@/hooks/useComplianceCases/actions';
+import { User } from '@/types';
 
-export const useComplianceCases = (organizationCustomerId?: string) => {
+export const useComplianceCases = (currentUser?: User) => {
   const [cases, setCases] = useState<ComplianceCaseDetails[]>([]);
   const [caseActions, setCaseActions] = useState<CaseAction[]>([]);
   const [selectedCase, setSelectedCase] = useState<ComplianceCaseDetails | null>(null);
@@ -74,7 +75,7 @@ export const useComplianceCases = (organizationCustomerId?: string) => {
         type: 'note',
         description: note,
         created_at: new Date().toISOString(),
-        created_by: 'current_user'
+        created_by: currentUser?.id || 'current_user'
       };
       setCaseActions(prev => [...prev, newAction]);
       return newAction;
@@ -130,7 +131,7 @@ export const useComplianceCases = (organizationCustomerId?: string) => {
 
   useEffect(() => {
     fetchCases();
-  }, [organizationCustomerId]);
+  }, []);
 
   return {
     cases,
