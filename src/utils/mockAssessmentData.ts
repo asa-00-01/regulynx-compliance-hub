@@ -98,6 +98,7 @@ export const mockDocuments: Document[] = [
   {
     id: 'doc_001',
     type: 'passport',
+    fileName: 'passport_user_001.pdf',
     uploadDate: new Date('2024-01-08T12:00:00Z').toISOString(),
     status: 'pending',
     userId: 'user_001'

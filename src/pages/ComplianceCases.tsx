@@ -80,18 +80,22 @@ const ComplianceCases = () => {
       if (caseData.source === 'sanctions_hit') mappedSource = 'alert';
 
       const convertedCaseData = {
-        userId: caseData.userId,
-        userName: caseData.userName,
-        type: caseData.type,
-        description: caseData.description,
-        riskScore: caseData.riskScore,
-        priority: caseData.priority,
+        userId: caseData.userId || '',
+        userName: caseData.userName || '',
+        type: caseData.type || 'kyc' as const,
+        description: caseData.description || '',
+        riskScore: caseData.riskScore || 0,
+        priority: caseData.priority || 'medium' as const,
         source: mappedSource,
         assignedTo: caseData.assignedTo,
         assignedToName: caseData.assignedToName,
-        relatedTransactions: caseData.relatedTransactions,
-        relatedAlerts: caseData.relatedAlerts,
-        documents: caseData.documents,
+        relatedTransactions: caseData.relatedTransactions || [],
+        relatedAlerts: caseData.relatedAlerts || [],
+        documents: caseData.documents || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: user?.id || 'current_user',
+        status: 'open' as const,
       };
 
       const result = await createCase(convertedCaseData);
