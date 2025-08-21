@@ -1,5 +1,5 @@
 
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { ComplianceContextInterface } from './ComplianceContextInterface';
 import { ComplianceState } from './types';
 
@@ -25,7 +25,6 @@ export const ComplianceContext = createContext<ComplianceContextInterface>({
   getRelatedCases: () => [],
 });
 
-// Export the hook from ComplianceContext.tsx
 export const useComplianceContext = () => {
   const context = useContext(ComplianceContext);
   if (!context) {
@@ -33,6 +32,3 @@ export const useComplianceContext = () => {
   }
   return context;
 };
-
-// Re-export everything needed
-export { ComplianceProvider } from './ComplianceContext';
