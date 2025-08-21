@@ -40,11 +40,23 @@ export interface GlobalFilters {
   country?: string;
 }
 
+export interface ComplianceMetrics {
+  totalUsers: number;
+  highRiskUsers: number;
+  pendingKYC: number;
+  verifiedUsers: number;
+}
+
 export interface ComplianceState {
   users: UnifiedUserData[];
   selectedUserId: string | null;
+  selectedUser: UnifiedUserData | null;
   selectedCase: ComplianceCaseDetails | null;
   globalFilters: GlobalFilters;
+  filters: GlobalFilters;
+  loading: boolean;
+  error: string | null;
+  metrics: ComplianceMetrics;
 }
 
 export type ComplianceAction =
@@ -52,4 +64,7 @@ export type ComplianceAction =
   | { type: 'UPDATE_USER_DATA'; payload: UnifiedUserData }
   | { type: 'SET_SELECTED_USER'; payload: string | null }
   | { type: 'SET_SELECTED_CASE'; payload: ComplianceCaseDetails | null }
-  | { type: 'SET_GLOBAL_FILTERS'; payload: GlobalFilters };
+  | { type: 'SET_GLOBAL_FILTERS'; payload: GlobalFilters }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_METRICS'; payload: ComplianceMetrics };

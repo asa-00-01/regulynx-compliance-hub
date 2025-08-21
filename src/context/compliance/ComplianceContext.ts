@@ -7,6 +7,7 @@ export const ComplianceContext = createContext<ComplianceContextInterface>({
   state: {
     users: [],
     selectedUserId: null,
+    selectedUser: null,
     selectedCase: null,
     globalFilters: {
       searchTerm: '',
@@ -14,6 +15,21 @@ export const ComplianceContext = createContext<ComplianceContextInterface>({
       dateRange: '30days',
       kycStatus: [],
       country: undefined,
+    },
+    filters: {
+      searchTerm: '',
+      riskLevel: 'all',
+      dateRange: '30days',
+      kycStatus: [],
+      country: undefined,
+    },
+    loading: false,
+    error: null,
+    metrics: {
+      totalUsers: 0,
+      highRiskUsers: 0,
+      pendingKYC: 0,
+      verifiedUsers: 0,
     },
   },
   dispatch: () => null,
@@ -23,6 +39,12 @@ export const ComplianceContext = createContext<ComplianceContextInterface>({
   getRelatedDocuments: () => [],
   getRelatedTransactions: () => [],
   getRelatedCases: () => [],
+  actions: {
+    loadUsers: () => Promise.resolve(),
+    selectUser: () => {},
+    updateFilters: () => {},
+    refreshMetrics: () => Promise.resolve(),
+  },
 });
 
 export const useComplianceContext = () => {
