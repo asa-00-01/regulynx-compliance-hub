@@ -1,10 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { ComplianceCaseDetails, CaseAction, CaseFilters, CaseSummary } from '@/types/compliance-cases';
+import { ComplianceCaseDetails, CaseAction, CaseFilters, CaseSummary } from '@/types/case';
 import { useCaseActions } from '@/hooks/useComplianceCases/actions';
-import { User } from '@/types';
 
-export const useComplianceCases = (currentUser?: User) => {
+export const useComplianceCases = (currentUserId?: string) => {
   const [cases, setCases] = useState<ComplianceCaseDetails[]>([]);
   const [caseActions, setCaseActions] = useState<CaseAction[]>([]);
   const [selectedCase, setSelectedCase] = useState<ComplianceCaseDetails | null>(null);
@@ -16,11 +15,27 @@ export const useComplianceCases = (currentUser?: User) => {
 
   // Calculate case summary
   const caseSummary: CaseSummary = {
-    total: cases.length,
-    open: cases.filter(c => c.status === 'open').length,
-    inProgress: cases.filter(c => c.status === 'in_progress').length,
-    resolved: cases.filter(c => c.status === 'resolved').length,
-    highPriority: cases.filter(c => c.priority === 'high' || c.priority === 'critical').length,
+    totalCases: cases.length,
+    openCases: cases.filter(c => c.status === 'open').length,
+    highRiskCases: cases.filter(c => c.riskScore >= 75).length,
+    escalatedCases: cases.filter(c => c.status === 'escalated').length,
+    resolvedLastWeek: cases.filter(c => 
+      c.status === 'closed' && 
+      new Date(c.updatedAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    ).length,
+    averageResolutionDays: 3.5,
+    casesByType: {
+      kyc: cases.filter(c => c.type === 'kyc').length,
+      aml: cases.filter(c => c.type === 'aml').length,
+      sanctions: cases.filter(c => c.type === 'sanctions').length,
+    },
+    casesByStatus: {
+      open: cases.filter(c => c.status === 'open').length,
+      under_review: cases.filter(c => c.status === 'under_review').length,
+      escalated: cases.filter(c => c.status === 'escalated').length,
+      pending_info: cases.filter(c => c.status === 'pending_info').length,
+      closed: cases.filter(c => c.status === 'closed').length,
+    }
   };
 
   // Mock data for cases
@@ -35,23 +50,22 @@ export const useComplianceCases = (currentUser?: User) => {
       const mockCases: ComplianceCaseDetails[] = [
         {
           id: '1',
+          userId: 'user-1',
+          userName: 'John Doe',
+          createdAt: new Date().toISOString(),
+          createdBy: 'admin-1',
+          updatedAt: new Date().toISOString(),
           type: 'kyc',
           status: 'open',
-          risk_score: 75,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          riskScore: 75,
+          description: 'KYC verification required',
+          assignedTo: undefined,
+          assignedToName: undefined,
           priority: 'high',
           source: 'system',
-          user_name: 'John Doe',
-          description: 'KYC verification required',
-          assigned_to: null,
-          assigned_to_name: null,
-          created_by: 'system',
-          resolved_at: null,
-          related_alerts: [],
-          related_transactions: [],
-          documents: [],
-          actions: []
+          relatedTransactions: [],
+          relatedAlerts: [],
+          documents: []
         }
       ];
       
@@ -67,22 +81,18 @@ export const useComplianceCases = (currentUser?: User) => {
     setSelectedCase(caseItem);
   };
 
-  const addCaseNote = async (caseId: string, note: string): Promise<CaseAction | null> => {
-    try {
-      const newAction: CaseAction = {
-        id: Math.random().toString(36).substr(2, 9),
-        case_id: caseId,
-        type: 'note',
-        description: note,
-        created_at: new Date().toISOString(),
-        created_by: currentUser?.id || 'current_user'
-      };
-      setCaseActions(prev => [...prev, newAction]);
-      return newAction;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add note');
-      return null;
-    }
+  const addCaseNote = async (caseId: string, note: string): Promise<CaseAction> => {
+    const newAction: CaseAction = {
+      id: Math.random().toString(36).substr(2, 9),
+      caseId: caseId,
+      actionBy: currentUserId || 'current_user',
+      actionByName: 'Current User',
+      actionDate: new Date().toISOString(),
+      actionType: 'note',
+      description: note
+    };
+    setCaseActions(prev => [...prev, newAction]);
+    return newAction;
   };
 
   const updateCaseStatus = async (
@@ -93,7 +103,7 @@ export const useComplianceCases = (currentUser?: User) => {
     try {
       setCases(prev => prev.map(c => 
         c.id === caseId 
-          ? { ...c, status: newStatus, updated_at: new Date().toISOString() }
+          ? { ...c, status: newStatus, updatedAt: new Date().toISOString() }
           : c
       ));
       
@@ -116,7 +126,7 @@ export const useComplianceCases = (currentUser?: User) => {
     try {
       setCases(prev => prev.map(c => 
         c.id === caseId 
-          ? { ...c, assigned_to: assignToId, assigned_to_name: assignToName, updated_at: new Date().toISOString() }
+          ? { ...c, assignedTo: assignToId, assignedToName: assignToName, updatedAt: new Date().toISOString() }
           : c
       ));
       
@@ -127,6 +137,31 @@ export const useComplianceCases = (currentUser?: User) => {
       setError(err instanceof Error ? err.message : 'Failed to assign case');
       return false;
     }
+  };
+
+  const createCase = async (caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails> => {
+    const newCase: ComplianceCaseDetails = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId: caseData.userId || '',
+      userName: caseData.userName || '',
+      createdAt: new Date().toISOString(),
+      createdBy: currentUserId || 'current_user',
+      updatedAt: new Date().toISOString(),
+      type: caseData.type || 'kyc',
+      status: 'open',
+      riskScore: caseData.riskScore || 0,
+      description: caseData.description || '',
+      assignedTo: caseData.assignedTo,
+      assignedToName: caseData.assignedToName,
+      priority: caseData.priority || 'medium',
+      source: caseData.source || 'manual',
+      relatedTransactions: caseData.relatedTransactions || [],
+      relatedAlerts: caseData.relatedAlerts || [],
+      documents: caseData.documents || []
+    };
+    
+    setCases(prev => [newCase, ...prev]);
+    return newCase;
   };
 
   useEffect(() => {
@@ -146,7 +181,7 @@ export const useComplianceCases = (currentUser?: User) => {
     addCaseNote,
     updateCaseStatus,
     assignCase,
-    createCase: caseActionsHook.createCase,
+    createCase,
     fetchCases,
     refreshCases: fetchCases,
     ...caseActionsHook

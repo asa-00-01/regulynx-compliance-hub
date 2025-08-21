@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ComplianceCaseDetails, CaseFilters, CaseSummary } from '@/types/case';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
@@ -43,7 +44,7 @@ const ComplianceCases = () => {
     assignCase,
     createCase,
     fetchCases,
-  } = useComplianceCases(user);
+  } = useComplianceCases(user?.id);
   
   // Handle case updates from action buttons
   const handleCaseUpdated = () => {
@@ -66,6 +67,31 @@ const ComplianceCases = () => {
       }
     }
   }, [location.state, cases, selectCase]);
+
+  // Create a proper case summary that matches the expected interface
+  const dashboardSummary: CaseSummary = {
+    totalCases: cases.length,
+    openCases: cases.filter(c => c.status === 'open').length,
+    highRiskCases: cases.filter(c => c.riskScore >= 75).length,
+    escalatedCases: cases.filter(c => c.status === 'escalated').length,
+    resolvedLastWeek: cases.filter(c => 
+      c.status === 'closed' && 
+      new Date(c.updatedAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    ).length,
+    averageResolutionDays: 3.5, // Mock value
+    casesByType: {
+      kyc: cases.filter(c => c.type === 'kyc').length,
+      aml: cases.filter(c => c.type === 'aml').length,
+      sanctions: cases.filter(c => c.type === 'sanctions').length,
+    },
+    casesByStatus: {
+      open: cases.filter(c => c.status === 'open').length,
+      under_review: cases.filter(c => c.status === 'under_review').length,
+      escalated: cases.filter(c => c.status === 'escalated').length,
+      pending_info: cases.filter(c => c.status === 'pending_info').length,
+      closed: cases.filter(c => c.status === 'closed').length,
+    }
+  };
   
   return (
     <div className="h-full p-6">
@@ -92,7 +118,7 @@ const ComplianceCases = () => {
           
           <TabsContent value="dashboard" className="space-y-4">
             <CaseDashboard 
-              summary={caseSummary} 
+              summary={dashboardSummary} 
               loading={loading} 
               onViewAllCases={() => setActiveTab('cases')}
             />
