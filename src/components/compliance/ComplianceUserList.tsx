@@ -1,87 +1,46 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CompliantUser } from '@/types/compliance';
-import { Eye, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { useComplianceContext } from '@/context/compliance/ComplianceContext';
 
-interface ComplianceUserListProps {
-  users: CompliantUser[];
-  onUserSelect: (userId: string) => void;
-  selectedUserId?: string;
-}
+const ComplianceUserList: React.FC = () => {
+  const { customers, loading, error } = useComplianceContext();
 
-const ComplianceUserList: React.FC<ComplianceUserListProps> = ({
-  users,
-  onUserSelect,
-  selectedUserId
-}) => {
-  const getKYCStatusIcon = (status: string) => {
-    switch (status) {
-      case 'verified':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'rejected':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      default:
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-    }
-  };
+  if (loading) {
+    return <div className="p-4">Loading customers...</div>;
+  }
 
-  const getRiskBadgeVariant = (score: number) => {
-    if (score >= 75) return "destructive";
-    if (score >= 50) return "secondary";
-    return "outline";
-  };
+  if (error) {
+    return <div className="p-4 text-destructive">Error: {error}</div>;
+  }
 
   return (
-    <div className="grid gap-4">
-      {users.map((user) => (
-        <Card 
-          key={user.id}
-          className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-            selectedUserId === user.id ? 'ring-2 ring-primary' : ''
-          }`}
-          onClick={() => onUserSelect(user.id)}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarFallback>
-                    {user.fullName.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-medium">{user.fullName}</h3>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Organization Customers</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {customers.map((customer) => (
+            <div key={customer.id} className="flex items-center justify-between p-4 border rounded">
+              <div>
+                <h3 className="font-medium">{customer.full_name}</h3>
+                <p className="text-sm text-muted-foreground">{customer.email}</p>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  {getKYCStatusIcon(user.kycStatus)}
-                  <Badge variant="outline" className="capitalize">
-                    {user.kycStatus.replace('_', ' ')}
-                  </Badge>
-                </div>
-                
-                <Badge variant={getRiskBadgeVariant(user.riskScore)}>
-                  Risk: {user.riskScore}
+              <div className="flex gap-2">
+                <Badge variant={customer.kyc_status === 'verified' ? 'default' : 'secondary'}>
+                  {customer.kyc_status}
                 </Badge>
-                
-                <Button variant="outline" size="sm">
-                  <Eye className="h-4 w-4" />
-                </Button>
+                <Badge variant={customer.risk_score > 70 ? 'destructive' : 'default'}>
+                  Risk: {customer.risk_score}
+                </Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
