@@ -38,6 +38,25 @@ export class MockDataService {
     return null;
   }
 
+  static async getDocuments() {
+    await this.delay();
+    return [];
+  }
+
+  static async getUnifiedUserData(): Promise<UnifiedUserData[]> {
+    await this.delay();
+    return [];
+  }
+
+  static async getAuditLogs() {
+    await this.delay();
+    return [];
+  }
+
+  static validateData(data: any) {
+    return { isValid: true, errors: [] };
+  }
+
   static async createCase(caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails> {
     await this.delay(1000);
     

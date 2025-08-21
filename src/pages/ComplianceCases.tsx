@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User } from '@/types';
-import { ComplianceCaseDetails, CaseFilters, CaseSummary } from '@/types/compliance-cases';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
@@ -45,7 +43,7 @@ const ComplianceCases = () => {
     assignCase,
     createCase,
     fetchCases,
-  } = useComplianceCases(user?.id);
+  } = useComplianceCases(user);
   
   // Handle case updates from action buttons
   const handleCaseUpdated = () => {

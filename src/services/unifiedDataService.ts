@@ -79,8 +79,7 @@ export class UnifiedDataService {
   // Unified user data
   static async getUnifiedUserData(): Promise<UnifiedUserData[]> {
     try {
-      // Mock implementation - return empty array for now
-      return [];
+      return MockDataService.getUnifiedUserData();
     } catch (error) {
       console.error('Error fetching unified user data:', error);
       return [];
@@ -100,12 +99,20 @@ export class UnifiedDataService {
   // Data validation
   static validateData(data: any) {
     try {
-      // Mock implementation - return true for now
-      return { isValid: true, errors: [] };
+      return MockDataService.validateData(data);
     } catch (error) {
       console.error('Error validating data:', error);
       return { isValid: false, errors: ['Validation failed'] };
     }
+  }
+
+  // Data source management
+  static getCurrentDataSource() {
+    return 'mock'; // Default to mock for now
+  }
+
+  static validateCurrentDataSource() {
+    return { isValid: true, errors: [] };
   }
 
   // Performance monitoring
