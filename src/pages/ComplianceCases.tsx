@@ -71,7 +71,11 @@ const ComplianceCases = () => {
   // Wrapper function to handle the type conversion for createCase
   const handleCreateCase = async (caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails | null> => {
     try {
-      // Convert the interface types to match what the hook expects
+      // Map the CaseSource types to what the hook expects
+      let mappedSource: 'manual' | 'system' | 'risk_assessment' = 'manual';
+      if (caseData.source === 'system') mappedSource = 'system';
+      if (caseData.source === 'risk_assessment') mappedSource = 'risk_assessment';
+
       const convertedCaseData = {
         userId: caseData.userId,
         userName: caseData.userName,
@@ -79,7 +83,7 @@ const ComplianceCases = () => {
         description: caseData.description,
         riskScore: caseData.riskScore,
         priority: caseData.priority,
-        source: caseData.source,
+        source: mappedSource,
         assignedTo: caseData.assignedTo,
         assignedToName: caseData.assignedToName,
         relatedTransactions: caseData.relatedTransactions,

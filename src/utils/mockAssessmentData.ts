@@ -7,7 +7,6 @@ import { ComplianceCaseDetails } from '@/types/case';
 export const mockAMLTransactions: AMLTransaction[] = [
   {
     id: 'txn_001',
-    transactionAmount: 15000.00,
     currency: 'USD',
     date: new Date('2024-01-15T10:30:00Z').toISOString(),
     fromAccountId: 'acc_001',
@@ -21,7 +20,6 @@ export const mockAMLTransactions: AMLTransaction[] = [
   },
   {
     id: 'txn_002',
-    transactionAmount: 7500.00,
     currency: 'EUR',
     date: new Date('2024-01-16T14:22:00Z').toISOString(),
     fromAccountId: 'acc_003',
@@ -35,7 +33,6 @@ export const mockAMLTransactions: AMLTransaction[] = [
   },
   {
     id: 'txn_003',
-    transactionAmount: 25000.00,
     currency: 'USD',
     date: new Date('2024-01-17T09:15:00Z').toISOString(),
     fromAccountId: 'acc_004',
@@ -76,7 +73,6 @@ export const mockComplianceCases: ComplianceCaseDetails[] = [
 export const mockDocuments: Document[] = [
   {
     id: 'doc_001',
-    name: 'passport_scan.pdf',
     type: 'passport',
     uploadDate: new Date('2024-01-08T12:00:00Z').toISOString(),
     status: 'pending',
