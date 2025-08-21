@@ -68,28 +68,30 @@ const ComplianceCases = () => {
     }
   }, [location.state, cases, selectCase]);
 
-  // Create a proper case summary that matches the expected interface
-  const dashboardSummary: CaseSummary = {
-    totalCases: cases.length,
-    openCases: cases.filter(c => c.status === 'open').length,
-    highRiskCases: cases.filter(c => c.riskScore >= 75).length,
-    escalatedCases: cases.filter(c => c.status === 'escalated').length,
-    resolvedLastWeek: cases.filter(c => 
-      c.status === 'closed' && 
-      new Date(c.updatedAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    ).length,
-    averageResolutionDays: 3.5, // Mock value
-    casesByType: {
-      kyc: cases.filter(c => c.type === 'kyc').length,
-      aml: cases.filter(c => c.type === 'aml').length,
-      sanctions: cases.filter(c => c.type === 'sanctions').length,
-    },
-    casesByStatus: {
-      open: cases.filter(c => c.status === 'open').length,
-      under_review: cases.filter(c => c.status === 'under_review').length,
-      escalated: cases.filter(c => c.status === 'escalated').length,
-      pending_info: cases.filter(c => c.status === 'pending_info').length,
-      closed: cases.filter(c => c.status === 'closed').length,
+  // Wrapper function to handle the type conversion for createCase
+  const handleCreateCase = async (caseData: Partial<ComplianceCaseDetails>): Promise<ComplianceCaseDetails | null> => {
+    try {
+      // Convert the interface types to match what the hook expects
+      const convertedCaseData = {
+        userId: caseData.userId,
+        userName: caseData.userName,
+        type: caseData.type,
+        description: caseData.description,
+        riskScore: caseData.riskScore,
+        priority: caseData.priority,
+        source: caseData.source,
+        assignedTo: caseData.assignedTo,
+        assignedToName: caseData.assignedToName,
+        relatedTransactions: caseData.relatedTransactions,
+        relatedAlerts: caseData.relatedAlerts,
+        documents: caseData.documents,
+      };
+
+      const result = await createCase(convertedCaseData);
+      return result;
+    } catch (error) {
+      console.error('Failed to create case:', error);
+      return null;
     }
   };
   
@@ -118,7 +120,7 @@ const ComplianceCases = () => {
           
           <TabsContent value="dashboard" className="space-y-4">
             <CaseDashboard 
-              summary={dashboardSummary} 
+              summary={caseSummary} 
               loading={loading} 
               onViewAllCases={() => setActiveTab('cases')}
             />
@@ -157,7 +159,7 @@ const ComplianceCases = () => {
       <NewCaseDialog 
         open={showNewCaseDialog}
         onOpenChange={setShowNewCaseDialog}
-        onCreateCase={createCase}
+        onCreateCase={handleCreateCase}
         currentUser={user}
         initialData={initialCaseData}
       />
