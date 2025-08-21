@@ -1,31 +1,37 @@
 
 import { AMLTransaction } from '@/types/aml';
-import { ComplianceCase } from '@/types/compliance-cases';
+import { User } from '@/types';
+import { ComplianceCaseDetails } from '@/types/compliance-cases';
 
-export interface ValidationResult {
+interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
 }
 
-export const validateTransaction = (transaction: AMLTransaction): ValidationResult => {
+export const validateAMLTransaction = (transaction: AMLTransaction): ValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Required fields validation
-  if (!transaction.id) errors.push('Transaction ID is required');
-  if (!transaction.amount || transaction.amount <= 0) errors.push('Valid amount is required');
-  if (!transaction.currency) errors.push('Currency is required');
-  if (!transaction.transaction_date) errors.push('Transaction date is required');
+  // Required field validations
+  if (!transaction.transactionAmount || transaction.transactionAmount <= 0) {
+    errors.push(`Invalid transaction amount: ${transaction.transactionAmount}`);
+  }
+  if (!transaction.currency) {
+    errors.push('Missing currency');
+  }
+  if (!transaction.transactionDate) {
+    errors.push('Missing transaction date');
+  }
 
-  // Business logic validation
-  if (transaction.amount > 100000 && !transaction.senderUserId) {
-    warnings.push('Large transactions should have sender information');
+  // Business rule validations
+  if (transaction.transactionAmount > 10000) {
+    warnings.push('Large transaction amount detected');
   }
 
   // Risk score validation
-  if (transaction.risk_score > 80 && transaction.status !== 'flagged') {
-    warnings.push('High risk transactions should be flagged for review');
+  if (transaction.riskScore > 80) {
+    warnings.push('High risk score detected');
   }
 
   return {
@@ -35,22 +41,21 @@ export const validateTransaction = (transaction: AMLTransaction): ValidationResu
   };
 };
 
-export const validateComplianceCase = (complianceCase: ComplianceCase): ValidationResult => {
+export const validateUser = (user: User): ValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Required fields validation
-  if (!complianceCase.id) errors.push('Case ID is required');
-  if (!complianceCase.type) errors.push('Case type is required');
-  if (!complianceCase.status) errors.push('Case status is required');
-
-  // Business logic validation
-  if (complianceCase.priority === 'high' && !complianceCase.assigned_to) {
-    warnings.push('High priority cases should be assigned');
+  // Required field validations
+  if (!user.email || !user.email.includes('@')) {
+    errors.push('Invalid email address');
+  }
+  if (!user.name || user.name.trim().length === 0) {
+    errors.push('Name is required');
   }
 
-  if (complianceCase.status === 'open' && complianceCase.resolved_at) {
-    errors.push('Open cases cannot have a resolved date');
+  // Business rule validations
+  if (user.riskScore > 70) {
+    warnings.push('High risk user detected');
   }
 
   return {
@@ -58,4 +63,53 @@ export const validateComplianceCase = (complianceCase: ComplianceCase): Validati
     errors,
     warnings
   };
+};
+
+export const validateComplianceCase = (caseData: ComplianceCaseDetails): ValidationResult => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required field validations
+  if (!caseData.type) {
+    errors.push('Case type is required');
+  }
+  if (!caseData.description || caseData.description.trim().length === 0) {
+    errors.push('Case description is required');
+  }
+  if (!caseData.created_by) {
+    errors.push('Created by field is required');
+  }
+
+  // Business rule validations
+  if (caseData.risk_score > 80) {
+    warnings.push('High risk case detected');
+  }
+  if (caseData.priority === 'critical') {
+    warnings.push('Critical priority case requires immediate attention');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+export const logValidationResults = (results: ValidationResult[], context: string) => {
+  console.log(`Validation results for ${context}:`);
+  results.forEach((result, index) => {
+    if (!result.isValid) {
+      console.error(`Item ${index + 1} validation failed:`, result.errors);
+    }
+    if (result.warnings.length > 0) {
+      console.warn(`Item ${index + 1} warnings:`, result.warnings);
+    }
+  });
+};
+
+export const batchValidate = <T>(
+  items: T[],
+  validator: (item: T) => ValidationResult
+): ValidationResult[] => {
+  return items.map(validator);
 };

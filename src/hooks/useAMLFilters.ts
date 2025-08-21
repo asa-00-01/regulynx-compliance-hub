@@ -24,12 +24,14 @@ export const useAMLFilters = (transactions: AMLTransaction[]) => {
     flags: []
   });
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       // Search filter
-      if (filters.search && !transaction.external_transaction_id?.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !transaction.from_account?.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !transaction.to_account?.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (filters.search && !transaction.id?.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !transaction.fromAccount?.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !transaction.toAccount?.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
 
@@ -39,25 +41,25 @@ export const useAMLFilters = (transactions: AMLTransaction[]) => {
       }
 
       // Risk score filter
-      if (transaction.risk_score < filters.riskScore[0] || transaction.risk_score > filters.riskScore[1]) {
+      if (transaction.riskScore < filters.riskScore[0] || transaction.riskScore > filters.riskScore[1]) {
         return false;
       }
 
       // Amount range filter
-      if (transaction.amount < filters.amountRange[0] || transaction.amount > filters.amountRange[1]) {
+      if (transaction.transactionAmount < filters.amountRange[0] || transaction.transactionAmount > filters.amountRange[1]) {
         return false;
       }
 
       // Date range filter
-      if (filters.dateRange.from && new Date(transaction.transaction_date) < filters.dateRange.from) {
+      if (filters.dateRange.from && new Date(transaction.transactionDate) < filters.dateRange.from) {
         return false;
       }
-      if (filters.dateRange.to && new Date(transaction.transaction_date) > filters.dateRange.to) {
+      if (filters.dateRange.to && new Date(transaction.transactionDate) > filters.dateRange.to) {
         return false;
       }
 
       // Flags filter
-      if (filters.flags.length > 0 && !filters.flags.some(flag => transaction.flags.includes(flag))) {
+      if (filters.flags.length > 0 && !filters.flags.some(flag => transaction.suspiciousFlags?.includes(flag))) {
         return false;
       }
 
@@ -68,6 +70,8 @@ export const useAMLFilters = (transactions: AMLTransaction[]) => {
   return {
     filters,
     setFilters,
+    searchTerm,
+    setSearchTerm,
     filteredTransactions,
     totalCount: transactions.length,
     filteredCount: filteredTransactions.length

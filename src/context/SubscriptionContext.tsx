@@ -25,13 +25,23 @@ interface Subscription {
   cancel_at_period_end: boolean;
 }
 
+interface SubscriptionState {
+  subscribed: boolean;
+  subscription_tier: string | null;
+}
+
 interface SubscriptionContextType {
   subscription: Subscription | null;
+  subscriptionState: SubscriptionState;
   plans: PricingPlan[];
   loading: boolean;
+  refreshing: boolean;
+  plansLoading: boolean;
   error: string | null;
   fetchSubscription: () => Promise<void>;
   fetchPlans: () => Promise<void>;
+  checkSubscription: () => Promise<void>;
+  createCheckout: (planId: string, interval: 'monthly' | 'yearly') => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -46,8 +56,14 @@ export const useSubscription = () => {
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>({
+    subscribed: false,
+    subscription_tier: null
+  });
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
@@ -58,6 +74,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setSubscription(null);
+        setSubscriptionState({ subscribed: false, subscription_tier: null });
         return;
       }
 
@@ -73,41 +90,38 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       };
 
       setSubscription(mockSubscription);
+      setSubscriptionState({
+        subscribed: true,
+        subscription_tier: 'Professional'
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch subscription');
+      setSubscriptionState({ subscribed: false, subscription_tier: null });
     } finally {
       setLoading(false);
     }
   };
 
+  const checkSubscription = async () => {
+    setRefreshing(true);
+    await fetchSubscription();
+    setRefreshing(false);
+  };
+
   const fetchPlans = async () => {
-    setLoading(true);
+    setPlansLoading(true);
     setError(null);
     
     try {
-      const { data, error } = await supabase.from('pricing_plans').select('*');
-      
-      if (error) throw error;
-      
-      // Convert Json[] to string[] for features
-      const processedPlans: PricingPlan[] = (data || []).map(plan => ({
-        ...plan,
-        features: Array.isArray(plan.features) 
-          ? plan.features.map(f => typeof f === 'string' ? f : JSON.stringify(f))
-          : []
-      }));
-      
-      setPlans(processedPlans);
-    } catch (err) {
-      // Fallback to mock data if table doesn't exist
+      // Use fallback to mock data since pricing_plans table doesn't exist
       const mockPlans: PricingPlan[] = [
         {
           id: 'plan_starter',
           plan_id: 'starter',
           name: 'Starter',
           description: 'Perfect for small teams',
-          price_monthly: 29,
-          price_yearly: 290,
+          price_monthly: 2900,
+          price_yearly: 29000,
           features: ['Up to 5 users', 'Basic compliance', '1,000 transactions/month'],
           max_users: 5,
           max_transactions: 1000,
@@ -118,8 +132,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           plan_id: 'pro',
           name: 'Professional',
           description: 'For growing businesses',
-          price_monthly: 99,
-          price_yearly: 990,
+          price_monthly: 9900,
+          price_yearly: 99000,
           features: ['Up to 25 users', 'Advanced compliance', '10,000 transactions/month'],
           max_users: 25,
           max_transactions: 10000,
@@ -128,9 +142,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ];
       
       setPlans(mockPlans);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch plans');
     } finally {
-      setLoading(false);
+      setPlansLoading(false);
     }
+  };
+
+  const createCheckout = (planId: string, interval: 'monthly' | 'yearly') => {
+    console.log('Creating checkout session for:', planId, interval);
+    // Mock implementation - would integrate with Stripe in production
   };
 
   useEffect(() => {
@@ -142,11 +163,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     <SubscriptionContext.Provider
       value={{
         subscription,
+        subscriptionState,
         plans,
         loading,
+        refreshing,
+        plansLoading,
         error,
         fetchSubscription,
-        fetchPlans
+        fetchPlans,
+        checkSubscription,
+        createCheckout
       }}
     >
       {children}
