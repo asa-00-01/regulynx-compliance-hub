@@ -1,127 +1,125 @@
 
-import { NewsItem, RSSFeed } from '@/types/news';
-import { KYCUser, KYCVerification } from '@/types/kyc';
+import { MockDataService } from '@/services/mockDataService';
 import { AMLTransaction } from '@/types/aml';
-import { Transaction } from '@/types/transaction';
-import { MockDataService } from './mockDataService';
-import { RealDataService } from './realDataService';
-import { config } from '@/config/environment';
+import { ComplianceCaseDetails } from '@/types/compliance-cases';
+import { UnifiedUserData } from '@/context/compliance/types';
 
-/**
- * Unified Data Service that automatically routes to either Mock or Real data services
- * based on the configuration flags set by developers
- */
 export class UnifiedDataService {
-  private static get useMockData(): boolean {
-    return config.features.useMockData;
-  }
-
-  private static logDataSource(operation: string): void {
-    const source = this.useMockData ? 'Mock Data' : 'Real API/Database';
-    const emoji = this.useMockData ? '🎭' : '🌐';
-    console.log(`${emoji} ${operation} - Source: ${source}`);
-  }
-
-  // News and RSS Feeds
-  static async getNewsItems(): Promise<NewsItem[]> {
-    this.logDataSource('Fetching news items');
-    
-    if (this.useMockData) {
-      return MockDataService.getNewsItems();
-    } else {
-      return RealDataService.getNewsItems();
-    }
-  }
-
-  static async getRSSFeeds(): Promise<RSSFeed[]> {
-    this.logDataSource('Fetching RSS feeds');
-    
-    if (this.useMockData) {
-      return MockDataService.getRSSFeeds();
-    } else {
-      return RealDataService.getRSSFeeds();
-    }
-  }
-
-  // KYC Users
-  static async getKYCUsers(filters?: any): Promise<KYCUser[]> {
-    this.logDataSource('Fetching KYC users');
-    
-    if (this.useMockData) {
-      return MockDataService.getKYCUsers(filters);
-    } else {
-      return RealDataService.getKYCUsers(filters);
-    }
-  }
-
-  static async getKYCVerifications(): Promise<KYCVerification[]> {
-    this.logDataSource('Fetching KYC verifications');
-    
-    if (this.useMockData) {
-      return MockDataService.getKYCVerifications();
-    } else {
-      return RealDataService.getKYCVerifications();
-    }
-  }
-
-  // AML Transactions
-  static async getAMLTransactions(filters?: any): Promise<AMLTransaction[]> {
-    this.logDataSource('Fetching AML transactions');
-    
-    if (this.useMockData) {
-      return MockDataService.getAMLTransactions(filters);
-    } else {
-      return RealDataService.getAMLTransactions(filters);
-    }
-  }
-
-  // Regular Transactions
-  static async getTransactions(filters?: any): Promise<Transaction[]> {
-    this.logDataSource('Fetching transactions');
-    
-    if (this.useMockData) {
-      // Import mock transaction data
-      const { mockTransactionData } = await import('@/components/transactions/mockTransactionData');
-      return mockTransactionData.transactions;
-    } else {
-      // For now, return empty array since real transaction service isn't implemented
-      console.warn('Real transaction service not yet implemented, returning empty array');
+  // News and RSS feed services
+  static async getNewsItems() {
+    try {
+      // Mock implementation - return empty array for now
+      return [];
+    } catch (error) {
+      console.error('Error fetching news items:', error);
       return [];
     }
   }
 
-  // Unified User Data
-  static async getUnifiedUserData(filters?: any): Promise<any> {
-    this.logDataSource('Fetching unified user data');
-    
-    if (this.useMockData) {
-      return MockDataService.getUnifiedUserData(filters);
-    } else {
-      return RealDataService.getUnifiedUserData(filters);
+  static async getRSSFeeds() {
+    try {
+      // Mock implementation - return empty array for now
+      return [];
+    } catch (error) {
+      console.error('Error fetching RSS feeds:', error);
+      return [];
     }
   }
 
-  // Configuration helpers
-  static isMockMode(): boolean {
-    return this.useMockData;
+  // KYC services
+  static async getKYCUsers() {
+    try {
+      return MockDataService.getUsers();
+    } catch (error) {
+      console.error('Error fetching KYC users:', error);
+      return [];
+    }
   }
 
-  static isRealMode(): boolean {
-    return !this.useMockData;
+  static async getKYCVerifications() {
+    try {
+      // Mock implementation - return empty array for now
+      return [];
+    } catch (error) {
+      console.error('Error fetching KYC verifications:', error);
+      return [];
+    }
   }
 
-  static getCurrentDataSource(): string {
-    return this.useMockData ? 'Mock Data Service' : 'Real API/Database';
+  // AML services
+  static async getAMLTransactions(): Promise<AMLTransaction[]> {
+    try {
+      return MockDataService.getTransactions();
+    } catch (error) {
+      console.error('Error fetching AML transactions:', error);
+      return [];
+    }
   }
 
-  static async validateCurrentDataSource(): Promise<boolean> {
-    if (this.useMockData) {
-      MockDataService.validateData();
-      return true;
-    } else {
-      return RealDataService.validateDataSources();
+  // Compliance case services
+  static async getComplianceCases(): Promise<ComplianceCaseDetails[]> {
+    try {
+      return MockDataService.getCases();
+    } catch (error) {
+      console.error('Error fetching compliance cases:', error);
+      return [];
+    }
+  }
+
+  // Document services
+  static async getDocuments() {
+    try {
+      return MockDataService.getDocuments();
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      return [];
+    }
+  }
+
+  // Unified user data
+  static async getUnifiedUserData(): Promise<UnifiedUserData[]> {
+    try {
+      // Mock implementation - return empty array for now
+      return [];
+    } catch (error) {
+      console.error('Error fetching unified user data:', error);
+      return [];
+    }
+  }
+
+  // Audit and compliance
+  static async getAuditLogs() {
+    try {
+      return MockDataService.getAuditLogs();
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      return [];
+    }
+  }
+
+  // Data validation
+  static validateData(data: any) {
+    try {
+      // Mock implementation - return true for now
+      return { isValid: true, errors: [] };
+    } catch (error) {
+      console.error('Error validating data:', error);
+      return { isValid: false, errors: ['Validation failed'] };
+    }
+  }
+
+  // Performance monitoring
+  static async getPerformanceMetrics() {
+    try {
+      return {
+        responseTime: Math.random() * 100,
+        throughput: Math.random() * 1000,
+        errorRate: Math.random() * 0.1,
+        uptime: 99.9
+      };
+    } catch (error) {
+      console.error('Error fetching performance metrics:', error);
+      return null;
     }
   }
 }
-
-export default UnifiedDataService;

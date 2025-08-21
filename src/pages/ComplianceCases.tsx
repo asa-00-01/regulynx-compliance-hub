@@ -13,6 +13,7 @@ import { PlusIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User } from '@/types';
+import { ComplianceCaseDetails, CaseFilters, CaseSummary } from '@/types/compliance-cases';
 
 const ComplianceCases = () => {
   const { user } = useAuth();
@@ -30,25 +31,6 @@ const ComplianceCases = () => {
   
   const location = useLocation();
   
-  // Convert ExtendedUser to User for compatibility - fix status mapping
-  const compatibleUser: User | undefined = user ? {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    riskScore: user.riskScore,
-    status: user.status === 'verified' ? 'verified' : 
-            user.status === 'information_requested' ? 'information_requested' :
-            user.status === 'rejected' ? 'rejected' : 'pending', // Map all other cases to pending
-    avatarUrl: user.avatarUrl,
-    department: user.department,
-    phone: user.phone,
-    customer_id: user.customer_id,
-    platform_roles: user.platform_roles,
-    customer_roles: user.customer_roles,
-    isPlatformOwner: user.isPlatformOwner,
-  } : undefined;
-  
   const {
     cases,
     caseActions,
@@ -63,11 +45,10 @@ const ComplianceCases = () => {
     assignCase,
     createCase,
     fetchCases,
-  } = useComplianceCases(compatibleUser);
+  } = useComplianceCases(user?.id);
   
   // Handle case updates from action buttons
   const handleCaseUpdated = () => {
-    // Refresh the cases data to reflect any changes
     console.log('Case updated, refreshing data...');
     fetchCases();
   };
@@ -142,7 +123,7 @@ const ComplianceCases = () => {
                 onUpdateStatus={updateCaseStatus}
                 onAssign={assignCase}
                 onBackToList={() => setActiveTab('cases')}
-                currentUser={compatibleUser}
+                currentUser={user}
               />
             )}
           </TabsContent>
@@ -153,7 +134,7 @@ const ComplianceCases = () => {
         open={showNewCaseDialog}
         onOpenChange={setShowNewCaseDialog}
         onCreateCase={createCase}
-        currentUser={compatibleUser}
+        currentUser={user}
         initialData={initialCaseData}
       />
     </div>

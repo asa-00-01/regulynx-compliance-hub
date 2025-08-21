@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,12 +52,15 @@ const SARCenter = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<SARFilters>({
     searchTerm: '',
-    status: 'all',
-    dateRange: { start: '', end: '' },
+    status: [],
+    dateRange: { from: undefined, to: undefined },
     riskLevel: 'all',
     transactionCount: 'all',
     hasDocuments: false,
-    hasNotes: false
+    hasNotes: false,
+    amount: { min: undefined, max: undefined },
+    country: [],
+    patternType: []
   });
   const [analyticsTimeRange, setAnalyticsTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   
@@ -75,7 +77,7 @@ const SARCenter = () => {
       // Pre-populate SAR creation with case data
       handleCreateSARFromCase(caseData, userData);
     }
-  }, [location.state]);
+  }, [location.state, createSAR, toast]);
 
   const handleCreateSARFromCase = (caseData: any, userData: any) => {
     // Validate that we have a proper user ID (UUID)
@@ -263,20 +265,20 @@ const SARCenter = () => {
       }
 
       // Status filter
-      if (advancedFilters.status !== 'all' && sar.status !== advancedFilters.status) {
+      if (advancedFilters.status.length > 0 && !advancedFilters.status.includes(sar.status)) {
         return false;
       }
 
       // Date range
-      if (advancedFilters.dateRange.start) {
+      if (advancedFilters.dateRange.from) {
         const sarDate = new Date(sar.dateSubmitted);
-        const startDate = new Date(advancedFilters.dateRange.start);
+        const startDate = new Date(advancedFilters.dateRange.from);
         if (sarDate < startDate) return false;
       }
 
-      if (advancedFilters.dateRange.end) {
+      if (advancedFilters.dateRange.to) {
         const sarDate = new Date(sar.dateSubmitted);
-        const endDate = new Date(advancedFilters.dateRange.end);
+        const endDate = new Date(advancedFilters.dateRange.to);
         if (sarDate > endDate) return false;
       }
 
@@ -502,12 +504,15 @@ const SARCenter = () => {
         onFiltersChange={setAdvancedFilters}
         onClearFilters={() => setAdvancedFilters({
           searchTerm: '',
-          status: 'all',
-          dateRange: { start: '', end: '' },
+          status: [],
+          dateRange: { from: undefined, to: undefined },
           riskLevel: 'all',
           transactionCount: 'all',
           hasDocuments: false,
-          hasNotes: false
+          hasNotes: false,
+          amount: { min: undefined, max: undefined },
+          country: [],
+          patternType: []
         })}
         isOpen={showAdvancedFilters}
         onToggle={() => setShowAdvancedFilters(!showAdvancedFilters)}

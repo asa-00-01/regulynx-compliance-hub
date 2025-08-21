@@ -23,6 +23,10 @@ export interface SARFilters {
   country: string[];
   patternType: string[];
   searchTerm: string;
+  riskLevel: string;
+  transactionCount: string;
+  hasDocuments: boolean;
+  hasNotes: boolean;
 }
 
 interface SARAdvancedFiltersProps {
@@ -30,6 +34,7 @@ interface SARAdvancedFiltersProps {
   onFiltersChange: (filters: SARFilters) => void;
   isOpen: boolean;
   onToggle: () => void;
+  onClearFilters?: () => void;
 }
 
 const SARAdvancedFilters: React.FC<SARAdvancedFiltersProps> = ({
@@ -37,6 +42,7 @@ const SARAdvancedFilters: React.FC<SARAdvancedFiltersProps> = ({
   onFiltersChange,
   isOpen,
   onToggle,
+  onClearFilters,
 }) => {
   const updateFilter = (key: keyof SARFilters, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -151,6 +157,12 @@ const SARAdvancedFilters: React.FC<SARAdvancedFiltersProps> = ({
                 />
               </div>
             </div>
+
+            {onClearFilters && (
+              <Button variant="outline" onClick={onClearFilters} className="w-full">
+                Clear All Filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       </CollapsibleContent>
@@ -159,4 +171,3 @@ const SARAdvancedFilters: React.FC<SARAdvancedFiltersProps> = ({
 };
 
 export default SARAdvancedFilters;
-export type { SARFilters };
