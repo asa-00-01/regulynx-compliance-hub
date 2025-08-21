@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useComplianceContext } from '@/context/compliance/ComplianceContext';
+import { useCompliance } from '@/context/ComplianceContext';
 
 interface ComplianceUserListProps {
   users?: any[];
@@ -15,51 +15,43 @@ const ComplianceUserList: React.FC<ComplianceUserListProps> = ({
   onUserSelect, 
   selectedUserId 
 }) => {
-  const { customers, loading, error } = useComplianceContext();
+  const { state } = useCompliance();
 
-  // Use prop users if provided, otherwise use context customers
-  const displayUsers = propUsers || customers;
-
-  if (loading) {
-    return <div className="p-4">Loading customers...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-destructive">Error: {error}</div>;
-  }
+  // Use prop users if provided, otherwise use context users
+  const displayUsers = propUsers || state.users;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Organization Customers</CardTitle>
+        <CardTitle>Compliance Users</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {displayUsers.map((customer) => (
+          {displayUsers.map((user) => (
             <div 
-              key={customer.id} 
+              key={user.id} 
               className={`flex items-center justify-between p-4 border rounded cursor-pointer hover:bg-muted/50 ${
-                selectedUserId === customer.id ? 'bg-muted' : ''
+                selectedUserId === user.id ? 'bg-muted' : ''
               }`}
-              onClick={() => onUserSelect?.(customer.id)}
+              onClick={() => onUserSelect?.(user.id)}
             >
               <div>
-                <h3 className="font-medium">{customer.full_name || customer.name}</h3>
-                <p className="text-sm text-muted-foreground">{customer.email}</p>
+                <h3 className="font-medium">{user.fullName || user.name}</h3>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
               <div className="flex gap-2">
-                <Badge variant={customer.kyc_status === 'verified' ? 'default' : 'secondary'}>
-                  {customer.kyc_status || customer.status}
+                <Badge variant={user.kycStatus === 'verified' ? 'default' : 'secondary'}>
+                  {user.kycStatus || user.status}
                 </Badge>
-                <Badge variant={customer.risk_score > 70 ? 'destructive' : 'default'}>
-                  Risk: {customer.risk_score || customer.riskScore}
+                <Badge variant={user.riskScore > 70 ? 'destructive' : 'default'}>
+                  Risk: {user.riskScore}
                 </Badge>
               </div>
             </div>
           ))}
           {displayUsers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              No customers found
+              No users found
             </div>
           )}
         </div>

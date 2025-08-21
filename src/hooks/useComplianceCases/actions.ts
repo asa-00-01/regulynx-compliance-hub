@@ -1,13 +1,6 @@
 
 import { useState } from 'react';
-import { ComplianceCaseDetails } from '@/types/compliance-cases';
-
-export interface CaseActionInsert {
-  case_id: string;
-  type: 'kyc' | 'sanctions' | 'aml' | 'transaction_monitoring' | 'pep' | 'other';
-  description: string;
-  created_by: string;
-}
+import { ComplianceCaseDetails } from '@/types/case';
 
 export interface CaseServiceOperations {
   createCase: (caseData: Partial<ComplianceCaseDetails>) => Promise<ComplianceCaseDetails>;
@@ -30,23 +23,22 @@ export const useCaseActions = (): CaseServiceOperations => {
       
       const newCase: ComplianceCaseDetails = {
         id: Math.random().toString(36).substr(2, 9),
+        userId: caseData.userId || '',
+        userName: caseData.userName || '',
+        createdAt: caseData.createdAt || new Date().toISOString(),
+        createdBy: caseData.createdBy || 'current_user',
+        updatedAt: caseData.updatedAt || new Date().toISOString(),
         type: caseData.type || 'kyc',
         status: 'open',
-        risk_score: caseData.risk_score || 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        riskScore: caseData.riskScore || 0,
+        description: caseData.description || '',
+        assignedTo: caseData.assignedTo || undefined,
+        assignedToName: caseData.assignedToName || undefined,
         priority: caseData.priority || 'medium',
         source: 'manual',
-        user_name: caseData.user_name || '',
-        description: caseData.description || '',
-        assigned_to: caseData.assigned_to || null,
-        assigned_to_name: caseData.assigned_to_name || null,
-        created_by: caseData.created_by || 'current_user',
-        resolved_at: null,
-        related_alerts: [],
-        related_transactions: [],
-        documents: [],
-        actions: []
+        relatedTransactions: caseData.relatedTransactions || [],
+        relatedAlerts: caseData.relatedAlerts || [],
+        documents: caseData.documents || []
       };
       
       return newCase;
@@ -70,24 +62,22 @@ export const useCaseActions = (): CaseServiceOperations => {
       // Return updated case
       const updatedCase: ComplianceCaseDetails = {
         id,
-        type: 'kyc',
-        status: 'open',
-        risk_score: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        priority: 'medium',
-        source: 'manual',
-        user_name: '',
-        description: '',
-        assigned_to: null,
-        assigned_to_name: null,
-        created_by: 'current_user',
-        resolved_at: null,
-        related_alerts: [],
-        related_transactions: [],
-        documents: [],
-        actions: [],
-        ...updates
+        userId: updates.userId || '',
+        userName: updates.userName || '',
+        createdAt: updates.createdAt || new Date().toISOString(),
+        createdBy: updates.createdBy || 'current_user',
+        updatedAt: new Date().toISOString(),
+        type: updates.type || 'kyc',
+        status: updates.status || 'open',
+        riskScore: updates.riskScore || 0,
+        description: updates.description || '',
+        assignedTo: updates.assignedTo || undefined,
+        assignedToName: updates.assignedToName || undefined,
+        priority: updates.priority || 'medium',
+        source: updates.source || 'manual',
+        relatedTransactions: updates.relatedTransactions || [],
+        relatedAlerts: updates.relatedAlerts || [],
+        documents: updates.documents || []
       };
       
       return updatedCase;
