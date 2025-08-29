@@ -5,18 +5,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Rss, Newspaper, Search, ExternalLink, Calendar, Filter } from 'lucide-react';
+import { Rss, Newspaper, Search, ExternalLink, Calendar, Filter, Settings, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import NewsCard from './NewsCard';
 import RSSFeedCard from './RSSFeedCard';
+import { NewsConfigurationDialog } from './NewsConfigurationDialog';
 import { useNewsData } from '@/hooks/useNewsData';
+import { useNewsConfiguration } from '@/hooks/useNewsConfiguration';
+import { useAuth } from '@/context/AuthContext';
 
 const NewsAndRSSFeeds = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSource, setSelectedSource] = useState('all');
   
-  const { newsItems, rssFeeds, loading } = useNewsData();
+  const { newsItems, rssFeeds, loading, refetch } = useNewsData();
+  const { configuration, isAdmin, stats } = useNewsConfiguration();
+  const { user } = useAuth();
 
   // Filter news items based on search and filters
   const filteredNews = newsItems.filter(item => {
@@ -37,96 +42,138 @@ const NewsAndRSSFeeds = () => {
       feed.organization.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  const categories = [
-    'all', 'aml', 'kyc', 'sanctions', 'regulatory', 'compliance', 'fintech',
-    'eu-regulation', 'sweden-regulation'
-  ];
-  
-  const sources = [
-    'all', 'fincen', 'fatf', 'ofac', 'sec', 'cftc', 'federal-register', 'ecb-banking',
-    'eba', 'esma', 'european-commission', 'finansinspektionen', 'riksbank', 'skatteverket'
-  ];
+  // Get unique categories from configuration and news items
+  const getAvailableCategories = () => {
+    const configCategories = configuration?.defaultCategories || [];
+    const newsCategories = newsItems.map(item => item.category);
+    const feedCategories = rssFeeds.flatMap(feed => feed.categories);
+    
+    const allCategories = [...new Set([...configCategories, ...newsCategories, ...feedCategories])];
+    return ['all', ...allCategories];
+  };
+
+  // Get unique sources from configuration and news items
+  const getAvailableSources = () => {
+    const configSources = configuration?.newsSources.map(s => s.name) || [];
+    const newsSources = newsItems.map(item => item.source);
+    
+    const allSources = [...new Set([...configSources, ...newsSources])];
+    return ['all', ...allSources];
+  };
+
+  const categories = getAvailableCategories();
+  const sources = getAvailableSources();
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header with Configuration Button */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">News & RSS Feeds</h1>
-          <p className="text-muted-foreground mt-2">
-            Stay updated with the latest regulatory news and compliance updates from US, EU, and Swedish authorities
+          <h1 className="text-3xl font-bold tracking-tight">News & RSS Feeds</h1>
+          <p className="text-muted-foreground">
+            Stay updated with the latest compliance news and regulatory updates.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Newspaper className="h-3 w-3" />
-            {filteredNews.length} Articles
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Rss className="h-3 w-3" />
-            {filteredFeeds.length} Feeds
-          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          {isAdmin && (
+            <NewsConfigurationDialog>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Configure Sources
+              </Button>
+            </NewsConfigurationDialog>
+          )}
         </div>
       </div>
 
+      {/* Stats Overview for Admins */}
+      {isAdmin && stats && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{stats.totalSources}</div>
+                <div className="text-sm text-muted-foreground">Total Sources</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{stats.activeSources}</div>
+                <div className="text-sm text-muted-foreground">Active Sources</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{stats.totalArticles}</div>
+                <div className="text-sm text-muted-foreground">Total Articles</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{stats.articlesToday}</div>
+                <div className="text-sm text-muted-foreground">Today</div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Last refresh: {formatDate(stats.lastRefresh)}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search and Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search news and feeds..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category === 'all' ? 'All Categories' : 
-                       category === 'eu-regulation' ? 'EU Regulation' :
-                       category === 'sweden-regulation' ? 'Sweden Regulation' :
-                       category.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sources.map(source => (
-                    <SelectItem key={source} value={source}>
-                      {source === 'all' ? 'All Sources' : 
-                       source === 'ecb-banking' ? 'ECB Banking' :
-                       source === 'european-commission' ? 'EU Commission' :
-                       source.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedCategory('all');
-                  setSelectedSource('all');
-                }}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search news and RSS feeds..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category === 'all' ? 'All Categories' : category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedSource} onValueChange={setSelectedSource}>
+            <SelectTrigger className="w-[180px]">
+              <Newspaper className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              {sources.map((source) => (
+                <SelectItem key={source} value={source}>
+                  {source === 'all' ? 'All Sources' : source}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Tabs for News and RSS Feeds */}
       <Tabs defaultValue="news" className="space-y-4">
@@ -134,10 +181,20 @@ const NewsAndRSSFeeds = () => {
           <TabsTrigger value="news" className="flex items-center gap-2">
             <Newspaper className="h-4 w-4" />
             Latest News
+            {newsItems.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {filteredNews.length}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="feeds" className="flex items-center gap-2">
             <Rss className="h-4 w-4" />
             RSS Feeds
+            {rssFeeds.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {filteredFeeds.length}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -159,6 +216,11 @@ const NewsAndRSSFeeds = () => {
               <CardContent className="p-8 text-center">
                 <Newspaper className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No news articles found matching your criteria.</p>
+                {isAdmin && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Configure news sources to start receiving updates.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -188,6 +250,11 @@ const NewsAndRSSFeeds = () => {
               <CardContent className="p-8 text-center">
                 <Rss className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No RSS feeds found matching your criteria.</p>
+                {isAdmin && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Configure RSS feeds to start receiving automated updates.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -199,6 +266,40 @@ const NewsAndRSSFeeds = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Configuration Status for Admins */}
+      {isAdmin && configuration && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Configuration Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium">News Sources:</span> {configuration.newsSources.length} configured
+                <div className="text-muted-foreground">
+                  {configuration.newsSources.filter(s => s.isActive).length} active
+                </div>
+              </div>
+              <div>
+                <span className="font-medium">RSS Feeds:</span> {configuration.rssFeeds.length} configured
+                <div className="text-muted-foreground">
+                  {configuration.rssFeeds.filter(f => f.isActive).length} active
+                </div>
+              </div>
+              <div>
+                <span className="font-medium">Auto Refresh:</span> {configuration.enableAutoRefresh ? 'Enabled' : 'Disabled'}
+                <div className="text-muted-foreground">
+                  {configuration.refreshInterval} minutes interval
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 text-xs text-muted-foreground">
+              Last updated: {formatDate(configuration.lastUpdated)}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

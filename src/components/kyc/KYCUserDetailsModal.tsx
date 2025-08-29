@@ -1,36 +1,44 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
+  User, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
   Shield,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  FileText
+  FileText,
+  Clock
 } from 'lucide-react';
 import { KYCUser, UserFlags } from '@/types/kyc';
+import DocumentsTab from './modal-tabs/DocumentsTab';
+import ComplianceCaseRecommendations from './ComplianceCaseRecommendations';
+import { useCompliance } from '@/context/ComplianceContext';
 
 interface KYCUserDetailsModalProps {
-  user: (KYCUser & { flags: UserFlags }) | null;
+  user: KYCUser & { flags: UserFlags };
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  kycOperations: any;
+  kycOperations: {
+    updateUserKYCStatus?: (userId: string, status: string) => Promise<void>;
+    requestAdditionalInfo?: (userId: string, info: string[]) => Promise<void>;
+    escalateToCompliance?: (userId: string, reason: string) => Promise<void>;
+    isProcessing?: (userId: string) => boolean;
+  };
 }
 
 const KYCUserDetailsModal: React.FC<KYCUserDetailsModalProps> = ({
@@ -39,7 +47,26 @@ const KYCUserDetailsModal: React.FC<KYCUserDetailsModalProps> = ({
   onOpenChange,
   kycOperations
 }) => {
-  if (!user) return null;
+  const { state } = useCompliance();
+  
+  // Get the unified user data for compliance case assessment
+  const unifiedUser = user ? state.users.find(u => u.id === user.id) : null;
+  
+  // Early return if no user is provided
+  if (!user) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>No User Selected</DialogTitle>
+            <DialogDescription>
+              Please select a user to view details.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const getRiskBadgeColor = (score: number) => {
     if (score >= 75) return 'destructive';
@@ -181,13 +208,7 @@ const KYCUserDetailsModal: React.FC<KYCUserDetailsModalProps> = ({
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4">
-            <div className="text-center py-8">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Documents</h3>
-              <p className="text-muted-foreground">
-                Document verification features will be available here.
-              </p>
-            </div>
+            <DocumentsTab userId={user.id} />
           </TabsContent>
 
           <TabsContent value="risk" className="space-y-4">
@@ -224,6 +245,20 @@ const KYCUserDetailsModal: React.FC<KYCUserDetailsModalProps> = ({
           <TabsContent value="actions" className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Available Actions</h3>
+              
+              {/* Compliance Case Recommendations */}
+              {unifiedUser && (
+                <ComplianceCaseRecommendations 
+                  user={unifiedUser}
+                  onCaseCreated={() => {
+                    // Optionally refresh data or show success message
+                    console.log('Compliance case created for:', user.fullName);
+                  }}
+                />
+              )}
+              
+              <Separator />
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button 
                   onClick={() => kycOperations.updateUserKYCStatus?.(user.id, 'verified')}

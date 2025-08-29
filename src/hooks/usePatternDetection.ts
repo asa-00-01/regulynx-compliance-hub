@@ -1,76 +1,38 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { mockTransactions } from '@/components/aml/mockTransactionData';
 import { DetectedPattern } from '@/types/pattern';
+import { patternDetectionService, PatternDetectionResult } from '@/services/patternDetectionService';
+import { useAuth } from '@/context/AuthContext';
 
 export const usePatternDetection = () => {
   const [patterns, setPatterns] = useState<DetectedPattern[]>([]);
+  const [statistics, setStatistics] = useState<PatternDetectionResult['statistics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const runPatternAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      // Simulate pattern detection analysis
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get the current customer ID from user context
+      const customerId = user?.customer_id;
 
-      const detectedPatterns: DetectedPattern[] = [
-        {
-          id: 'struct_001',
-          name: 'Potential Structuring',
-          description: 'Multiple transactions just below $10,000 threshold',
-          category: 'structuring',
-          severity: 'high',
-          matchCount: 12,
-          lastDetected: new Date().toISOString(),
-          transactions: mockTransactions.filter(t => t.senderAmount > 9000 && t.senderAmount < 10000)
-        },
-        {
-          id: 'corridor_001',
-          name: 'High-Risk Corridor Activity',
-          description: 'Increased activity to sanctioned jurisdictions',
-          category: 'high_risk_corridor',
-          severity: 'medium',
-          matchCount: 8,
-          lastDetected: new Date().toISOString(),
-          transactions: mockTransactions.filter(t => ['AF', 'IR', 'KP'].includes(t.receiverCountryCode))
-        },
-        {
-          id: 'velocity_001',
-          name: 'High Transaction Velocity',
-          description: 'Unusual number of transactions in short time period',
-          category: 'velocity',
-          severity: 'medium',
-          matchCount: 15,
-          lastDetected: new Date().toISOString(),
-          transactions: mockTransactions.slice(0, 15)
-        },
-        {
-          id: 'time_001',
-          name: 'Off-Hours Trading Pattern',
-          description: 'Transactions occurring during unusual hours',
-          category: 'time_pattern',
-          severity: 'low',
-          matchCount: 6,
-          lastDetected: new Date().toISOString(),
-          transactions: mockTransactions.filter(t => {
-            const hour = new Date(t.timestamp).getHours();
-            return hour < 6 || hour > 22;
-          })
-        }
-      ];
+      // Run the actual pattern analysis
+      const result = await patternDetectionService.runAnalysis(customerId);
 
-      setPatterns(detectedPatterns);
+      setPatterns(result.patterns);
+      setStatistics(result.statistics);
       
       toast({
         title: 'Pattern Analysis Complete',
-        description: `Detected ${detectedPatterns.length} suspicious patterns`,
+        description: `Detected ${result.patterns.length} suspicious patterns with ${result.statistics.totalDetections} total detections`,
       });
     } catch (error) {
+      console.error('Pattern analysis failed:', error);
       toast({
         title: 'Analysis Error',
-        description: 'Failed to complete pattern analysis',
+        description: error instanceof Error ? error.message : 'Failed to complete pattern analysis',
         variant: 'destructive',
       });
     } finally {
@@ -78,7 +40,7 @@ export const usePatternDetection = () => {
     }
   };
 
-  const updatePatternTransactions = (updatedTransaction: any) => {
+  const updatePatternTransactions = (updatedTransaction: DetectedPattern['transactions'][0]) => {
     setPatterns(prevPatterns =>
       prevPatterns.map(pattern => ({
         ...pattern,
@@ -89,10 +51,62 @@ export const usePatternDetection = () => {
     );
   };
 
+  const triggerDetectionForTransaction = async (transactionId: string) => {
+    try {
+      const customerId = user?.customer_id;
+      if (!customerId) {
+        throw new Error('No customer ID available');
+      }
+
+      const result = await patternDetectionService.triggerDetectionForTransaction(transactionId, customerId);
+      
+      toast({
+        title: 'Pattern Detection Triggered',
+        description: `Pattern detection completed for transaction. Detected ${result.patterns_detected} patterns.`,
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Failed to trigger pattern detection:', error);
+      toast({
+        title: 'Detection Error',
+        description: error instanceof Error ? error.message : 'Failed to trigger pattern detection',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const getStatistics = async (dateFrom?: string, dateTo?: string) => {
+    try {
+      const customerId = user?.customer_id;
+      const stats = await patternDetectionService.getStatistics(customerId, dateFrom, dateTo);
+      return stats;
+    } catch (error) {
+      console.error('Failed to get statistics:', error);
+      throw error;
+    }
+  };
+
+  const getRecentAlerts = async (limit: number = 10) => {
+    try {
+      const customerId = user?.customer_id;
+      const alerts = await patternDetectionService.getRecentAlerts(customerId, limit);
+      return alerts;
+    } catch (error) {
+      console.error('Failed to get recent alerts:', error);
+      throw error;
+    }
+  };
+
   return {
     patterns,
+    statistics,
     isAnalyzing,
     runPatternAnalysis,
     updatePatternTransactions,
+    triggerDetectionForTransaction,
+    getStatistics,
+    getRecentAlerts,
   };
 };

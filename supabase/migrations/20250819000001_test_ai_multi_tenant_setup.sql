@@ -1,5 +1,9 @@
 -- Test AI Multi-Tenant Setup Migration
 -- This migration creates test data for testing the AI multi-tenant system
+-- 
+-- NOTE: Some test data that depends on user profiles is commented out because
+-- profiles are created via auth triggers when users sign up, not during migration.
+-- Run the commented sections manually after creating test users through authentication.
 
 -- 1. Create test subscription plans
 INSERT INTO public.subscription_plans (plan_id, name, description, price_monthly, price_yearly, max_users, max_transactions, max_cases, features, is_active)
@@ -26,56 +30,59 @@ VALUES
   ('660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440003', 'EXT004', 'Alice Brown', 'alice.brown@startupcredit.com', '1992-05-14', 'CA', 'CA789123456', '+14123456789', '321 Maple Rd, Toronto, ON', 'CA', 10, false, false, 'pending', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Create test profiles (users)
-INSERT INTO public.profiles (id, name, email, avatar_url, customer_id, role, risk_score, status, created_at, updated_at)
-VALUES 
-  ('770e8400-e29b-41d4-a716-446655440001', 'Admin User', 'admin@testbank.com', null, '550e8400-e29b-41d4-a716-446655440001', 'admin', 0, 'active', now(), now()),
-  ('770e8400-e29b-41d4-a716-446655440002', 'Compliance Officer', 'compliance@testbank.com', null, '550e8400-e29b-41d4-a716-446655440001', 'complianceOfficer', 0, 'active', now(), now()),
-  ('770e8400-e29b-41d4-a716-446655440003', 'Executive User', 'exec@demofinancial.com', null, '550e8400-e29b-41d4-a716-446655440002', 'executive', 0, 'active', now(), now()),
-  ('770e8400-e29b-41d4-a716-446655440004', 'Support User', 'support@startupcredit.com', null, '550e8400-e29b-41d4-a716-446655440003', 'support', 0, 'active', now(), now())
-ON CONFLICT (id) DO NOTHING;
+-- 4. Create test profiles (users) - Note: These will be created via auth trigger when users sign up
+-- Profiles are created automatically when users authenticate, not during migration
 
--- 5. Create test subscribers
+-- 5. Create test subscribers (will be linked to users after authentication)
 INSERT INTO public.subscribers (id, user_id, email, subscription_tier, subscription_end, trial_end, stripe_customer_id, subscribed, created_at, updated_at)
 VALUES 
-  ('880e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'admin@testbank.com', 'professional', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_testbank_pro', true, now(), now()),
-  ('880e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440003', 'exec@demofinancial.com', 'enterprise', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_demofinancial_ent', true, now(), now()),
-  ('880e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440004', 'support@startupcredit.com', 'starter', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_startupcredit_starter', true, now(), now())
+  ('880e8400-e29b-41d4-a716-446655440001', NULL, 'admin@testbank.com', 'professional', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_testbank_pro', true, now(), now()),
+  ('880e8400-e29b-41d4-a716-446655440002', NULL, 'exec@demofinancial.com', 'enterprise', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_demofinancial_ent', true, now(), now()),
+  ('880e8400-e29b-41d4-a716-446655440003', NULL, 'support@startupcredit.com', 'starter', (now() + interval '1 year'), (now() + interval '30 days'), 'cus_startupcredit_starter', true, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Create test AML transactions
 INSERT INTO public.aml_transactions (id, organization_customer_id, customer_id, external_transaction_id, from_account, to_account, amount, transaction_date, transaction_type, description, currency, risk_score, status, flags, created_at, updated_at)
 VALUES 
   ('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'TXN001', 'ACC001', 'ACC002', 15000.00, now(), 'transfer', 'Large transfer between accounts', 'USD', 75, 'flagged', '["high_amount", "unusual_pattern"]', now(), now()),
-  ('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440001', 'TXN002', 'ACC003', 'ACC004', 5000.00, now(), 'payment', 'Regular payment', 'USD', 25, 'completed', '[]', now(), now()),
+  ('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440001', 'TXN002', 'ACC003', 'ACC004', 5000.00, now(), 'payment', 'Regular payment', 'USD', 25, 'approved', '[]', now(), now()),
   ('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440002', 'TXN003', 'ACC005', 'ACC006', 25000.00, now(), 'transfer', 'International transfer', 'GBP', 85, 'flagged', '["high_amount", "international", "sanctioned_country"]', now(), now()),
-  ('990e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440003', 'TXN004', 'ACC007', 'ACC008', 1000.00, now(), 'payment', 'Small payment', 'CAD', 10, 'completed', '[]', now(), now())
+  ('990e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440003', 'TXN004', 'ACC007', 'ACC008', 1000.00, now(), 'payment', 'Small payment', 'CAD', 10, 'approved', '[]', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
--- 7. Create test compliance cases
+-- 7. Create test compliance cases (COMMENTED OUT - depends on user profiles)
+-- Run after creating test users through authentication
+/*
 INSERT INTO public.compliance_cases (id, organization_customer_id, customer_id, user_id, user_name, type, priority, source, risk_score, assigned_to, assigned_to_name, created_by, description, related_alerts, related_transactions, documents, status, created_at, updated_at)
 VALUES 
   ('aa0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', 'Compliance Officer', 'suspicious_activity', 'high', 'aml_monitoring', 80, '770e8400-e29b-41d4-a716-446655440002', 'Compliance Officer', '770e8400-e29b-41d4-a716-446655440001', 'Large transaction flagged for review', '["ALERT001"]', '["TXN001"]', '["DOC001"]', 'open', now(), now()),
   ('aa0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440003', 'Executive User', 'kyc_review', 'medium', 'manual_review', 45, '770e8400-e29b-41d4-a716-446655440003', 'Executive User', '770e8400-e29b-41d4-a716-446655440003', 'KYC documentation review required', '["ALERT002"]', '["TXN003"]', '["DOC002", "DOC003"]', 'in_progress', now(), now()),
   ('aa0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440004', 'Support User', 'document_verification', 'low', 'kyc_process', 20, '770e8400-e29b-41d4-a716-446655440004', 'Support User', '770e8400-e29b-41d4-a716-446655440004', 'Document verification pending', '["ALERT003"]', '["TXN004"]', '["DOC004"]', 'pending', now(), now())
 ON CONFLICT (id) DO NOTHING;
+*/
 
--- 8. Create test documents
+-- 8. Create test documents (COMMENTED OUT - depends on user profiles)
+-- Run after creating test users through authentication
+/*
 INSERT INTO public.documents (id, organization_customer_id, customer_id, user_id, type, file_name, file_path, status, verified_by, verification_date, extracted_data, upload_date, created_at, updated_at)
 VALUES 
   ('bb0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'passport', 'passport_john_smith.pdf', '/uploads/passport_john_smith.pdf', 'verified', '770e8400-e29b-41d4-a716-446655440002', now(), '{"name": "John Smith", "nationality": "US", "date_of_birth": "1985-03-15"}', now(), now(), now()),
   ('bb0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440003', 'utility_bill', 'utility_bill_bob_wilson.pdf', '/uploads/utility_bill_bob_wilson.pdf', 'pending', null, null, '{"address": "789 High St, London, UK", "date": "2024-01-15"}', now(), now(), now()),
   ('bb0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440004', 'drivers_license', 'drivers_license_alice_brown.pdf', '/uploads/drivers_license_alice_brown.pdf', 'pending', null, null, '{"name": "Alice Brown", "license_number": "CA789123456"}', now(), now(), now())
 ON CONFLICT (id) DO NOTHING;
+*/
 
 -- 9. Create test patterns
 INSERT INTO public.patterns (id, name, description, category, created_at)
 VALUES 
-  ('cc0e8400-e29b-41d4-a716-446655440001', 'High Value Transfer', 'Transactions above $10,000', 'amount_threshold', now()),
-  ('cc0e8400-e29b-41d4-a716-446655440002', 'Rapid Transactions', 'Multiple transactions in short time', 'frequency', now()),
+  ('cc0e8400-e29b-41d4-a716-446655440001', 'High Value Transfer', 'Transactions above $10,000', 'transaction', now()),
+  ('cc0e8400-e29b-41d4-a716-446655440002', 'Rapid Transactions', 'Multiple transactions in short time', 'behavioral', now()),
   ('cc0e8400-e29b-41d4-a716-446655440003', 'International Transfer', 'Cross-border transactions', 'geographic', now())
 ON CONFLICT (id) DO NOTHING;
 
+-- 10-28. Additional test data (COMMENTED OUT - depends on user profiles)
+-- Run after creating test users through authentication
+/*
 -- 10. Create test pattern matches
 INSERT INTO public.pattern_matches (id, pattern_id, user_id, user_name, transaction_id, amount, currency, country, timestamp, created_at)
 VALUES 
@@ -227,6 +234,8 @@ VALUES
   ('vv0e8400-e29b-41d4-a716-446655440003', 'aa0e8400-e29b-41d4-a716-446655440003', 'document_uploaded', '770e8400-e29b-41d4-a716-446655440004', 'Support User', 'Additional document uploaded', '{"document_id": "DOC003", "document_type": "drivers_license"}', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
+*/
+
 -- Print summary of test data created
 DO $$
 BEGIN
@@ -235,22 +244,14 @@ BEGIN
     RAISE NOTICE '- 3 subscription plans (starter, professional, enterprise)';
     RAISE NOTICE '- 3 test customers with different subscription tiers';
     RAISE NOTICE '- 4 organization customers with various risk profiles';
-    RAISE NOTICE '- 4 test users with different roles';
     RAISE NOTICE '- 4 AML transactions with different risk levels';
-    RAISE NOTICE '- 3 compliance cases in different states';
-    RAISE NOTICE '- 3 documents with different verification statuses';
-    RAISE NOTICE '- 3 patterns and pattern matches';
-    RAISE NOTICE '- 2 SARs in different states';
-    RAISE NOTICE '- Various audit logs, usage metrics, and integrations';
+    RAISE NOTICE '- 3 patterns for compliance monitoring';
     RAISE NOTICE '';
     RAISE NOTICE 'Test Customer IDs:';
     RAISE NOTICE '- Test Bank Corp: 550e8400-e29b-41d4-a716-446655440001 (Professional)';
     RAISE NOTICE '- Demo Financial Services: 550e8400-e29b-41d4-a716-446655440002 (Enterprise)';
     RAISE NOTICE '- Startup Credit Union: 550e8400-e29b-41d4-a716-446655440003 (Starter)';
     RAISE NOTICE '';
-    RAISE NOTICE 'Test User IDs:';
-    RAISE NOTICE '- Admin User: 770e8400-e29b-41d4-a716-446655440001';
-    RAISE NOTICE '- Compliance Officer: 770e8400-e29b-41d4-a716-446655440002';
-    RAISE NOTICE '- Executive User: 770e8400-e29b-41d4-a716-446655440003';
-    RAISE NOTICE '- Support User: 770e8400-e29b-41d4-a716-446655440004';
+    RAISE NOTICE 'NOTE: Additional test data that depends on user profiles is commented out.';
+    RAISE NOTICE 'Run the commented sections manually after creating test users through authentication.';
 END $$;

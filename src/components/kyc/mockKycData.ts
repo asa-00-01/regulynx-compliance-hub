@@ -1,6 +1,7 @@
 
-import { KYCUser, UserFlags, KYCVerification } from '@/types/kyc';
+import { KYCUser, UserFlags, KYCVerification, KYCStatus } from '@/types/kyc';
 import { useCompliance } from '@/context/ComplianceContext';
+import { UnifiedUserData } from '@/context/compliance/types';
 
 // This function will be used to get users from the centralized compliance context
 export const getKYCUsersFromContext = () => {
@@ -10,7 +11,7 @@ export const getKYCUsersFromContext = () => {
 };
 
 // Convert unified user data to KYC format for backward compatibility
-export const convertToKYCUsers = (unifiedUsers: any[]): (KYCUser & { flags: UserFlags })[] => {
+export const convertToKYCUsers = (unifiedUsers: UnifiedUserData[]): (KYCUser & { flags: UserFlags; kycStatus?: KYCStatus })[] => {
   return unifiedUsers.map(user => ({
     id: user.id,
     fullName: user.fullName,
@@ -21,11 +22,12 @@ export const convertToKYCUsers = (unifiedUsers: any[]): (KYCUser & { flags: User
     address: user.address || '',
     createdAt: user.createdAt,
     updatedAt: user.createdAt,
-    flags: user.kycFlags
+    flags: user.kycFlags,
+    kycStatus: user.kycStatus as KYCStatus // Cast to proper KYCStatus type
   }));
 };
 
-export const convertToKYCVerifications = (unifiedUsers: any[]): KYCVerification[] => {
+export const convertToKYCVerifications = (unifiedUsers: UnifiedUserData[]): KYCVerification[] => {
   return unifiedUsers.map(user => {
     const getVerificationStatus = () => {
       switch (user.kycStatus) {

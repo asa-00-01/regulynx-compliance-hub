@@ -438,7 +438,7 @@ const UserCaseOverview: React.FC = () => {
                   userName: transaction.senderName,
                   description: `Suspicious transaction: ${transaction.id} - Amount: ${transaction.senderAmount} ${transaction.senderCurrency}`,
                   type: 'aml',
-                  source: 'transaction_alert',
+                  source: 'system_alert',
                   riskScore: transaction.riskScore,
                 }
               }

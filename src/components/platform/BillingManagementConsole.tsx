@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { config } from '@/config/environment';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -111,10 +112,10 @@ const BillingManagementConsole: React.FC = () => {
       const annualRevenue = monthlyRevenue * 12;
       const totalCustomers = customers.length;
       const activeSubscriptions = customers.filter(c => c.subscription_tier !== 'inactive').length;
-      const churnRate = 2.5; // Mock data
+      const churnRate = config.features.useMockData ? 2.5 : 0; // Mock data when enabled
       const averageRevenuePerUser = monthlyRevenue / totalCustomers;
-      const growthRate = 15.2; // Mock data
-      const outstandingInvoices = 3; // Mock data
+      const growthRate = config.features.useMockData ? 15.2 : 0; // Mock data when enabled
+      const outstandingInvoices = config.features.useMockData ? 3 : 0; // Mock data when enabled
 
       setBillingStats({
         monthlyRevenue,
@@ -197,14 +198,14 @@ const BillingManagementConsole: React.FC = () => {
     }
   };
 
-  const revenueData = [
+  const revenueData = config.features.useMockData ? [
     { month: 'Jan', revenue: 45000 },
     { month: 'Feb', revenue: 52000 },
     { month: 'Mar', revenue: 48000 },
     { month: 'Apr', revenue: 61000 },
     { month: 'May', revenue: 55000 },
     { month: 'Jun', revenue: 67000 },
-  ];
+  ] : [];
 
   const quickActions = [
     {

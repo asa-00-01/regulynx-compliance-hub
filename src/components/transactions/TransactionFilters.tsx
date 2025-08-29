@@ -1,138 +1,233 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { TransactionFilters } from '@/hooks/useTransactionData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Search, 
+  Filter, 
+  X,
+  Calendar,
+  DollarSign,
+  Shield
+} from 'lucide-react';
+import { TransactionFilters } from '@/services/transactionService';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionFiltersProps {
   filters: TransactionFilters;
-  onFilterChange: (filters: TransactionFilters) => void;
-  countries: string[];
+  onFilterChange: (filters: Partial<TransactionFilters>) => void;
+  onClearFilters: () => void;
+  totalCount: number;
+  filteredCount: number;
 }
 
-const TransactionFiltersComponent = ({
+const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
   filters,
   onFilterChange,
-  countries,
-}: TransactionFiltersProps) => {
-  // Update filters with new values
-  const updateFilters = (updates: Partial<TransactionFilters>) => {
-    onFilterChange({ ...filters, ...updates });
-  };
+  onClearFilters,
+  totalCount,
+  filteredCount
+}) => {
+  const { t } = useTranslation();
 
-  // Handle amount changes
-  const handleMinAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value ? Number(e.target.value) : undefined;
-    updateFilters({ minAmount: value });
-  };
-
-  const handleMaxAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value ? Number(e.target.value) : undefined;
-    updateFilters({ maxAmount: value });
-  };
+  const hasActiveFilters = 
+    filters.status !== 'all' ||
+    filters.riskLevel ||
+    filters.searchTerm ||
+    filters.amountRange?.min ||
+    filters.amountRange?.max;
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="dateRange">Date Range</Label>
-            <Select
-              value={filters.dateRange}
-              onValueChange={(value) => updateFilters({ dateRange: value as TransactionFilters['dateRange'] })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select date range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7days">Last 7 days</SelectItem>
-                <SelectItem value="30days">Last 30 days</SelectItem>
-                <SelectItem value="90days">Last 90 days</SelectItem>
-                <SelectItem value="all">All time</SelectItem>
-              </SelectContent>
-            </Select>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            {t('transactions.filters')}
           </div>
-
-          <div className="space-y-2">
-            <Label>Amount Range</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                value={filters.minAmount || ''}
-                onChange={handleMinAmountChange}
-              />
-              <Input
-                type="number"
-                placeholder="Max"
-                value={filters.maxAmount || ''}
-                onChange={handleMaxAmountChange}
-              />
-            </div>
+          <div className="text-sm text-muted-foreground">
+            {filteredCount} of {totalCount} transactions
           </div>
-
-          <div className="space-y-2">
-            <Label>Payment Method</Label>
-            <Select
-              value={filters.methods?.[0] || 'all'}
-              onValueChange={(value) =>
-                updateFilters({ methods: value !== 'all' ? [value] : undefined })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All methods" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All methods</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="bank">Bank Transfer</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="mobile">Mobile Wallet</SelectItem>
-                <SelectItem value="crypto">Cryptocurrency</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('transactions.searchPlaceholder')}
+            value={filters.searchTerm || ''}
+            onChange={(e) => onFilterChange({ searchTerm: e.target.value })}
+            className="pl-10"
+          />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="flagged"
-              checked={filters.onlyFlagged}
-              onCheckedChange={(checked) =>
-                updateFilters({ onlyFlagged: checked === true })
-              }
-            />
-            <label
-              htmlFor="flagged"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        {/* Filter Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t('transactions.status')}</label>
+            <Select 
+              value={filters.status || 'all'} 
+              onValueChange={(value) => onFilterChange({ status: value })}
             >
-              Only show flagged transactions
+              <SelectTrigger>
+                <SelectValue placeholder={t('transactions.selectStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('transactions.allStatuses')}</SelectItem>
+                <SelectItem value="approved">{t('transactions.approved')}</SelectItem>
+                <SelectItem value="pending">{t('transactions.pending')}</SelectItem>
+                <SelectItem value="flagged">{t('transactions.flagged')}</SelectItem>
+                <SelectItem value="rejected">{t('transactions.rejected')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Risk Level Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1">
+              <Shield className="h-4 w-4" />
+              {t('transactions.riskLevel')}
             </label>
+            <Select 
+              value={filters.riskLevel || 'all'} 
+              onValueChange={(value) => onFilterChange({ riskLevel: value === 'all' ? undefined : value as 'low' | 'medium' | 'high' })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('transactions.selectRiskLevel')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('transactions.allRiskLevels')}</SelectItem>
+                <SelectItem value="low">{t('transactions.lowRisk')} (0-30)</SelectItem>
+                <SelectItem value="medium">{t('transactions.mediumRisk')} (31-70)</SelectItem>
+                <SelectItem value="high">{t('transactions.highRisk')} (71-100)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() =>
-              onFilterChange({
-                dateRange: '30days',
-                onlyFlagged: false,
-              })
-            }
-          >
-            Reset Filters
-          </Button>
+          {/* Amount Range Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1">
+              <DollarSign className="h-4 w-4" />
+              {t('transactions.amountRange')}
+            </label>
+            <Select 
+              value="all"
+              onValueChange={(value) => {
+                switch (value) {
+                  case 'low':
+                    onFilterChange({ amountRange: { min: 0, max: 1000 } });
+                    break;
+                  case 'medium':
+                    onFilterChange({ amountRange: { min: 1000, max: 10000 } });
+                    break;
+                  case 'high':
+                    onFilterChange({ amountRange: { min: 10000, max: undefined } });
+                    break;
+                  default:
+                    onFilterChange({ amountRange: undefined });
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('transactions.selectAmountRange')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('transactions.allAmounts')}</SelectItem>
+                <SelectItem value="low">{t('transactions.lowAmount')} ($0-$1,000)</SelectItem>
+                <SelectItem value="medium">{t('transactions.mediumAmount')} ($1,000-$10,000)</SelectItem>
+                <SelectItem value="high">{t('transactions.highAmount')} ($10,000+)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        {/* Filter Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Date Range Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              {t('transactions.dateRange')}
+            </label>
+            <Select 
+              value="all"
+              onValueChange={(value) => {
+                const now = new Date();
+                let from: Date | undefined;
+                
+                switch (value) {
+                  case '7days':
+                    from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    break;
+                  case '30days':
+                    from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    break;
+                  case '90days':
+                    from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                    break;
+                  default:
+                    from = undefined;
+                }
+                
+                onFilterChange({ dateRange: from ? { from, to: now } : undefined });
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('transactions.selectDateRange')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('transactions.allDates')}</SelectItem>
+                <SelectItem value="7days">{t('transactions.last7Days')}</SelectItem>
+                <SelectItem value="30days">{t('transactions.last30Days')}</SelectItem>
+                <SelectItem value="90days">{t('transactions.last90Days')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Clear Filters */}
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={onClearFilters}
+              disabled={!hasActiveFilters}
+              className="w-full"
+            >
+              <X className="h-4 w-4 mr-2" />
+              {t('transactions.clearFilters')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t">
+            <span className="text-sm text-muted-foreground">{t('transactions.activeFilters')}:</span>
+            {filters.status && filters.status !== 'all' && (
+              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                Status: {filters.status}
+              </span>
+            )}
+            {filters.riskLevel && (
+              <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                Risk: {filters.riskLevel}
+              </span>
+            )}
+            {filters.searchTerm && (
+              <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                Search: "{filters.searchTerm}"
+              </span>
+            )}
+            {filters.amountRange && (
+              <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                Amount: ${filters.amountRange.min || 0} - {filters.amountRange.max ? `$${filters.amountRange.max}` : '∞'}
+              </span>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

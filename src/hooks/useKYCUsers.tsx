@@ -1,10 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { KYCUser, UserFlags } from '@/types/kyc';
+import { KYCUser, UserFlags, KYCStatus } from '@/types/kyc';
 import { useToast } from '@/hooks/use-toast';
+import { useCompliance } from '@/context/compliance/useCompliance';
+import { supabase } from '@/integrations/supabase/client';
+import { UnifiedUserData } from '@/context/compliance/types';
 
 interface UseKYCUsersProps {
-  initialUsers: (KYCUser & { flags: UserFlags })[];
+  initialUsers: (KYCUser & { flags: UserFlags; kycStatus?: KYCStatus })[];
 }
 
 const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
@@ -15,7 +18,12 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [flaggedUsers, setFlaggedUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20); // Default 20 items per page
   const { toast } = useToast();
+  const { dispatch } = useCompliance();
 
   // Simulate loading state for UI improvements
   useEffect(() => {
@@ -24,6 +32,14 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
     }, 800);
     return () => clearTimeout(timer);
   }, []);
+
+  // Initialize flagged users from the initial users data
+  useEffect(() => {
+    const flagged = initialUsers
+      .filter(user => user.flags.is_sanction_list || user.flags.riskScore > 70)
+      .map(user => user.id);
+    setFlaggedUsers(flagged);
+  }, [initialUsers]);
 
   const filteredUsers = initialUsers.filter(user => {
     // Apply search term
@@ -72,6 +88,18 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
     return sortOrder === 'asc' ? comparison : -comparison;
   });
 
+  // Pagination calculations
+  const totalUsers = sortedUsers.length;
+  const totalPages = Math.ceil(totalUsers / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = sortedUsers.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, riskFilter, activeTab, sortField, sortOrder]);
+
   const handleSortChange = (field: string) => {
     if (field === sortField) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -87,20 +115,110 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
     setSortField('name');
     setSortOrder('asc');
     setActiveTab('all');
+    setCurrentPage(1);
   };
 
-  const handleFlagUser = (userId: string) => {
-    if (flaggedUsers.includes(userId)) {
-      setFlaggedUsers(flaggedUsers.filter(id => id !== userId));
-      toast({
-        title: "User Unflagged",
-        description: "User has been removed from flagged list"
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleFlagUser = async (userId: string) => {
+    try {
+      const user = initialUsers.find(u => u.id === userId);
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "User not found",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update the database to mark user as flagged
+      const { error: dbError } = await supabase
+        .from('organization_customers')
+        .update({ 
+          is_sanctioned: !user.flags.is_sanction_list, // Toggle sanction status as a flag
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (dbError) {
+        throw new Error(`Database error: ${dbError.message}`);
+      }
+
+      // Update local flagged users state
+      if (flaggedUsers.includes(userId)) {
+        setFlaggedUsers(flaggedUsers.filter(id => id !== userId));
+        toast({
+          title: "User Unflagged",
+          description: "User has been removed from flagged list"
+        });
+      } else {
+        setFlaggedUsers([...flaggedUsers, userId]);
+        toast({
+          title: "User Flagged",
+          description: "User has been added to flagged list for review"
+        });
+      }
+
+      // Update the compliance context
+      const updatedUser = {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        dateOfBirth: user.dateOfBirth,
+        nationality: '',
+        identityNumber: user.identityNumber,
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        countryOfResidence: '',
+        riskScore: user.flags.riskScore,
+        isPEP: user.flags.is_verified_pep,
+        isSanctioned: !user.flags.is_sanction_list, // Toggle the flag
+        kycStatus: (user.kycStatus || 'pending') as KYCStatus,
+        createdAt: user.createdAt,
+        kycFlags: {
+          ...user.flags,
+          is_sanction_list: !user.flags.is_sanction_list // Toggle the flag
+        },
+        documents: [],
+        transactions: [],
+        complianceCases: [],
+        notes: []
+      };
+
+      dispatch({ 
+        type: 'UPDATE_USER_DATA', 
+        payload: updatedUser as UnifiedUserData // Type assertion to avoid complex type issues
       });
-    } else {
-      setFlaggedUsers([...flaggedUsers, userId]);
+
+    } catch (error) {
+      console.error('Error flagging user:', error);
       toast({
-        title: "User Flagged",
-        description: "User has been added to flagged list for review"
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to flag user",
+        variant: "destructive"
       });
     }
   };
@@ -139,7 +257,17 @@ const useKYCUsers = ({ initialUsers }: UseKYCUsersProps) => {
     handleResetFilters,
     handleExportData,
     sortedUsers,
-    showResetFilters
+    paginatedUsers, // Add paginated users
+    showResetFilters,
+    // Pagination
+    currentPage,
+    itemsPerPage,
+    totalPages,
+    totalUsers,
+    goToPage,
+    goToNextPage,
+    goToPreviousPage,
+    handleItemsPerPageChange
   };
 };
 

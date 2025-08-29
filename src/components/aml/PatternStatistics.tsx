@@ -6,16 +6,28 @@ import { DetectedPattern } from '@/types/pattern';
 
 interface PatternStatisticsProps {
   patterns: DetectedPattern[];
+  statistics?: {
+    totalDetections: number;
+    alertsGenerated: number;
+    resolvedDetections: number;
+    pendingReview: number;
+    averageConfidence: number;
+    averageRiskScore: number;
+    bySeverity: Record<string, number>;
+    byPatternType: Record<string, number>;
+  } | null;
 }
 
-const PatternStatistics: React.FC<PatternStatisticsProps> = ({ patterns }) => {
+const PatternStatistics: React.FC<PatternStatisticsProps> = ({ patterns, statistics }) => {
   if (patterns.length === 0) {
     return null;
   }
 
-  const highSeverityCount = patterns.filter(p => p.severity === 'high').length;
-  const totalMatches = patterns.reduce((sum, p) => sum + p.matchCount, 0);
-  const uniqueCategories = new Set(patterns.map(p => p.category)).size;
+  // Use statistics if available, otherwise calculate from patterns
+  const highSeverityCount = statistics?.bySeverity?.high || patterns.filter(p => p.severity === 'high').length;
+  const totalMatches = statistics?.totalDetections || patterns.reduce((sum, p) => sum + p.matchCount, 0);
+  const uniqueCategories = statistics?.byPatternType ? Object.keys(statistics.byPatternType).length : new Set(patterns.map(p => p.category)).size;
+  const alertsGenerated = statistics?.alertsGenerated || 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -14,7 +14,7 @@ import PatternDetailsModal from './PatternDetailsModal';
 import TransactionDetailsModal from './TransactionDetailsModal';
 
 const PatternDetectionEngine: React.FC = () => {
-  const { patterns, isAnalyzing, runPatternAnalysis, updatePatternTransactions } = usePatternDetection();
+  const { patterns, statistics, isAnalyzing, runPatternAnalysis, updatePatternTransactions } = usePatternDetection();
   const [selectedPattern, setSelectedPattern] = useState<DetectedPattern | null>(null);
   const [isPatternDetailsOpen, setIsPatternDetailsOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<AMLTransaction | null>(null);
@@ -93,7 +93,7 @@ const PatternDetectionEngine: React.FC = () => {
         </CardContent>
       </Card>
 
-      <PatternStatistics patterns={patterns} />
+      <PatternStatistics patterns={patterns} statistics={statistics} />
 
       {selectedPattern && (
         <PatternDetailsModal

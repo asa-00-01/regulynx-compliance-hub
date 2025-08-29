@@ -21,12 +21,12 @@ export const validateMockData = (): ValidationResult => {
   
   // Validate user data consistency
   const userIds = new Set(unifiedMockData.map(u => u.id));
-  const transactionUserIds = new Set(mockTransactionsCollection.map(t => t.senderUserId));
+  const transactionUserIds = new Set(mockTransactionsCollection.map(t => t.userId));
   const documentUserIds = new Set(mockDocumentsCollection.map(d => d.userId));
   const caseUserIds = new Set(mockComplianceCasesCollection.map(c => c.userId));
   
   // Check for orphaned transactions
-  const orphanedTransactions = mockTransactionsCollection.filter(t => !userIds.has(t.senderUserId));
+  const orphanedTransactions = mockTransactionsCollection.filter(t => !userIds.has(t.userId));
   if (orphanedTransactions.length > 0) {
     errors.push(`Found ${orphanedTransactions.length} transactions with non-existent user IDs`);
   }

@@ -63,7 +63,7 @@ export const useDashboardData = () => {
       // Calculate metrics
       const pendingDocs = mockDocuments.filter(doc => doc.status === 'pending').length;
       const pendingKyc = unifiedMockData.filter(user => user.kycStatus === 'pending').length;
-      const activeAlerts = Math.floor(Math.random() * 15) + 5;
+      const activeAlerts = config.features.useMockData ? Math.floor(Math.random() * 15) + 5 : 0;
       
       const dashboardMetrics: DashboardMetrics = {
         pendingDocuments: pendingDocs,
@@ -71,9 +71,9 @@ export const useDashboardData = () => {
         activeAlerts,
         riskScoreTrend: [65, 72, 68, 74, 69, 78, 82],
         complianceCasesByType: {
-          kyc: Math.floor(Math.random() * 50) + 10,
-          aml: Math.floor(Math.random() * 30) + 5,
-          sanctions: Math.floor(Math.random() * 10) + 2
+          kyc: config.features.useMockData ? Math.floor(Math.random() * 50) + 10 : 0,
+          aml: config.features.useMockData ? Math.floor(Math.random() * 30) + 5 : 0,
+          sanctions: config.features.useMockData ? Math.floor(Math.random() * 10) + 2 : 0
         }
       };
 

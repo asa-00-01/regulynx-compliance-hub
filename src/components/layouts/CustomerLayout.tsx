@@ -36,8 +36,11 @@ import {
   Newspaper,
   Zap,
   Code,
-  LogOut 
+  LogOut,
+  AlertCircle
 } from 'lucide-react';
+import NotificationBell from '@/components/layout/NotificationBell';
+import UserNav from '@/components/layout/UserNav';
 
 interface CustomerLayoutProps {
   children: React.ReactNode;
@@ -71,6 +74,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Compliance', href: '/compliance', icon: Shield },
     { name: 'Compliance Cases', href: '/compliance-cases', icon: FileText },
+    { name: 'Escalation Management', href: '/escalation-management', icon: AlertCircle },
     { name: 'KYC Verification', href: '/kyc-verification', icon: Shield },
     { name: 'Transactions', href: '/transactions', icon: CreditCard },
     { name: 'Documents', href: '/documents', icon: FileText },
@@ -187,6 +191,15 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({
               <p className="text-xs text-muted-foreground">
                 {user?.customer?.name || 'Customer Organization'}
               </p>
+            </div>
+            
+            {/* Header Actions */}
+            <div className="flex items-center gap-2">
+              {/* Notifications */}
+              <NotificationBell />
+
+              {/* User Menu */}
+              <UserNav />
             </div>
           </header>
 

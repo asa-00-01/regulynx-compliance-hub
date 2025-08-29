@@ -87,6 +87,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
   };
 
   const getCustomerName = (userId: string) => {
+    // Try to find customer by organization_customer_id first, then fallback to user_id
     const customer = state.users.find(u => u.id === userId);
     return customer?.fullName || 'Unknown Customer';
   };
@@ -183,7 +184,7 @@ const DocumentsList: React.FC<DocumentsListProps> = ({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        {getCustomerName(document.user_id)}
+                        {getCustomerName(document.organization_customer_id || document.user_id || '')}
                       </div>
                     </TableCell>
                     <TableCell>

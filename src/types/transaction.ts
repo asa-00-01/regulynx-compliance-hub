@@ -1,6 +1,6 @@
 
 export type TransactionCurrency = 'SEK' | 'USD' | 'EUR' | 'GBP';
-export type TransactionMethod = 'card' | 'bank' | 'cash' | 'mobile' | 'crypto';
+export type TransactionMethod = 'card' | 'bank' | 'cash' | 'mobile' | 'crypto' | 'transfer' | 'payment' | 'international_transfer' | 'internal_transfer' | 'online_payment' | 'crypto_purchase' | 'gambling';
 
 export interface Transaction {
   id: string;
@@ -9,12 +9,17 @@ export interface Transaction {
   amount: number;
   currency: TransactionCurrency;
   timestamp: string;
-  originCountry: string;
-  destinationCountry: string;
+  originCountry?: string;
+  destinationCountry?: string;
   method: TransactionMethod;
   description?: string;
   riskScore: number;
   flagged: boolean;
+  status: 'pending' | 'approved' | 'rejected' | 'flagged';
+  fromAccount?: string;
+  toAccount?: string;
+  externalId?: string;
+  flags?: string[];
 }
 
 export interface TransactionAlert {

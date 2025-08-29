@@ -39,6 +39,22 @@ export const useNewsData = () => {
     loadNewsData();
   }, [config.features.useMockData]); // Re-load when mock mode changes
 
+  // Listen for configuration changes to refresh RSS feeds
+  useEffect(() => {
+    const handleConfigurationChange = () => {
+      // Refresh news data when configuration changes, regardless of mock mode
+      console.log('🔄 News configuration changed, refreshing news data...');
+      loadNewsData();
+    };
+
+    // Listen for custom events when configuration changes
+    window.addEventListener('news-configuration-changed', handleConfigurationChange);
+    
+    return () => {
+      window.removeEventListener('news-configuration-changed', handleConfigurationChange);
+    };
+  }, []);
+
   const refetch = async () => {
     setError(null);
     await loadNewsData();

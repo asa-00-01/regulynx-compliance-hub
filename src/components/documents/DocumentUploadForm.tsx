@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import CustomerSelector from './CustomerSelector';
 import { useFeatureAccess } from '@/hooks/use-permissions';
+import { useTranslation } from 'react-i18next';
 
 interface DocumentUploadFormProps {
   onUploadComplete: () => void;
@@ -23,11 +24,12 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
   const [documentType, setDocumentType] = useState<DocumentType>('passport');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(preSelectedCustomerId || '');
   const [isUploading, setIsUploading] = useState(false);
-  const [lastOCRResult, setLastOCRResult] = useState<any>(null);
+  const [lastOCRResult, setLastOCRResult] = useState<{ extractedData?: Record<string, string> } | null>(null);
   const { processImage, isProcessing, progress, error } = useDocumentOCR();
   const { toast } = useToast();
   const { user, session } = useAuth();
   const { canApproveDocuments } = useFeatureAccess();
+  const { t } = useTranslation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -82,10 +84,10 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       const timestamp = new Date().getTime();
       const fileExt = file.name.split('.').pop();
       const documentUserId = canApproveDocuments() ? selectedCustomerId : user.id;
-      const filePath = `${documentUserId}/${documentType}_${timestamp}.${fileExt}`;
+      const filePath = `organization_customers/${documentUserId}/${documentType}_${timestamp}.${fileExt}`;
       
       console.log('Inserting document record with path:', filePath);
-      console.log('Document user ID:', documentUserId);
+      console.log('Document organization customer ID:', documentUserId);
       console.log('Current authenticated user:', user.id);
       console.log('Session exists:', !!session);
       
@@ -93,7 +95,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       const { data: documentData, error: documentError } = await supabase
         .from('documents')
         .insert({
-          user_id: documentUserId,
+          organization_customer_id: documentUserId, // Use organization_customer_id instead of user_id
           type: documentType,
           file_name: file.name,
           file_path: filePath,
@@ -132,7 +134,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
         if (extractedFields.length > 0) {
           toast({
             title: "OCR Processing Complete",
-            description: `Successfully extracted ${extractedFields.length} field${extractedFields.length !== 1 ? 's' : ''} from the document`,
+            description: t('documents.ocrProcessingCompleteDescription', { count: extractedFields.length }),
           });
         }
       }
@@ -166,7 +168,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
     return (
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
         <p className="text-yellow-800 text-sm">
-          Please sign in to upload documents. You will be redirected to the login page.
+          {t('documents.authenticationWarningMessage')}
         </p>
       </div>
     );
@@ -184,25 +186,29 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="documentType">Document Type</Label>
+        <Label htmlFor="documentType">{t('documents.documentType')}</Label>
         <Select 
           value={documentType}
           onValueChange={(value) => setDocumentType(value as DocumentType)}
           disabled={isFormDisabled}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select document type" />
+            <SelectValue placeholder={t('documents.selectDocumentType')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="passport">Passport</SelectItem>
-            <SelectItem value="id">ID Card</SelectItem>
-            <SelectItem value="license">Driver's License</SelectItem>
+            <SelectItem value="passport">{t('documents.passport')}</SelectItem>
+            <SelectItem value="national_id">ID Card</SelectItem>
+            <SelectItem value="drivers_license">{t('documents.driversLicense')}</SelectItem>
+            <SelectItem value="utility_bill">{t('documents.utilityBill')}</SelectItem>
+            <SelectItem value="bank_statement">{t('documents.bankStatement')}</SelectItem>
+            <SelectItem value="proof_of_income">Proof of Income</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="file">Upload Document</Label>
+        <Label htmlFor="file">{t('documents.uploadDocument')}</Label>
         <Input 
           id="file" 
           type="file" 
@@ -219,31 +225,31 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
       
       {isProcessing && (
         <div className="space-y-2">
-          <Label>Processing document...</Label>
+          <Label>{t('documents.processingDocument')}</Label>
           <Progress value={progress} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {progress}% complete - OCR is analyzing the document
+            {t('documents.ocrProgressMessage', { progress: progress })}
           </p>
         </div>
       )}
       
       {lastOCRResult && lastOCRResult.extractedData && Object.keys(lastOCRResult.extractedData).length > 0 && (
         <div className="p-3 bg-green-50 text-green-700 text-sm rounded-md border border-green-200">
-          <strong>OCR Success:</strong> Successfully extracted data from the document!
+          <strong>{t('documents.ocrSuccessTitle')}:</strong> {t('documents.ocrSuccessDescription')}
           <br />
           <span className="text-xs">
-            Detected fields: {Object.keys(lastOCRResult.extractedData).filter(key => 
+            {t('documents.detectedFieldsMessage', { count: Object.keys(lastOCRResult.extractedData).filter(key => 
               lastOCRResult.extractedData[key] && lastOCRResult.extractedData[key].trim() !== ''
-            ).join(', ')}
+            ).length })}
           </span>
         </div>
       )}
       
       {error && (
         <div className="p-3 bg-yellow-50 text-yellow-700 text-sm rounded-md border border-yellow-200">
-          <strong>OCR Warning:</strong> {error}
+          <strong>{t('documents.ocrWarningTitle')}:</strong> {error}
           <br />
-          <span className="text-xs">Document will still be uploaded without text extraction.</span>
+          <span className="text-xs">{t('documents.documentWillStillBeUploadedMessage')}</span>
         </div>
       )}
       
@@ -252,7 +258,7 @@ const DocumentUploadForm = ({ onUploadComplete, preSelectedCustomerId }: Documen
           type="submit"
           disabled={!file || isFormDisabled}
         >
-          {isUploading ? 'Uploading...' : isProcessing ? 'Processing...' : 'Upload Document'}
+          {isUploading ? t('documents.uploadingButtonText') : isProcessing ? t('documents.processingButtonText') : t('documents.uploadDocumentButtonText')}
         </Button>
       </div>
     </form>

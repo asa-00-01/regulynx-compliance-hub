@@ -7,13 +7,160 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      ai_configurations: {
+        Row: {
+          available_tools: Json | null
+          created_at: string | null
+          customer_id: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          response_categories: Json | null
+          settings: Json | null
+          system_prompt: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_tools?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          response_categories?: Json | null
+          settings?: Json | null
+          system_prompt: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_tools?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          response_categories?: Json | null
+          settings?: Json | null
+          system_prompt?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_configurations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_interactions: {
+        Row: {
+          confidence: number | null
+          configuration_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          processing_time: number | null
+          response: string
+          session_id: string | null
+          tools_used: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          configuration_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          processing_time?: number | null
+          response: string
+          session_id?: string | null
+          tools_used?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          configuration_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          processing_time?: number | null
+          response?: string
+          session_id?: string | null
+          tools_used?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_interactions_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "ai_configurations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_interactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aml_transactions: {
         Row: {
           amount: number
@@ -114,7 +261,22 @@ export type Database = {
           id?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       backup_logs: {
         Row: {
@@ -183,7 +345,198 @@ export type Database = {
           details?: Json | null
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "case_actions_action_by_fkey"
+            columns: ["action_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_actions_action_by_fkey"
+            columns: ["action_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_actions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_document: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          document_id: string
+          id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          document_id: string
+          id?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          document_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_document_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_case"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_document_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_event: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string
+          event_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_event_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_transaction: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          id: string
+          transaction_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          id?: string
+          transaction_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_transaction_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_case"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_transaction_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transaction"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_case: {
+        Row: {
+          assigned_to: string | null
+          case_type: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          organisation_customer_id: string
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_type: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          organisation_customer_id: string
+          priority: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          case_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          organisation_customer_id?: string
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_case_organisation_customer_id_fkey"
+            columns: ["organisation_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organisation_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       compliance_cases: {
         Row: {
@@ -193,12 +546,12 @@ export type Database = {
           created_by: string | null
           customer_id: string | null
           description: string
-          documents: string[] | null
+          documents: Json | null
           id: string
           organization_customer_id: string | null
           priority: string
-          related_alerts: string[] | null
-          related_transactions: string[] | null
+          related_alerts: Json | null
+          related_transactions: Json | null
           resolved_at: string | null
           risk_score: number
           source: Database["public"]["Enums"]["case_source"] | null
@@ -215,12 +568,12 @@ export type Database = {
           created_by?: string | null
           customer_id?: string | null
           description: string
-          documents?: string[] | null
+          documents?: Json | null
           id?: string
           organization_customer_id?: string | null
           priority: string
-          related_alerts?: string[] | null
-          related_transactions?: string[] | null
+          related_alerts?: Json | null
+          related_transactions?: Json | null
           resolved_at?: string | null
           risk_score: number
           source?: Database["public"]["Enums"]["case_source"] | null
@@ -237,12 +590,12 @@ export type Database = {
           created_by?: string | null
           customer_id?: string | null
           description?: string
-          documents?: string[] | null
+          documents?: Json | null
           id?: string
           organization_customer_id?: string | null
           priority?: string
-          related_alerts?: string[] | null
-          related_transactions?: string[] | null
+          related_alerts?: Json | null
+          related_transactions?: Json | null
           resolved_at?: string | null
           risk_score?: number
           source?: Database["public"]["Enums"]["case_source"] | null
@@ -253,6 +606,34 @@ export type Database = {
           user_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "compliance_cases_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "compliance_cases_customer_id_fkey"
             columns: ["customer_id"]
@@ -265,6 +646,67 @@ export type Database = {
             columns: ["organization_customer_id"]
             isOneToOne: false
             referencedRelation: "organization_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_cases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_ai_settings: {
+        Row: {
+          created_at: string | null
+          custom_categories: Json | null
+          custom_tools: Json | null
+          customer_id: string | null
+          default_configuration_id: string | null
+          id: string
+          limits: Json | null
+          openai_api_key: string | null
+          preferences: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_categories?: Json | null
+          custom_tools?: Json | null
+          customer_id?: string | null
+          default_configuration_id?: string | null
+          id?: string
+          limits?: Json | null
+          openai_api_key?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_categories?: Json | null
+          custom_tools?: Json | null
+          customer_id?: string | null
+          default_configuration_id?: string | null
+          id?: string
+          limits?: Json | null
+          openai_api_key?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ai_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -387,7 +829,81 @@ export type Database = {
           status?: string
           version?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deployment_logs_deployed_by_fkey"
+            columns: ["deployed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deployment_logs_deployed_by_fkey"
+            columns: ["deployed_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size_bytes: number | null
+          id: string
+          metadata: Json | null
+          mime_type: string
+          organisation_customer_id: string
+          status: string
+          storage_uri: string
+          type: string
+          updated_at: string | null
+          uploaded_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type: string
+          organisation_customer_id: string
+          status: string
+          storage_uri: string
+          type: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string
+          organisation_customer_id?: string
+          status?: string
+          storage_uri?: string
+          type?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_organisation_customer_id_fkey"
+            columns: ["organisation_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organisation_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -399,10 +915,10 @@ export type Database = {
           id: string
           organization_customer_id: string | null
           status: string
-          type: string
+          type: Database["public"]["Enums"]["document_type"]
           updated_at: string
           upload_date: string
-          user_id: string
+          user_id: string | null
           verification_date: string | null
           verified_by: string | null
         }
@@ -414,11 +930,11 @@ export type Database = {
           file_path: string
           id?: string
           organization_customer_id?: string | null
-          status: string
-          type: string
+          status?: string
+          type: Database["public"]["Enums"]["document_type"]
           updated_at?: string
           upload_date?: string
-          user_id: string
+          user_id?: string | null
           verification_date?: string | null
           verified_by?: string | null
         }
@@ -431,10 +947,10 @@ export type Database = {
           id?: string
           organization_customer_id?: string | null
           status?: string
-          type?: string
+          type?: Database["public"]["Enums"]["document_type"]
           updated_at?: string
           upload_date?: string
-          user_id?: string
+          user_id?: string | null
           verification_date?: string | null
           verified_by?: string | null
         }
@@ -451,6 +967,34 @@ export type Database = {
             columns: ["organization_customer_id"]
             isOneToOne: false
             referencedRelation: "organization_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
             referencedColumns: ["id"]
           },
         ]
@@ -540,7 +1084,340 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_history: {
+        Row: {
+          case_id: string
+          escalated_from_user_id: string | null
+          escalated_to_role: Database["public"]["Enums"]["customer_role"] | null
+          escalated_to_user_id: string | null
+          escalation_date: string | null
+          escalation_level: number
+          escalation_rule_id: string | null
+          id: string
+          new_assigned_to: string | null
+          new_priority: string | null
+          previous_assigned_to: string | null
+          previous_priority: string | null
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          case_id: string
+          escalated_from_user_id?: string | null
+          escalated_to_role?:
+            | Database["public"]["Enums"]["customer_role"]
+            | null
+          escalated_to_user_id?: string | null
+          escalation_date?: string | null
+          escalation_level: number
+          escalation_rule_id?: string | null
+          id?: string
+          new_assigned_to?: string | null
+          new_priority?: string | null
+          previous_assigned_to?: string | null
+          previous_priority?: string | null
+          reason: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          case_id?: string
+          escalated_from_user_id?: string | null
+          escalated_to_role?:
+            | Database["public"]["Enums"]["customer_role"]
+            | null
+          escalated_to_user_id?: string | null
+          escalation_date?: string | null
+          escalation_level?: number
+          escalation_rule_id?: string | null
+          id?: string
+          new_assigned_to?: string | null
+          new_priority?: string | null
+          previous_assigned_to?: string | null
+          previous_priority?: string | null
+          reason?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_history_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalated_from_user_id_fkey"
+            columns: ["escalated_from_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalated_from_user_id_fkey"
+            columns: ["escalated_from_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalated_to_user_id_fkey"
+            columns: ["escalated_to_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalated_to_user_id_fkey"
+            columns: ["escalated_to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalation_rule_id_fkey"
+            columns: ["escalation_rule_id"]
+            isOneToOne: false
+            referencedRelation: "escalation_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_new_assigned_to_fkey"
+            columns: ["new_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_new_assigned_to_fkey"
+            columns: ["new_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_previous_assigned_to_fkey"
+            columns: ["previous_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_previous_assigned_to_fkey"
+            columns: ["previous_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_notifications: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          escalation_history_id: string
+          id: string
+          message: string
+          notification_type: string
+          read_at: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
+          retry_count: number | null
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          escalation_history_id: string
+          id?: string
+          message: string
+          notification_type: string
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          escalation_history_id?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_notifications_escalation_history_id_fkey"
+            columns: ["escalation_history_id"]
+            isOneToOne: false
+            referencedRelation: "escalation_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_notifications_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_notifications_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_rules: {
+        Row: {
+          auto_assign: boolean | null
+          case_type: Database["public"]["Enums"]["case_type"] | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          description: string | null
+          escalation_level: number
+          id: string
+          is_active: boolean | null
+          name: string
+          priority_boost: boolean | null
+          priority_threshold: string | null
+          risk_score_threshold: number | null
+          send_notifications: boolean | null
+          target_role: Database["public"]["Enums"]["customer_role"] | null
+          target_user_id: string | null
+          time_threshold_hours: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_assign?: boolean | null
+          case_type?: Database["public"]["Enums"]["case_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          escalation_level: number
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority_boost?: boolean | null
+          priority_threshold?: string | null
+          risk_score_threshold?: number | null
+          send_notifications?: boolean | null
+          target_role?: Database["public"]["Enums"]["customer_role"] | null
+          target_user_id?: string | null
+          time_threshold_hours?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_assign?: boolean | null
+          case_type?: Database["public"]["Enums"]["case_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          escalation_level?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority_boost?: boolean | null
+          priority_threshold?: string | null
+          risk_score_threshold?: number | null
+          send_notifications?: boolean | null
+          target_role?: Database["public"]["Enums"]["customer_role"] | null
+          target_user_id?: string | null
+          time_threshold_hours?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       external_customer_mappings: {
         Row: {
@@ -573,7 +1450,22 @@ export type Database = {
           last_synced_at?: string | null
           sync_status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "external_customer_mappings_internal_user_id_fkey"
+            columns: ["internal_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_customer_mappings_internal_user_id_fkey"
+            columns: ["internal_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       external_transaction_mappings: {
         Row: {
@@ -685,6 +1577,271 @@ export type Database = {
           webhook_url?: string | null
         }
         Relationships: []
+      }
+      kyx: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          organisation_customer_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organisation_customer_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status: string
+          updated_at?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organisation_customer_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyx_organisation_customer_id_fkey"
+            columns: ["organisation_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organisation_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_configurations: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          default_categories: string[] | null
+          enable_auto_refresh: boolean | null
+          enable_notifications: boolean | null
+          id: string
+          max_articles_per_source: number | null
+          refresh_interval: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          default_categories?: string[] | null
+          enable_auto_refresh?: boolean | null
+          enable_notifications?: boolean | null
+          id?: string
+          max_articles_per_source?: number | null
+          refresh_interval?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          default_categories?: string[] | null
+          enable_auto_refresh?: boolean | null
+          enable_notifications?: boolean | null
+          id?: string
+          max_articles_per_source?: number | null
+          refresh_interval?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_configurations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_source_templates: {
+        Row: {
+          categories: string[] | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_recommended: boolean | null
+          name: string
+          type: string
+          url: string
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_recommended?: boolean | null
+          name: string
+          type: string
+          url: string
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_recommended?: boolean | null
+          name?: string
+          type?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      news_sources: {
+        Row: {
+          categories: string[] | null
+          created_at: string | null
+          created_by: string
+          customer_id: string
+          description: string | null
+          error_count: number | null
+          id: string
+          is_active: boolean | null
+          last_fetched: string | null
+          name: string
+          priority: number | null
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string | null
+          created_by: string
+          customer_id: string
+          description?: string | null
+          error_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_fetched?: string | null
+          name: string
+          priority?: number | null
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string | null
+          created_by?: string
+          customer_id?: string
+          description?: string | null
+          error_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_fetched?: string | null
+          name?: string
+          priority?: number | null
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_sources_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_customer: {
+        Row: {
+          address: string | null
+          country_of_residence: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string
+          date_of_birth: string | null
+          email: string | null
+          external_id: string
+          full_name: string
+          id: string
+          identity_number: string | null
+          is_pep: boolean | null
+          is_sanctioned: boolean | null
+          nationality: string | null
+          phone_number: string | null
+          risk_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          country_of_residence?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id: string
+          date_of_birth?: string | null
+          email?: string | null
+          external_id: string
+          full_name: string
+          id?: string
+          identity_number?: string | null
+          is_pep?: boolean | null
+          is_sanctioned?: boolean | null
+          nationality?: string | null
+          phone_number?: string | null
+          risk_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          country_of_residence?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string
+          date_of_birth?: string | null
+          email?: string | null
+          external_id?: string
+          full_name?: string
+          id?: string
+          identity_number?: string | null
+          is_pep?: boolean | null
+          is_sanctioned?: boolean | null
+          nationality?: string | null
+          phone_number?: string | null
+          risk_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisation_customer_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organization_customers: {
         Row: {
@@ -816,27 +1973,41 @@ export type Database = {
             referencedRelation: "patterns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pattern_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
         ]
       }
       patterns: {
         Row: {
           category: Database["public"]["Enums"]["pattern_category"]
           created_at: string
-          description: string
+          description: string | null
           id: string
           name: string
         }
         Insert: {
           category: Database["public"]["Enums"]["pattern_category"]
           created_at?: string
-          description: string
+          description?: string | null
           id?: string
           name: string
         }
         Update: {
           category?: Database["public"]["Enums"]["pattern_category"]
           created_at?: string
-          description?: string
+          description?: string | null
           id?: string
           name?: string
         }
@@ -861,7 +2032,22 @@ export type Database = {
           role?: Database["public"]["Enums"]["platform_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "platform_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -940,6 +2126,82 @@ export type Database = {
         }
         Relationships: []
       }
+      rss_feeds: {
+        Row: {
+          categories: string[] | null
+          created_at: string | null
+          created_by: string
+          customer_id: string
+          description: string | null
+          error_count: number | null
+          feed_url: string
+          id: string
+          is_active: boolean | null
+          last_fetched: string | null
+          priority: number | null
+          refresh_interval: number | null
+          title: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string | null
+          created_by: string
+          customer_id: string
+          description?: string | null
+          error_count?: number | null
+          feed_url: string
+          id?: string
+          is_active?: boolean | null
+          last_fetched?: string | null
+          priority?: number | null
+          refresh_interval?: number | null
+          title: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string | null
+          created_by?: string
+          customer_id?: string
+          description?: string | null
+          error_count?: number | null
+          feed_url?: string
+          id?: string
+          is_active?: boolean | null
+          last_fetched?: string | null
+          priority?: number | null
+          refresh_interval?: number | null
+          title?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rss_feeds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rss_feeds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rss_feeds_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rules: {
         Row: {
           category: string
@@ -984,12 +2246,12 @@ export type Database = {
           created_at: string
           date_of_activity: string
           date_submitted: string
-          documents: string[] | null
+          documents: Json | null
           id: string
-          notes: string[] | null
+          notes: Json | null
           status: Database["public"]["Enums"]["sar_status"]
           summary: string
-          transactions: string[]
+          transactions: Json
           updated_at: string
           user_id: string
           user_name: string
@@ -998,12 +2260,12 @@ export type Database = {
           created_at?: string
           date_of_activity: string
           date_submitted: string
-          documents?: string[] | null
+          documents?: Json | null
           id?: string
-          notes?: string[] | null
+          notes?: Json | null
           status: Database["public"]["Enums"]["sar_status"]
           summary: string
-          transactions: string[]
+          transactions: Json
           updated_at?: string
           user_id: string
           user_name: string
@@ -1012,17 +2274,82 @@ export type Database = {
           created_at?: string
           date_of_activity?: string
           date_submitted?: string
-          documents?: string[] | null
+          documents?: Json | null
           id?: string
-          notes?: string[] | null
+          notes?: Json | null
           status?: Database["public"]["Enums"]["sar_status"]
           summary?: string
-          transactions?: string[]
+          transactions?: Json
           updated_at?: string
           user_id?: string
           user_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sla_tracking: {
+        Row: {
+          breach_reason: string | null
+          case_id: string
+          created_at: string | null
+          end_time: string | null
+          escalation_level: number
+          id: string
+          sla_type: string
+          start_time: string
+          status: string | null
+          target_hours: number
+          updated_at: string | null
+        }
+        Insert: {
+          breach_reason?: string | null
+          case_id: string
+          created_at?: string | null
+          end_time?: string | null
+          escalation_level: number
+          id?: string
+          sla_type: string
+          start_time: string
+          status?: string | null
+          target_hours: number
+          updated_at?: string | null
+        }
+        Update: {
+          breach_reason?: string | null
+          case_id?: string
+          created_at?: string | null
+          end_time?: string | null
+          escalation_level?: number
+          id?: string
+          sla_type?: string
+          start_time?: string
+          status?: string | null
+          target_hours?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_tracking_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscribers: {
         Row: {
@@ -1061,7 +2388,22 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscription_plans: {
         Row: {
@@ -1108,6 +2450,65 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction: {
+        Row: {
+          amount: number
+          counterparty_account: string | null
+          counterparty_name: string | null
+          created_at: string | null
+          currency: string | null
+          direction: string
+          external_transaction_id: string
+          flags: Json | null
+          id: string
+          metadata: Json | null
+          occurred_at: string
+          organisation_customer_id: string
+          risk_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          counterparty_account?: string | null
+          counterparty_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          direction: string
+          external_transaction_id: string
+          flags?: Json | null
+          id?: string
+          metadata?: Json | null
+          occurred_at: string
+          organisation_customer_id: string
+          risk_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          counterparty_account?: string | null
+          counterparty_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          direction?: string
+          external_transaction_id?: string
+          flags?: Json | null
+          id?: string
+          metadata?: Json | null
+          occurred_at?: string
+          organisation_customer_id?: string
+          risk_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_organisation_customer_id_fkey"
+            columns: ["organisation_customer_id"]
+            isOneToOne: false
+            referencedRelation: "organisation_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_metrics: {
         Row: {
           count: number
@@ -1133,7 +2534,22 @@ export type Database = {
           metric_type?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "usage_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1163,6 +2579,20 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_with_customer"
             referencedColumns: ["id"]
           },
         ]
@@ -1237,16 +2667,51 @@ export type Database = {
       }
     }
     Functions: {
+      check_case_escalation: {
+        Args: { case_id: string }
+        Returns: {
+          escalation_level: number
+          reason: string
+          rule_id: string
+          should_escalate: boolean
+          target_role: Database["public"]["Enums"]["customer_role"]
+          target_user_id: string
+        }[]
+      }
+      check_sla_breaches: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          actual_hours: number
+          case_id: string
+          escalation_level: number
+          sla_id: string
+          sla_type: string
+          status: string
+          target_hours: number
+        }[]
+      }
+      escalate_case: {
+        Args: {
+          case_id: string
+          escalated_from_user_id?: string
+          escalation_level?: number
+          escalation_rule_id?: string
+          reason?: string
+          target_role?: Database["public"]["Enums"]["customer_role"]
+          target_user_id?: string
+        }
+        Returns: string
+      }
       get_current_user_with_customer: {
         Args: Record<PropertyKey, never>
         Returns: {
-          customer_domain: string
-          customer_full_name: string
           customer_id: string
           email: string
           id: string
+          joined_customer_domain: string
+          joined_customer_name: string
           name: string
-          role: Database["public"]["Enums"]["user_role"]
+          role: string
           subscription_tier: string
         }[]
       }
@@ -1280,87 +2745,56 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
-      log_error: {
-        Args: {
-          p_additional_context?: Json
-          p_error_id: string
-          p_error_message: string
-          p_error_stack?: string
-          p_error_type?: string
-          p_severity?: string
-          p_url?: string
-          p_user_agent?: string
-        }
-        Returns: string
-      }
-      schedule_backup: {
-        Args: { backup_type?: string }
-        Returns: string
+      send_escalation_notifications: {
+        Args: { escalation_history_id: string }
+        Returns: undefined
       }
       track_usage: {
         Args: { metric_type: string }
         Returns: undefined
       }
-      validate_environment_config: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          message: string
-          recommendation: string
-          severity: string
-          status: string
-          validation_type: string
-        }[]
-      }
     }
     Enums: {
       action_type:
-        | "created"
-        | "updated"
-        | "assigned"
-        | "resolved"
-        | "closed"
-        | "commented"
-      case_action_type:
-        | "note"
         | "status_change"
         | "assignment"
-        | "document_request"
+        | "comment"
+        | "document_upload"
         | "escalation"
         | "resolution"
-      case_priority: "low" | "medium" | "high" | "critical"
       case_source:
-        | "manual"
-        | "system"
-        | "external"
-        | "transaction_alert"
-        | "kyc_flag"
+        | "system_alert"
+        | "manual_review"
+        | "external_report"
+        | "regulatory_request"
+      case_status: "open" | "in_progress" | "resolved" | "closed" | "escalated"
+      case_type:
+        | "kyc_review"
+        | "aml_alert"
         | "sanctions_hit"
-        | "risk_assessment"
-      case_status: "open" | "in_progress" | "resolved" | "closed"
-      case_type: "kyc" | "aml" | "sanctions" | "fraud" | "other"
-      compliance_case: "aml_alert, kyc_alert, sanctions, fraud, other"
+        | "pep_review"
+        | "transaction_monitoring"
+        | "suspicious_activity"
+        | "document_review"
+        | "compliance_breach"
       customer_role:
         | "customer_admin"
         | "customer_compliance"
         | "customer_executive"
         | "customer_support"
-      document_status: "pending" | "verified" | "rejected"
       document_type:
         | "passport"
         | "drivers_license"
+        | "national_id"
         | "utility_bill"
         | "bank_statement"
+        | "proof_of_income"
         | "other"
-      pattern_category:
-        | "structuring"
-        | "round_amounts"
-        | "velocity"
-        | "geographic"
-        | "time_based"
+      pattern_category: "transaction" | "behavioral" | "geographic" | "temporal"
       platform_role: "platform_admin" | "platform_support"
-      sar_status: "draft" | "submitted" | "filed" | "rejected"
+      sar_status: "draft" | "submitted" | "acknowledged" | "rejected"
       user_role: "admin" | "complianceOfficer" | "executive" | "support"
-      user_status: "active" | "pending" | "suspended" | "banned"
+      user_status: "verified" | "pending" | "rejected" | "information_requested"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1486,62 +2920,57 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       action_type: [
-        "created",
-        "updated",
-        "assigned",
-        "resolved",
-        "closed",
-        "commented",
-      ],
-      case_action_type: [
-        "note",
         "status_change",
         "assignment",
-        "document_request",
+        "comment",
+        "document_upload",
         "escalation",
         "resolution",
       ],
-      case_priority: ["low", "medium", "high", "critical"],
       case_source: [
-        "manual",
-        "system",
-        "external",
-        "transaction_alert",
-        "kyc_flag",
-        "sanctions_hit",
-        "risk_assessment",
+        "system_alert",
+        "manual_review",
+        "external_report",
+        "regulatory_request",
       ],
-      case_status: ["open", "in_progress", "resolved", "closed"],
-      case_type: ["kyc", "aml", "sanctions", "fraud", "other"],
-      compliance_case: ["aml_alert, kyc_alert, sanctions, fraud, other"],
+      case_status: ["open", "in_progress", "resolved", "closed", "escalated"],
+      case_type: [
+        "kyc_review",
+        "aml_alert",
+        "sanctions_hit",
+        "pep_review",
+        "transaction_monitoring",
+        "suspicious_activity",
+        "document_review",
+        "compliance_breach",
+      ],
       customer_role: [
         "customer_admin",
         "customer_compliance",
         "customer_executive",
         "customer_support",
       ],
-      document_status: ["pending", "verified", "rejected"],
       document_type: [
         "passport",
         "drivers_license",
+        "national_id",
         "utility_bill",
         "bank_statement",
+        "proof_of_income",
         "other",
       ],
-      pattern_category: [
-        "structuring",
-        "round_amounts",
-        "velocity",
-        "geographic",
-        "time_based",
-      ],
+      pattern_category: ["transaction", "behavioral", "geographic", "temporal"],
       platform_role: ["platform_admin", "platform_support"],
-      sar_status: ["draft", "submitted", "filed", "rejected"],
+      sar_status: ["draft", "submitted", "acknowledged", "rejected"],
       user_role: ["admin", "complianceOfficer", "executive", "support"],
-      user_status: ["active", "pending", "suspended", "banned"],
+      user_status: ["verified", "pending", "rejected", "information_requested"],
     },
   },
 } as const
+

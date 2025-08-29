@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { config } from '@/config/environment';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -82,7 +83,7 @@ const AnalyticsReportingConsole: React.FC = () => {
     pageViews: 0
   });
 
-  const [reports, setReports] = useState<Report[]>([
+  const [reports, setReports] = useState<Report[]>(config.features.useMockData ? [
     {
       id: 'rep_001',
       name: 'Monthly Revenue Report',
@@ -116,7 +117,7 @@ const AnalyticsReportingConsole: React.FC = () => {
       format: 'excel',
       size: 'Processing...'
     }
-  ]);
+  ] : []);
 
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
@@ -136,13 +137,13 @@ const AnalyticsReportingConsole: React.FC = () => {
 
       setAnalyticsStats({
         totalRevenue: totalRevenue * 12, // Annual revenue
-        monthlyGrowth: 15.2,
+        monthlyGrowth: config.features.useMockData ? 15.2 : 0,
         activeUsers,
-        userGrowth: 8.5,
-        conversionRate: 3.2,
-        churnRate: 2.5,
-        averageSessionDuration: 12.5,
-        pageViews: 45000
+        userGrowth: config.features.useMockData ? 8.5 : 0,
+        conversionRate: config.features.useMockData ? 3.2 : 0,
+        churnRate: config.features.useMockData ? 2.5 : 0,
+        averageSessionDuration: config.features.useMockData ? 12.5 : 0,
+        pageViews: config.features.useMockData ? 45000 : 0
       });
     }
   }, [customers]);
@@ -226,7 +227,7 @@ const AnalyticsReportingConsole: React.FC = () => {
     }
   ];
 
-  const chartData = {
+  const chartData = config.features.useMockData ? {
     revenue: [
       { month: 'Jan', value: 45000 },
       { month: 'Feb', value: 52000 },
@@ -251,6 +252,10 @@ const AnalyticsReportingConsole: React.FC = () => {
       { month: 'May', value: 3.2 },
       { month: 'Jun', value: 3.6 },
     ]
+  } : {
+    revenue: [],
+    users: [],
+    conversion: []
   };
 
   return (

@@ -3,10 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import TransactionFilters from './TransactionFilters';
+import { AMLTransactionFilters } from '@/types/aml';
 
 interface AMLFiltersSectionProps {
-  filters: any;
-  onFilterChange: (filters: any) => void;
+  filters: AMLTransactionFilters;
+  onFilterChange: (filters: AMLTransactionFilters) => void;
   filteredTransactionsCount: number;
   onExport: () => void;
 }
@@ -18,16 +19,20 @@ const AMLFiltersSection: React.FC<AMLFiltersSectionProps> = ({
   onExport,
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="space-y-4">
+      {/* Export button positioned at the top right */}
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={onExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Export ({filteredTransactionsCount})
+        </Button>
+      </div>
+
+      {/* Filters section */}
       <TransactionFilters
         filters={filters}
         onFilterChange={onFilterChange}
       />
-
-      <Button variant="outline" className="ml-auto" onClick={onExport}>
-        <Download className="mr-2 h-4 w-4" />
-        Export ({filteredTransactionsCount})
-      </Button>
     </div>
   );
 };

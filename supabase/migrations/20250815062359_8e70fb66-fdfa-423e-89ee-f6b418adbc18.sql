@@ -530,25 +530,92 @@ ALTER TABLE public.backup_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deployment_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.environment_validations ENABLE ROW LEVEL SECURITY;
 
+-- Create helper functions
+CREATE OR REPLACE FUNCTION public.get_user_role(user_id uuid)
+RETURNS text
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT role::text FROM public.profiles WHERE id = user_id;
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_platform_role(_user_id uuid, _role platform_role)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.platform_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_customer_role(_user_id uuid, _role customer_role)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_platform_owner(_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.platform_roles
+    WHERE user_id = _user_id
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_platform_roles(_user_id uuid)
+RETURNS platform_role[]
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT ARRAY_AGG(role)
+  FROM public.platform_roles
+  WHERE user_id = _user_id
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_customer_roles(_user_id uuid)
+RETURNS customer_role[]
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT ARRAY_AGG(role)
+  FROM public.user_roles
+  WHERE user_id = _user_id
+$$;
+
 -- Create RLS policies
 
 -- Platform roles policies
 CREATE POLICY "Platform admins can manage platform roles" ON public.platform_roles
-  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 CREATE POLICY "Users can view their own platform roles" ON public.platform_roles
   FOR SELECT USING (user_id = auth.uid());
 
 -- Customer roles policies
 CREATE POLICY "Platform admins can manage customer roles" ON public.user_roles
-  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 CREATE POLICY "Users can view their own customer roles" ON public.user_roles
   FOR SELECT USING (user_id = auth.uid());
 
 -- Customers policies
 CREATE POLICY "Platform admins can manage customers" ON public.customers
-  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR ALL USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 -- Profiles policies
 CREATE POLICY "Users can view their own profile" ON public.profiles
@@ -558,7 +625,7 @@ CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "Platform admins can view all profiles" ON public.profiles
-  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 CREATE POLICY "Admins can view all profiles" ON public.profiles
   FOR SELECT USING (get_user_role(auth.uid()) = ANY(ARRAY['admin', 'complianceOfficer']));
@@ -587,7 +654,7 @@ CREATE POLICY "Customer users can manage their organization's customers" ON publ
   );
 
 CREATE POLICY "Platform admins can view all organization customers" ON public.organization_customers
-  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 -- AML transactions policies
 CREATE POLICY "Customer users can manage their organization's transactions" ON public.aml_transactions
@@ -601,7 +668,7 @@ CREATE POLICY "Customer users can manage their organization's transactions" ON p
   );
 
 CREATE POLICY "Platform admins can view all transactions" ON public.aml_transactions
-  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'));
+  FOR SELECT USING (has_platform_role(auth.uid(), 'platform_admin'::platform_role));
 
 -- Documents policies
 CREATE POLICY "Users can view their own documents" ON public.documents
@@ -850,6 +917,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -871,6 +939,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS assign_default_role ON public.profiles;
 CREATE TRIGGER assign_default_role
   AFTER INSERT ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.assign_default_customer_role();

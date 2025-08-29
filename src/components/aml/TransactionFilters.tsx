@@ -7,19 +7,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Filter } from 'lucide-react';
 import { format } from 'date-fns';
+import { AMLTransactionFilters } from '@/types/aml';
 
 interface TransactionFiltersProps {
-  filters: {
-    dateRange: { from: Date | null; to: Date | null };
-    amountRange: { min: number | null; max: number | null };
-    currency: string;
-    method: string;
-    riskLevel: string;
-    country: string;
-    status: string;
-    searchTerm: string;
-  };
-  onFilterChange: (filters: any) => void;
+  filters: AMLTransactionFilters;
+  onFilterChange: (filters: AMLTransactionFilters) => void;
 }
 
 const TransactionFilters: React.FC<TransactionFiltersProps> = ({

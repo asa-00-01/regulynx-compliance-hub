@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 -- 4. Ensure subscription_plans table exists (may already exist)
 CREATE TABLE IF NOT EXISTS public.subscription_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    plan_id TEXT UNIQUE NOT NULL,
+    plan_id TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     price_monthly INTEGER NOT NULL,
@@ -50,6 +50,18 @@ CREATE TABLE IF NOT EXISTS public.subscription_plans (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Ensure unique constraint on plan_id exists
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'subscription_plans_plan_id_key' 
+        AND conrelid = 'public.subscription_plans'::regclass
+    ) THEN
+        ALTER TABLE public.subscription_plans ADD CONSTRAINT subscription_plans_plan_id_key UNIQUE (plan_id);
+    END IF;
+END $$;
 
 -- 5. Ensure subscribers table exists (may already exist)
 CREATE TABLE IF NOT EXISTS public.subscribers (
@@ -246,15 +258,34 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_customers_updated_at ON public.customers;
 CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_subscribers_updated_at ON public.subscribers;
 CREATE TRIGGER update_subscribers_updated_at BEFORE UPDATE ON public.subscribers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_integration_configs_updated_at ON public.integration_configs;
 CREATE TRIGGER update_integration_configs_updated_at BEFORE UPDATE ON public.integration_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_organisation_customer_updated_at ON public.organisation_customer;
 CREATE TRIGGER update_organisation_customer_updated_at BEFORE UPDATE ON public.organisation_customer FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_kyx_updated_at ON public.kyx;
 CREATE TRIGGER update_kyx_updated_at BEFORE UPDATE ON public.kyx FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_transaction_updated_at ON public.transaction;
 CREATE TRIGGER update_transaction_updated_at BEFORE UPDATE ON public.transaction FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_document_updated_at ON public.document;
 CREATE TRIGGER update_document_updated_at BEFORE UPDATE ON public.document FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_compliance_case_updated_at ON public.compliance_case;
 CREATE TRIGGER update_compliance_case_updated_at BEFORE UPDATE ON public.compliance_case FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_ai_interactions_updated_at ON public.ai_interactions;
 CREATE TRIGGER update_ai_interactions_updated_at BEFORE UPDATE ON public.ai_interactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create constraint to ensure only one active KYX per organisation_customer
@@ -281,20 +312,14 @@ VALUES
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'enterprise', 'Enterprise Plan', 'Enterprise-grade compliance platform', 299900, 2999900, '["aml_monitoring", "kyc_verification", "sanctions_screening", "case_management", "advanced_analytics", "custom_integrations", "dedicated_support"]'::jsonb, -1, -1, -1, true)
 ON CONFLICT (plan_id) DO NOTHING;
 
--- 3. Create platform user
-INSERT INTO public.profiles (id, name, email, customer_id, role, status)
-VALUES ('22222222-2222-2222-2222-222222222222', 'John Admin', 'admin@democorp.com', '01234567-89ab-cdef-0123-456789abcdef', 'admin', 'active')
-ON CONFLICT (id) DO NOTHING;
+-- 3. Create platform user (profile will be created via auth trigger when user signs up)
+-- Note: Profile will be created automatically when user signs up through auth
 
--- 4. Assign admin role
-INSERT INTO public.user_roles (id, user_id, customer_id, role)
-VALUES ('33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', '01234567-89ab-cdef-0123-456789abcdef', 'admin')
-ON CONFLICT (id) DO NOTHING;
+-- 4. Assign admin role (will be done after user signs up)
+-- Note: User roles will be assigned after user authentication
 
--- 5. Create subscription
-INSERT INTO public.subscribers (id, user_id, email, subscribed, subscription_tier, subscription_end)
-VALUES ('44444444-4444-4444-4444-444444444444', '22222222-2222-2222-2222-222222222222', 'admin@democorp.com', true, 'pro', now() + INTERVAL '1 year')
-ON CONFLICT (id) DO NOTHING;
+-- 5. Create subscription (will be linked after user signs up)
+-- Note: Subscription will be linked to user after authentication
 
 -- 6. Add integration config
 INSERT INTO public.integration_configs (id, client_id, client_name, integration_type, webhook_url, data_mapping, status)
@@ -308,14 +333,14 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 8. Create Organisation Customer
 INSERT INTO public.organisation_customer (id, customer_id, external_id, full_name, email, phone_number, date_of_birth, nationality, country_of_residence, risk_score, created_by)
-VALUES ('77777777-7777-7777-7777-777777777777', '01234567-89ab-cdef-0123-456789abcdef', 'EXT_CUST_001', 'Alice Smith', 'alice.smith@email.com', '+1-555-0123', '1985-06-15', 'American', 'United States', 45, '22222222-2222-2222-2222-222222222222')
+VALUES ('77777777-7777-7777-7777-777777777777', '01234567-89ab-cdef-0123-456789abcdef', 'EXT_CUST_001', 'Alice Smith', 'alice.smith@email.com', '+1-555-0123', '1985-06-15', 'American', 'United States', 45, NULL)
 ON CONFLICT (customer_id, external_id) DO NOTHING;
 
 -- 9. Create KYX records (v1 inactive, v2 active approved)
 INSERT INTO public.kyx (id, organisation_customer_id, version, status, is_active, data, reviewed_by, reviewed_at)
 VALUES 
-('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777', 1, 'expired', false, '{"identity_verified": false, "address_verified": false}'::jsonb, '22222222-2222-2222-2222-222222222222', now() - INTERVAL '30 days'),
-('99999999-9999-9999-9999-999999999999', '77777777-7777-7777-7777-777777777777', 2, 'approved', true, '{"identity_verified": true, "address_verified": true, "pep_check": "clear", "sanctions_check": "clear"}'::jsonb, '22222222-2222-2222-2222-222222222222', now() - INTERVAL '1 day')
+('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777', 1, 'expired', false, '{"identity_verified": false, "address_verified": false}'::jsonb, NULL, now() - INTERVAL '30 days'),
+('99999999-9999-9999-9999-999999999999', '77777777-7777-7777-7777-777777777777', 2, 'approved', true, '{"identity_verified": true, "address_verified": true, "pep_check": "clear", "sanctions_check": "clear"}'::jsonb, NULL, now() - INTERVAL '1 day')
 ON CONFLICT (organisation_customer_id, version) DO NOTHING;
 
 -- 10. Create transactions
@@ -328,13 +353,13 @@ ON CONFLICT (id) DO NOTHING;
 -- 11. Create documents
 INSERT INTO public.document (id, organisation_customer_id, type, file_name, storage_uri, mime_type, file_size_bytes, status, uploaded_by, verified_by, verified_at)
 VALUES 
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'passport', 'alice_passport.pdf', '/documents/alice/passport.pdf', 'application/pdf', 1024000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '2 days'),
-('ffffffff-ffff-ffff-ffff-ffffffffffff', '77777777-7777-7777-7777-777777777777', 'utility_bill', 'alice_utility.pdf', '/documents/alice/utility.pdf', 'application/pdf', 512000, 'verified', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', now() - INTERVAL '1 day')
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'passport', 'alice_passport.pdf', '/documents/alice/passport.pdf', 'application/pdf', 1024000, 'verified', NULL, NULL, now() - INTERVAL '2 days'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '77777777-7777-7777-7777-777777777777', 'utility_bill', 'alice_utility.pdf', '/documents/alice/utility.pdf', 'application/pdf', 512000, 'verified', NULL, NULL, now() - INTERVAL '1 day')
 ON CONFLICT (id) DO NOTHING;
 
 -- 12. Create compliance case
 INSERT INTO public.compliance_case (id, organisation_customer_id, case_type, status, priority, title, description, assigned_to, created_by)
-VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'aml_alert', 'in_progress', 'medium', 'Routine AML Review', 'Regular transaction monitoring review for new customer', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222')
+VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'aml_alert', 'in_progress', 'medium', 'Routine AML Review', 'Regular transaction monitoring review for new customer', NULL, NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- 13. Link case to transactions
@@ -352,13 +377,13 @@ ON CONFLICT (case_id, document_id) DO NOTHING;
 -- 15. Create case events
 INSERT INTO public.case_event (id, case_id, event_type, description, created_by)
 VALUES 
-('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'created', 'Case opened for routine AML review', '22222222-2222-2222-2222-222222222222'),
-('11111111-1111-1111-1111-111111111111', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'note_added', 'Initial review completed. All documents verified. Transactions appear legitimate.', '22222222-2222-2222-2222-222222222222')
+('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'created', 'Case opened for routine AML review', NULL),
+('11111111-1111-1111-1111-111111111111', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'note_added', 'Initial review completed. All documents verified. Transactions appear legitimate.', NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- 16. Create sample AI interactions
 INSERT INTO public.ai_interactions (id, user_id, message, response, tools_used, confidence, processing_time, session_id)
 VALUES 
-('gggggggg-gggg-gggg-gggg-gggggggggggg', '22222222-2222-2222-2222-222222222222', 'What are the AML compliance requirements?', 'Based on our compliance database, I can provide guidance on AML compliance. The key areas to focus on include customer due diligence, transaction monitoring, and suspicious activity reporting. Our system flags transactions above $10,000 and monitors for unusual patterns.', '["RAG System", "Compliance Database", "Regulatory Updates"]'::jsonb, 0.92, 1200, 'session-001'),
-('hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh', '22222222-2222-2222-2222-222222222222', 'How do I verify customer identity?', 'For KYC procedures, you''ll need to verify identity documents, assess risk level, and conduct enhanced due diligence for high-risk customers. Our system supports document verification, risk scoring, and automated compliance checks.', '["KYC Database", "Document Verification", "Risk Assessment"]'::jsonb, 0.89, 950, 'session-001')
+('33333333-3333-3333-3333-333333333333', NULL, 'What are the AML compliance requirements?', 'Based on our compliance database, I can provide guidance on AML compliance. The key areas to focus on include customer due diligence, transaction monitoring, and suspicious activity reporting. Our system flags transactions above $10,000 and monitors for unusual patterns.', '["RAG System", "Compliance Database", "Regulatory Updates"]'::jsonb, 0.92, 1200, 'session-001'),
+('44444444-4444-4444-4444-444444444444', NULL, 'How do I verify customer identity?', 'For KYC procedures, you''ll need to verify identity documents, assess risk level, and conduct enhanced due diligence for high-risk customers. Our system supports document verification, risk scoring, and automated compliance checks.', '["KYC Database", "Document Verification", "Risk Assessment"]'::jsonb, 0.89, 950, 'session-001')
 ON CONFLICT (id) DO NOTHING;

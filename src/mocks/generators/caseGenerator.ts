@@ -1,8 +1,28 @@
 
 import { ComplianceCaseDetails, CasePriority, CaseSource } from '@/types/case';
 
-// Generate UUID v4
-const generateUUID = (): string => {
+// Generate consistent UUIDs for mock data
+const generateUUID = (seed?: string): string => {
+  if (seed) {
+    // Simple hash function to generate consistent UUIDs
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to UUID format
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32).padEnd(12, '0')}`;
+  }
+  
+  // Fallback to crypto.randomUUID() if available, otherwise use Math.random()
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Legacy fallback (less secure but functional)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -12,7 +32,7 @@ const generateUUID = (): string => {
 
 // Case types and sources for realistic generation
 const caseTypes: ('kyc' | 'aml' | 'sanctions')[] = ['kyc', 'aml', 'sanctions'];
-const caseSources: CaseSource[] = ['manual', 'transaction_alert', 'kyc_flag', 'sanctions_hit', 'system', 'risk_assessment'];
+const caseSources: CaseSource[] = ['manual_review', 'system_alert', 'external_report', 'regulatory_request'];
 const caseStatuses = ['open', 'under_review', 'escalated', 'pending_info', 'closed'] as const;
 const priorities: CasePriority[] = ['low', 'medium', 'high', 'critical'];
 

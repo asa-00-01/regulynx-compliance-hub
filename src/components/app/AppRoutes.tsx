@@ -33,6 +33,7 @@ import Profile from '@/pages/Profile';
 import AIAgent from '@/pages/AIAgent';
 import News from '@/pages/News';
 import Optimization from '@/pages/Optimization';
+import EscalationManagement from '@/pages/EscalationManagement';
 import DeveloperTools from '@/pages/DeveloperTools';
 import Pricing from '@/pages/Pricing';
 import SubscriptionSuccess from '@/pages/SubscriptionSuccess';
@@ -258,6 +259,14 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <CustomerLayout>
                 <Optimization />
+              </CustomerLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/escalation-management" element={
+            <ProtectedRoute>
+              <CustomerLayout requiredRoles={['admin', 'complianceOfficer'] as const}>
+                <EscalationManagement />
               </CustomerLayout>
             </ProtectedRoute>
           } />

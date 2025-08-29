@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SupabasePlatformRoleService } from '@/services/supabasePlatformRoleService';
 import { ExtendedUserProfile, PlatformRole } from '@/types/platform-roles';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { config } from '@/config/environment';
 
 const PlatformUserManagement: React.FC = () => {
   const { toast } = useToast();
@@ -208,20 +209,28 @@ const PlatformUserManagement: React.FC = () => {
           <CardDescription>Aggregate view of users across all customer organizations</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">1,234</div>
-              <div className="text-sm text-muted-foreground">Total Customer Users</div>
+          {config.features.useMockData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold">1,234</div>
+                <div className="text-sm text-muted-foreground">Total Customer Users</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold">45</div>
+                <div className="text-sm text-muted-foreground">Customer Admins</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold">89</div>
+                <div className="text-sm text-muted-foreground">Compliance Officers</div>
+              </div>
             </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">45</div>
-              <div className="text-sm text-muted-foreground">Customer Admins</div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Customer user overview data not available in production mode
+              </p>
             </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">89</div>
-              <div className="text-sm text-muted-foreground">Compliance Officers</div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -30,7 +30,7 @@ export const useDocuments = (userId?: string | null) => {
 
       // If userId is provided, filter by that user
       if (userId) {
-        query = query.eq('user_id', userId);
+        query = query.eq('organization_customer_id', userId);
       }
 
       const { data, error } = await query;

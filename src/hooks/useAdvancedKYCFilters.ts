@@ -1,10 +1,11 @@
 
 import { useState, useMemo } from 'react';
-import { KYCUser, UserFlags } from '@/types/kyc';
+import { KYCUser, UserFlags, KYCStatus } from '@/types/kyc';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseAdvancedKYCFiltersProps {
-  users: (KYCUser & { flags: UserFlags })[];
+  users: (KYCUser & { flags: UserFlags; kycStatus?: KYCStatus })[];
+  filteredUsers?: (KYCUser & { flags: UserFlags; kycStatus?: KYCStatus })[]; // Add optional filtered users
 }
 
 interface FilterState {
@@ -15,7 +16,7 @@ interface FilterState {
   kycStatusFilter: string;
 }
 
-export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => {
+export const useAdvancedKYCFilters = ({ users, filteredUsers }: UseAdvancedKYCFiltersProps) => {
   const [filters, setFilters] = useState<FilterState>({
     searchTerm: '',
     riskFilter: 'all',
@@ -26,7 +27,8 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const filteredUsers = useMemo(() => {
+  // Fallback filtering logic when filteredUsers is not provided
+  const fallbackFilteredUsers = useMemo(() => {
     return users.filter(user => {
       // Search term filter
       if (filters.searchTerm) {
@@ -75,18 +77,20 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
 
       // KYC status filter
       if (filters.kycStatusFilter !== 'all') {
-        const isVerified = user.flags.is_email_confirmed && user.identityNumber;
-        const isPending = !user.flags.is_email_confirmed || !user.identityNumber;
+        const userKycStatus = user.kycStatus || (user.flags.is_email_confirmed && user.identityNumber ? 'verified' : 'pending');
         
         switch (filters.kycStatusFilter) {
           case 'verified':
-            if (!isVerified) return false;
+            if (userKycStatus !== 'verified') return false;
             break;
           case 'pending':
-            if (!isPending) return false;
+            if (userKycStatus !== 'pending') return false;
             break;
           case 'rejected':
-            if (user.flags.is_sanction_list) return false;
+            if (userKycStatus !== 'rejected') return false;
+            break;
+          case 'information_requested':
+            if (userKycStatus !== 'information_requested') return false;
             break;
         }
       }
@@ -94,6 +98,9 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
       return true;
     });
   }, [users, filters]);
+
+  // Use provided filteredUsers or fall back to filtered logic
+  const effectiveFilteredUsers = filteredUsers || fallbackFilteredUsers;
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -105,7 +112,7 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
     return count;
   }, [filters]);
 
-  const updateFilter = (key: keyof FilterState, value: any) => {
+  const updateFilter = (key: keyof FilterState, value: string | Date | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -129,10 +136,10 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
   };
 
   const toggleAllUsers = () => {
-    if (selectedUsers.length === filteredUsers.length) {
+    if (selectedUsers.length === effectiveFilteredUsers.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(filteredUsers.map(user => user.id));
+      setSelectedUsers(effectiveFilteredUsers.map(user => user.id));
     }
   };
 
@@ -140,21 +147,22 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
     setSelectedUsers([]);
   };
 
-  const handleBulkAction = (action: string, data?: any) => {
+  const handleBulkAction = async (action: string, data?: Record<string, unknown>) => {
     console.log('Bulk action:', action, 'on users:', selectedUsers, 'with data:', data);
     
-    // Simulate bulk action processing
-    setTimeout(() => {
-      toast({
-        title: "Bulk Action Completed",
-        description: `Successfully performed ${action} on ${selectedUsers.length} user(s).`
-      });
-      clearSelection();
-    }, 1000);
+    // This function should be called with the actual kycOperations
+    // For now, we'll just show a toast and clear selection
+    // The actual implementation should be passed from the parent component
+    
+    toast({
+      title: "Bulk Action Completed",
+      description: `Successfully performed ${action} on ${selectedUsers.length} user(s).`
+    });
+    clearSelection();
   };
 
   const exportData = () => {
-    const dataToExport = filteredUsers.map(user => ({
+    const dataToExport = effectiveFilteredUsers.map(user => ({
       id: user.id,
       fullName: user.fullName,
       email: user.email,
@@ -187,7 +195,7 @@ export const useAdvancedKYCFilters = ({ users }: UseAdvancedKYCFiltersProps) => 
 
   return {
     filters,
-    filteredUsers,
+    filteredUsers: effectiveFilteredUsers,
     activeFiltersCount,
     selectedUsers,
     updateFilter,

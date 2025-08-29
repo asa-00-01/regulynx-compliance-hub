@@ -1,11 +1,11 @@
 
 -- Insert demo customer (SaaS customer)
 INSERT INTO public.customers (id, name, domain, subscription_tier, settings) VALUES
-('550e8400-e29b-41d4-a716-446655440001', 'Demo Financial Services', 'demo-finserv.com', 'premium', '{"features": ["aml_monitoring", "kyc_verification", "sanctions_screening"]}');
+('550e8400-e29b-41d4-a716-446655440001', 'Demo Financial Services', 'demo-finserv.com', 'premium', '{"features": ["aml_monitoring", "kyc_verification", "sanctions_screening"]}')
+ON CONFLICT (id) DO NOTHING;
 
--- Insert demo platform user
-INSERT INTO public.profiles (id, name, email, customer_id, role, status) VALUES
-('550e8400-e29b-41d4-a716-446655440010', 'Demo Compliance Officer', 'compliance@demo-finserv.com', '550e8400-e29b-41d4-a716-446655440001', 'complianceOfficer', 'verified');
+-- Note: Demo platform user will be created when user signs up through auth
+-- The trigger will automatically create the profile
 
 -- Insert demo organization customer (the end-user being monitored)
 INSERT INTO public.organization_customers (
@@ -28,8 +28,9 @@ INSERT INTO public.organization_customers (
   75,
   false,
   false,
-  '550e8400-e29b-41d4-a716-446655440010'
-);
+  NULL
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Insert 2 AML transactions
 INSERT INTO public.aml_transactions (
@@ -68,7 +69,8 @@ INSERT INTO public.aml_transactions (
   70,
   '["high_amount", "frequent_transactions"]'::jsonb,
   'flagged'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Insert 2 documents
 INSERT INTO public.documents (
@@ -84,10 +86,10 @@ INSERT INTO public.documents (
   '/documents/john_smith/passport.pdf',
   'verified',
   now() - INTERVAL '10 days',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   now() - INTERVAL '8 days',
   '{"name": "John Smith", "passport_number": "123456789", "expiry_date": "2030-03-15", "nationality": "American"}'::jsonb,
-  '550e8400-e29b-41d4-a716-446655440010'
+  NULL
 ),
 (
   '550e8400-e29b-41d4-a716-446655440041',
@@ -98,11 +100,12 @@ INSERT INTO public.documents (
   '/documents/john_smith/utility_bill.pdf',
   'verified',
   now() - INTERVAL '7 days',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   now() - INTERVAL '5 days',
   '{"name": "John Smith", "address": "123 Main Street, New York, NY 10001", "bill_date": "2024-01-15"}'::jsonb,
-  '550e8400-e29b-41d4-a716-446655440010'
-);
+  NULL
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Insert 1 AML compliance case linking both transactions and one document
 INSERT INTO public.compliance_cases (
@@ -120,13 +123,14 @@ INSERT INTO public.compliance_cases (
   'John Smith',
   'High-risk transaction pattern detected: Multiple large wire transfers to foreign accounts within short timeframe. Customer risk score elevated due to transaction behavior.',
   85,
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   'Demo Compliance Officer',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   '["ALERT_001", "ALERT_002"]'::jsonb,
   '["550e8400-e29b-41d4-a716-446655440030", "550e8400-e29b-41d4-a716-446655440031"]'::jsonb,
   '["550e8400-e29b-41d4-a716-446655440040"]'::jsonb
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Insert case action events
 INSERT INTO public.case_actions (
@@ -137,7 +141,7 @@ INSERT INTO public.case_actions (
   '550e8400-e29b-41d4-a716-446655440050',
   'status_change',
   'Case automatically created due to AML alert triggered by high-risk transaction pattern',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   'Demo Compliance Officer',
   '{"previous_status": null, "new_status": "open", "trigger": "system_alert", "alert_ids": ["ALERT_001", "ALERT_002"]}'::jsonb
 ),
@@ -146,16 +150,17 @@ INSERT INTO public.case_actions (
   '550e8400-e29b-41d4-a716-446655440050',
   'assignment',
   'Case assigned to compliance officer for detailed review',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   'Demo Compliance Officer',
-  '{"assigned_to": "550e8400-e29b-41d4-a716-446655440010", "assigned_to_name": "Demo Compliance Officer", "reason": "AML specialist review required"}'::jsonb
+  '{"assigned_to": null, "assigned_to_name": "Demo Compliance Officer", "reason": "AML specialist review required"}'::jsonb
 ),
 (
   '550e8400-e29b-41d4-a716-446655440062',
   '550e8400-e29b-41d4-a716-446655440050',
   'comment',
   'Initial assessment: Customer has legitimate business reasons for transfers. Passport verified. Utility bill confirms address. Proceeding with enhanced due diligence.',
-  '550e8400-e29b-41d4-a716-446655440010',
+  NULL,
   'Demo Compliance Officer',
   '{"comment_type": "assessment", "documents_reviewed": ["passport", "utility_bill"], "next_steps": ["enhanced_due_diligence", "source_of_funds_verification"]}'::jsonb
-);
+)
+ON CONFLICT (id) DO NOTHING;

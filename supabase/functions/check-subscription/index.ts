@@ -30,7 +30,39 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("WARNING: Stripe not configured - using database fallback");
+      
+      // If Stripe is not configured, just return database state
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("No authorization header provided");
+      
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError) throw new Error(`Authentication error: ${userError.message}`);
+      const user = userData.user;
+      if (!user?.email) throw new Error("User not authenticated or email not available");
+      
+      // Get subscription from database
+      const { data: subscriberData, error: dbError } = await supabaseClient
+        .from('subscribers')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      const subscriptionData = subscriberData || {
+        subscribed: false,
+        subscription_tier: null,
+        subscription_end: null
+      };
+      
+      logStep("Using database fallback", subscriptionData);
+      return new Response(JSON.stringify(subscriptionData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+    
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");

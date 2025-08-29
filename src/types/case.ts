@@ -2,7 +2,7 @@
 import { User } from "./index";
 
 export type CasePriority = 'low' | 'medium' | 'high' | 'critical';
-export type CaseSource = 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment';
+export type CaseSource = 'system_alert' | 'manual_review' | 'external_report' | 'regulatory_request';
 
 export interface ComplianceCaseDetails {
   id: string;
@@ -11,8 +11,8 @@ export interface ComplianceCaseDetails {
   createdAt: string;
   createdBy?: string;
   updatedAt: string;
-  type: 'kyc' | 'aml' | 'sanctions';
-  status: 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed'; // Match database enum
+  type: 'kyc_review' | 'aml_alert' | 'sanctions_hit' | 'pep_review' | 'transaction_monitoring' | 'suspicious_activity' | 'document_review' | 'compliance_breach';
+  status: 'open' | 'in_progress' | 'resolved' | 'closed' | 'escalated'; // Match database enum
   riskScore: number;
   description: string;
   assignedTo?: string;
@@ -32,7 +32,7 @@ export interface CaseAction {
   actionDate: string;
   actionType: 'note' | 'status_change' | 'assignment' | 'document_request' | 'escalation' | 'resolution';
   description: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface CaseFilters {

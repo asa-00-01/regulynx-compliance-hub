@@ -106,25 +106,26 @@ const CaseActionButtons: React.FC<CaseActionButtonsProps> = ({
   const handleEscalateCase = async () => {
     setLoading('escalate');
     try {
-      if (onUpdateStatus) {
-        // Use the proper update function if available
-        const success = await onUpdateStatus(caseItem.id, 'escalated', 'Case escalated for senior review');
-        if (success) {
-          toast({
-            title: 'Case Escalated',
-            description: `Case ${caseItem.id} has been escalated for senior review`,
-            variant: 'default',
-          });
-        }
-      } else {
-        // Fallback to just showing a toast
-        toast({
-          title: 'Case Escalated',
-          description: `Case ${caseItem.id} has been escalated for senior review`,
-          variant: 'default',
-        });
-        onCaseUpdated?.();
-      }
+      // Use the new escalation workflow
+      const escalationRequest = {
+        caseId: caseItem.id,
+        escalationLevel: 2, // Default to level 2 escalation
+        reason: 'Manual escalation by compliance officer',
+        priorityBoost: true,
+        sendNotifications: true
+      };
+
+      // Import and use the escalation service
+      const { EscalationService } = await import('@/services/escalation/escalationService');
+      await EscalationService.manuallyEscalateCase(escalationRequest);
+
+      toast({
+        title: 'Case Escalated',
+        description: `Case ${caseItem.id} has been escalated to level 2 for senior review`,
+        variant: 'default',
+      });
+
+      onCaseUpdated?.();
     } catch (error) {
       console.error('Error escalating case:', error);
       toast({

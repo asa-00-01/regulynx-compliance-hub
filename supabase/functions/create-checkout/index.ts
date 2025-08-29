@@ -48,7 +48,26 @@ serve(async (req) => {
     if (planError || !plan) throw new Error("Plan not found");
     logStep("Plan found", { plan: plan.name });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+    // Check if Stripe is configured
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      logStep("WARNING: Stripe not configured - using development fallback", { 
+        message: "STRIPE_SECRET_KEY environment variable is not set. Using development fallback." 
+      });
+      
+      // Development fallback - return a mock checkout URL
+      const mockCheckoutUrl = `${req.headers.get("origin")}/subscription-success?session_id=mock_session_${Date.now()}&plan_id=${planId}&billing_type=${billingType}`;
+      
+      return new Response(JSON.stringify({ 
+        url: mockCheckoutUrl,
+        warning: "Development mode: Using mock checkout URL. Configure Stripe for production use."
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    const stripe = new Stripe(stripeSecretKey, { 
       apiVersion: "2023-10-16" 
     });
 

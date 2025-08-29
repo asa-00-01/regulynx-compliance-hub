@@ -5,7 +5,6 @@ import { AMLTransaction } from '@/types/aml';
 import { unifiedMockData } from '@/mocks/centralizedMockData';
 
 import { NewsService } from './news/NewsService';
-import { KYCService } from './kyc/KYCService';
 import { AMLService } from './aml/AMLService';
 import { UnifiedDataService } from './unified/UnifiedDataService';
 
@@ -21,13 +20,31 @@ export class MockDataService {
     return NewsService.getRSSFeeds();
   }
 
-  // KYC Users
+  // KYC Users - Using UnifiedDataService instead of deprecated KYCService
   static async getKYCUsers(filters?: any): Promise<KYCUser[]> {
-    return KYCService.getKYCUsers(filters);
+    const unifiedData = await UnifiedDataService.getUnifiedUserData(filters);
+    return unifiedData.users.map(user => ({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      dateOfBirth: user.dateOfBirth,
+      nationality: user.nationality,
+      identityNumber: user.identityNumber,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      countryOfResidence: user.countryOfResidence,
+      riskScore: user.riskScore,
+      isPEP: user.isPEP,
+      isSanctioned: user.isSanctioned,
+      kycStatus: user.kycStatus,
+      flags: user.kycFlags,
+      createdAt: user.createdAt
+    }));
   }
 
   static async getKYCVerifications(): Promise<KYCVerification[]> {
-    return KYCService.getKYCVerifications();
+    // Return empty array as KYC verifications are now handled through unified data
+    return [];
   }
 
   // AML Transactions

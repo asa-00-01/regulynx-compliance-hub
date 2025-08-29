@@ -12,22 +12,22 @@ import { normalizedComplianceCases } from '@/mocks/normalizedMockData';
 
 const mapToComplianceCaseDetails = (c: ComplianceCase): ComplianceCaseDetails => ({
   id: c.id,
-  userId: c.user_id!,
+  userId: c.organization_customer_id || c.user_id || '', // Prefer organization_customer_id, fallback to user_id
   userName: c.user_name!,
   createdAt: c.created_at,
   createdBy: c.created_by || undefined,
   updatedAt: c.updated_at,
-  type: c.type as 'kyc' | 'aml' | 'sanctions',
-  status: c.status as 'open' | 'under_review' | 'escalated' | 'pending_info' | 'closed',
+  type: c.type as 'kyc_review' | 'aml_alert' | 'sanctions_hit' | 'pep_review' | 'transaction_monitoring' | 'suspicious_activity' | 'document_review' | 'compliance_breach',
+  status: c.status as 'open' | 'in_progress' | 'resolved' | 'closed' | 'escalated',
   riskScore: c.risk_score,
   description: c.description,
   assignedTo: c.assigned_to || undefined,
   assignedToName: c.assigned_to_name || undefined,
   priority: c.priority as 'low' | 'medium' | 'high' | 'critical',
-  source: c.source as 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment',
-  relatedTransactions: c.related_transactions || [],
-  relatedAlerts: c.related_alerts || [],
-  documents: c.documents || [],
+  source: c.source as 'system_alert' | 'manual_review' | 'external_report' | 'regulatory_request',
+  relatedTransactions: (c.related_transactions as string[]) || [],
+  relatedAlerts: (c.related_alerts as string[]) || [],
+  documents: (c.documents as string[]) || [],
 });
 
 const mapToCaseAction = (a: SupabaseCaseAction): CaseAction => ({
@@ -76,7 +76,7 @@ const validateAndConvertUuid = (value: string | undefined): string | null => {
 
 // Valid database status values based on schema
 const VALID_DB_STATUSES = ['open', 'closed', 'resolved', 'in_progress'] as const;
-const VALID_DB_TYPES = ['kyc', 'aml', 'sanctions', 'fraud', 'other'] as const;
+const VALID_DB_TYPES = ['kyc_review', 'aml_alert', 'sanctions_hit', 'pep_review', 'transaction_monitoring', 'suspicious_activity', 'document_review', 'compliance_breach'] as const;
 
 // Mock data storage for runtime updates
 const mockDataStore = {
@@ -217,8 +217,24 @@ export const complianceCaseService: CaseServiceOperations = {
     const validatedCreatedBy = validateAndConvertUuid(caseData.createdBy);
     const validatedUserId = validateAndConvertUuid(caseData.userId);
 
+    // Get the current user's customer_id from the auth context
+    const { data: { user } } = await supabase.auth.getUser();
+    let customerId = null;
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('customer_id')
+        .eq('id', user.id)
+        .single();
+      
+      customerId = profile?.customer_id || null;
+    }
+
     const dbCase: Omit<ComplianceCaseInsert, 'id' | 'created_at' | 'updated_at' | 'status'> = {
-      user_id: validatedUserId,
+      organization_customer_id: validatedUserId, // Use organization_customer_id instead of user_id
+      customer_id: customerId, // Add customer_id
+      user_id: null, // Set user_id to null since we're using organization_customer_id
       user_name: caseData.userName,
       created_by: validatedCreatedBy,
       type: caseData.type!,
@@ -227,7 +243,7 @@ export const complianceCaseService: CaseServiceOperations = {
       assigned_to: validatedAssignedTo,
       assigned_to_name: caseData.assignedToName,
       priority: caseData.priority!,
-      source: caseData.source as 'manual' | 'transaction_alert' | 'kyc_flag' | 'sanctions_hit' | 'system' | 'risk_assessment',
+      source: caseData.source as 'system_alert' | 'manual_review' | 'external_report' | 'regulatory_request',
       related_transactions: caseData.relatedTransactions,
       related_alerts: caseData.relatedAlerts,
       documents: caseData.documents,
@@ -238,7 +254,7 @@ export const complianceCaseService: CaseServiceOperations = {
     const { data, error } = await supabase
       .from('compliance_cases')
       .insert(dbCase)
-      .select()
+      .select('*')
       .single();
     
     if (error) {

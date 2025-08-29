@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -27,9 +27,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { Eye, Download, Clock, FilePenLine, Flag, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { config } from '@/config/environment';
+
+interface UserActivity {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  actor: 'user' | 'admin' | 'system';
+  adminName?: string;
+}
 
 // Mock user activity data
-const initialActivities = [
+const initialActivities: UserActivity[] = [
   {
     id: '1',
     userId: '101',
@@ -126,11 +138,29 @@ const initialActivities = [
 ];
 
 const UserActivityLogs = () => {
-  const [activities, setActivities] = useState(initialActivities);
+  const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [actionTypeFilter, setActionTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      setLoading(true);
+      try {
+        if (config.features.useMockData) {
+          setActivities(initialActivities);
+        } else {
+          console.log('🌐 Real user activity logs not implemented');
+          setActivities([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadActivities();
+  }, [config.features.useMockData]);
 
   // Get unique users for the filter dropdown
   const uniqueUsers = Array.from(new Set(activities.map(activity => activity.userId)))
@@ -210,123 +240,150 @@ const UserActivityLogs = () => {
                 Track user actions and compliance events
               </CardDescription>
             </div>
-            <Button onClick={exportToCSV}>
+            <Button onClick={exportToCSV} disabled={!config.features.useMockData}>
               <Download className="h-4 w-4 mr-2" />
               Export to CSV
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
-          <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0 mb-6">
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium text-muted-foreground">
-                Filter by User
-              </label>
-              <Select
-                value={selectedUser || 'all'}
-                onValueChange={(value) => setSelectedUser(value === 'all' ? null : value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Users" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
-                  {uniqueUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-muted rounded animate-pulse" />
+                    <div className="h-3 bg-muted rounded w-3/4 animate-pulse" />
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium text-muted-foreground">
-                Filter by Action Type
-              </label>
-              <Select
-                value={actionTypeFilter}
-                onValueChange={setActionTypeFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Actions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  <SelectItem value="document_upload">Document Upload</SelectItem>
-                  <SelectItem value="kyc_review">KYC Review</SelectItem>
-                  <SelectItem value="profile_update">Profile Update</SelectItem>
-                  <SelectItem value="flag_added">Flag Added</SelectItem>
-                  <SelectItem value="account_login">Account Login</SelectItem>
-                  <SelectItem value="transaction">Transaction</SelectItem>
-                </SelectContent>
-              </Select>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {config.features.useMockData 
+                  ? 'No user activity logs found' 
+                  : 'User activity logs not available in production mode'
+                }
+              </p>
             </div>
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium text-muted-foreground">
-                Search
-              </label>
-              <Input
-                type="text"
-                placeholder="Search in details..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
+          ) : (
+            <>
+              {/* Filters */}
+              <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0 mb-6">
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Filter by User
+                  </label>
+                  <Select
+                    value={selectedUser || 'all'}
+                    onValueChange={(value) => setSelectedUser(value === 'all' ? null : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Users" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Users</SelectItem>
+                      {uniqueUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Filter by Action Type
+                  </label>
+                  <Select
+                    value={actionTypeFilter}
+                    onValueChange={setActionTypeFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Actions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Actions</SelectItem>
+                      <SelectItem value="document_upload">Document Upload</SelectItem>
+                      <SelectItem value="kyc_review">KYC Review</SelectItem>
+                      <SelectItem value="profile_update">Profile Update</SelectItem>
+                      <SelectItem value="flag_added">Flag Added</SelectItem>
+                      <SelectItem value="account_login">Account Login</SelectItem>
+                      <SelectItem value="transaction">Transaction</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Search
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Search in details..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          {/* Activity Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Time</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Actor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredActivities.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">No activities found</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredActivities.map((activity) => (
-                    <TableRow key={activity.id}>
-                      <TableCell className="font-mono text-xs">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </TableCell>
-                      <TableCell>{activity.userName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          {getActionIcon(activity.action)}
-                          <span className="ml-2">{getFormattedAction(activity.action)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">{activity.details}</TableCell>
-                      <TableCell>
-                        {activity.actor === 'user' ? (
-                          <span className="text-blue-600">Self</span>
-                        ) : activity.actor === 'admin' ? (
-                          <span className="text-green-600">{activity.adminName}</span>
-                        ) : (
-                          <span className="text-gray-600">System</span>
-                        )}
-                      </TableCell>
+              {/* Activity Table */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Details</TableHead>
+                      <TableHead>Actor</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredActivities.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center">No activities found</TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredActivities.map((activity) => (
+                        <TableRow key={activity.id}>
+                          <TableCell className="font-mono text-xs">
+                            {new Date(activity.timestamp).toLocaleString()}
+                          </TableCell>
+                          <TableCell>{activity.userName}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getActionIcon(activity.action)}
+                              <span className="ml-2">{getFormattedAction(activity.action)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">{activity.details}</TableCell>
+                          <TableCell>
+                            {activity.actor === 'user' ? (
+                              <span className="text-blue-600">Self</span>
+                            ) : activity.actor === 'admin' ? (
+                              <span className="text-green-600">{activity.adminName}</span>
+                            ) : (
+                              <span className="text-gray-600">System</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
-        <CardFooter className="border-t bg-muted/50 px-6 py-3">
-          <div className="text-xs text-muted-foreground">
-            Showing {filteredActivities.length} of {activities.length} activities
-          </div>
-        </CardFooter>
+        {activities.length > 0 && (
+          <CardFooter className="border-t bg-muted/50 px-6 py-3">
+            <div className="text-xs text-muted-foreground">
+              Showing {filteredActivities.length} of {activities.length} activities
+            </div>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

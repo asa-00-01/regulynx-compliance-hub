@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { config } from '@/config/environment';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -89,7 +90,7 @@ const SecurityComplianceConsole: React.FC = () => {
     dataBreaches: 0
   });
 
-  const [incidents, setIncidents] = useState<SecurityIncident[]>([
+  const [incidents, setIncidents] = useState<SecurityIncident[]>(config.features.useMockData ? [
     {
       id: 'inc_001',
       type: 'Failed Login Attempts',
@@ -110,9 +111,9 @@ const SecurityComplianceConsole: React.FC = () => {
       affectedUsers: 1,
       affectedSystems: ['Customer Database', 'API Gateway']
     }
-  ]);
+  ] : []);
 
-  const [complianceRequirements, setComplianceRequirements] = useState<ComplianceRequirement[]>([
+  const [complianceRequirements, setComplianceRequirements] = useState<ComplianceRequirement[]>(config.features.useMockData ? [
     {
       id: 'comp_001',
       name: 'GDPR Compliance',
@@ -158,7 +159,7 @@ const SecurityComplianceConsole: React.FC = () => {
         'Security monitoring'
       ]
     }
-  ]);
+  ] : []);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {

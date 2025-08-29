@@ -108,8 +108,12 @@ const AdvancedDocumentFilters: React.FC<AdvancedDocumentFiltersProps> = ({
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="passport">Passport</SelectItem>
-                <SelectItem value="id">ID Card</SelectItem>
-                <SelectItem value="license">Driver's License</SelectItem>
+                <SelectItem value="national_id">ID Card</SelectItem>
+                <SelectItem value="drivers_license">Driver's License</SelectItem>
+                <SelectItem value="utility_bill">Utility Bill</SelectItem>
+                <SelectItem value="bank_statement">Bank Statement</SelectItem>
+                <SelectItem value="proof_of_income">Proof of Income</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

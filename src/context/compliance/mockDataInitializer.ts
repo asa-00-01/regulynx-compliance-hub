@@ -2,8 +2,28 @@
 import { UnifiedUserData } from './types';
 import { generateCasesForUser } from '../../mocks/generators/caseGenerator';
 
-// Generate proper UUIDs for mock users
-const generateUUID = () => {
+// Generate consistent UUIDs for mock data
+const generateUUID = (seed?: string): string => {
+  if (seed) {
+    // Simple hash function to generate consistent UUIDs
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to UUID format
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32).padEnd(12, '0')}`;
+  }
+  
+  // Fallback to crypto.randomUUID() if available, otherwise use Math.random()
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Legacy fallback (less secure but functional)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);

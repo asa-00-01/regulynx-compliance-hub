@@ -437,7 +437,7 @@ export const normalizedComplianceCases: ComplianceCaseDetails[] = [
     createdAt: '2023-11-10T10:00:00Z',
     updatedAt: '2023-12-01T15:30:00Z',
     priority: 'high',
-    source: 'transaction_alert',
+    source: 'system_alert',
     relatedTransactions: [generateUUID('tx-001'), generateUUID('tx-002'), generateUUID('tx-003')]
   },
   {
@@ -453,7 +453,7 @@ export const normalizedComplianceCases: ComplianceCaseDetails[] = [
     createdAt: '2023-11-29T09:00:00Z',
     updatedAt: '2023-12-05T11:45:00Z',
     priority: 'medium',
-    source: 'transaction_alert',
+    source: 'system_alert',
     relatedTransactions: [generateUUID('tx-004'), generateUUID('tx-005'), generateUUID('tx-006'), generateUUID('tx-007')]
   },
   {
@@ -469,7 +469,7 @@ export const normalizedComplianceCases: ComplianceCaseDetails[] = [
     createdAt: '2023-12-16T08:00:00Z',
     updatedAt: '2023-12-18T13:20:00Z',
     priority: 'medium',
-    source: 'transaction_alert',
+    source: 'system_alert',
     relatedTransactions: [generateUUID('tx-008'), generateUUID('tx-009')]
   },
   {
@@ -485,7 +485,7 @@ export const normalizedComplianceCases: ComplianceCaseDetails[] = [
     createdAt: '2023-12-21T12:00:00Z',
     updatedAt: '2023-12-22T10:15:00Z',
     priority: 'critical',
-    source: 'sanctions_hit',
+    source: 'regulatory_request',
     relatedTransactions: [generateUUID('tx-012'), generateUUID('tx-013')]
   }
 ];

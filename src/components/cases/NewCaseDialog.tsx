@@ -33,7 +33,7 @@ interface NewCaseDialogProps {
     userName?: string;
     riskScore?: number;
     description?: string;
-    type?: 'kyc' | 'aml' | 'sanctions';
+    type?: 'kyc_review' | 'aml_alert' | 'sanctions_hit' | 'pep_review' | 'transaction_monitoring' | 'suspicious_activity' | 'document_review' | 'compliance_breach';
     source?: string;
   };
 }
@@ -46,13 +46,13 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
   initialData
 }) => {
   const [formData, setFormData] = useState<Partial<ComplianceCaseDetails>>({
-    type: 'kyc',
+    type: 'kyc_review',
     priority: 'medium',
     riskScore: 50,
     description: '',
     userId: '',
     userName: '',
-    source: 'manual'
+    source: 'manual_review'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -72,7 +72,7 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
   }, [initialData, open]);
   
   // Update form field
-  const updateField = (field: keyof ComplianceCaseDetails, value: any) => {
+  const updateField = (field: keyof ComplianceCaseDetails, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -95,13 +95,13 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
     
     if (result) {
       setFormData({
-        type: 'kyc',
+        type: 'kyc_review',
         priority: 'medium',
         riskScore: 50,
         description: '',
         userId: '',
         userName: '',
-        source: 'manual'
+        source: 'manual_review'
       });
       onOpenChange(false);
     }
@@ -154,9 +154,14 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
                     <SelectValue placeholder="Select case type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kyc">KYC</SelectItem>
-                    <SelectItem value="aml">AML</SelectItem>
-                    <SelectItem value="sanctions">Sanctions</SelectItem>
+                    <SelectItem value="kyc_review">KYC Review</SelectItem>
+                    <SelectItem value="aml_alert">AML Alert</SelectItem>
+                    <SelectItem value="sanctions_hit">Sanctions Hit</SelectItem>
+                    <SelectItem value="pep_review">PEP Review</SelectItem>
+                    <SelectItem value="transaction_monitoring">Transaction Monitoring</SelectItem>
+                    <SelectItem value="suspicious_activity">Suspicious Activity</SelectItem>
+                    <SelectItem value="document_review">Document Review</SelectItem>
+                    <SelectItem value="compliance_breach">Compliance Breach</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -239,11 +244,10 @@ const NewCaseDialog: React.FC<NewCaseDialogProps> = ({
                   <SelectValue placeholder="Select case source" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manual">Manual</SelectItem>
-                  <SelectItem value="transaction_alert">Transaction Alert</SelectItem>
-                  <SelectItem value="kyc_flag">KYC Flag</SelectItem>
-                  <SelectItem value="sanctions_hit">Sanctions Hit</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="manual_review">Manual Review</SelectItem>
+                  <SelectItem value="system_alert">System Alert</SelectItem>
+                  <SelectItem value="external_report">External Report</SelectItem>
+                  <SelectItem value="regulatory_request">Regulatory Request</SelectItem>
                 </SelectContent>
               </Select>
             </div>

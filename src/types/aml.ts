@@ -21,6 +21,17 @@ export interface AMLTransaction {
   notes?: string;
 }
 
+export interface AMLTransactionFilters {
+  dateRange: { from: Date | null; to: Date | null };
+  amountRange: { min: number | null; max: number | null };
+  currency: string;
+  method: string;
+  riskLevel: string;
+  country: string;
+  status: string;
+  searchTerm: string;
+}
+
 export interface HighRiskCountry {
   countryCode: string;
   name: string;

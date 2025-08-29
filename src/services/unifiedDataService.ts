@@ -27,7 +27,42 @@ export class UnifiedDataService {
     this.logDataSource('Fetching news items');
     
     if (this.useMockData) {
-      return MockDataService.getNewsItems();
+      const mockItems = await MockDataService.getNewsItems();
+      
+      // Try to get configured news sources and generate news items from them
+      try {
+        const { NewsConfigurationService } = await import('./news/newsConfigurationService');
+        const config = await NewsConfigurationService.getConfiguration();
+        
+        if (config?.newsSources && config.newsSources.length > 0) {
+          // Generate news items from configured sources
+          const configuredNewsItems: NewsItem[] = config.newsSources
+            .filter(source => source.isActive)
+            .map(source => ({
+              id: `configured_${source.id}`,
+              title: `Latest from ${source.name}`,
+              description: source.description || `Recent updates from ${source.name}`,
+              content: source.description || `Recent updates from ${source.name}`,
+              url: source.url,
+              source: source.name,
+              category: source.categories[0] || 'general',
+              publishedAt: source.lastFetched || new Date().toISOString(),
+              author: 'System',
+              imageUrl: undefined
+            }));
+          
+          // Combine mock items with configured items, avoiding duplicates
+          const existingIds = new Set(mockItems.map(item => item.id));
+          const newConfiguredItems = configuredNewsItems.filter(item => !existingIds.has(item.id));
+          
+          console.log(`📰 Found ${newConfiguredItems.length} configured news sources to add to news items`);
+          return [...mockItems, ...newConfiguredItems];
+        }
+      } catch (error) {
+        console.log('Could not fetch configured news sources, using only mock items:', error);
+      }
+      
+      return mockItems;
     } else {
       return RealDataService.getNewsItems();
     }
@@ -37,7 +72,44 @@ export class UnifiedDataService {
     this.logDataSource('Fetching RSS feeds');
     
     if (this.useMockData) {
-      return MockDataService.getRSSFeeds();
+      // In mock mode, combine static mock feeds with configured feeds
+      const mockFeeds = await MockDataService.getRSSFeeds();
+      
+      // Try to get configured feeds from the news configuration
+      try {
+        // Import the news configuration service dynamically to avoid circular dependencies
+        const { NewsConfigurationService } = await import('./news/newsConfigurationService');
+        const config = await NewsConfigurationService.getConfiguration();
+        
+        if (config?.rssFeeds && config.rssFeeds.length > 0) {
+          // Convert configured RSS feeds to RSSFeed format
+          const configuredFeeds: RSSFeed[] = config.rssFeeds.map(feed => ({
+            id: feed.id,
+            title: feed.title,
+            description: feed.description,
+            feedUrl: feed.feedUrl,
+            websiteUrl: feed.websiteUrl,
+            organization: 'Custom Feed',
+            categories: feed.categories,
+            lastUpdated: feed.lastFetched || new Date().toISOString(),
+            status: feed.isActive ? 'active' : 'inactive',
+            refreshInterval: feed.refreshInterval,
+            errorCount: feed.errorCount,
+            items: [] // Empty items array since we don't have actual feed content
+          }));
+          
+          // Combine mock feeds with configured feeds, avoiding duplicates
+          const existingIds = new Set(mockFeeds.map(f => f.id));
+          const newConfiguredFeeds = configuredFeeds.filter(f => !existingIds.has(f.id));
+          
+          console.log(`📡 Found ${newConfiguredFeeds.length} configured RSS feeds to add to mock feeds`);
+          return [...mockFeeds, ...newConfiguredFeeds];
+        }
+      } catch (error) {
+        console.log('Could not fetch configured RSS feeds, using only mock feeds:', error);
+      }
+      
+      return mockFeeds;
     } else {
       return RealDataService.getRSSFeeds();
     }
@@ -84,9 +156,9 @@ export class UnifiedDataService {
       const { mockTransactionData } = await import('@/components/transactions/mockTransactionData');
       return mockTransactionData.transactions;
     } else {
-      // For now, return empty array since real transaction service isn't implemented
-      console.warn('Real transaction service not yet implemented, returning empty array');
-      return [];
+      // Use the new TransactionService for real data
+      const { TransactionService } = await import('./transactionService');
+      return TransactionService.getTransactions(filters);
     }
   }
 

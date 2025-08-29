@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS public.ai_interactions (
 -- 4. Update ai_interactions table to support multi-tenancy
 ALTER TABLE public.ai_interactions 
 ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES public.customers(id) ON DELETE CASCADE,
-ADD COLUMN IF NOT EXISTS configuration_id UUID REFERENCES public.ai_configurations(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS configuration_id UUID REFERENCES public.ai_configurations(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- 5. Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_customer_ai_settings_customer_id ON public.customer_ai_settings(customer_id);
@@ -90,6 +91,11 @@ CREATE TRIGGER update_customer_ai_settings_updated_at
 
 CREATE TRIGGER update_ai_configurations_updated_at 
     BEFORE UPDATE ON public.ai_configurations 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_ai_interactions_updated_at ON public.ai_interactions;
+CREATE TRIGGER update_ai_interactions_updated_at 
+    BEFORE UPDATE ON public.ai_interactions 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- 7. Insert default AI configurations for existing customers

@@ -5,10 +5,13 @@ const isDevelopment = environment === 'development';
 const isProduction = environment === 'production';
 
 // Helper function to get stored configuration values
-const getStoredConfigValue = (key: string, defaultValue: any) => {
+const getStoredConfigValue = (key: string, defaultValue: unknown) => {
   try {
     const stored = localStorage.getItem(`dev_${key}`);
-    return stored ? JSON.parse(stored) : defaultValue;
+    if (stored === null || stored === undefined) {
+      return defaultValue;
+    }
+    return JSON.parse(stored);
   } catch {
     return defaultValue;
   }
@@ -33,10 +36,14 @@ export const config = {
     retries: parseInt(import.meta.env.VITE_API_RETRIES || '3'),
   },
 
-  // Supabase Configuration - Use actual values from client.ts
+  // Supabase Configuration - Use local instance in development, remote in production
   supabase: {
-    url: "https://mqsouubnefdyjyaxjcwr.supabase.co",
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU",
+    url: isDevelopment 
+      ? (import.meta.env.VITE_SUPABASE_URL || "http://127.0.0.1:54321")
+      : "https://mqsouubnefdyjyaxjcwr.supabase.co",
+    anonKey: isDevelopment
+      ? (import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0")
+      : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU",
     serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '',
   },
 
@@ -46,7 +53,7 @@ export const config = {
     enableErrorReporting: getStoredConfigValue('features_enableErrorReporting', import.meta.env.VITE_ENABLE_ERROR_REPORTING === 'true' || isProduction),
     enablePerformanceMonitoring: getStoredConfigValue('features_enablePerformanceMonitoring', import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true' || isProduction),
     enableDebugMode: getStoredConfigValue('features_enableDebugMode', import.meta.env.VITE_DEBUG_MODE === 'true' && !isProduction),
-    useMockData: getStoredConfigValue('features_useMockData', import.meta.env.VITE_USE_MOCK_DATA === 'true' && !isProduction),
+    useMockData: getStoredConfigValue('features_useMockData', false), // Use real data by default
     enableDevTools: getStoredConfigValue('features_enableDevTools', import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true' && !isProduction),
   },
 
@@ -158,5 +165,18 @@ export const getConfigurationSummary = () => ({
     xssProtection: config.security.enableXSSProtection,
   },
 });
+
+// Reactive configuration getter for dynamic feature flags
+export const getConfig = () => {
+  return {
+    ...config,
+    features: {
+      ...config.features,
+      useMockData: getStoredConfigValue('features_useMockData', false), // Use real data by default
+      enableDevTools: getStoredConfigValue('features_enableDevTools', import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true' && !isProduction),
+      enableDebugMode: getStoredConfigValue('features_enableDebugMode', import.meta.env.VITE_DEBUG_MODE === 'true' && !isProduction),
+    }
+  };
+};
 
 export default config;

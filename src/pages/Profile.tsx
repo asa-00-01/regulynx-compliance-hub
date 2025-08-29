@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import UserProfileForm from '@/components/profile/UserProfileForm';
@@ -16,6 +17,13 @@ import { User, Shield, Settings, CreditCard, TestTube, Bell } from 'lucide-react
 
 const Profile = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
+  // Set default tab based on URL parameter
+  const defaultTab = tabParam && ['profile', 'security', 'subscription', 'notifications', 'test', 'preferences'].includes(tabParam) 
+    ? tabParam 
+    : 'profile';
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -42,7 +50,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile" className="flex items-center space-x-2">
             <User className="h-4 w-4" />

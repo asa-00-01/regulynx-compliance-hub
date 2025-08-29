@@ -2,14 +2,12 @@
 import React from 'react';
 import { CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSubscriptionData } from '@/hooks/subscription/useSubscriptionData';
-import { useSubscriptionActions } from '@/hooks/subscription/useSubscriptionActions';
+import { useSubscription } from '@/context/SubscriptionContext';
 import SubscriptionStatusCard from '@/components/subscription/SubscriptionStatusCard';
 import UsageOverviewCard from '@/components/subscription/UsageOverviewCard';
 
 const SubscriptionManagement = () => {
-  const { subscriptionState, refreshing, checkSubscription } = useSubscriptionData();
-  const { createCheckout, openCustomerPortal } = useSubscriptionActions();
+  const { subscriptionState, refreshing, checkSubscription, createCheckout, openCustomerPortal } = useSubscription();
 
   const handleUpgradePlan = () => {
     window.open('/pricing', '_blank');

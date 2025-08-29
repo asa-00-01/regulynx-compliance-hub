@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,8 @@ import {
   AlertTriangle, 
   Download,
   X,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import { KYCUser, UserFlags } from '@/types/kyc';
 
@@ -19,7 +20,13 @@ interface KYCBulkActionsToolbarProps {
   users: (KYCUser & { flags: UserFlags })[];
   onClearSelection: () => void;
   onBulkAction: (action: string, userIds: string[]) => void;
-  kycOperations: any;
+  kycOperations: {
+    updateUserKYCStatus?: (userId: string, status: string) => Promise<void>;
+    requestAdditionalInfo?: (userId: string, info: string[]) => Promise<void>;
+    escalateToCompliance?: (userId: string, reason: string) => Promise<void>;
+    generateComplianceReport?: (userIds: string[]) => Promise<void>;
+    isProcessing?: (userId: string) => boolean;
+  };
 }
 
 const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
@@ -29,41 +36,89 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
   onBulkAction,
   kycOperations
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const selectedCount = selectedUsers.length;
 
   if (selectedCount === 0) return null;
 
-  const handleBulkApprove = () => {
-    selectedUsers.forEach(userId => {
-      kycOperations.updateUserKYCStatus?.(userId, 'verified');
-    });
-    onClearSelection();
+  const handleBulkApprove = async () => {
+    setIsProcessing(true);
+    try {
+      // Process all selected users
+      await Promise.all(
+        selectedUsers.map(userId => 
+          kycOperations.updateUserKYCStatus?.(userId, 'verified')
+        ).filter(Boolean) // Filter out undefined functions
+      );
+      onClearSelection();
+    } catch (error) {
+      console.error('Bulk approve error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleBulkReject = () => {
-    selectedUsers.forEach(userId => {
-      kycOperations.updateUserKYCStatus?.(userId, 'rejected');
-    });
-    onClearSelection();
+  const handleBulkReject = async () => {
+    setIsProcessing(true);
+    try {
+      // Process all selected users
+      await Promise.all(
+        selectedUsers.map(userId => 
+          kycOperations.updateUserKYCStatus?.(userId, 'rejected')
+        ).filter(Boolean) // Filter out undefined functions
+      );
+      onClearSelection();
+    } catch (error) {
+      console.error('Bulk reject error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleBulkRequestInfo = () => {
-    selectedUsers.forEach(userId => {
-      kycOperations.requestAdditionalInfo?.(userId, ['Additional documentation required']);
-    });
-    onClearSelection();
+  const handleBulkRequestInfo = async () => {
+    setIsProcessing(true);
+    try {
+      // Process all selected users
+      await Promise.all(
+        selectedUsers.map(userId => 
+          kycOperations.requestAdditionalInfo?.(userId, ['Additional documentation required'])
+        ).filter(Boolean) // Filter out undefined functions
+      );
+      onClearSelection();
+    } catch (error) {
+      console.error('Bulk request info error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleBulkEscalate = () => {
-    selectedUsers.forEach(userId => {
-      kycOperations.escalateToCompliance?.(userId, 'Bulk escalation');
-    });
-    onClearSelection();
+  const handleBulkEscalate = async () => {
+    setIsProcessing(true);
+    try {
+      // Process all selected users
+      await Promise.all(
+        selectedUsers.map(userId => 
+          kycOperations.escalateToCompliance?.(userId, 'Bulk escalation from KYC center')
+        ).filter(Boolean) // Filter out undefined functions
+      );
+      onClearSelection();
+    } catch (error) {
+      console.error('Bulk escalate error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleGenerateReport = () => {
-    kycOperations.generateComplianceReport?.(selectedUsers);
-    onClearSelection();
+  const handleGenerateReport = async () => {
+    setIsProcessing(true);
+    try {
+      await kycOperations.generateComplianceReport?.(selectedUsers);
+      onClearSelection();
+    } catch (error) {
+      console.error('Generate report error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -79,6 +134,7 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClearSelection}
+              disabled={isProcessing}
               className="h-8 w-8 p-0"
             >
               <X className="h-4 w-4" />
@@ -90,9 +146,14 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               size="sm"
               variant="default"
               onClick={handleBulkApprove}
+              disabled={isProcessing}
               className="h-8"
             >
-              <CheckCircle className="h-3 w-3 mr-1" />
+              {isProcessing ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <CheckCircle className="h-3 w-3 mr-1" />
+              )}
               Approve All
             </Button>
 
@@ -100,9 +161,14 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               size="sm"
               variant="destructive"
               onClick={handleBulkReject}
+              disabled={isProcessing}
               className="h-8"
             >
-              <XCircle className="h-3 w-3 mr-1" />
+              {isProcessing ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <XCircle className="h-3 w-3 mr-1" />
+              )}
               Reject All
             </Button>
 
@@ -110,9 +176,14 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               size="sm"
               variant="outline"
               onClick={handleBulkRequestInfo}
+              disabled={isProcessing}
               className="h-8"
             >
-              <FileText className="h-3 w-3 mr-1" />
+              {isProcessing ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <FileText className="h-3 w-3 mr-1" />
+              )}
               Request Info
             </Button>
 
@@ -120,9 +191,14 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               size="sm"
               variant="outline"
               onClick={handleBulkEscalate}
+              disabled={isProcessing}
               className="h-8"
             >
-              <AlertTriangle className="h-3 w-3 mr-1" />
+              {isProcessing ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <AlertTriangle className="h-3 w-3 mr-1" />
+              )}
               Escalate
             </Button>
 
@@ -130,9 +206,14 @@ const KYCBulkActionsToolbar: React.FC<KYCBulkActionsToolbarProps> = ({
               size="sm"
               variant="outline"
               onClick={handleGenerateReport}
+              disabled={isProcessing}
               className="h-8"
             >
-              <Download className="h-3 w-3 mr-1" />
+              {isProcessing ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3 mr-1" />
+              )}
               Export
             </Button>
           </div>

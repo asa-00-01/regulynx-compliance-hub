@@ -3,9 +3,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { AuditLogInsert } from '@/types/supabase';
+import { config } from '@/config/environment';
 
-const SUPABASE_URL = "https://mqsouubnefdyjyaxjcwr.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xc291dWJuZWZkeWp5YXhqY3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDg5MzIsImV4cCI6MjA2MTkyNDkzMn0.DwQOtbp3Jzq1f76mbZKPSuNF7tubgIOpbS2qAL3mgtU";
+// Use configuration from environment file
+const SUPABASE_URL = config.supabase.url;
+const SUPABASE_PUBLISHABLE_KEY = config.supabase.anonKey;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
