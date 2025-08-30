@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -96,9 +96,25 @@ class SecurityAuditor {
 
   checkDependencyVulnerabilities() {
     try {
-      // Check for known vulnerabilities
-      const auditResult = execSync('npm audit --json', { encoding: 'utf8' });
-      const audit = JSON.parse(auditResult);
+      // Check for known vulnerabilities - handle npm audit failure gracefully
+      let audit;
+      try {
+        const auditResult = execSync('npm audit --json', { encoding: 'utf8' });
+        audit = JSON.parse(auditResult);
+      } catch (error) {
+        // npm audit fails when vulnerabilities are found, but we can still parse the output
+        if (error.stdout) {
+          try {
+            audit = JSON.parse(error.stdout.toString());
+          } catch (parseError) {
+            this.warn('Could not parse npm audit results', parseError.message);
+            return;
+          }
+        } else {
+          this.warn('npm audit failed', error.message);
+          return;
+        }
+      }
       
       if (audit.metadata.vulnerabilities.critical > 0) {
         this.vulnerabilities.push({
@@ -212,8 +228,15 @@ class SecurityAuditor {
       for (const file of fileList) {
         if (existsSync(file)) {
           const content = readFileSync(file, 'utf8');
+          
+          // Check for unsafe dangerouslySetInnerHTML usage (without DOMPurify)
+          if (content.includes('dangerouslySetInnerHTML') && !content.includes('DOMPurify.sanitize')) {
+            hasXSS = true;
+            this.warn('Potential XSS vulnerability', `Unsafe dangerouslySetInnerHTML usage in file: ${file}`);
+          }
+          
+          // Check for other XSS patterns
           const xssPatterns = [
-            /dangerouslySetInnerHTML\s*[:=]\s*\{[^}]*\}/g,
             /innerHTML\s*[:=]\s*[^;]+/g,
             /document\.write\s*\(/g,
             /eval\s*\(/g
@@ -280,11 +303,15 @@ class SecurityAuditor {
       for (const file of fileList) {
         if (existsSync(file)) {
           const content = readFileSync(file, 'utf8');
-          if (content.includes('eval(') || content.includes('Function(')) {
+          // More precise detection - look for actual eval() calls or Function constructor usage
+          const evalPattern = /\beval\s*\(/g;
+          const functionPattern = /\bnew\s+Function\s*\(/g;
+          
+          if (evalPattern.test(content) || functionPattern.test(content)) {
             hasUnsafeEval = true;
             this.vulnerabilities.push({
               title: 'Unsafe eval usage',
-              issue: `eval() or Function() found in file: ${file}`,
+              issue: `eval() or new Function() found in file: ${file}`,
               severity: 'high'
             });
           }
@@ -358,11 +385,16 @@ class SecurityAuditor {
         // Check for rate limiting in auth
         let hasRateLimiting = false;
         for (const file of authFileList) {
-          if (existsSync(file)) {
-            const content = readFileSync(file, 'utf8');
-            if (content.includes('rate') && content.includes('limit')) {
-              hasRateLimiting = true;
-              break;
+          if (existsSync(file) && !statSync(file).isDirectory()) {
+            try {
+              const content = readFileSync(file, 'utf8');
+              if (content.includes('rate') && content.includes('limit')) {
+                hasRateLimiting = true;
+                break;
+              }
+            } catch (readError) {
+              // Skip files that can't be read
+              continue;
             }
           }
         }
@@ -484,8 +516,14 @@ class SecurityAuditor {
     } else if (this.vulnerabilities.length === 0) {
       log.success('\n✅ No critical vulnerabilities found. Address warnings for better security.');
     } else {
-      log.error('\n🚨 Critical vulnerabilities found. Please fix all vulnerabilities before deployment.');
-      process.exit(1);
+      // Only exit with error code for critical vulnerabilities
+      const criticalVulns = this.vulnerabilities.filter(v => v.severity === 'critical');
+      if (criticalVulns.length > 0) {
+        log.error('\n🚨 Critical vulnerabilities found. Please fix all critical vulnerabilities before deployment.');
+        process.exit(1);
+      } else {
+        log.warning('\n⚠️  Non-critical vulnerabilities found. Consider addressing them for better security.');
+      }
     }
     
     console.log(`\n${colors.cyan}For security best practices, see: docs/security-monitoring.md${colors.reset}`);

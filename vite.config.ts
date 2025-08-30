@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    cors: {
+      origin: mode === 'development' ? ['http://localhost:3000', 'http://localhost:8080'] : false,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    },
   },
   plugins: [
     react(),

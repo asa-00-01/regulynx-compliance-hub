@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEmailAutomation } from '@/hooks/useEmailAutomation';
 import { EmailTemplate } from '@/services/emailAutomation';
 import { Mail, Send, Calendar, History, Settings } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const EmailManagement = () => {
   const { templates, isSending, sendEmail, scheduleEmail, loadTemplates } = useEmailAutomation();
@@ -169,7 +170,7 @@ const EmailManagement = () => {
                       <Label className="text-sm font-medium">Content Preview</Label>
                       <div 
                         className="border rounded p-3 text-sm bg-gray-50 max-h-64 overflow-y-auto"
-                        dangerouslySetInnerHTML={{ __html: selectedTemplate.html_content }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedTemplate.html_content) }}
                       />
                     </div>
                   </div>
