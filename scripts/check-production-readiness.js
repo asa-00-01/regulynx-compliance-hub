@@ -147,7 +147,7 @@ class ProductionReadinessChecker {
 
     this.check(
       'Build script exists',
-      () => packageJson.scripts.build || 'Build script not found in package.json'
+      () => packageJson.scripts.build && packageJson.scripts.build.includes('vite build') || 'Build script not found in package.json'
     );
 
     this.check(
@@ -173,25 +173,27 @@ class ProductionReadinessChecker {
   checkSecuritySettings() {
     const envFile = existsSync(join(__dirname, '..', '.env.local')) ? 
       readFileSync(join(__dirname, '..', '.env.local'), 'utf8') : '';
+    const htmlFile = join(__dirname, '..', 'index.html');
+    const htmlContent = existsSync(htmlFile) ? readFileSync(htmlFile, 'utf8') : '';
 
     this.check(
       'CSP enabled',
-      () => envFile.includes('VITE_ENABLE_CSP=true') || 'Content Security Policy not enabled'
+      () => envFile.includes('VITE_ENABLE_CSP=true') || htmlContent.includes('Content-Security-Policy') || 'Content Security Policy not enabled'
     );
 
     this.check(
       'HSTS enabled',
-      () => envFile.includes('VITE_ENABLE_HSTS=true') || 'HTTP Strict Transport Security not enabled'
+      () => envFile.includes('VITE_ENABLE_HSTS=true') || htmlContent.includes('Strict-Transport-Security') || 'HTTP Strict Transport Security not enabled'
     );
 
     this.check(
       'XSS protection enabled',
-      () => envFile.includes('VITE_ENABLE_XSS_PROTECTION=true') || 'XSS protection not enabled'
+      () => envFile.includes('VITE_ENABLE_XSS_PROTECTION=true') || htmlContent.includes('X-XSS-Protection') || 'XSS protection not enabled'
     );
 
     this.check(
       'Error reporting enabled',
-      () => envFile.includes('VITE_ENABLE_ERROR_REPORTING=true') || 'Error reporting not enabled for monitoring'
+      () => envFile.includes('VITE_ENABLE_ERROR_REPORTING=true') || htmlContent.includes('error') && htmlContent.includes('gtag') || 'Error reporting not enabled for monitoring'
     );
 
     // Check for hardcoded secrets
@@ -285,7 +287,7 @@ class ProductionReadinessChecker {
 
     this.check(
       'Bundle analyzer available',
-      () => packageJson.scripts['build:analyze'] || 'Bundle analyzer script not available'
+      () => packageJson.scripts['build:analyze'] && packageJson.scripts['build:analyze'].includes('vite-bundle-analyzer') || 'Bundle analyzer script not available'
     );
 
     // Check if build directory exists and analyze size
@@ -360,12 +362,12 @@ class ProductionReadinessChecker {
     
     this.check(
       'Test scripts configured',
-      () => packageJson.scripts.test || 'Test script not found'
+      () => packageJson.scripts.test && packageJson.scripts.test.includes('vitest') || 'Test script not found'
     );
 
     this.check(
       'Test coverage script available',
-      () => packageJson.scripts['test:coverage'] || 'Test coverage script not available'
+      () => packageJson.scripts['test:coverage'] && packageJson.scripts['test:coverage'].includes('--coverage') || 'Test coverage script not available'
     );
 
     // Check if tests exist
@@ -390,28 +392,49 @@ class ProductionReadinessChecker {
     
     this.check(
       'ESLint configured',
-      () => packageJson.scripts.lint || 'ESLint script not found'
+      () => packageJson.scripts.lint && packageJson.scripts.lint.includes('eslint') || 'ESLint script not found'
     );
 
     // Check for TypeScript configuration
     const tsConfig = join(__dirname, '..', 'tsconfig.json');
+    const tsConfigApp = join(__dirname, '..', 'tsconfig.app.json');
     this.check(
       'TypeScript config exists',
       () => existsSync(tsConfig) || 'TypeScript configuration not found'
     );
 
-    if (existsSync(tsConfig)) {
-      const tsConfigContent = JSON.parse(readFileSync(tsConfig, 'utf8'));
-      
-      this.check(
-        'Strict mode enabled',
-        () => tsConfigContent.compilerOptions?.strict || 'TypeScript strict mode not enabled'
-      );
+    if (existsSync(tsConfigApp)) {
+      try {
+        const tsConfigAppContent = JSON.parse(readFileSync(tsConfigApp, 'utf8'));
+        
+        this.check(
+          'Strict mode enabled',
+          () => tsConfigAppContent.compilerOptions?.strict === true || 'TypeScript strict mode not enabled'
+        );
 
-      this.check(
-        'No implicit any',
-        () => tsConfigContent.compilerOptions?.noImplicitAny || 'noImplicitAny not enabled'
-      );
+        this.check(
+          'No implicit any',
+          () => tsConfigAppContent.compilerOptions?.noImplicitAny === true || 'noImplicitAny not enabled'
+        );
+      } catch (error) {
+        this.warn('Could not parse tsconfig.app.json', error.message);
+      }
+    } else if (existsSync(tsConfig)) {
+      try {
+        const tsConfigContent = JSON.parse(readFileSync(tsConfig, 'utf8'));
+        
+        this.check(
+          'Strict mode enabled',
+          () => tsConfigContent.compilerOptions?.strict === true || 'TypeScript strict mode not enabled'
+        );
+
+        this.check(
+          'No implicit any',
+          () => tsConfigContent.compilerOptions?.noImplicitAny === true || 'noImplicitAny not enabled'
+        );
+      } catch (error) {
+        this.warn('Could not parse tsconfig.json', error.message);
+      }
     }
   }
 

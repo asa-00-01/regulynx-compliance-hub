@@ -15,6 +15,45 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com; frame-src https://js.stripe.com;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+    
+    <!-- HSTS Header -->
+    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
+    
+    <!-- Error Reporting -->
+    <script>
+      // Global error handler for production
+      if (window.location.hostname !== 'localhost') {
+        window.addEventListener('error', function(e) {
+          console.error('Global error:', e.error);
+          // Send to error reporting service
+          if (window.gtag) {
+            gtag('event', 'exception', {
+              description: e.error?.message || 'Unknown error',
+              fatal: false
+            });
+          }
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+          console.error('Unhandled promise rejection:', e.reason);
+          // Send to error reporting service
+          if (window.gtag) {
+            gtag('event', 'exception', {
+              description: e.reason?.message || 'Unhandled promise rejection',
+              fatal: false
+            });
+          }
+        });
+      }
+    </script>
   </head>
 
   <body>

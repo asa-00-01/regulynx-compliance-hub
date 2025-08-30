@@ -30,35 +30,35 @@ const ConfigurationManagement = () => {
 
   const configSections = {
     database: {
-      host: 'localhost',
-      port: '5432',
-      database: 'compliance_db',
-      ssl_mode: 'require',
-      connection_pool_size: '20',
-      query_timeout: '30000'
+      host: process.env.VITE_DB_HOST || 'localhost',
+      port: process.env.VITE_DB_PORT || '5432',
+      database: process.env.VITE_DB_NAME || 'compliance_db',
+      ssl_mode: process.env.VITE_DB_SSL_MODE || 'require',
+      connection_pool_size: process.env.VITE_DB_POOL_SIZE || '20',
+      query_timeout: process.env.VITE_DB_TIMEOUT || '30000'
     },
     security: {
-      jwt_secret: '***************',
-      encryption_key: '***************',
-      api_rate_limit: '1000',
-      session_timeout: '3600',
-      password_policy: 'strong',
-      two_factor_enabled: true
+      jwt_secret: process.env.VITE_JWT_SECRET ? '***************' : 'Not configured',
+      encryption_key: process.env.VITE_ENCRYPTION_KEY ? '***************' : 'Not configured',
+      api_rate_limit: process.env.VITE_API_RATE_LIMIT || '1000',
+      session_timeout: process.env.VITE_SESSION_TIMEOUT || '3600',
+      password_policy: process.env.VITE_PASSWORD_POLICY || 'strong',
+      two_factor_enabled: process.env.VITE_2FA_ENABLED === 'true'
     },
     notifications: {
-      email_enabled: true,
-      slack_webhook: '***************',
-      sms_enabled: false,
-      alert_threshold: '5',
-      notification_frequency: 'immediate'
+      email_enabled: process.env.VITE_EMAIL_ENABLED === 'true',
+      slack_webhook: process.env.VITE_SLACK_WEBHOOK ? '***************' : 'Not configured',
+      sms_enabled: process.env.VITE_SMS_ENABLED === 'true',
+      alert_threshold: process.env.VITE_ALERT_THRESHOLD || '5',
+      notification_frequency: process.env.VITE_NOTIFICATION_FREQUENCY || 'immediate'
     },
     api: {
-      base_url: 'https://api.compliance.com',
-      version: 'v2',
-      timeout: '30000',
-      retry_attempts: '3',
-      cache_enabled: true,
-      debug_mode: false
+      base_url: process.env.VITE_API_BASE_URL || 'https://api.compliance.com',
+      version: process.env.VITE_API_VERSION || 'v2',
+      timeout: process.env.VITE_API_TIMEOUT || '30000',
+      retry_attempts: process.env.VITE_API_RETRY_ATTEMPTS || '3',
+      cache_enabled: process.env.VITE_API_CACHE_ENABLED === 'true',
+      debug_mode: process.env.VITE_DEBUG_MODE === 'true'
     }
   };
 
